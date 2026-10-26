@@ -2,7 +2,7 @@
 setlocal EnableDelayedExpansion
 set "HOME=%cd%"
 set "VERSION=2026.0.0
-set "CDN_CENTER=https://repo1.maven.org/maven2/io/edurt/datacap"
+set "CDN_CENTER=https://repo1.maven.org/maven2/org/devlive/metaforge"
 
 :: 检查并创建临时目录
 :: Check and create temporary directory

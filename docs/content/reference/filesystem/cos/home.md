@@ -2,31 +2,31 @@
 title: 腾讯云 COS
 ---
 
-在 DataCap 中目前已经支持腾讯云 COS，支持功能如下：
+在 MetaForge 中目前已经支持腾讯云 COS，支持功能如下：
 
 - 上传文件
 - 预览&下载文件
 - 删除文件
 
-### DataCap 使用配置
+### MetaForge 使用配置
 
 ---
 
-在 DataCap 中文件系统用于配置系统的缓冲以及临时文件的存储。修改 `application.properties` 文件如下内容：
+在 MetaForge 中文件系统用于配置系统的缓冲以及临时文件的存储。修改 `application.properties` 文件如下内容：
 
 ```properties
-datacap.fs.type=TencentCos
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=TencentCos
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: 文件系统的类型只能是 **TencentCos**
-- `datacap.fs.access`: 腾讯云的 AccessKey
-- `datacap.fs.secret`: 腾讯云的 SecretKey
-- `datacap.fs.endpoint`: 腾讯云的 Endpoint
-- `datacap.fs.bucket`: 腾讯云的存储桶名称，如 `datacap`
+- `metaforge.fs.type`: 文件系统的类型只能是 **TencentCos**
+- `metaforge.fs.access`: 腾讯云的 AccessKey
+- `metaforge.fs.secret`: 腾讯云的 SecretKey
+- `metaforge.fs.endpoint`: 腾讯云的 Endpoint
+- `metaforge.fs.bucket`: 腾讯云的存储桶名称，如 `metaforge`
 
 ### 依赖使用方式
 
@@ -36,8 +36,8 @@ datacap.fs.bucket=
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-fs-tencent-cos</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-fs-tencent-cos</artifactId>
     <version>${VERSION}</version>
 </dependency>
 ```
@@ -45,15 +45,15 @@ datacap.fs.bucket=
 使用代码如下：
 
 ```kotlin
-package io.edurt.datacap.fs.cos
+package org.devlive.metaforge.fs.cos
 
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.Key
 import com.google.inject.TypeLiteral
-import io.edurt.datacap.fs.FsService
-import io.edurt.datacap.fs.FsManager
-import io.edurt.datacap.fs.FsRequest
+import org.devlive.metaforge.fs.FsService
+import org.devlive.metaforge.fs.FsManager
+import org.devlive.metaforge.fs.FsRequest
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -90,7 +90,7 @@ class TencentCosFsTest
         {}))
         val plugin: Fs? = plugins?.first { v -> v?.name().equals(name) }
 
-        val stream = FileInputStream("src/test/kotlin/io/edurt/datacap/fs/cos/TencentCosFsTest.kt")
+        val stream = FileInputStream("src/test/kotlin/org/devlive/metaforge/fs/cos/TencentCosFsTest.kt")
         request.stream = stream
         val response = plugin !!.writer(request)
         assertTrue(response.isSuccessful)

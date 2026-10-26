@@ -6,9 +6,9 @@
 -->
 <FindBugsFilter>
     <Match>
-        <Package name="io.edurt.datacap.plugin.natived.zookeeper.sql" />
+        <Package name="org.devlive.metaforge.plugin.natived.zookeeper.sql" />
     </Match>
     <Match>
-        <Package name="io.edurt.datacap.sql.parser" />
+        <Package name="org.devlive.metaforge.sql.parser" />
     </Match>
 </FindBugsFilter>

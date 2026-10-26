@@ -11,7 +11,7 @@ QuestDB 是一个开源时间序列数据库，用于高吞吐量摄取和快速
 
 !!! note
 
-    如果你需要使用这个数据源, 您需要将 DataCap 服务升级到 >= `1.9.x`
+    如果你需要使用这个数据源, 您需要将 MetaForge 服务升级到 >= `1.9.x`
 
 !!!
 
@@ -23,7 +23,7 @@ QuestDB 是一个开源时间序列数据库，用于高吞吐量摄取和快速
 
 !!! note
 
-    如果您的 QuestDB 服务版本需要其他特殊配置，请参考修改配置文件并重启 DataCap 服务。
+    如果您的 QuestDB 服务版本需要其他特殊配置，请参考修改配置文件并重启 MetaForge 服务。
 
 !!!
 
@@ -42,7 +42,7 @@ QuestDB 是一个开源时间序列数据库，用于高吞吐量摄取和快速
 
 !!! warning
 
-    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/datacap/issues/new/choose)
+    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
 
     - [x] 7.x
 

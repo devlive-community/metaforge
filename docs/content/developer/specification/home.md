@@ -2,7 +2,7 @@
 title: 开发规范
 ---
 
-本文档主要用来介绍 DataCap 服务端和 UI 端的开发规范。
+本文档主要用来介绍 MetaForge 服务端和 UI 端的开发规范。
 
 !!! danger
 
@@ -216,3 +216,11 @@ const aaaInfo = () => {}
 
 <ShadcnPagination v-model="pageIndex" show-total :page-size="pageSize" @on-change="onPageChange"/>
 ```
+
+## UI 组件规范
+
+- 页面组件一律使用 `metaforge-ui` 组件库（`Mf` 前缀，如 `MfButton`、`MfSelect`），禁止引入其他 UI 框架。
+- 样式必须使用语义 token 工具类（`bg-surface`、`text-content`、`border-line`、`bg-primary` 等），**不允许**写死调色板类（如 `bg-blue-500`）。
+- 主题切换由 `--mf-*` CSS 变量驱动（light/dark），新组件样式必须保证两种主题下可读。
+- 组件 props/事件命名遵循 antd 兼容映射，迁移或新写页面参考 `core/metaforge-web/docs/antd-to-mf.md`。
+- 组件库开发与演示：`pnpm --filter metaforge-ui dev`（playground）；前端构建：`pnpm --filter metaforge-web build`。

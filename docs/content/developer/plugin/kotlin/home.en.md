@@ -2,7 +2,7 @@
 title: Kotlin Implementation
 ---
 
-DataCap supports custom plug-ins, and users can write their own plug-ins and integrate them into the system. This document mainly explains how to quickly integrate a plug-in into the DataCap system.
+MetaForge supports custom plug-ins, and users can write their own plug-ins and integrate them into the system. This document mainly explains how to quickly integrate a plug-in into the MetaForge system.
 !!! note
 
     This article demonstrates by integrating the StarRocks data storage system based on the JDBC protocol.
@@ -12,13 +12,13 @@ DataCap supports custom plug-ins, and users can write their own plug-ins and int
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-spi</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-spi</artifactId>
     <scope>provided</scope>
 </dependency>
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-common</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-common</artifactId>
 </dependency>
 <dependency>
     <groupId>commons-beanutils</groupId>
@@ -40,7 +40,7 @@ DataCap supports custom plug-ins, and users can write their own plug-ins and int
 </dependency>
 ```
 
-The above configuration adds `datacap-spi` and `datacap-common` modules, and others are some auxiliary dependencies.
+The above configuration adds `metaforge-spi` and `metaforge-common` modules, and others are some auxiliary dependencies.
 
 !!! warning
 
@@ -148,7 +148,7 @@ The executor needs to implement the `Plugin` interface, which provides the follo
 
 ### Plugin Converter
 
-The plug-in converter is used to convert the result after the current plug-in is executed, and convert it into logic that can be used in DataCap. It is mainly used to encapsulate `Response` to return the result.
+The plug-in converter is used to convert the result after the current plug-in is executed, and convert it into logic that can be used in MetaForge. It is mainly used to encapsulate `Response` to return the result.
 
 This article is a JDBC-based plug-in, so some functions can be realized by directly inheriting the `JdbcAdapter` parent class.
 
@@ -161,10 +161,10 @@ Add `META-INF` and `services` directory under `resources` source directory
     `services` needs to be in the `resources` directory
 !!!
 
-Create the `io.edurt.datacap.spi.PluginModule` file, as follows
+Create the `org.devlive.metaforge.spi.PluginModule` file, as follows
 
 ```java
-io.edurt.datacap.plugin.jdbc.starrocks.StarRocksPluginModule
+org.devlive.metaforge.plugin.jdbc.starrocks.StarRocksPluginModule
 ```
 
 The content of this file is the plugin loading module we defined.

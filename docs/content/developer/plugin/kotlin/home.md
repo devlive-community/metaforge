@@ -2,7 +2,7 @@
 title: 自定义 Plugin 连接器
 ---
 
-DataCap 支持自定义插件，使用者可以编写自己的插件集成到系统中。该文档主要讲解如何快速集成一个插件到 DataCap 系统中。
+MetaForge 支持自定义插件，使用者可以编写自己的插件集成到系统中。该文档主要讲解如何快速集成一个插件到 MetaForge 系统中。
 
 !!! note
 
@@ -13,13 +13,13 @@ DataCap 支持自定义插件，使用者可以编写自己的插件集成到系
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-spi</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-spi</artifactId>
     <scope>provided</scope>
 </dependency>
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-common</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-common</artifactId>
 </dependency>
 <dependency>
     <groupId>commons-beanutils</groupId>
@@ -41,7 +41,7 @@ DataCap 支持自定义插件，使用者可以编写自己的插件集成到系
 </dependency>
 ```
 
-以上配置添加了 `datacap-spi` 和 `datacap-common` 模块，其他的是一些辅助依赖。
+以上配置添加了 `metaforge-spi` 和 `metaforge-common` 模块，其他的是一些辅助依赖。
 
 !!! warning
 
@@ -149,7 +149,7 @@ class StarRocksPlugin : Plugin {
 
 ### 插件转换器
 
-插件转换器用于对当前插件执行后的结果的转化，将其转换为 DataCap 中可以使用的逻辑。主要是用于封装 `Response` 返回结果。
+插件转换器用于对当前插件执行后的结果的转化，将其转换为 MetaForge 中可以使用的逻辑。主要是用于封装 `Response` 返回结果。
 
 本文是基于 JDBC 的插件所以直接继承 `JdbcAdapter` 父类即可实现部分功能。
 
@@ -162,10 +162,10 @@ class StarRocksPlugin : Plugin {
     `services` 在 `resources` 目录中需要
 !!!
 
-创建 `io.edurt.datacap.spi.PluginModule` 文件，内容如下
+创建 `org.devlive.metaforge.spi.PluginModule` 文件，内容如下
 
 ```java
-io.edurt.datacap.plugin.jdbc.starrocks.StarRocksPluginModule
+org.devlive.metaforge.plugin.jdbc.starrocks.StarRocksPluginModule
 ```
 
 该文件的内容是我们定义好的插件加载模块。

@@ -2,12 +2,12 @@
 title: MongoDB Driver
 ---
 
-DataCap MongoDB Driver 主要要用于在 DataCap 中连接和操作 MongoDB 数据库。该驱动支持以下语法:
+MetaForge MongoDB Driver 主要要用于在 MetaForge 中连接和操作 MongoDB 数据库。该驱动支持以下语法:
 
 - `SHOW ...` 语法
 - `SELECT ...` 语法
 
-DataCap MongoDB Driver 适用于所有 DataCap 版本。
+MetaForge MongoDB Driver 适用于所有 MetaForge 版本。
 
 ## 使用方式
 
@@ -15,8 +15,8 @@ DataCap MongoDB Driver 适用于所有 DataCap 版本。
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-driver-mongodb</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-driver-mongodb</artifactId>
     <version>${VERSION}</version>
     <scope>test</scope>
 </dependency>
@@ -24,7 +24,7 @@ DataCap MongoDB Driver 适用于所有 DataCap 版本。
 
 `VERSION` 可以在 Maven 中央仓库中找到。
 
-驱动名称：`io.edurt.datacap.driver.MongoJdbcDriver`
+驱动名称：`org.devlive.metaforge.driver.MongoJdbcDriver`
 
 支持的连接语法：
 
@@ -37,7 +37,7 @@ DataCap MongoDB Driver 适用于所有 DataCap 版本。
 - 授权用户
 
 ```java
-Class.forName("io.edurt.datacap.driver.MongoJdbcDriver");
+Class.forName("org.devlive.metaforge.driver.MongoJdbcDriver");
 Properties props = new Properties();
 props.setProperty("database", "xxxx");
 props.setProperty("user", "xxxx");
@@ -50,14 +50,14 @@ connection = DriverManager.getConnection(jdbcUrl, props);
 - 非授权用户
 
 ```java
-Class.forName("io.edurt.datacap.driver.MongoJdbcDriver");
+Class.forName("org.devlive.metaforge.driver.MongoJdbcDriver");
 String jdbcUrl = String.format("jdbc:mongodb://%s:%d", "127.0.0.1", 27017);
 connection = DriverManager.getConnection(jdbcUrl);
 ```
 
 ## SHOW 语法
 
-DataCap MongoDB Driver 支持以下 SHOW 语法:
+MetaForge MongoDB Driver 支持以下 SHOW 语法:
 
 - `SHOW DATABASES`
 - `SHOW DATABASES LIKE ...`
@@ -71,7 +71,7 @@ DataCap MongoDB Driver 支持以下 SHOW 语法:
 
 ## SELECT 语法
 
-DataCap MongoDB Driver 支持以下 SELECT 语法:
+MetaForge MongoDB Driver 支持以下 SELECT 语法:
 
 - `SELECT * FROM ...`
 - `SELECT ... FROM ...`
@@ -86,7 +86,7 @@ DataCap MongoDB Driver 支持以下 SELECT 语法:
 
 ### 聚合函数
 
-DataCap MongoDB Driver 支持以下聚合函数:
+MetaForge MongoDB Driver 支持以下聚合函数:
 
 - `COUNT(*)`
 - `COUNT(columnName)`
@@ -97,6 +97,6 @@ DataCap MongoDB Driver 支持以下聚合函数:
 
 ## 系统函数
 
-DataCap MongoDB Driver 支持以下系统函数:
+MetaForge MongoDB Driver 支持以下系统函数:
 
 - `SELECT VERSION()`

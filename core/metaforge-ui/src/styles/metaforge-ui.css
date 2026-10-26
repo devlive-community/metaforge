@@ -1,0 +1,68 @@
+/**
+ * Tailwind entry for MetaForge UI consumers.
+ *
+ * An app that builds with Tailwind v4 imports this file once:
+ *
+ *   @import 'metaforge-ui/styles/metaforge-ui.css';
+ *
+ * Utilities generated here always resolve to `--mf-*` custom properties
+ * (`@theme inline` keeps the indirection), so switching a theme at runtime
+ * is a variable swap handled by tokens.css / applyTheme().
+ */
+@import 'tailwindcss';
+@import './tokens.css';
+
+/* Components live outside a consumer's Vite root; register them explicitly
+ * so every utility used by the library is generated wherever this CSS is
+ * imported from. */
+@source '../';
+
+@theme inline {
+    /* brand */
+    --color-primary: var(--mf-color-primary);
+    --color-primary-hover: var(--mf-color-primary-hover);
+    --color-primary-active: var(--mf-color-primary-active);
+    --color-on-primary: var(--mf-color-on-primary);
+
+    /* feedback */
+    --color-success: var(--mf-color-success);
+    --color-success-subtle: var(--mf-color-success-subtle);
+    --color-warning: var(--mf-color-warning);
+    --color-warning-subtle: var(--mf-color-warning-subtle);
+    --color-danger: var(--mf-color-danger);
+    --color-danger-subtle: var(--mf-color-danger-subtle);
+    --color-info: var(--mf-color-info);
+    --color-info-subtle: var(--mf-color-info-subtle);
+
+    /* surfaces & content */
+    --color-page: var(--mf-color-page);
+    --color-surface: var(--mf-color-surface);
+    --color-surface-hover: var(--mf-color-surface-hover);
+    --color-surface-active: var(--mf-color-surface-active);
+    --color-content: var(--mf-color-content);
+    --color-content-secondary: var(--mf-color-content-secondary);
+    --color-content-tertiary: var(--mf-color-content-tertiary);
+    --color-content-placeholder: var(--mf-color-content-placeholder);
+    --color-content-disabled: var(--mf-color-content-disabled);
+    --color-content-inverse: var(--mf-color-content-inverse);
+    --color-line: var(--mf-color-line);
+    --color-line-strong: var(--mf-color-line-strong);
+    --color-overlay: var(--mf-color-overlay);
+
+    /* radii */
+    --radius-mf-sm: var(--mf-radius-sm);
+    --radius-mf-md: var(--mf-radius-md);
+    --radius-mf-lg: var(--mf-radius-lg);
+    --radius-mf-full: var(--mf-radius-full);
+
+    /* elevation */
+    --shadow-mf-sm: var(--mf-shadow-sm);
+    --shadow-mf-md: var(--mf-shadow-md);
+    --shadow-mf-lg: var(--mf-shadow-lg);
+
+    /* motion */
+    --ease-mf: var(--mf-easing);
+
+    /* typography */
+    --font-mf: var(--mf-font-family);
+}

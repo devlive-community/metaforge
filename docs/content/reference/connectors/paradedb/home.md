@@ -14,7 +14,7 @@ ParadeDB 不是 Postgres 的分支，而是安装了自定义扩展的常规 Pos
 
 !!! note
 
-    如果需要使用此数据源，则需要将 DataCap 服务升级到 >= `2024.02.1`
+    如果需要使用此数据源，则需要将 MetaForge 服务升级到 >= `2024.02.1`
 
 !!!
 
@@ -53,7 +53,7 @@ ParadeDB 不是 Postgres 的分支，而是安装了自定义扩展的常规 Pos
 
 !!! warning
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/devlive-community/datacap/issues/new/choose)
+    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/devlive-community/metaforge/issues/new/choose)
 
 !!!
 

@@ -1,23 +1,23 @@
 USE
-`datacap`;
+`metaforge`;
 
-ALTER TABLE `datacap_dashboard`
+ALTER TABLE `metaforge_dashboard`
     ADD COLUMN `version` VARCHAR(100) DEFAULT NULL;
 
-UPDATE `datacap_dashboard`
+UPDATE `metaforge_dashboard`
 SET `version` = '1.0'
 WHERE `version` IS NULL;
 
-UPDATE `datacap_dataset`
+UPDATE `metaforge_dataset`
 SET `executor` = 'LocalExecutor'
 WHERE `executor` = 'Default';
 
-ALTER TABLE `datacap_dataset`
+ALTER TABLE `metaforge_dataset`
     ALTER COLUMN `executor` SET DEFAULT 'LocalExecutor';
 
-UPDATE `datacap_dataset`
+UPDATE `metaforge_dataset`
 SET `scheduler` = 'LocalScheduler'
 WHERE `scheduler` = 'Default';
 
-ALTER TABLE `datacap_dataset`
+ALTER TABLE `metaforge_dataset`
     ALTER COLUMN `scheduler` SET DEFAULT 'LocalScheduler';

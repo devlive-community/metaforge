@@ -2,7 +2,7 @@
 title: 自主机部署
 ---
 
-DataCap 是支持用户将服务部署到自主机中。通过本文档用户可以了解如何在自主机中部署 DataCap。
+MetaForge 是支持用户将服务部署到自主机中。通过本文档用户可以了解如何在自主机中部署 MetaForge。
 
 ### 系统要求
 
@@ -36,20 +36,20 @@ DataCap 是支持用户将服务部署到自主机中。通过本文档用户可
 2.将二进制文件下载到本地后运行以下命令
 
 ```bash
-tar -xvzf datacap-<VERSION>-bin.tar.gz
+tar -xvzf metaforge-<VERSION>-bin.tar.gz
 ```
 
 3. 进入软件根目录
 
 ```bash
-cd datacap-<VERSION>
+cd metaforge-<VERSION>
 ```
 
 ### 软件配置
 
 ---
 
-对于软件的首次安装，您需要将 `schema/datacap.sql` 文件中的sql脚本导入MySQL服务器。注意需要导入的脚本根据下载的软件包进行匹配
+对于软件的首次安装，您需要将 `schema/metaforge.sql` 文件中的sql脚本导入MySQL服务器。注意需要导入的脚本根据下载的软件包进行匹配
 
 !!! danger "注意"
 
@@ -57,7 +57,7 @@ cd datacap-<VERSION>
 
 !!!
 
-datacap 软件中的所有配置均在 `configure/application.properties` 文件中。
+metaforge 软件中的所有配置均在 `configure/application.properties` 文件中。
 
 #### 基本配置
 
@@ -68,18 +68,18 @@ server.port=9096
 server.address=localhost
 spring.jackson.time-zone=GMT+8
 spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
-datacap.security.secret=DataCapSecretKey
-datacap.security.expiration=86400000
-datacap.editor.sugs.maxSize=1000
+metaforge.security.secret=MetaForgeSecretKey
+metaforge.security.expiration=86400000
+metaforge.editor.sugs.maxSize=1000
 ```
 
 - `server.port`: 用于配置服务在服务器中启动监听的端口，默认为 `9096`
 - `server.address`: 用于配置服务在本地的监听地址，如果需要使用 `IP+端口` 方便外部机器访问，请不要设置为 `localhost`，建议设置为 `0.0.0.0`
 - `spring.jackson.time-zone`: 用于配置时区，默认为 `GMT+8`
 - `spring.jackson.date-format`: 用于配置日期格式，默认为 `yyyy-MM-dd HH:mm:ss`
-- `datacap.security.secret`: 用于配置数据安全管理的密钥，默认为 `DataCapSecretKey`
-- `datacap.security.expiration`: 用于配置数据安全管理的过期时间，单位为毫秒，默认为 `86400000`
-- `datacap.editor.sugs.maxSize`: 用于配置数据编辑器的最大行数，默认为 `1000` 已经失效不在使用
+- `metaforge.security.secret`: 用于配置数据安全管理的密钥，默认为 `MetaForgeSecretKey`
+- `metaforge.security.expiration`: 用于配置数据安全管理的过期时间，单位为毫秒，默认为 `86400000`
+- `metaforge.editor.sugs.maxSize`: 用于配置数据编辑器的最大行数，默认为 `1000` 已经失效不在使用
 
 #### Web 服务配置
 
@@ -102,7 +102,7 @@ spring.web.resources.add-mappings=true
 !!!
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/datacap?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&useOldAliasMetadataBehavior=true&jdbcCompliantTruncation=false&allowPublicKeyRetrieval=true
+spring.datasource.url=jdbc:mysql://localhost:3306/metaforge?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&useOldAliasMetadataBehavior=true&jdbcCompliantTruncation=false&allowPublicKeyRetrieval=true
 spring.datasource.username=root
 spring.datasource.password=12345678
 ```
@@ -119,122 +119,122 @@ spring.datasource.password=12345678
 
 #### 执行器配置
 
-从 `2026.0.0` 起，执行器配置（原 `datacap.executor.*`）已经迁移到数据库表 `datacap_configure`（category = `EXECUTOR`），不再通过 `application.properties` 配置。
+从 `2026.0.0` 起，执行器配置（原 `metaforge.executor.*`）已经迁移到数据库表 `metaforge_configure`（category = `EXECUTOR`），不再通过 `application.properties` 配置。
 
 - 默认值由各执行器插件（`ExecutorPlugin.configures()`）声明，**首次启动会自动写入数据库**
 - 管理员可在 UI 的 **系统配置 → 运行时配置** 页面（`/system/configure`）修改全部字段
 - 普通用户在触发同步时，可对每个执行器的 `tunable=true` 字段做**本次运行临时覆盖**（不持久化）
-- 每次同步实际生效的配置 JSON 会写入对应 `datacap_dataset_history.executor_configure`，方便审计
+- 每次同步实际生效的配置 JSON 会写入对应 `metaforge_dataset_history.executor_configure`，方便审计
 
 #### 上传配置
 
 ```properties
-datacap.config.data=
-datacap.cache.data=
+metaforge.config.data=
+metaforge.cache.data=
 ```
 
-- `datacap.config.data`: 用于配置上传配置文件的路径
-- `datacap.cache.data`: 用于配置上传缓存文件的路径
+- `metaforge.config.data`: 用于配置上传配置文件的路径
+- `metaforge.cache.data`: 用于配置上传缓存文件的路径
 
 #### OpenAi 配置
 
 ```properties
-datacap.openai.backend=https://api.openai.com
-datacap.openai.token=
-datacap.openai.model=GPT_35_TURBO_0613
-datacap.openai.timeout=30
+metaforge.openai.backend=https://api.openai.com
+metaforge.openai.token=
+metaforge.openai.model=GPT_35_TURBO_0613
+metaforge.openai.timeout=30
 ```
 
-- `datacap.openai.backend`: 用于配置 OpenAI 的后端地址
-- `datacap.openai.token`: 用于配置 OpenAI 的 token
-- `datacap.openai.model`: 用于配置 OpenAI 的模型
-- `datacap.openai.timeout`: 用于配置 OpenAI 的超时时间，单位为秒
+- `metaforge.openai.backend`: 用于配置 OpenAI 的后端地址
+- `metaforge.openai.token`: 用于配置 OpenAI 的 token
+- `metaforge.openai.model`: 用于配置 OpenAI 的模型
+- `metaforge.openai.timeout`: 用于配置 OpenAI 的超时时间，单位为秒
 
 #### 主系统配置
 
 ```properties
-datacap.registration.enable=
-datacap.captcha.enable=
-datacap.cache.maximum=100000
-datacap.cache.expiration=5
-datacap.audit.sql.print=false
+metaforge.registration.enable=
+metaforge.captcha.enable=
+metaforge.cache.maximum=100000
+metaforge.cache.expiration=5
+metaforge.audit.sql.print=false
 ```
 
-- `datacap.registration.enable`: 用于配置是否开启注册
-- `datacap.captcha.enable`: 用于配置是否开启验证码
-- `datacap.cache.maximum`: 用于配置缓存最大值
-- `datacap.cache.expiration`: 用于配置缓存过期时间，单位为分钟
-- `datacap.audit.sql.print`: 用于配置是否打印 SQL
+- `metaforge.registration.enable`: 用于配置是否开启注册
+- `metaforge.captcha.enable`: 用于配置是否开启验证码
+- `metaforge.cache.maximum`: 用于配置缓存最大值
+- `metaforge.cache.expiration`: 用于配置缓存过期时间，单位为分钟
+- `metaforge.audit.sql.print`: 用于配置是否打印 SQL
 
 #### 流水线配置
 
 ```properties
-datacap.pipeline.maxRunning=100
-datacap.pipeline.maxQueue=200
-datacap.pipeline.reset=STOPPED
+metaforge.pipeline.maxRunning=100
+metaforge.pipeline.maxQueue=200
+metaforge.pipeline.reset=STOPPED
 ```
 
-- `datacap.pipeline.maxRunning`: 用于配置最大运行数
-- `datacap.pipeline.maxQueue`: 用于配置最大队列
-- `datacap.pipeline.reset`: 用于配置重置策略
+- `metaforge.pipeline.maxRunning`: 用于配置最大运行数
+- `metaforge.pipeline.maxQueue`: 用于配置最大队列
+- `metaforge.pipeline.reset`: 用于配置重置策略
 
 #### 存储配置
 
 ---
 
-支持的存储类型详见 https://github.com/devlive-community/datacap/tree/dev/fs
+支持的存储类型详见 https://github.com/devlive-community/metaforge/tree/dev/fs
 
 ##### 本地存储配置
 
 ```properties
-datacap.fs.type=Local
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=Local
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: 用于配置文件系统类型
-- `datacap.fs.access`: 用于配置文件系统访问，该类型可以为空
-- `datacap.fs.secret`: 用于配置文件系统密钥，该类型可以为空
-- `datacap.fs.endpoint`: 用于配置文件系统端点，如果填写后将追加为目录 **该类型可以为空**
-- `datacap.fs.bucket`: 用于配置文件系统存储桶，该类型可以为空
+- `metaforge.fs.type`: 用于配置文件系统类型
+- `metaforge.fs.access`: 用于配置文件系统访问，该类型可以为空
+- `metaforge.fs.secret`: 用于配置文件系统密钥，该类型可以为空
+- `metaforge.fs.endpoint`: 用于配置文件系统端点，如果填写后将追加为目录 **该类型可以为空**
+- `metaforge.fs.bucket`: 用于配置文件系统存储桶，该类型可以为空
 
 ##### 阿里云 OSS 配置
 
 ```properties
-datacap.fs.type=AliOss
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=AliOss
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: AliOss
+- `metaforge.fs.type`: AliOss
 
 ##### 七牛云配置
 
 ```properties
-datacap.fs.type=Qiniu
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=Qiniu
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: Qiniu
+- `metaforge.fs.type`: Qiniu
 
 #### 实验性功能
 
 ```properties
-datacap.experimental.autoLimit=true
-datacap.experimental.data={user.dir}/data
-datacap.experimental.avatarPath={username}/avatar/
+metaforge.experimental.autoLimit=true
+metaforge.experimental.data={user.dir}/data
+metaforge.experimental.avatarPath={username}/avatar/
 ```
 
-- `datacap.experimental.autoLimit`: 用于配置是否自动增加 LIMIT
-- `datacap.experimental.data`: 用于配置实验性功能的数据路径
-- `datacap.experimental.avatarPath`: 用于配置实验性功能的头像路径
+- `metaforge.experimental.autoLimit`: 用于配置是否自动增加 LIMIT
+- `metaforge.experimental.data`: 用于配置实验性功能的数据路径
+- `metaforge.experimental.avatarPath`: 用于配置实验性功能的头像路径
 
 #### 日志配置
 
@@ -268,7 +268,7 @@ plugin.manager.extend.packages=com.fasterxml.jackson
 
 #### 启动服务
 
-DataCap服务启动非常简单，执行以下脚本
+MetaForge服务启动非常简单，执行以下脚本
 
 ```bash
 ./bin/startup.sh

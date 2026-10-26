@@ -98,7 +98,7 @@
                 <exclude>**/*-sources.jar</exclude>
             </excludes>
             <includes>
-                <include>**/datacap*.jar</include>
+                <include>**/metaforge*.jar</include>
             </includes>
         </fileSet>
     </fileSets>

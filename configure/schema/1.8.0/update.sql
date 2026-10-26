@@ -28,5 +28,5 @@ create table `scheduled_task`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8;
 
-INSERT INTO datacap.scheduled_task (name, description, expression, active, is_system)
+INSERT INTO metaforge.scheduled_task (name, description, expression, active, is_system)
 VALUES ('Synchronize table structure', 'Synchronize the table structure of the data source library at 1 am every day', '0 0 1 * * ?', 1, 1);

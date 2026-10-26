@@ -1,130 +1,130 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge</artifactId>
     <packaging>pom</packaging>
     <version>2026.0.0</version>
 
     <modules>
-        <module>client/datacap-cli</module>
-        <module>core/datacap-common</module>
-        <module>core/datacap-parser</module>
-        <module>core/datacap-spi</module>
-        <module>core/datacap-server</module>
-        <module>core/datacap-service</module>
-        <module>core/datacap-security</module>
-        <module>core/datacap-captcha</module>
-        <module>core/datacap-sql</module>
-        <module>core/datacap-plugin</module>
-        <module>core/datacap-condor</module>
-        <module>lib/datacap-http</module>
-        <module>lib/datacap-logger</module>
-        <module>lib/datacap-shell</module>
-        <module>lib/datacap-schedule</module>
-        <module>driver/datacap-driver-redis</module>
-        <module>driver/datacap-driver-mongodb</module>
-        <module>shaded/datacap-shaded-ydb</module>
-        <module>shaded/datacap-shaded-pinot</module>
-        <module>shaded/datacap-shaded-neo4j</module>
-        <module>plugin/datacap-plugin-mysql</module>
-        <module>plugin/datacap-plugin-clickhouse</module>
-        <module>plugin/datacap-plugin-clickhouse-http</module>
-        <module>plugin/datacap-plugin-solr</module>
-        <module>plugin/datacap-plugin-cratedb</module>
-        <module>plugin/datacap-plugin-cratedb-http</module>
-        <module>plugin/datacap-plugin-alioss</module>
-        <module>plugin/datacap-plugin-zookeeper</module>
-        <module>plugin/datacap-plugin-kafka</module>
-        <module>plugin/datacap-plugin-redis</module>
-        <module>plugin/datacap-plugin-redis-jdbc</module>
-        <module>plugin/datacap-plugin-h2</module>
-        <module>plugin/datacap-plugin-h2-tcp</module>
-        <module>plugin/datacap-plugin-hdfs</module>
-        <module>plugin/datacap-plugin-db2</module>
-        <module>plugin/datacap-plugin-dm</module>
-        <module>plugin/datacap-plugin-dremio</module>
-        <module>plugin/datacap-plugin-druid</module>
-        <module>plugin/datacap-plugin-duckdb</module>
-        <module>plugin/datacap-plugin-pinot</module>
-        <module>plugin/datacap-plugin-cassandra</module>
-        <module>plugin/datacap-plugin-matrixone</module>
-        <module>plugin/datacap-plugin-influxdb</module>
-        <module>plugin/datacap-plugin-scylladb</module>
-        <module>plugin/datacap-plugin-paradedb</module>
-        <module>plugin/datacap-plugin-hive-2x</module>
-        <module>plugin/datacap-plugin-kyuubi</module>
-        <module>plugin/datacap-plugin-ignite</module>
-        <module>plugin/datacap-plugin-impala</module>
-        <module>plugin/datacap-plugin-kylin</module>
-        <module>plugin/datacap-plugin-timescale</module>
-        <module>plugin/datacap-plugin-iotdb</module>
-        <module>plugin/datacap-plugin-monetdb</module>
-        <module>plugin/datacap-plugin-ydb</module>
-        <module>plugin/datacap-plugin-neo4j</module>
-        <module>plugin/datacap-plugin-oceanbase</module>
-        <module>plugin/datacap-plugin-oracle</module>
-        <module>plugin/datacap-plugin-phoenix</module>
-        <module>plugin/datacap-plugin-postgresql</module>
-        <module>plugin/datacap-plugin-presto</module>
-        <module>plugin/datacap-plugin-snowflake</module>
-        <module>plugin/datacap-plugin-sqlserver</module>
-        <module>plugin/datacap-plugin-tdengine</module>
-        <module>plugin/datacap-plugin-trino</module>
-        <module>plugin/datacap-plugin-doris</module>
-        <module>plugin/datacap-plugin-starrocks</module>
-        <module>plugin/datacap-plugin-hologres</module>
-        <module>plugin/datacap-plugin-greptimedb</module>
-        <module>plugin/datacap-plugin-questdb</module>
-        <module>plugin/datacap-plugin-ceresdb</module>
-        <module>plugin/datacap-plugin-elasticsearch-8x</module>
-        <module>plugin/datacap-plugin-mongo-atlas</module>
-        <module>plugin/datacap-plugin-mongo-community</module>
-        <module>plugin/datacap-plugin-dolphindb</module>
-        <module>executor/datacap-executor-spi</module>
-        <module>executor/datacap-executor-local</module>
-        <module>executor/datacap-executor-seatunnel</module>
-        <module>fs/datacap-fs-spi</module>
-        <module>fs/datacap-fs-local</module>
-        <module>fs/datacap-fs-qiniu</module>
-        <module>fs/datacap-fs-alioss</module>
-        <module>fs/datacap-fs-tencent-cos</module>
-        <module>fs/datacap-fs-amazon-s3</module>
-        <module>fs/datacap-fs-minio</module>
-        <module>parser/datacap-parser-spi</module>
-        <module>parser/datacap-parser-trino</module>
-        <module>parser/datacap-parser-mysql</module>
-        <module>scheduler/datacap-scheduler-spi</module>
-        <module>scheduler/datacap-scheduler-local</module>
-        <module>notify/datacap-notify-spi</module>
-        <module>notify/datacap-notify-dingtalk</module>
-        <module>convert/datacap-convert-spi</module>
-        <module>convert/datacap-convert-txt</module>
-        <module>convert/datacap-convert-json</module>
-        <module>convert/datacap-convert-none</module>
-        <module>convert/datacap-convert-csv</module>
-        <module>convert/datacap-convert-xml</module>
-        <module>test/datacap-test-plugin</module>
-        <module>test/datacap-test-convert</module>
-        <module>test/datacap-test-core</module>
-        <module>test/datacap-test-lib</module>
-        <module>test/datacap-test-executor</module>
-        <module>test/datacap-test-scheduler</module>
-        <module>test/datacap-test-fs</module>
-        <module>test/datacap-test-driver</module>
-        <module>test/datacap-test-parser</module>
-        <module>test/datacap-test-condor</module>
+        <module>client/metaforge-cli</module>
+        <module>core/metaforge-common</module>
+        <module>core/metaforge-parser</module>
+        <module>core/metaforge-spi</module>
+        <module>core/metaforge-server</module>
+        <module>core/metaforge-service</module>
+        <module>core/metaforge-security</module>
+        <module>core/metaforge-captcha</module>
+        <module>core/metaforge-sql</module>
+        <module>core/metaforge-plugin</module>
+        <module>core/metaforge-condor</module>
+        <module>lib/metaforge-http</module>
+        <module>lib/metaforge-logger</module>
+        <module>lib/metaforge-shell</module>
+        <module>lib/metaforge-schedule</module>
+        <module>driver/metaforge-driver-redis</module>
+        <module>driver/metaforge-driver-mongodb</module>
+        <module>shaded/metaforge-shaded-ydb</module>
+        <module>shaded/metaforge-shaded-pinot</module>
+        <module>shaded/metaforge-shaded-neo4j</module>
+        <module>plugin/metaforge-plugin-mysql</module>
+        <module>plugin/metaforge-plugin-clickhouse</module>
+        <module>plugin/metaforge-plugin-clickhouse-http</module>
+        <module>plugin/metaforge-plugin-solr</module>
+        <module>plugin/metaforge-plugin-cratedb</module>
+        <module>plugin/metaforge-plugin-cratedb-http</module>
+        <module>plugin/metaforge-plugin-alioss</module>
+        <module>plugin/metaforge-plugin-zookeeper</module>
+        <module>plugin/metaforge-plugin-kafka</module>
+        <module>plugin/metaforge-plugin-redis</module>
+        <module>plugin/metaforge-plugin-redis-jdbc</module>
+        <module>plugin/metaforge-plugin-h2</module>
+        <module>plugin/metaforge-plugin-h2-tcp</module>
+        <module>plugin/metaforge-plugin-hdfs</module>
+        <module>plugin/metaforge-plugin-db2</module>
+        <module>plugin/metaforge-plugin-dm</module>
+        <module>plugin/metaforge-plugin-dremio</module>
+        <module>plugin/metaforge-plugin-druid</module>
+        <module>plugin/metaforge-plugin-duckdb</module>
+        <module>plugin/metaforge-plugin-pinot</module>
+        <module>plugin/metaforge-plugin-cassandra</module>
+        <module>plugin/metaforge-plugin-matrixone</module>
+        <module>plugin/metaforge-plugin-influxdb</module>
+        <module>plugin/metaforge-plugin-scylladb</module>
+        <module>plugin/metaforge-plugin-paradedb</module>
+        <module>plugin/metaforge-plugin-hive-2x</module>
+        <module>plugin/metaforge-plugin-kyuubi</module>
+        <module>plugin/metaforge-plugin-ignite</module>
+        <module>plugin/metaforge-plugin-impala</module>
+        <module>plugin/metaforge-plugin-kylin</module>
+        <module>plugin/metaforge-plugin-timescale</module>
+        <module>plugin/metaforge-plugin-iotdb</module>
+        <module>plugin/metaforge-plugin-monetdb</module>
+        <module>plugin/metaforge-plugin-ydb</module>
+        <module>plugin/metaforge-plugin-neo4j</module>
+        <module>plugin/metaforge-plugin-oceanbase</module>
+        <module>plugin/metaforge-plugin-oracle</module>
+        <module>plugin/metaforge-plugin-phoenix</module>
+        <module>plugin/metaforge-plugin-postgresql</module>
+        <module>plugin/metaforge-plugin-presto</module>
+        <module>plugin/metaforge-plugin-snowflake</module>
+        <module>plugin/metaforge-plugin-sqlserver</module>
+        <module>plugin/metaforge-plugin-tdengine</module>
+        <module>plugin/metaforge-plugin-trino</module>
+        <module>plugin/metaforge-plugin-doris</module>
+        <module>plugin/metaforge-plugin-starrocks</module>
+        <module>plugin/metaforge-plugin-hologres</module>
+        <module>plugin/metaforge-plugin-greptimedb</module>
+        <module>plugin/metaforge-plugin-questdb</module>
+        <module>plugin/metaforge-plugin-ceresdb</module>
+        <module>plugin/metaforge-plugin-elasticsearch-8x</module>
+        <module>plugin/metaforge-plugin-mongo-atlas</module>
+        <module>plugin/metaforge-plugin-mongo-community</module>
+        <module>plugin/metaforge-plugin-dolphindb</module>
+        <module>executor/metaforge-executor-spi</module>
+        <module>executor/metaforge-executor-local</module>
+        <module>executor/metaforge-executor-seatunnel</module>
+        <module>fs/metaforge-fs-spi</module>
+        <module>fs/metaforge-fs-local</module>
+        <module>fs/metaforge-fs-qiniu</module>
+        <module>fs/metaforge-fs-alioss</module>
+        <module>fs/metaforge-fs-tencent-cos</module>
+        <module>fs/metaforge-fs-amazon-s3</module>
+        <module>fs/metaforge-fs-minio</module>
+        <module>parser/metaforge-parser-spi</module>
+        <module>parser/metaforge-parser-trino</module>
+        <module>parser/metaforge-parser-mysql</module>
+        <module>scheduler/metaforge-scheduler-spi</module>
+        <module>scheduler/metaforge-scheduler-local</module>
+        <module>notify/metaforge-notify-spi</module>
+        <module>notify/metaforge-notify-dingtalk</module>
+        <module>convert/metaforge-convert-spi</module>
+        <module>convert/metaforge-convert-txt</module>
+        <module>convert/metaforge-convert-json</module>
+        <module>convert/metaforge-convert-none</module>
+        <module>convert/metaforge-convert-csv</module>
+        <module>convert/metaforge-convert-xml</module>
+        <module>test/metaforge-test-plugin</module>
+        <module>test/metaforge-test-convert</module>
+        <module>test/metaforge-test-core</module>
+        <module>test/metaforge-test-lib</module>
+        <module>test/metaforge-test-executor</module>
+        <module>test/metaforge-test-scheduler</module>
+        <module>test/metaforge-test-fs</module>
+        <module>test/metaforge-test-driver</module>
+        <module>test/metaforge-test-parser</module>
+        <module>test/metaforge-test-condor</module>
     </modules>
 
-    <name>datacap</name>
-    <description>DataCap is integrated software for data transformation, integration, and visualization. Support a variety of data sources, file types, big data related database, relational database, NoSQL database, etc. Through the software can realize the management of multiple data sources, the data under the source of various operations conversion.</description>
-    <url>https://datacap.devlive.org/</url>
+    <name>metaforge</name>
+    <description>MetaForge is integrated software for data transformation, integration, and visualization. Support a variety of data sources, file types, big data related database, relational database, NoSQL database, etc. Through the software can realize the management of multiple data sources, the data under the source of various operations conversion.</description>
+    <url>https://metaforge.devlive.org/</url>
 
     <scm>
-        <url>https://datacap.devlive.org</url>
-        <connection>scm:git:git://github.com/devlive-community/datacap.git</connection>
-        <developerConnection>scm:git:git@github.com:devlive-community/datacap.git</developerConnection>
-        <tag>datacap,database,clickhouse,mysql,postgresql,kylin,db2,dremio,druid,elasticsearch,hive,ignite,kyuubi,monetdb,mongo,presto,trino</tag>
+        <url>https://metaforge.devlive.org</url>
+        <connection>scm:git:git://github.com/devlive-community/metaforge.git</connection>
+        <developerConnection>scm:git:git@github.com:devlive-community/metaforge.git</developerConnection>
+        <tag>metaforge,database,clickhouse,mysql,postgresql,kylin,db2,dremio,druid,elasticsearch,hive,ignite,kyuubi,monetdb,mongo,presto,trino</tag>
     </scm>
 
     <licenses>
@@ -208,18 +208,18 @@
         <redisson.version>3.27.0</redisson.version>
         <assembly-plugin.version>3.6.0</assembly-plugin.version>
         <dep.reflections.version>0.10.2</dep.reflections.version>
-        <!-- datacap plugin dependency -->
-        <datacap.pgsql.version>42.7.3</datacap.pgsql.version>
-        <datacap.qiniu.version>7.15.0</datacap.qiniu.version>
-        <datacap.alioss.version>3.16.1</datacap.alioss.version>
-        <datacap.commons-io.version>2.14.0</datacap.commons-io.version>
-        <datacap.solr.version>6.0.0</datacap.solr.version>
-        <datacap.influxdb.version>0.2.6</datacap.influxdb.version>
-        <datacap.cos.version>5.6.227</datacap.cos.version>
-        <datacap.s3.version>1.12.771</datacap.s3.version>
-        <datacap.minio.version>8.5.12</datacap.minio.version>
-        <datacap.maven.model.version>3.9.6</datacap.maven.model.version>
-        <datacap.dolphindb.version>3.00.2.0</datacap.dolphindb.version>
+        <!-- metaforge plugin dependency -->
+        <metaforge.pgsql.version>42.7.3</metaforge.pgsql.version>
+        <metaforge.qiniu.version>7.15.0</metaforge.qiniu.version>
+        <metaforge.alioss.version>3.16.1</metaforge.alioss.version>
+        <metaforge.commons-io.version>2.14.0</metaforge.commons-io.version>
+        <metaforge.solr.version>6.0.0</metaforge.solr.version>
+        <metaforge.influxdb.version>0.2.6</metaforge.influxdb.version>
+        <metaforge.cos.version>5.6.227</metaforge.cos.version>
+        <metaforge.s3.version>1.12.771</metaforge.s3.version>
+        <metaforge.minio.version>8.5.12</metaforge.minio.version>
+        <metaforge.maven.model.version>3.9.6</metaforge.maven.model.version>
+        <metaforge.dolphindb.version>3.00.2.0</metaforge.dolphindb.version>
         <!-- maven plugin -->
         <plugin.maven.checkstyle.version>3.3.1</plugin.maven.checkstyle.version>
         <plugin.maven.findbugs.version>4.8.5.0</plugin.maven.findbugs.version>
@@ -278,13 +278,13 @@
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>io.edurt.datacap</groupId>
-                <artifactId>datacap-common</artifactId>
+                <groupId>org.devlive.metaforge</groupId>
+                <artifactId>metaforge-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.edurt.datacap</groupId>
-                <artifactId>datacap-http</artifactId>
+                <groupId>org.devlive.metaforge</groupId>
+                <artifactId>metaforge-http</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -308,8 +308,8 @@
                 <version>${commons-lang3.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.edurt.datacap</groupId>
-                <artifactId>datacap-spi</artifactId>
+                <groupId>org.devlive.metaforge</groupId>
+                <artifactId>metaforge-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -353,13 +353,13 @@
                 <version>${guava.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.edurt.datacap</groupId>
-                <artifactId>datacap-parser</artifactId>
+                <groupId>org.devlive.metaforge</groupId>
+                <artifactId>metaforge-parser</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.edurt.datacap</groupId>
-                <artifactId>datacap-driver-redis</artifactId>
+                <groupId>org.devlive.metaforge</groupId>
+                <artifactId>metaforge-driver-redis</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -373,18 +373,18 @@
                 <version>${kotlin.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.edurt.datacap</groupId>
-                <artifactId>datacap-parser-spi</artifactId>
+                <groupId>org.devlive.metaforge</groupId>
+                <artifactId>metaforge-parser-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.edurt.datacap</groupId>
-                <artifactId>datacap-notify-spi</artifactId>
+                <groupId>org.devlive.metaforge</groupId>
+                <artifactId>metaforge-notify-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.edurt.datacap</groupId>
-                <artifactId>datacap-convert-spi</artifactId>
+                <groupId>org.devlive.metaforge</groupId>
+                <artifactId>metaforge-convert-spi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -420,7 +420,7 @@
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
-                <version>${datacap.commons-io.version}</version>
+                <version>${metaforge.commons-io.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.mongodb</groupId>
@@ -645,7 +645,7 @@
                 <version>0.8.0</version>
                 <extensions>true</extensions>
                 <configuration>
-                    <publishingServerId>datacap-ossrh</publishingServerId>
+                    <publishingServerId>metaforge-ossrh</publishingServerId>
                     <autoPublish>true</autoPublish>
                     <waitMaxTime>9600</waitMaxTime>
                     <excludeArtifacts>
@@ -682,11 +682,11 @@
                             <followSymlinks>false</followSymlinks>
                             <includes>
                                 <include>*.tar.gz</include>
-                                <include>datacap*/</include>
+                                <include>metaforge*/</include>
                             </includes>
                         </fileset>
                         <fileset>
-                            <directory>${basedir}/core/datacap-binary/datacap-binary-tar/copy-conf/</directory>
+                            <directory>${basedir}/core/metaforge-binary/metaforge-binary-tar/copy-conf/</directory>
                             <excludes>
                                 <exclude>README.md</exclude>
                             </excludes>
@@ -808,7 +808,7 @@
 
     <distributionManagement>
         <repository>
-            <id>datacap-ossrh</id>
+            <id>metaforge-ossrh</id>
             <url>https://central.sonatype.com/</url>
         </repository>
     </distributionManagement>

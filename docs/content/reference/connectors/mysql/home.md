@@ -10,7 +10,7 @@ MySQL is one of the most recognizable technologies in the modern big data ecosys
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.0.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.0.x`
 
 !!!
 
@@ -20,11 +20,11 @@ Support Time: `2022-09-19`
 
 ---
 
-DataCap uses configuration files by default [mysql.json](https://github.com/EdurtIO/datacap/blob/develop/server/src/main/etc/conf/plugins/jdbc/mysql.json)
+MetaForge uses configuration files by default [mysql.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/mysql.json)
 
 !!! note
 
-    If your MySQL service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your MySQL service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -63,7 +63,7 @@ DataCap uses configuration files by default [mysql.json](https://github.com/Edur
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
     - [x] 5.x
     - [x] 6.x

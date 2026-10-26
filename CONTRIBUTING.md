@@ -1,7 +1,7 @@
 ## Contributing
 
-[fork]: https://github.com/EdurtIO/datacap/fork
-[pr]: https://github.com/EdurtIO/datacap/compare
+[fork]: https://github.com/EdurtIO/metaforge/fork
+[pr]: https://github.com/EdurtIO/metaforge/compare
 [code-of-conduct]: CODE_OF_CONDUCT.md
 
 Hi there! We're thrilled that you'd like to contribute to this project. Your help is essential for keeping it great.

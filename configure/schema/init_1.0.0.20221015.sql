@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS datacap;
+CREATE DATABASE IF NOT EXISTS metaforge;
 
-USE datacap;
+USE metaforge;
 
 -- ----------------------------
 -- Table structure for audit_plugin

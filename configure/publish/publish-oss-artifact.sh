@@ -28,7 +28,7 @@ fi
 echo "OSS Bucket Name: $BUCKET_NAME"
 echo "OSS Endpoint: $OSS_ENDPOINT"
 echo "Work Home: $PLUGIN_HOME"
-echo "Datacap Home: $DATACAP_HOME"
+echo "Metaforge Home: $METAFORGE_HOME"
 echo "Metadata Home: $METADATA_HOME"
 echo "Resource Home: $RESOURCE_HOME"
 
@@ -46,7 +46,7 @@ for file in "$HOME/dist"/*bin.tar.gz; do
   if [ -e "$file" ]; then
     filename=$(basename "$file")
     echo "Uploading binary: $filename"
-    ossutil cp "$file" "oss://$BUCKET_NAME/$DATACAP_HOME/versions/$VERSION/$filename" -f
+    ossutil cp "$file" "oss://$BUCKET_NAME/$METAFORGE_HOME/versions/$VERSION/$filename" -f
   fi
 done
 
@@ -83,19 +83,19 @@ for file in "$PLUGIN_DIR"/*.tar.gz; do
   echo "Document found: $filename"
 
   case "$filename" in
-    datacap-executor-*)
+    metaforge-executor-*)
       target_dir="$PLUGIN_HOME/$VERSION/executor"
       ;;
-    datacap-convert-*)
+    metaforge-convert-*)
       target_dir="$PLUGIN_HOME/$VERSION/convert"
       ;;
-    datacap-fs-*)
+    metaforge-fs-*)
       target_dir="$PLUGIN_HOME/$VERSION/fs"
       ;;
-    datacap-parser-*)
+    metaforge-parser-*)
       target_dir="$PLUGIN_HOME/$VERSION/parser"
       ;;
-    datacap-scheduler-*)
+    metaforge-scheduler-*)
       target_dir="$PLUGIN_HOME/$VERSION/scheduler"
       ;;
     *)

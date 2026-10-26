@@ -10,7 +10,7 @@ YDB is a fault-tolerant distributed SQL DBMS. YDB provides high availability, ho
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.4.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.4.x`
 
 !!!
 
@@ -20,11 +20,11 @@ Support Time: `2023-01-30`
 
 ---
 
-DataCap uses configuration files by default [ydb.json](https://github.com/EdurtIO/datacap/blob/develop/server/src/main/etc/conf/plugins/jdbc/ydb.json)
+MetaForge uses configuration files by default [ydb.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/ydb.json)
 
 !!! note
 
-    If your YDB service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your YDB service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -52,7 +52,7 @@ DataCap uses configuration files by default [ydb.json](https://github.com/EdurtI
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
     - [x] 2.1.x
 

@@ -8,7 +8,7 @@ title: DolphinDB
 
 ---
 
-DataCap 整合 DolphinDB 模块，用于实现对 DolphinDB 数据源的数据操作。
+MetaForge 整合 DolphinDB 模块，用于实现对 DolphinDB 数据源的数据操作。
 
 在该模块中我们使用的是 `com.dolphindb` 依赖，版本为 `3.00.2.0`。
 
@@ -30,7 +30,7 @@ DataCap 整合 DolphinDB 模块，用于实现对 DolphinDB 数据源的数据�
 
 !!! note
 
-    如果需要使用该数据源，需要将 DataCap 服务升级到 >= `2025.1.1`
+    如果需要使用该数据源，需要将 MetaForge 服务升级到 >= `2025.1.1`
 
 !!!
 
@@ -41,7 +41,7 @@ DataCap 整合 DolphinDB 模块，用于实现对 DolphinDB 数据源的数据�
 
 !!! note
 
-    如果您的服务版本需要其他特殊配置，请参考修改配置文件并重启 DataCap 服务。
+    如果您的服务版本需要其他特殊配置，请参考修改配置文件并重启 MetaForge 服务。
 
 !!!
 

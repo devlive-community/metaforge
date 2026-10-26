@@ -3,22 +3,22 @@ If you are upgrading to 2024.03.4 from a different version, execute the followin
 # Если вы обновляетесь до версии 2024.03.4 с другой версии, выполните следующую инструкцию SQL
 # 如果您是通过其他版本升级到 2024.03.4, 请执行以下 SQL 语句
 
-USE `datacap`;
+USE `metaforge`;
 
-ALTER TABLE `datacap_dashboard`
+ALTER TABLE `metaforge_dashboard`
     ADD COLUMN `avatar` TEXT DEFAULT NULL;
 
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     ADD COLUMN `active` BOOLEAN DEFAULT TRUE;
 
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     ADD COLUMN `code` VARCHAR(200);
 
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     ADD COLUMN `name` VARCHAR(100) DEFAULT NULL;
 
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     ADD COLUMN `avatar` TEXT DEFAULT NULL;
 
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     ADD COLUMN `update_time` DATETIME DEFAULT NULL;

@@ -8,7 +8,7 @@ Real-time Platform for Analytics and Stream Processing Powered by High-performan
 
 ---
 
-DataCap integrates the DolphinDB module to implement data operations on DolphinDB data sources.
+MetaForge integrates the DolphinDB module to implement data operations on DolphinDB data sources.
 
 In this module we use the `com.dolphindb` dependency, version `3.00.2.0`.
 
@@ -30,7 +30,7 @@ The driver used is `com.dolphindb.jdbc.Driver`.
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `2025.1.1`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `2025.1.1`
 
 !!!
 
@@ -41,7 +41,7 @@ The driver used is `com.dolphindb.jdbc.Driver`.
 
 !!! note
 
-    If your service version requires other special configurations, please refer to Modifying the Configuration File and Restarting the DataCap Service.
+    If your service version requires other special configurations, please refer to Modifying the Configuration File and Restarting the MetaForge Service.
 
 !!!
 

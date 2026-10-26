@@ -10,7 +10,7 @@ ClickHouse® 是一个面向列的数据库管理系统（DBMS），用于在线
 
 !!! note
 
-    如果需要使用此数据源，则需要将 DataCap 服务升级到 >= `1.0.x`
+    如果需要使用此数据源，则需要将 MetaForge 服务升级到 >= `1.0.x`
 
 !!!
 
@@ -22,7 +22,7 @@ ClickHouse® 是一个面向列的数据库管理系统（DBMS），用于在线
 
 !!! note
 
-    如果您的 ClickHouse 服务版本需要其他特殊配置，请参考修改配置文件并重启 DataCap 服务。
+    如果您的 ClickHouse 服务版本需要其他特殊配置，请参考修改配置文件并重启 MetaForge 服务。
 
 !!!
 
@@ -55,7 +55,7 @@ ClickHouse® 是一个面向列的数据库管理系统（DBMS），用于在线
 
 !!! warning
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/EdurtIO/datacap/issues/new/choose)
+    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
 
     - [x] 19.x
     - [x] 20.x

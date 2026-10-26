@@ -2,7 +2,7 @@
 title: 命令行界面
 ---
 
-DataCap CLI 提供基于终端的交互式 shell 来运行查询。 CLI 是一个自动执行的 JAR 文件，这意味着它的行为就像普通的 UNIX 可执行文件一样。
+MetaForge CLI 提供基于终端的交互式 shell 来运行查询。 CLI 是一个自动执行的 JAR 文件，这意味着它的行为就像普通的 UNIX 可执行文件一样。
 
 ### 要求
 
@@ -10,7 +10,7 @@ DataCap CLI 提供基于终端的交互式 shell 来运行查询。 CLI 是一�
 
 CLI 需要路径上有可用的 Java 虚拟机。它可以与 Java 版本 8 及更高版本一起使用。
 
-CLI 使用基于 HTTP/HTTPS 的 DataCap 客户端 REST API 与系统进行通信。
+CLI 使用基于 HTTP/HTTPS 的 MetaForge 客户端 REST API 与系统进行通信。
 
 CLI 版本应与系统版本相同或更高。
 
@@ -18,14 +18,14 @@ CLI 版本应与系统版本相同或更高。
 
 ---
 
-下载 [datacap-client-cli-1.6.0.jar](https://repo1.maven.org/maven2/io/edurt/datacap/datacap-client-cli/1.6.0/datacap-client-cli-1.6.0.jar), 将其重命名为 datacap，使用 `chmod +x` 命令将其设置为可执行。
+下载 [metaforge-client-cli-1.6.0.jar](https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-client-cli/1.6.0/metaforge-client-cli-1.6.0.jar), 将其重命名为 metaforge，使用 `chmod +x` 命令将其设置为可执行。
 
 ### 运行 CLI
 
 ---
 
 ```bash
-./datacap
+./metaforge
 
 connect -h 127.0.0.1 -p 9096 -u username -P password
 ```

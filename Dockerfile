@@ -1,15 +1,15 @@
 FROM eclipse-temurin:11-jdk-focal
 
 LABEL maintainer="community@devlive.org" \
-      description="DataCap Server Image"
+      description="MetaForge Server Image"
 
-# Add datacap
+# Add metaforge
 RUN mkdir -p /opt/app
-ADD --chown=root:root dist/datacap-server-*.tar.gz /opt/app/
+ADD --chown=root:root dist/metaforge-server-*.tar.gz /opt/app/
 RUN cd /opt/app && \
-    mv datacap-server-* datacap
+    mv metaforge-server-* metaforge
 
-WORKDIR /opt/app/datacap
+WORKDIR /opt/app/metaforge
 
 EXPOSE 9096
 

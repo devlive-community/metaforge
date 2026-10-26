@@ -10,7 +10,7 @@ Apache Solr is a fast open source search platform built on Apache Lucene™, pro
 
 ---
 
-DataCap integrates the Apache Solr module to implement data operations on Apache Solr data sources.
+MetaForge integrates the Apache Solr module to implement data operations on Apache Solr data sources.
 
 In this module we use the `solr-solrj` dependency, version `6.0.0`.
 
@@ -32,7 +32,7 @@ The driver used is `org.apache.solr.client.solrj.io.sql.DriverImpl`.
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `2024.03.7`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `2024.03.7`
 
 Support time: `2024-06-25`
 
@@ -42,7 +42,7 @@ Support time: `2024-06-25`
 
 !!! note
 
-    If your service version requires other special configurations, please refer to Modifying the Configuration File and Restarting the DataCap Service.
+    If your service version requires other special configurations, please refer to Modifying the Configuration File and Restarting the MetaForge Service.
 
 === "Basic configuration"
 

@@ -13,7 +13,7 @@ Apache Pinot 是一个实时分布式 OLAP 数据存储，专为低延迟、高�
 
 !!! note
 
-    如果需要使用该数据源，需要将DataCap服务升级到 >= `1.10.x`
+    如果需要使用该数据源，需要将MetaForge服务升级到 >= `1.10.x`
 
 !!!
 
@@ -26,7 +26,7 @@ Apache Pinot 是一个实时分布式 OLAP 数据存储，专为低延迟、高�
 
 !!! note
 
-    如果您的服务版本需要其他特殊配置，请参考修改配置文件并重启DataCap服务。
+    如果您的服务版本需要其他特殊配置，请参考修改配置文件并重启MetaForge服务。
 
 !!!
 
@@ -50,7 +50,7 @@ Apache Pinot 是一个实时分布式 OLAP 数据存储，专为低延迟、高�
 
 !!! warning
 
-    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/datacap/issues/new/choose)
+    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
 
     - [x] `0.8.x`
 

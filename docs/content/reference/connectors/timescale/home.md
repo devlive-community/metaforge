@@ -12,7 +12,7 @@ Timescale 是一个用于时间序列、事件和分析的 PostgreSQL 数据平�
 
 !!! note
 
-    如果需要使用此数据源，则需要将 DataCap 服务升级到 >= `2024.02.1`
+    如果需要使用此数据源，则需要将 MetaForge 服务升级到 >= `2024.02.1`
 
 !!!
 
@@ -53,7 +53,7 @@ Timescale 是一个用于时间序列、事件和分析的 PostgreSQL 数据平�
 
 !!! warning
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/devlive-community/datacap/issues/new/choose)
+    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/devlive-community/metaforge/issues/new/choose)
 
     - [x] `all`
 

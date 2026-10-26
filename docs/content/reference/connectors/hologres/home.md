@@ -11,7 +11,7 @@ Hologres是兼容PostgreSQL的一站式实时数据仓库引擎，支持PB级数
 
 !!! note
 
-    如果你需要使用这个数据源, 您需要将 DataCap 服务升级到 >= `1.9.x`
+    如果你需要使用这个数据源, 您需要将 MetaForge 服务升级到 >= `1.9.x`
 
 !!!
 
@@ -23,7 +23,7 @@ Hologres是兼容PostgreSQL的一站式实时数据仓库引擎，支持PB级数
 
 !!! note
 
-    如果您的 Hologres 服务版本需要其他特殊配置，请参考修改配置文件并重启 DataCap 服务。
+    如果您的 Hologres 服务版本需要其他特殊配置，请参考修改配置文件并重启 MetaForge 服务。
 
 !!!
 
@@ -51,7 +51,7 @@ Hologres是兼容PostgreSQL的一站式实时数据仓库引擎，支持PB级数
 
 !!! warning
 
-    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/datacap/issues/new/choose)
+    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
 
     - [x] all
 

@@ -28,7 +28,7 @@ jobs:
         run: |
           cd docs
           pageforge build
-          echo 'datacap.devlive.org' > dist/CNAME
+          echo 'metaforge.devlive.org' > dist/CNAME
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

@@ -10,7 +10,7 @@ InfluxDB is an open source sequential database developed by InfluxData. It is wr
 
 ---
 
-DataCap integrates the InfluxDB module to implement data operations on InfluxDB data sources.
+MetaForge integrates the InfluxDB module to implement data operations on InfluxDB data sources.
 
 In this module we use the `influxdb-jdbc` dependency, version `0.2.6`.
 
@@ -34,7 +34,7 @@ For driver source code, please refer to: https://github.com/konikvranik/jdbc-inf
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `2024.03.7`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `2024.03.7`
 
 Support time: `2024-06-26`
 
@@ -45,7 +45,7 @@ Support time: `2024-06-26`
 
 !!! note
 
-    If your service version requires other special configurations, please refer to Modifying the Configuration File and Restarting the DataCap Service.
+    If your service version requires other special configurations, please refer to Modifying the Configuration File and Restarting the MetaForge Service.
 
 === "Basic configuration"
 

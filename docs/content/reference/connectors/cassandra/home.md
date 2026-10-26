@@ -13,7 +13,7 @@ Apache Cassandra® powers mission-critical deployments with improved performance
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.11.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.11.x`
 
 !!!
 
@@ -26,7 +26,7 @@ Support Time: `2023-06-07`
 
 !!! note
 
-    If your plugin service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your plugin service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -49,7 +49,7 @@ Support Time: `2023-06-07`
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
     - [x] `0.4.x`
 

@@ -1,4 +1,4 @@
-USE `datacap`;
+USE `metaforge`;
 
 UPDATE `template_sql`
 SET `system` = true

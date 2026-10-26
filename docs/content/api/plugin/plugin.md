@@ -20,7 +20,7 @@ title: 插件列表
         "loadTimestamp": 1732353263492,
         "loadTime": "2024-11-23 17:14:23",
         "type": "CONVERT",
-        "loaderName": "io.edurt.datacap.plugin.loader.PropertiesPluginLoader"
+        "loaderName": "org.devlive.metaforge.plugin.loader.PropertiesPluginLoader"
       }
     ]
     ```

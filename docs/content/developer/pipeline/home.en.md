@@ -2,7 +2,7 @@
 title: Pipeline
 ---
 
-In the DataCap system, users can configure the pipeline function at will and adjust it arbitrarily according to the version of the low-level executor. The system will automatically identify and compile the final configuration according to the configuration and send it to the executor.
+In the MetaForge system, users can configure the pipeline function at will and adjust it arbitrarily according to the version of the low-level executor. The system will automatically identify and compile the final configuration according to the configuration and send it to the executor.
 
 The configurations we can provide are:
 

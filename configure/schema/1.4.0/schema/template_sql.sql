@@ -1,4 +1,4 @@
-USE `datacap`;
+USE `metaforge`;
 
 ALTER TABLE `template_sql`
     MODIFY COLUMN `content` text,

@@ -2,14 +2,14 @@
 # Если вы обновляетесь до версии 1.18.0 с другой версии, выполните следующую инструкцию SQL
 # 如果您是通过其他版本升级到 1.18.0, 请执行以下 SQL 语句
 
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     ADD COLUMN `avatar_configure` LONGTEXT COMMENT 'avatar configure';
 
-UPDATE `datacap_user`
+UPDATE `metaforge_user`
 SET `avatar_configure` = '{}'
 WHERE `avatar_configure` IS NULL;
 
-UPDATE `datacap_user`
+UPDATE `metaforge_user`
 SET `editor_configure` = '{}'
 WHERE `editor_configure` IS NULL;
 
@@ -17,10 +17,10 @@ DELETE
 FROM `audit_plugin`
 WHERE `plugin_id` = 9;
 
-ALTER TABLE `datacap_pipeline`
+ALTER TABLE `metaforge_pipeline`
     ADD COLUMN `flow_configure` LONGTEXT COMMENT 'Flow configure';
 
-CREATE TABLE `datacap_report`
+CREATE TABLE `metaforge_report`
 (
     `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
     `name`        VARCHAR(255),
@@ -33,7 +33,7 @@ CREATE TABLE `datacap_report`
     `query`       LONGTEXT
 );
 
-CREATE TABLE `datacap_report_user_relation`
+CREATE TABLE `metaforge_report_user_relation`
 (
     `report_id` BIGINT,
     `user_id`   BIGINT
@@ -65,7 +65,7 @@ VALUES ('1', '17');
 INSERT INTO `role_menu_relation` (`role_id`, `menu_id`)
 VALUES ('2', '17');
 
-CREATE TABLE `datacap_dashboard`
+CREATE TABLE `metaforge_dashboard`
 (
     `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
     `name`        VARCHAR(255),
@@ -75,37 +75,37 @@ CREATE TABLE `datacap_dashboard`
     `configure`   LONGTEXT
 );
 
-CREATE TABLE `datacap_dashboard_user_relation`
+CREATE TABLE `metaforge_dashboard_user_relation`
 (
     `dashboard_id` BIGINT,
     `user_id`      BIGINT
 );
 
-CREATE TABLE `datacap_dashboard_report_relation`
+CREATE TABLE `metaforge_dashboard_report_relation`
 (
     `dashboard_id` BIGINT,
     `report_id`    BIGINT
 );
 
-CREATE TABLE `datacap_report_source_relation`
+CREATE TABLE `metaforge_report_source_relation`
 (
     `report_id` BIGINT,
     `source_id` BIGINT
 );
 
-UPDATE `datacap_metadata_database`
+UPDATE `metaforge_metadata_database`
 SET `active` = 1
 WHERE `active` IS NULL;
 
-UPDATE `datacap_metadata_table`
+UPDATE `metaforge_metadata_table`
 SET `active` = 1
 WHERE `active` IS NULL;
 
-UPDATE `datacap_metadata_column`
+UPDATE `metaforge_metadata_column`
 SET `active` = 1
 WHERE `active` IS NULL;
 
-CREATE TABLE `datacap_dataset`
+CREATE TABLE `metaforge_dataset`
 (
     `id`          BIGINT AUTO_INCREMENT PRIMARY KEY,
     `name`        VARCHAR(255),
@@ -119,19 +119,19 @@ CREATE TABLE `datacap_dataset`
     `table_name`  VARCHAR(255)
 );
 
-CREATE TABLE `datacap_dataset_user_relation`
+CREATE TABLE `metaforge_dataset_user_relation`
 (
     `dataset_id` BIGINT,
     `user_id`    BIGINT
 );
 
-CREATE TABLE `datacap_dataset_source_relation`
+CREATE TABLE `metaforge_dataset_source_relation`
 (
     `dataset_id` BIGINT,
     `source_id`  BIGINT
 );
 
-CREATE TABLE `datacap_dataset_column`
+CREATE TABLE `metaforge_dataset_column`
 (
     `id`              BIGINT AUTO_INCREMENT PRIMARY KEY,
     `name`            VARCHAR(255),
@@ -151,7 +151,7 @@ CREATE TABLE `datacap_dataset_column`
     `is_order_by_key` BOOLEAN DEFAULT FALSE
 );
 
-CREATE TABLE `datacap_dataset_column_relation`
+CREATE TABLE `metaforge_dataset_column_relation`
 (
     `dataset_id` BIGINT,
     `column_id`  BIGINT

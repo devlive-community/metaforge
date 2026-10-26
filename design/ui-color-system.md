@@ -1,4 +1,4 @@
-## DataCap UI Color System
+## MetaForge UI Color System
 
 ### 1. 品牌主色
 
@@ -15,7 +15,7 @@
 | `primary-800` | `#086247` | Pressed                  |
 | `primary-900` | `#064D39` | 深色强调                     |
 
-我建议真正作为 DataCap 的核心品牌色固定为：
+我建议真正作为 MetaForge 的核心品牌色固定为：
 
 ```css
 --primary: #0A8F67;
@@ -363,7 +363,7 @@ background:
 
 # 12. 整个 Body 的视觉基调
 
-最终我建议 DataCap 页面保持：
+最终我建议 MetaForge 页面保持：
 
 ```css
 background:
@@ -407,7 +407,7 @@ Placeholder
 
 ---
 
-# 14. DataCap 最终核心色板
+# 14. MetaForge 最终核心色板
 
 这是我建议你真正保存到项目里的核心 12 色：
 

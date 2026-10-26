@@ -1,0 +1,111 @@
+/**
+ * MetaForge UI design tokens.
+ *
+ * Tokens are plain CSS custom properties so any theme (light, dark or a
+ * fully custom user theme) is a variable swap - no rebuild, no CSS-in-JS.
+ *
+ * Layering:
+ *   1. tokens.css        semantic `--mf-*` variables (this file, light + dark)
+ *   2. metaforge-ui.css  Tailwind `@theme inline` mapping `--mf-*` to
+ *                        utility-generating tokens (`bg-primary`, ...)
+ *
+ * Components only ever use semantic utilities, never raw palette classes.
+ * Palette source: design/ui-color-system.md (MetaForge green identity).
+ */
+
+/* ------------------------------------------------------------------ */
+/* Light theme (default)                                               */
+/* ------------------------------------------------------------------ */
+:root {
+    /* brand */
+    --mf-color-primary: #0A8F67;
+    --mf-color-primary-hover: #087A59;
+    --mf-color-primary-active: #086247;
+    --mf-color-on-primary: #ffffff;
+
+    /* feedback */
+    --mf-color-success: #16A66A;
+    --mf-color-success-subtle: #EAF8F1;
+    --mf-color-warning: #E5A11A;
+    --mf-color-warning-subtle: #FFF8E6;
+    --mf-color-danger: #DC5656;
+    --mf-color-danger-subtle: #FFF1F1;
+    --mf-color-info: #3B82F6;
+    --mf-color-info-subtle: #EFF6FF;
+
+    /* surfaces & content */
+    --mf-color-page: #F6FAF9;
+    --mf-color-surface: #ffffff;
+    --mf-color-surface-hover: #F0F7F4;
+    --mf-color-surface-active: #DDF5EC;
+    --mf-color-content: #14201C;
+    --mf-color-content-secondary: #465A52;
+    --mf-color-content-tertiary: #7D8D87;
+    --mf-color-content-placeholder: #A8B3AF;
+    --mf-color-content-disabled: #BDC6C2;
+    --mf-color-content-inverse: #ffffff;
+    --mf-color-line: #E3EAE7;
+    --mf-color-line-strong: #C9D8D2;
+    --mf-color-overlay: rgb(20 32 28 / 0.45);
+
+    /* radii */
+    --mf-radius-sm: 4px;
+    --mf-radius-md: 8px;
+    --mf-radius-lg: 12px;
+    --mf-radius-full: 9999px;
+
+    /* elevation */
+    --mf-shadow-sm: 0 1px 2px rgb(15 23 42 / 0.04);
+    --mf-shadow-md: 0 1px 2px rgb(15 23 42 / 0.02), 0 4px 16px rgb(15 23 42 / 0.035);
+    --mf-shadow-lg: 0 4px 10px rgb(15 23 42 / 0.03), 0 12px 30px rgb(15 23 42 / 0.05);
+
+    /* motion */
+    --mf-duration-fast: 120ms;
+    --mf-duration-base: 180ms;
+    --mf-duration-slow: 280ms;
+    --mf-easing: cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* typography */
+    --mf-font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI',
+        'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    --mf-font-size-sm: 12px;
+    --mf-font-size-md: 14px;
+    --mf-font-size-lg: 16px;
+}
+
+/* ------------------------------------------------------------------ */
+/* Dark theme                                                          */
+/* ------------------------------------------------------------------ */
+[data-theme='dark'] {
+    --mf-color-primary: #18A779;
+    --mf-color-primary-hover: #49C399;
+    --mf-color-primary-active: #12805E;
+    --mf-color-on-primary: #ffffff;
+
+    --mf-color-success: #3FBF8A;
+    --mf-color-success-subtle: rgb(63 191 138 / 0.14);
+    --mf-color-warning: #E8B84A;
+    --mf-color-warning-subtle: rgb(232 184 74 / 0.14);
+    --mf-color-danger: #E57272;
+    --mf-color-danger-subtle: rgb(229 114 114 / 0.14);
+    --mf-color-info: #6CA5F8;
+    --mf-color-info-subtle: rgb(108 165 248 / 0.14);
+
+    --mf-color-page: #0C1412;
+    --mf-color-surface: #111B18;
+    --mf-color-surface-hover: #1A2823;
+    --mf-color-surface-active: #1F3A30;
+    --mf-color-content: #E8F0ED;
+    --mf-color-content-secondary: #9FB2AB;
+    --mf-color-content-tertiary: #6F817A;
+    --mf-color-content-placeholder: #6F817A;
+    --mf-color-content-disabled: #4C5A55;
+    --mf-color-content-inverse: #0C1412;
+    --mf-color-line: #22302B;
+    --mf-color-line-strong: #33473F;
+    --mf-color-overlay: rgb(0 8 5 / 0.6);
+
+    --mf-shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+    --mf-shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.45), 0 2px 4px -2px rgb(0 0 0 / 0.35);
+    --mf-shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.4);
+}

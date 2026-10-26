@@ -49,36 +49,36 @@ mongo_*.xml
 **/dependency-reduced-pom.xml
 shaded/*/dependency-reduced-pom.xml
 
-# datacap #
-core/datacap-server/src/main/resources/logback.xml
+# metaforge #
+core/metaforge-server/src/main/resources/logback.xml
 cache/
 config/
 docs/site/
 data/
-!parser/datacap-parser-trino/src/main/java/io/edurt/datacap/parser/node/
+!parser/metaforge-parser-trino/src/main/java/org/devlive/metaforge/parser/node/
 depcheck-output.json
 
 !configure/schema/*/data/
 
 # Skip sql parser #
-parser/datacap-parser-mysql/src/main/java
-parser/datacap-parser-trino/src/main/java/*.tokens
-parser/datacap-parser-trino/src/main/java/io/edurt/datacap/parser/antlr
-core/datacap-parser/src/main/java/*.tokens
-core/datacap-parser/src/main/java/io/edurt/datacap/sql/parser/*.java
-core/datacap-parser/src/main/java/io/edurt/datacap/sql/parser/*.interp
-!core/datacap-parser/src/main/java/io/edurt/datacap/sql/node
+parser/metaforge-parser-mysql/src/main/java
+parser/metaforge-parser-trino/src/main/java/*.tokens
+parser/metaforge-parser-trino/src/main/java/org/devlive/metaforge/parser/antlr
+core/metaforge-parser/src/main/java/*.tokens
+core/metaforge-parser/src/main/java/org/devlive/metaforge/sql/parser/*.java
+core/metaforge-parser/src/main/java/org/devlive/metaforge/sql/parser/*.interp
+!core/metaforge-parser/src/main/java/org/devlive/metaforge/sql/node
 
 # Skip convert #
-convert/datacap-convert-txt/*.txt
-convert/datacap-convert-json/*.json
-convert/datacap-convert-none/*.none
-convert/datacap-convert-csv/*.csv
-convert/datacap-convert-xml/*.xml
+convert/metaforge-convert-txt/*.txt
+convert/metaforge-convert-json/*.json
+convert/metaforge-convert-none/*.none
+convert/metaforge-convert-csv/*.csv
+convert/metaforge-convert-xml/*.xml
 
 # Skip ui #
-core/datacap-ui/depcheck-output.json
-core/datacap-ui/yarn.lock
+core/metaforge-ui/depcheck-output.json
+core/metaforge-ui/yarn.lock
 
 # Qshell #
 .qshell/*
@@ -86,4 +86,8 @@ core/datacap-ui/yarn.lock
 .ossutil_checkpoint
 
 # Test #
-test/datacap-test-convert/*convertservice
+test/metaforge-test-convert/*convertservice
+
+# Local assistant memory (never commit)
+.claude/
+.Codex/

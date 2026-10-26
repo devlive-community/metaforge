@@ -31,7 +31,7 @@ jobs:
         with:
           maven_profiles: 'deploy'
           maven_goals_phases: 'clean deploy'
-          maven_args: "-DskipTests -Dspotbugs.skip -Dcheckstyle.skip -pl '!test/datacap-test-condor,!test/datacap-test-convert,!test/datacap-test-core,!test/datacap-test-lib,!test/datacap-test-executor,!test/datacap-test-scheduler,!test/datacap-test-fs,!test/datacap-test-driver,!test/datacap-test-parser,!test/datacap-test-plugin'"
+          maven_args: "-DskipTests -Dspotbugs.skip -Dcheckstyle.skip -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'"
           gpg_private_key: ${{ secrets.GPG_SECRET }}
           gpg_passphrase: ${{ secrets.GPG_PASSWORD }}
           nexus_username: ${{ secrets.OSSRH_USERNAME }}

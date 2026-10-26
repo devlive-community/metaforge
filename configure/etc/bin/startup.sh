@@ -2,7 +2,7 @@
 
 HOME=$(pwd)
 JAVA_HOME=${JAVA_HOME:-/opt/jdk}
-APPLICATION_NAME='io.edurt.datacap.server.DataCap'
+APPLICATION_NAME='org.devlive.metaforge.server.MetaForge'
 APPLICATION_PID=
 
 check_java_version() {

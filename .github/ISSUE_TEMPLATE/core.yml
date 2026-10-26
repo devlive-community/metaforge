@@ -10,7 +10,7 @@ body:
       label: Contribution guidelines
       description: Please read the contribution guidelines before proceeding.
       options:
-        - label: I've read the [contribution guidelines](https://github.com/devlive-community/datacap/blob/dev/CONTRIBUTING.md) and wholeheartedly agree
+        - label: I've read the [contribution guidelines](https://github.com/devlive-community/metaforge/blob/dev/CONTRIBUTING.md) and wholeheartedly agree
           required: true
   - type: checkboxes
     attributes:

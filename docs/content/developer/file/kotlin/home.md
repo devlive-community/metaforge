@@ -2,7 +2,7 @@
 title: 自定义 File 转换器
 ---
 
-DataCap 支持自定义 File 转换器，使用者可以编写自己的文件转换器集成到 DataCap 中。该文档主要讲解如何快速集成一个文件转换器到 DataCap 系统中。
+MetaForge 支持自定义 File 转换器，使用者可以编写自己的文件转换器集成到 MetaForge 中。该文档主要讲解如何快速集成一个文件转换器到 MetaForge 系统中。
 
 该模块我们主要使用到的是 `file` 模块内的代码，我们本文使用 `json` 来做示例。
 
@@ -27,8 +27,8 @@ DataCap 支持自定义 File 转换器，使用者可以编写自己的文件转
         <artifactId>logback-classic</artifactId>
     </dependency>
     <dependency>
-        <groupId>io.edurt.datacap</groupId>
-        <artifactId>datacap-file-spi</artifactId>
+        <groupId>org.devlive.metaforge</groupId>
+        <artifactId>metaforge-file-spi</artifactId>
     </dependency>
     <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
@@ -46,18 +46,18 @@ DataCap 支持自定义 File 转换器，使用者可以编写自己的文件转
 </build>
 ```
 
-我们添加 `datacap-file-spi` 依赖，这样我们就可以实现集成文件转换器。
+我们添加 `metaforge-file-spi` 依赖，这样我们就可以实现集成文件转换器。
 
 ### `Json Module` 加载器
 
 ---
 
 ```kotlin
-package io.edurt.datacap.convert.json
+package org.devlive.metaforge.convert.json
 
 import com.google.inject.multibindings.Multibinder
-import io.edurt.datacap.convert.File
-import io.edurt.datacap.convert.FileModule
+import org.devlive.metaforge.convert.File
+import org.devlive.metaforge.convert.FileModule
 
 class JsonModule : FileModule()
 {
@@ -75,7 +75,7 @@ class JsonModule : FileModule()
 ---
 
 ```kotlin
-package io.edurt.datacap.convert.json
+package org.devlive.metaforge.convert.json
 
 import com.fasterxml.jackson.core.JsonEncoding
 import com.fasterxml.jackson.core.JsonFactory
@@ -83,11 +83,11 @@ import com.fasterxml.jackson.core.JsonGenerationException
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
-import io.edurt.datacap.common.utils.DateUtils
-import io.edurt.datacap.convert.File
-import io.edurt.datacap.convert.FileConvert.formatFile
-import io.edurt.datacap.convert.model.FileRequest
-import io.edurt.datacap.convert.model.FileResponse
+import org.devlive.metaforge.common.utils.DateUtils
+import org.devlive.metaforge.convert.File
+import org.devlive.metaforge.convert.FileConvert.formatFile
+import org.devlive.metaforge.convert.model.FileRequest
+import org.devlive.metaforge.convert.model.FileResponse
 import org.slf4j.LoggerFactory.getLogger
 import java.io.BufferedReader
 import java.io.IOException
@@ -300,18 +300,18 @@ class JsonFile : File
 
 ---
 
-在 `resources` 源目录下添加 `META-INF` 和 `services` 目录，格式为 `resources/META-INF/services`，创建 `io.edurt.datacap.convert.FileModule` 文件，内容如下
+在 `resources` 源目录下添加 `META-INF` 和 `services` 目录，格式为 `resources/META-INF/services`，创建 `org.devlive.metaforge.convert.FileModule` 文件，内容如下
 
 ```kotlin
-io.edurt.datacap.convert.json.JsonModule
+org.devlive.metaforge.convert.json.JsonModule
 ```
 
 > 通过以上内容我们实现了 Json 文件转换器的支持。我们只需要在要使用 Json 文件转换器的地方引用该模块即可。比如我们在 `server` 模块中使用到该模块，则在 `server/pom.xml` 文件中增加以下内容
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-file-json</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-file-json</artifactId>
     <version>${project.version}</version>
 </dependency>
 ```
@@ -321,14 +321,14 @@ io.edurt.datacap.convert.json.JsonModule
 ---
 
 ```kotlin
-package io.edurt.datacap.convert.json
+package org.devlive.metaforge.convert.json
 
 import com.google.inject.Guice.createInjector
 import com.google.inject.Injector
 import com.google.inject.Key
 import com.google.inject.TypeLiteral
-import io.edurt.datacap.convert.File
-import io.edurt.datacap.convert.FileManager
+import org.devlive.metaforge.convert.File
+import org.devlive.metaforge.convert.FileManager
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -355,13 +355,13 @@ class JsonModuleTest
 ---
 
 ```kotlin
-package io.edurt.datacap.convert.json
+package org.devlive.metaforge.convert.json
 
 import com.google.inject.Guice.createInjector
 import com.google.inject.Injector
-import io.edurt.datacap.convert.FileFilter
-import io.edurt.datacap.convert.FileManager
-import io.edurt.datacap.convert.model.FileRequest
+import org.devlive.metaforge.convert.FileFilter
+import org.devlive.metaforge.convert.FileManager
+import org.devlive.metaforge.convert.model.FileRequest
 import org.junit.Before
 import org.junit.Test
 import org.slf4j.LoggerFactory.getLogger

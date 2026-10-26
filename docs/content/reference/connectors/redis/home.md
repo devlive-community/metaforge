@@ -9,7 +9,7 @@ The open source, in-memory data store used by millions of developers as a databa
 #### Environment
 
 !!! note
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.3.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.3.x`
 
 !!!
 
@@ -19,11 +19,11 @@ Support Time: `2022-12-01`
 
 ---
 
-DataCap uses configuration files by default [redis.json](https://github.com/EdurtIO/datacap/blob/develop/server/src/main/etc/conf/plugins/native/redis.json)
+MetaForge uses configuration files by default [redis.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/native/redis.json)
 
 !!! note
 
-    If your Redis service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your Redis service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -46,7 +46,7 @@ DataCap uses configuration files by default [redis.json](https://github.com/Edur
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
     - [x] 6.x
     - [x] 7.x

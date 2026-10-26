@@ -1,2 +1,2 @@
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     ADD COLUMN `editor_configure` TEXT NULL;

@@ -2,7 +2,7 @@
 title: SDK 集成
 ---
 
-本文章主要用来介绍如何集成 datacap 提供的 plugin 插件快速访问对应数据源。在本文中我们使用 `datacap-jdbc-mysql` SDK 来访问 MySQL 数据源。
+本文章主要用来介绍如何集成 metaforge 提供的 plugin 插件快速访问对应数据源。在本文中我们使用 `metaforge-jdbc-mysql` SDK 来访问 MySQL 数据源。
 
 ### 准备工作
 
@@ -14,8 +14,8 @@ title: SDK 集成
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-jdbc-mysql</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-jdbc-mysql</artifactId>
     <version>VERSION</version>
 </dependency>
 ```
@@ -23,7 +23,7 @@ title: SDK 集成
 - Gradle
 
 ```xml
-implementation group: 'io.edurt.datacap', name: 'datacap-jdbc-mysql', version: 'VERSION'
+implementation group: 'org.devlive.metaforge', name: 'metaforge-jdbc-mysql', version: 'VERSION'
 ```
 
 !!! danger
@@ -58,5 +58,5 @@ response.columns.forEach(item -> {
 
 !!! note
 
-    请注意 `datacap-jdbc-mysql` 插件仅支持 MySQL 数据源，如果需要其他 SDK 请使用其他的插件。
+    请注意 `metaforge-jdbc-mysql` 插件仅支持 MySQL 数据源，如果需要其他 SDK 请使用其他的插件。
 !!!

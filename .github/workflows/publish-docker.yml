@@ -5,7 +5,7 @@ on:
     types: [ published ]
 
 env:
-  APP_NAME: datacap
+  APP_NAME: metaforge
   GITHUB_REGISTRY: ghcr.io
   APP_GITHUB_GROUP: devlive-community
   APP_DOCKER_GROUP: devliveorg
@@ -45,7 +45,7 @@ jobs:
         with:
           path: |
             ./Dockerfile
-            ./dist/datacap-server-${{ steps.apply_version.outputs.APP_VERSION }}-bin.tar.gz
+            ./dist/metaforge-server-${{ steps.apply_version.outputs.APP_VERSION }}-bin.tar.gz
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}
 
@@ -62,7 +62,7 @@ jobs:
         with:
           path: |
             ./Dockerfile
-            ./dist/datacap-server-${{ needs.before-compile.outputs.APP_VERSION }}-bin.tar.gz
+            ./dist/metaforge-server-${{ needs.before-compile.outputs.APP_VERSION }}-bin.tar.gz
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}
 
@@ -102,7 +102,7 @@ jobs:
         with:
           path: |
             ./Dockerfile
-            ./dist/datacap-server-${{ needs.before-compile.outputs.APP_VERSION }}-bin.tar.gz
+            ./dist/metaforge-server-${{ needs.before-compile.outputs.APP_VERSION }}-bin.tar.gz
           key: ${{ runner.os }}-build-${{ env.cache-name }}
           restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}
 

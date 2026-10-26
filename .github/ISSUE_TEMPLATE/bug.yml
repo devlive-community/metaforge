@@ -9,7 +9,7 @@ body:
       label: Contribution guidelines
       description: Please read the contribution guidelines before proceeding.
       options:
-        - label: I've read the [contribution guidelines](https://github.com/devlive-community/datacap/blob/dev/CONTRIBUTING.md) and wholeheartedly agree
+        - label: I've read the [contribution guidelines](https://github.com/devlive-community/metaforge/blob/dev/CONTRIBUTING.md) and wholeheartedly agree
           required: true
   - type: checkboxes
     attributes:
@@ -73,7 +73,7 @@ body:
       label: Configuration
       description: Please provide a minimal (!) `application.properties` to reproduce the bug.
       placeholder: |-
-        site_name: DataCap Website
+        site_name: MetaForge Website
         site_url: https://databap.edurt.io
       render: yaml
   - type: textarea

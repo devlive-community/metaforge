@@ -70,9 +70,9 @@ The URI import method is relatively simple. We can import data in batches by spe
 The URI address format provided by the software by default is
 
 ```sql
-(http|https)://datacap.edurt.io/resources/functions/plugin/keywords.txt
-(http|https)://datacap.edurt.io/resources/functions/plugin/operators.txt
-(http|https)://datacap.edurt.io/resources/functions/plugin/functions.txt
+(http|https)://metaforge.edurt.io/resources/functions/plugin/keywords.txt
+(http|https)://metaforge.edurt.io/resources/functions/plugin/operators.txt
+(http|https)://metaforge.edurt.io/resources/functions/plugin/functions.txt
 ```
 
 We only need to replace the value of plugin in the address with the name of the plugin that needs to be imported.

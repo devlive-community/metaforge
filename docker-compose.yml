@@ -5,11 +5,11 @@ services:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: 12345678
-      MYSQL_DATABASE: datacap
+      MYSQL_DATABASE: metaforge
     ports:
       - "13306:3306"
     volumes:
-      - ./configure/schema/datacap.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./configure/schema/metaforge.sql:/docker-entrypoint-initdb.d/schema.sql
       - mysql_data:/var/lib/mysql
 
   app-clickhouse:
@@ -18,15 +18,15 @@ services:
     ports:
       - "8123:8123"
     environment:
-      - CLICKHOUSE_DB=datacap
+      - CLICKHOUSE_DB=metaforge
       - CLICKHOUSE_USER=default
       - CLICKHOUSE_PASSWORD=da39a3ee5e6b4b0d3255bfef95601890afd80709
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
 
-  app-datacap:
-    image: devliveorg/datacap:latest
+  app-metaforge:
+    image: devliveorg/metaforge:latest
     restart: always
     ports:
       - "9099:9096"
@@ -34,11 +34,11 @@ services:
       - app-mysql
       - app-clickhouse
     volumes:
-      - ./configure/docker/application.properties:/opt/app/datacap/configure/application.properties
-      - datacap_data:/opt/app/datacap/data
+      - ./configure/docker/application.properties:/opt/app/metaforge/configure/application.properties
+      - metaforge_data:/opt/app/metaforge/data
 
 volumes:
   mysql_data:
   clickhouse_data:
   clickhouse_logs:
-  datacap_data:
+  metaforge_data:

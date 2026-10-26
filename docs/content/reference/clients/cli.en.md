@@ -2,7 +2,7 @@
 title: Command line interface
 ---
 
-The DataCap CLI provides a terminal-based, interactive shell for running queries. The CLI is a self-executing JAR file, which means it acts like a normal UNIX executable.
+The MetaForge CLI provides a terminal-based, interactive shell for running queries. The CLI is a self-executing JAR file, which means it acts like a normal UNIX executable.
 
 ### Requirements
 
@@ -10,7 +10,7 @@ The DataCap CLI provides a terminal-based, interactive shell for running queries
 
 The CLI requires a Java virtual machine available on the path. It can be used with Java version 8 and higher.
 
-The CLI uses the DataCap client REST API over HTTP/HTTPS to communicate with the system.
+The CLI uses the MetaForge client REST API over HTTP/HTTPS to communicate with the system.
 
 The CLI version should be identical to the version of system, or newer.
 
@@ -18,14 +18,14 @@ The CLI version should be identical to the version of system, or newer.
 
 ---
 
-Download [datacap-client-cli-1.6.0.jar](https://repo1.maven.org/maven2/io/edurt/datacap/datacap-client-cli/1.6.0/datacap-client-cli-1.6.0.jar), rename it to datacap, make it executable with `chmod +x`.
+Download [metaforge-client-cli-1.6.0.jar](https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-client-cli/1.6.0/metaforge-client-cli-1.6.0.jar), rename it to metaforge, make it executable with `chmod +x`.
 
 ### Running the CLI
 
 ---
 
 ```bash
-./datacap
+./metaforge
 
 connect -h 127.0.0.1 -p 9096 -u username -P password
 ```

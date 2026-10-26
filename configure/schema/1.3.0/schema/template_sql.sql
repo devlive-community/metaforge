@@ -1,4 +1,4 @@
-USE datacap;
+USE metaforge;
 
 DROP TABLE IF EXISTS `template_sql`;
 CREATE TABLE `template_sql`

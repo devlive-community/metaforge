@@ -1,37 +1,37 @@
 <div align="center">
 
-<img width=68 height=65 src="core/datacap-ui/public/static/images/logo.png" />
+<img width=68 height=65 src="core/metaforge-web/public/static/images/logo.png" />
 
-# DataCap
+# MetaForge
 
 ---
 
-![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FEdurtIO%2Fdatacap.git&countColor=%23263759&style=flat&labelStyle=none)
-[![](https://tokei.rs/b1/github/EdurtIO/datacap)](https://github.com/EdurtIO/datacap)
-![version](https://img.shields.io/github/v/release/EdurtIO/datacap.svg)
+![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FEdurtIO%2Fmetaforge.git&countColor=%23263759&style=flat&labelStyle=none)
+[![](https://tokei.rs/b1/github/EdurtIO/metaforge)](https://github.com/EdurtIO/metaforge)
+![version](https://img.shields.io/github/v/release/EdurtIO/metaforge.svg)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-![GitHub Release Date](https://img.shields.io/github/release-date/EdurtIO/datacap?style=flat-square)
+![GitHub Release Date](https://img.shields.io/github/release-date/EdurtIO/metaforge?style=flat-square)
 
-![Docker Automated build](https://img.shields.io/docker/automated/devliveorg/datacap)
-![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/devliveorg/datacap?style=flat-square)
-![Docker Pulls](https://img.shields.io/docker/pulls/devliveorg/datacap?style=flat-square)
+![Docker Automated build](https://img.shields.io/docker/automated/devliveorg/metaforge)
+![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/devliveorg/metaforge?style=flat-square)
+![Docker Pulls](https://img.shields.io/docker/pulls/devliveorg/metaforge?style=flat-square)
 
-![GitHub commit activity](https://img.shields.io/github/commit-activity/y/EdurtIO/datacap?style=flat-square)
-![GitHub contributors](https://img.shields.io/github/contributors-anon/EdurtIO/datacap?style=flat-square)
-![GitHub last commit](https://img.shields.io/github/last-commit/EdurtIO/datacap?style=flat-square)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/EdurtIO/metaforge?style=flat-square)
+![GitHub contributors](https://img.shields.io/github/contributors-anon/EdurtIO/metaforge?style=flat-square)
+![GitHub last commit](https://img.shields.io/github/last-commit/EdurtIO/metaforge?style=flat-square)
 
 </div>
 
-### 什么是 datacap?
+### 什么是 metaforge?
 
 ---
 
-DataCap 是用于数据转换、集成和可视化的集成软件。支持多种数据源、文件类型、大数据相关数据库、关系数据库、NoSQL数据库等。通过软件可以实现多数据源的管理，对源下的数据进行各种操作转换、制作数据图表、监控数据源和其他功能。
+MetaForge 是用于数据转换、集成和可视化的集成软件。支持多种数据源、文件类型、大数据相关数据库、关系数据库、NoSQL数据库等。通过软件可以实现多数据源的管理，对源下的数据进行各种操作转换、制作数据图表、监控数据源和其他功能。
 
 |    用户名    | 密码          |
 |:---------:|:------------|
-| `datacap` | `123456789` |
+| `metaforge` | `123456789` |
 |  `admin`  | `12345678`  |
 
 ### 要求
@@ -49,7 +49,7 @@ chmod 700 .git/hooks/*
 
 ---
 
-DataCap 可以从任何使用 SQL 的数据存储或数据引擎（ClickHouse、MySQL、Presto 等）查询数据。
+MetaForge 可以从任何使用 SQL 的数据存储或数据引擎（ClickHouse、MySQL、Presto 等）查询数据。
 
 以下是一些受支持的主要数据库解决方案：
 
@@ -115,13 +115,13 @@ DataCap 可以从任何使用 SQL 的数据存储或数据引擎（ClickHouse、
 
 ---
 
-[![Star History Chart](https://star-history.dera.page/svg?repos=devlive-community/datacap&type=Timeline)](https://star-history.dera.page/#devlive-community/datacap&Timeline)
+[![Star History Chart](https://star-history.dera.page/svg?repos=devlive-community/metaforge&type=Timeline)](https://star-history.dera.page/#devlive-community/metaforge&Timeline)
 
 ## 加入我们
 
 ---
 
-查看 [Issues 950](https://github.com/devlive-community/datacap/issues/950)
+查看 [Issues 950](https://github.com/devlive-community/metaforge/issues/950)
 
 ## 鸣谢
 
@@ -129,18 +129,18 @@ DataCap 可以从任何使用 SQL 的数据存储或数据引擎（ClickHouse、
 
 [![Jetbrains](https://img.shields.io/badge/Development-Jetbrains-brightgreen?style=flat-square)](https://www.jetbrains.com/)
 [![App Store](https://img.shields.io/badge/App%20Store-Rainbond-brightgreen?style=flat-square)](https://www.rainbond.com/)
-[![View UI Plus](https://img.shields.io/badge/UI-View%20UI%20Plus-brightgreen?style=flat-square)](https://www.iviewui.com/view-ui-plus)
+[![Vue 3](https://img.shields.io/badge/UI-Vue%203%20%2B%20Tailwind-brightgreen?style=flat-square)](https://vuejs.org/)
 
 ## 安装和配置
 
 ---
 
-[DataCap 的扩展文档](https://datacap.devlive.org)
+[MetaForge 的扩展文档](https://metaforge.devlive.org)
 
 ## 贡献者
 
 ---
 
-<a href="https://github.com/EdurtIO/datacap/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=EdurtIO/datacap" />
+<a href="https://github.com/EdurtIO/metaforge/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=EdurtIO/metaforge" />
 </a>

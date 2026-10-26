@@ -12,7 +12,7 @@ MatrixOne 是一款面向未来的超融合云和边缘原生 DBMS，通过简�
 
 !!! note
 
-    如果需要使用此数据源，则需要将 DataCap 服务升级到 >= `2024.01.1`
+    如果需要使用此数据源，则需要将 MetaForge 服务升级到 >= `2024.01.1`
 
 !!!
 
@@ -59,7 +59,7 @@ MatrixOne 是一款面向未来的超融合云和边缘原生 DBMS，通过简�
 
 !!! warning
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/EdurtIO/datacap/issues/new/choose)
+    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
 
     - [x] `1.1.0`
 

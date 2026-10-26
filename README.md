@@ -1,37 +1,37 @@
 <div align="center">
 
-<img width=68 height=65 src="core/datacap-ui/public/static/images/logo.png" />
+<img width=68 height=65 src="core/metaforge-web/public/static/images/logo.png" />
 
-# DataCap
+# MetaForge
 
 ---
 
-![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FEdurtIO%2Fdatacap.git&countColor=%23263759&style=flat&labelStyle=none)
-[![](https://tokei.rs/b1/github/EdurtIO/datacap)](https://github.com/EdurtIO/datacap)
-![version](https://img.shields.io/github/v/release/EdurtIO/datacap.svg)
+![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FEdurtIO%2Fmetaforge.git&countColor=%23263759&style=flat&labelStyle=none)
+[![](https://tokei.rs/b1/github/EdurtIO/metaforge)](https://github.com/EdurtIO/metaforge)
+![version](https://img.shields.io/github/v/release/EdurtIO/metaforge.svg)
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-![GitHub Release Date](https://img.shields.io/github/release-date/EdurtIO/datacap?style=flat-square)
+![GitHub Release Date](https://img.shields.io/github/release-date/EdurtIO/metaforge?style=flat-square)
 
-![Docker Automated build](https://img.shields.io/docker/automated/devliveorg/datacap)
-![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/devliveorg/datacap?style=flat-square)
-![Docker Pulls](https://img.shields.io/docker/pulls/devliveorg/datacap?style=flat-square)
+![Docker Automated build](https://img.shields.io/docker/automated/devliveorg/metaforge)
+![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/devliveorg/metaforge?style=flat-square)
+![Docker Pulls](https://img.shields.io/docker/pulls/devliveorg/metaforge?style=flat-square)
 
-![GitHub commit activity](https://img.shields.io/github/commit-activity/y/EdurtIO/datacap?style=flat-square)
-![GitHub contributors](https://img.shields.io/github/contributors-anon/EdurtIO/datacap?style=flat-square)
-![GitHub last commit](https://img.shields.io/github/last-commit/EdurtIO/datacap?style=flat-square)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/EdurtIO/metaforge?style=flat-square)
+![GitHub contributors](https://img.shields.io/github/contributors-anon/EdurtIO/metaforge?style=flat-square)
+![GitHub last commit](https://img.shields.io/github/last-commit/EdurtIO/metaforge?style=flat-square)
 
 </div>
 
-### What is datacap?
+### What is metaforge?
 
 ---
 
-DataCap is integrated software for data transformation, integration, and visualization. Support a variety of data sources, file types, big data related database, relational database, NoSQL database, etc. Through the software can realize the management of multiple data sources, the data under the source of various operations conversion, making data charts, monitoring data sources and other functions.
+MetaForge is integrated software for data transformation, integration, and visualization. Support a variety of data sources, file types, big data related database, relational database, NoSQL database, etc. Through the software can realize the management of multiple data sources, the data under the source of various operations conversion, making data charts, monitoring data sources and other functions.
 
 | Username  | Password    |
 |:---------:|:------------|
-| `datacap` | `123456789` |
+| `metaforge` | `123456789` |
 |  `admin`  | `12345678`  |
 
 ### Require
@@ -49,7 +49,7 @@ chmod 700 .git/hooks/*
 
 ---
 
-DataCap can query data from any SQL-speaking datastore or data engine (ClickHouse, MySQL, Presto and more).
+MetaForge can query data from any SQL-speaking datastore or data engine (ClickHouse, MySQL, Presto and more).
 
 Here are some of the major database solutions that are supported:
 
@@ -115,13 +115,13 @@ Here are some of the major database solutions that are supported:
 
 ---
 
-[![Star History Chart](https://star-history.dera.page/svg?repos=devlive-community/datacap&type=Timeline)](https://star-history.dera.page/#devlive-community/datacap&Timeline)
+[![Star History Chart](https://star-history.dera.page/svg?repos=devlive-community/metaforge&type=Timeline)](https://star-history.dera.page/#devlive-community/metaforge&Timeline)
 
 ## Join Us
 
 ---
 
-Please visit [Issues 950](https://github.com/devlive-community/datacap/issues/950)
+Please visit [Issues 950](https://github.com/devlive-community/metaforge/issues/950)
 
 ## Thank you
 
@@ -129,18 +129,18 @@ Please visit [Issues 950](https://github.com/devlive-community/datacap/issues/95
 
 [![Jetbrains](https://img.shields.io/badge/Development-Jetbrains-brightgreen?style=flat-square)](https://www.jetbrains.com/)
 [![App Store](https://img.shields.io/badge/App%20Store-Rainbond-brightgreen?style=flat-square)](https://www.rainbond.com/)
-[![View UI Plus](https://img.shields.io/badge/UI-View%20UI%20Plus-brightgreen?style=flat-square)](https://www.iviewui.com/view-ui-plus)
+[![Vue 3](https://img.shields.io/badge/UI-Vue%203%20%2B%20Tailwind-brightgreen?style=flat-square)](https://vuejs.org/)
 
 ## Installation and Configuration
 
 ---
 
-[Extended documentation for DataCap](https://datacap.devlive.org)
+[Extended documentation for MetaForge](https://metaforge.devlive.org)
 
 ## Contributors
 
 ---
 
-<a href="https://github.com/EdurtIO/datacap/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=EdurtIO/datacap" />
+<a href="https://github.com/EdurtIO/metaforge/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=EdurtIO/metaforge" />
 </a>

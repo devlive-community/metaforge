@@ -2,7 +2,7 @@
 title: Docker Compose 部署
 ---
 
-DataCap 项目提供 Docker Compose 方式部署，通过下载 [docker-compose.yml](https://github.com/devlive-community/datacap/blob/dev/docker-compose.yml) 文件，或者使用以下代码进行服务部署。
+MetaForge 项目提供 Docker Compose 方式部署，通过下载 [docker-compose.yml](https://github.com/devlive-community/metaforge/blob/dev/docker-compose.yml) 文件，或者使用以下代码进行服务部署。
 
 #### 简化版
 
@@ -18,21 +18,21 @@ services:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: 12345678
-      MYSQL_DATABASE: datacap
+      MYSQL_DATABASE: metaforge
     ports:
       - "3306:3306"
     volumes:
-      - ./configure/schema/datacap.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./configure/schema/metaforge.sql:/docker-entrypoint-initdb.d/schema.sql
 
-  app-datacap:
-    image: devliveorg/datacap:latest
+  app-metaforge:
+    image: devliveorg/metaforge:latest
     restart: always
     ports:
       - "9099:9099"
     depends_on:
       - app-mysql
     volumes:
-      - ./configure/docker/application.properties:/opt/app/datacap/configure/application.properties
+      - ./configure/docker/application.properties:/opt/app/metaforge/configure/application.properties
 ```
 
 #### 进阶版
@@ -49,11 +49,11 @@ services:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: 12345678
-      MYSQL_DATABASE: datacap
+      MYSQL_DATABASE: metaforge
     ports:
       - "13306:3306"
     volumes:
-      - ./configure/schema/datacap.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./configure/schema/metaforge.sql:/docker-entrypoint-initdb.d/schema.sql
       - mysql_data:/var/lib/mysql
 
   app-clickhouse:
@@ -62,15 +62,15 @@ services:
     ports:
       - "8123:8123"
     environment:
-      - CLICKHOUSE_DB=datacap
+      - CLICKHOUSE_DB=metaforge
       - CLICKHOUSE_USER=default
       - CLICKHOUSE_PASSWORD=da39a3ee5e6b4b0d3255bfef95601890afd80709
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
 
-  app-datacap:
-    image: devliveorg/datacap:latest
+  app-metaforge:
+    image: devliveorg/metaforge:latest
     restart: always
     ports:
       - "9099:9096"
@@ -78,22 +78,22 @@ services:
       - app-mysql
       - app-clickhouse
     volumes:
-      - ./configure/docker/application.properties:/opt/app/datacap/configure/application.properties
-      - datacap_data:/opt/app/datacap/data
+      - ./configure/docker/application.properties:/opt/app/metaforge/configure/application.properties
+      - metaforge_data:/opt/app/metaforge/data
 
 volumes:
   mysql_data:
   clickhouse_data:
   clickhouse_logs:
-  datacap_data:
+  metaforge_data:
 ```
 
 !!! warning "注意"
 
     需要同时下载一下多个文件：
 
-    - [datacap.sql](https://github.com/devlive-community/datacap/blob/dev/configure/schema/datacap.sql)
-    - [application.properties](https://github.com/devlive-community/datacap/blob/dev/configure/docker/application.properties)
+    - [metaforge.sql](https://github.com/devlive-community/metaforge/blob/dev/configure/schema/metaforge.sql)
+    - [application.properties](https://github.com/devlive-community/metaforge/blob/dev/configure/docker/application.properties)
 
     下载完成后将他们放置到指定目录，也就是 `./configure/docker/` 和 `./configure/schema/` 如果需要自定义目录，可以修改 `docker-compose.yml` 文件中挂载的 `volumes` 配置即可。
 

@@ -2,7 +2,7 @@
 title: 自定义 Fs 文件系统
 ---
 
-DataCap 支持自定义文件系统，使用者可以编写自己的文件存储系统集成到 DataCap 中。该文档主要讲解如何快速集成一个文件存储系统到 DataCap 系统中。
+MetaForge 支持自定义文件系统，使用者可以编写自己的文件存储系统集成到 MetaForge 中。该文档主要讲解如何快速集成一个文件存储系统到 MetaForge 系统中。
 
 该模块我们主要使用到的是 `fs` 模块内的代码，我们本文使用本地存储来做示例。
 
@@ -15,20 +15,20 @@ DataCap 支持自定义文件系统，使用者可以编写自己的文件存储
 ```xml
 <dependencies>
     <dependency>
-        <groupId>io.edurt.datacap</groupId>
-        <artifactId>datacap-fs-spi</artifactId>
+        <groupId>org.devlive.metaforge</groupId>
+        <artifactId>metaforge-fs-spi</artifactId>
         <version>${project.version}</version>
     </dependency>
 </dependencies>
 ```
-我们添加 `datacap-fs-spi` 依赖，这样我们就可以实现集成文件系统。
+我们添加 `metaforge-fs-spi` 依赖，这样我们就可以实现集成文件系统。
 
 ### 模块加载器
 
 ---
 
 ```kotlin
-package io.edurt.datacap.fs
+package org.devlive.metaforge.fs
 
 import com.google.inject.multibindings.Multibinder
 
@@ -46,7 +46,7 @@ class LocalModule : FsModule() {
 ---
 
 ```kotlin
-package io.edurt.datacap.fs
+package org.devlive.metaforge.fs
 
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -108,7 +108,7 @@ class LocalFs : Fs {
 ---
 
 ```kotlin
-package io.edurt.datacap.fs
+package org.devlive.metaforge.fs
 
 import java.io.InputStream
 import java.nio.file.Files
@@ -184,10 +184,10 @@ object IOUtils {
 
 ---
 
-在 `resources` 源目录下添加 `META-INF` 和 `services` 目录，格式为 `resources/META-INF/services`，创建 `io.edurt.datacap.fs.FsModule` 文件，内容如下
+在 `resources` 源目录下添加 `META-INF` 和 `services` 目录，格式为 `resources/META-INF/services`，创建 `org.devlive.metaforge.fs.FsModule` 文件，内容如下
 
 ```kotlin
-io.edurt.datacap.fs.LocalModule
+org.devlive.metaforge.fs.LocalModule
 ```
 
 !!! note

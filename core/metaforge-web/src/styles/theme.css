@@ -1,0 +1,220 @@
+/* ==========================================================================
+   MetaForge UI 主题令牌（design/ui-color-system.md）
+   --------------------------------------------------------------------------
+   - 所有自定义组件只允许消费 --dc-* 变量，禁止硬编码色值
+   - 明色为默认；暗色只需在 html.dark 下覆盖变量，antd 组件由
+     darkAlgorithm 跟随（见 composables/useTheme.ts）
+   - 后续用户偏好切换主题：新增一套品牌变量 + 在 useTheme 的 BRANDS
+     注册表中登记 antd token 即可
+   ========================================================================== */
+
+:root {
+    /* ---- Brand ---- */
+    --dc-primary: #0A8F67;
+    --dc-primary-hover: #087A59;
+    --dc-primary-active: #086247;
+    --dc-primary-light: #DDF5EC;
+    --dc-primary-surface: #F3FBF8;
+    --dc-primary-50: #F2FBF8;
+    --dc-primary-100: #DDF5EC;
+    --dc-primary-200: #B9EAD9;
+    --dc-primary-300: #87D9BE;
+    --dc-primary-400: #49C399;
+    --dc-primary-500: #18A779;
+    --dc-primary-600: #0A8F67;
+    --dc-primary-700: #087A59;
+    --dc-primary-800: #086247;
+    --dc-primary-900: #064D39;
+
+    /* ---- Background ---- */
+    --dc-bg: #F6FAF9;
+    --dc-surface: #FFFFFF;
+    --dc-sidebar: #FBFDFC;
+    --dc-header: rgba(255, 255, 255, 0.92);
+
+    /* ---- Text ---- */
+    --dc-text-title: #14201C;
+    --dc-text-primary: #465A52;
+    --dc-text-secondary: #7D8D87;
+    --dc-text-placeholder: #A8B3AF;
+    --dc-text-disabled: #BDC6C2;
+    --dc-text-brand: #0A8F67;
+
+    /* ---- Menu ---- */
+    --dc-menu-hover: #F2F8F5;
+    --dc-menu-text: #40534C;
+
+    /* ---- Border / Divider ---- */
+    --dc-border: #E3EAE7;
+    --dc-border-light: #EDF2F0;
+    --dc-border-hover: #C9D8D2;
+
+    /* ---- Status ---- */
+    --dc-success: #16A66A;
+    --dc-success-bg: #EAF8F1;
+    --dc-success-border: #BDEAD2;
+    --dc-info: #3B82F6;
+    --dc-info-bg: #EFF6FF;
+    --dc-info-border: #BFDBFE;
+    --dc-warning: #E5A11A;
+    --dc-warning-bg: #FFF8E6;
+    --dc-warning-border: #F7DA94;
+    --dc-danger: #DC5656;
+    --dc-danger-bg: #FFF1F1;
+    --dc-danger-border: #F4C1C1;
+
+    /* ---- Radius ---- */
+    --dc-radius-sm: 6px;
+    --dc-radius-md: 10px;
+    --dc-radius-lg: 12px;
+    --dc-radius-xl: 16px;
+
+    /* ---- Shadows ---- */
+    --dc-shadow-card: 0 1px 2px rgba(15, 23, 42, 0.02), 0 4px 16px rgba(15, 23, 42, 0.035);
+    --dc-shadow-card-hover: 0 4px 10px rgba(15, 23, 42, 0.03), 0 12px 30px rgba(15, 23, 42, 0.05);
+    --dc-shadow-focus: 0 0 0 3px rgba(10, 143, 103, 0.10);
+    --dc-shadow-avatar: 0 6px 18px rgba(10, 143, 103, 0.12);
+
+    /* ---- Gradients ---- */
+    --dc-gradient-avatar: linear-gradient(145deg, #70D1AE 0%, #0A8F67 100%);
+    --dc-gradient-hero: linear-gradient(120deg, #F4FCF9 0%, #E8F9F2 46%, #DDF5EC 100%);
+    --dc-gradient-promo: linear-gradient(135deg, var(--dc-primary-300), var(--dc-primary-600));
+
+    /* ---- Body ambience（第 12 节：渐变环境光）+ 品牌波浪背景图 ----
+       图片仅浅色主题使用；暗色回退到纯渐变。URL 抽成变量，
+       后续用户偏好中的背景切换只需覆盖 --dc-body-image */
+    --dc-body-image: url('/static/images/bg-main.png');
+    --dc-body-background:
+        radial-gradient(circle at 90% 5%, rgba(87, 211, 167, 0.08), transparent 25%),
+        radial-gradient(circle at 0% 90%, rgba(10, 143, 103, 0.04), transparent 24%),
+        var(--dc-bg);
+}
+
+/* ---- 暗色：仅覆盖变量（组件自动跟随） ---- */
+html.dark {
+    --dc-bg: #0E1613;
+    --dc-surface: #14201C;
+    --dc-sidebar: #101A16;
+    --dc-header: rgba(16, 25, 23, 0.92);
+
+    --dc-text-title: #E8F0EC;
+    --dc-text-primary: #C3D2CB;
+    --dc-text-secondary: #8FA39A;
+    --dc-text-placeholder: #5C6B65;
+    --dc-text-disabled: #46564F;
+    --dc-text-brand: #49C399;
+
+    --dc-border: rgba(255, 255, 255, 0.1);
+    --dc-border-light: rgba(255, 255, 255, 0.06);
+    --dc-border-hover: rgba(255, 255, 255, 0.2);
+    --dc-menu-hover: rgba(18, 166, 106, 0.1);
+    --dc-menu-text: #C3D2CB;
+
+    --dc-primary-light: rgba(18, 166, 106, 0.16);
+    --dc-primary-surface: rgba(18, 166, 106, 0.1);
+
+    --dc-success-bg: rgba(22, 166, 106, 0.14);
+    --dc-info-bg: rgba(59, 130, 246, 0.14);
+    --dc-warning-bg: rgba(229, 161, 26, 0.14);
+    --dc-danger-bg: rgba(220, 86, 86, 0.14);
+
+    --dc-gradient-hero: linear-gradient(120deg, #12241E 0%, #10201A 46%, #0D1D18 100%);
+    --dc-shadow-card: 0 1px 2px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(0, 0, 0, 0.35);
+    --dc-shadow-card-hover: 0 4px 10px rgba(0, 0, 0, 0.3), 0 12px 30px rgba(0, 0, 0, 0.4);
+
+    --dc-body-image: none;
+    --dc-body-background:
+        radial-gradient(circle at 90% 5%, rgba(87, 211, 167, 0.06), transparent 25%),
+        radial-gradient(circle at 0% 90%, rgba(10, 143, 103, 0.05), transparent 24%),
+        var(--dc-bg);
+}
+
+/* ---- Body ambience：波浪背景图（浅色）/ 环境光渐变（暗色） ---- */
+html body {
+    background: var(--dc-body-background);
+    background-attachment: fixed;
+}
+
+html:not(.dark) body {
+    background-image: var(--dc-body-image);
+    background-size: cover;
+    background-position: center top;
+    background-repeat: no-repeat;
+}
+
+/* ---- 全局滚动条（横向 + 纵向）：细轨 + 圆角拇指，跟随 --dc-* 令牌 ----
+   WebKit 走 ::-webkit-scrollbar（自定义滚动条常驻显示，且可做 hover 态）；
+   Firefox 不识别 -moz-appearance 之外的写法，用标准属性 thin + 颜色。
+   注意：Chromium 121+ 一旦 scrollbar-width/color 非 auto 就会忽略
+   ::-webkit-scrollbar 并退回 macOS 悬浮式，因此标准属性必须只留给 Firefox。 */
+@supports (-moz-appearance: none) {
+    * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--dc-text-placeholder) transparent;
+    }
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background-color: var(--dc-text-placeholder);
+    border: 2px solid transparent;
+    border-radius: 9999px;
+    background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--dc-text-secondary);
+}
+
+::-webkit-scrollbar-thumb:active {
+    background-color: var(--dc-text-primary);
+}
+
+::-webkit-scrollbar-corner {
+    background: transparent;
+}
+
+/* ---- 通用卡片：白底 + 极浅边框 + 很轻的阴影 ---- */
+.dc-card {
+    background: var(--dc-surface);
+    border: 1px solid var(--dc-border-light);
+    border-radius: var(--dc-radius-lg);
+    box-shadow: var(--dc-shadow-card);
+}
+
+.dc-card:hover {
+    box-shadow: var(--dc-shadow-card-hover);
+}
+
+/* ---- 通用状态标签（管理员=info、正常=success，避免全绿） ---- */
+.dc-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    line-height: 20px;
+    border: 1px solid transparent;
+    margin-inline-end: 0;
+}
+
+.dc-tag--info {
+    background: var(--dc-info-bg);
+    color: var(--dc-info);
+    border-color: var(--dc-info-border);
+}
+
+.dc-tag--success {
+    background: var(--dc-success-bg);
+    color: var(--dc-success);
+    border-color: var(--dc-success-border);
+}

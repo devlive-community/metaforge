@@ -5,15 +5,15 @@ ALTER TABLE `menus`
     ADD COLUMN `redirect` BIGINT  DEFAULT 0,
     ADD COLUMN `is_new`   BOOLEAN DEFAULT FALSE;
 
-RENAME TABLE `users` TO `datacap_user`;
+RENAME TABLE `users` TO `metaforge_user`;
 
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     ADD COLUMN `is_system` BOOLEAN DEFAULT FALSE;
 
-INSERT INTO `datacap_user`(`username`, `is_system`)
+INSERT INTO `metaforge_user`(`username`, `is_system`)
 VALUES ('Ai', TRUE);
 
-CREATE TABLE `datacap_chat`
+CREATE TABLE `metaforge_chat`
 (
     `id`          BIGINT PRIMARY KEY AUTO_INCREMENT,
     `name`        VARCHAR(255) NOT NULL,
@@ -24,13 +24,13 @@ CREATE TABLE `datacap_chat`
     `description` VARCHAR(255) DEFAULT NULL
 );
 
-CREATE TABLE `datacap_chat_user_relation`
+CREATE TABLE `metaforge_chat_user_relation`
 (
     chat_id BIGINT,
     user_id BIGINT
 );
 
-CREATE TABLE `datacap_message`
+CREATE TABLE `metaforge_message`
 (
     `id`                BIGINT PRIMARY KEY AUTO_INCREMENT,
     `name`              VARCHAR(255) NOT NULL,
@@ -45,17 +45,17 @@ CREATE TABLE `datacap_message`
     `total_tokens`      BIGINT       DEFAULT 0
 );
 
-CREATE TABLE `datacap_message_user_relation`
+CREATE TABLE `metaforge_message_user_relation`
 (
     message_id BIGINT,
     user_id    BIGINT
 );
 
-CREATE TABLE `datacap_message_chat_relation`
+CREATE TABLE `metaforge_message_chat_relation`
 (
     message_id BIGINT,
     chat_id    BIGINT
 );
 
-ALTER TABLE `datacap_user`
+ALTER TABLE `metaforge_user`
     CHANGE `third_configure` `chat_configure` text;

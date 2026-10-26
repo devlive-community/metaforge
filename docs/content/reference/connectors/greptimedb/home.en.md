@@ -13,7 +13,7 @@ An open-source, cloud-native, distributed time-series database with PromQL/SQL/P
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.9.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.9.x`
 
 Support Time: `2023-04-14`
 
@@ -23,7 +23,7 @@ Support Time: `2023-04-14`
 
 !!! note
 
-    If your GreptimeDB service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your GreptimeDB service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 === "Configure"
 
@@ -39,6 +39,6 @@ Support Time: `2023-04-14`
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
 - [x] 0.x

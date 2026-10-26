@@ -35,7 +35,7 @@ title: 即席查询
 
 ```sql
 SELECT *
-FROM datacap.datacap_source_query
+FROM metaforge.metaforge_source_query
 ```
 
 点击编辑器顶部的 `运行` 按钮，即可查询。当查询成功后，编辑器下方会展示本次查询结果，类似如下
@@ -92,7 +92,7 @@ FROM datacap.datacap_source_query
 
 ---
 
-在 datacap 中接入了 ai 模型，需要用户配置相应的信息方可使用，AI 模型支持
+在 metaforge 中接入了 ai 模型，需要用户配置相应的信息方可使用，AI 模型支持
 
 - 解析
 - 优化

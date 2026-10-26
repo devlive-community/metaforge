@@ -2,7 +2,7 @@
 title: Deploying in Docker Compose
 ---
 
-The DataCap project provides Docker Compose deployment by downloading the [docker-compose.yml](https://github.com/devlive-community/datacap/blob/dev/docker-compose.yml) file, or using the following code for service deploy.
+The MetaForge project provides Docker Compose deployment by downloading the [docker-compose.yml](https://github.com/devlive-community/metaforge/blob/dev/docker-compose.yml) file, or using the following code for service deploy.
 
 #### Simplified version
 
@@ -18,14 +18,14 @@ services:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: 12345678
-      MYSQL_DATABASE: datacap
+      MYSQL_DATABASE: metaforge
     ports:
       - "3306:3306"
     volumes:
-      - ./configure/schema/datacap.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./configure/schema/metaforge.sql:/docker-entrypoint-initdb.d/schema.sql
 
-  app-datacap:
-    image: devliveorg/datacap:latest
+  app-metaforge:
+    image: devliveorg/metaforge:latest
     restart: always
     ports:
       - "9099:9099"
@@ -33,7 +33,7 @@ services:
       - app-mysql
       - app-clickhouse
     volumes:
-      - ./configure/docker/application.properties:/opt/app/datacap/configure/application.properties
+      - ./configure/docker/application.properties:/opt/app/metaforge/configure/application.properties
 ```
 
 #### Advanced version
@@ -50,11 +50,11 @@ services:
     image: mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: 12345678
-      MYSQL_DATABASE: datacap
+      MYSQL_DATABASE: metaforge
     ports:
       - "13306:3306"
     volumes:
-      - ./configure/schema/datacap.sql:/docker-entrypoint-initdb.d/schema.sql
+      - ./configure/schema/metaforge.sql:/docker-entrypoint-initdb.d/schema.sql
       - mysql_data:/var/lib/mysql
 
   app-clickhouse:
@@ -63,15 +63,15 @@ services:
     ports:
       - "8123:8123"
     environment:
-      - CLICKHOUSE_DB=datacap
+      - CLICKHOUSE_DB=metaforge
       - CLICKHOUSE_USER=default
       - CLICKHOUSE_PASSWORD=da39a3ee5e6b4b0d3255bfef95601890afd80709
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - clickhouse_logs:/var/log/clickhouse-server
 
-  app-datacap:
-    image: devliveorg/datacap:latest
+  app-metaforge:
+    image: devliveorg/metaforge:latest
     restart: always
     ports:
       - "9099:9096"
@@ -79,22 +79,22 @@ services:
       - app-mysql
       - app-clickhouse
     volumes:
-      - ./configure/docker/application.properties:/opt/app/datacap/configure/application.properties
-      - datacap_data:/opt/app/datacap/data
+      - ./configure/docker/application.properties:/opt/app/metaforge/configure/application.properties
+      - metaforge_data:/opt/app/metaforge/data
 
 volumes:
   mysql_data:
   clickhouse_data:
   clickhouse_logs:
-  datacap_data:
+  metaforge_data:
 ```
 
 !!! warning "Warning"
 
     You need to download multiple files at the same time:
 
-    - [datacap.sql](https://github.com/devlive-community/datacap/blob/dev/configure/schema/datacap.sql)
-    - [application.properties](https://github.com/devlive-community/datacap/blob/dev/configure/docker/application.properties)
+    - [metaforge.sql](https://github.com/devlive-community/metaforge/blob/dev/configure/schema/metaforge.sql)
+    - [application.properties](https://github.com/devlive-community/metaforge/blob/dev/configure/docker/application.properties)
 
     After the download is completed, place them in the specified directory, that is, `./configure/docker/` and `./configure/schema/`. If you need to customize the directory, you can modify the ` mounted in the `docker-compose.yml` file. volumes` can be configured.
 

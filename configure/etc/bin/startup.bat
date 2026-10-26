@@ -3,7 +3,7 @@ setlocal
 
 set "HOME=%CD%"
 if not defined JAVA_HOME set "JAVA_HOME=C:\Program Files\Java\jdk"
-set "APPLICATION_NAME=io.edurt.datacap.server.DataCap"
+set "APPLICATION_NAME=org.devlive.metaforge.server.MetaForge"
 set "APPLICATION_PID="
 
 call :check_java_version

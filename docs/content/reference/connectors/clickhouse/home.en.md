@@ -12,7 +12,7 @@ ClickHouse® is a column-oriented database management system (DBMS) for online a
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.0.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.0.x`
 
 Support Time: `2022-09-22`
 
@@ -20,11 +20,11 @@ Support Time: `2022-09-22`
 
 ---
 
-DataCap uses configuration files by default [clickhouse.json](https://github.com/EdurtIO/datacap/blob/develop/server/src/main/etc/conf/plugins/jdbc/clickhouse.json)
+MetaForge uses configuration files by default [clickhouse.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/clickhouse.json)
 
 !!! note
 
-    If your ClickHouse service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your ClickHouse service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 === "Configure"
 
@@ -59,7 +59,7 @@ DataCap uses configuration files by default [clickhouse.json](https://github.com
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
 - [x] 19.x
 - [x] 20.x

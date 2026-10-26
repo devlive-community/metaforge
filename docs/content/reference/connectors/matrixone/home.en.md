@@ -14,7 +14,7 @@ MatrixOne is a future-oriented hyper-converged cloud and edge native DBMS that s
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `2024.01.1`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `2024.01.1`
 
 Support Time: `2024-01-12`
 
@@ -25,7 +25,7 @@ Support Time: `2024-01-12`
 
 !!! note
 
-    If your MatrixOne service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your MatrixOne service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 === "Configure"
 
@@ -70,6 +70,6 @@ Support Time: `2024-01-12`
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
 - [x] `1.1.0`

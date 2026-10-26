@@ -1,6 +1,6 @@
 @echo off
 set "HOME=%CD%"
-set "APPLICATION_NAME=io.edurt.datacap.server.DataCap"
+set "APPLICATION_NAME=org.devlive.metaforge.server.MetaForge"
 set "APPLICATION_PID="
 
 call :job_before_echo_basic

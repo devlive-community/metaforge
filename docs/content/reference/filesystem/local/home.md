@@ -2,31 +2,31 @@
 title: Local (本地)
 ---
 
-在 DataCap 中目前已经支持 Local，支持功能如下：
+在 MetaForge 中目前已经支持 Local，支持功能如下：
 
 - 上传文件
 - 预览&下载文件
 - 删除文件
 
-### DataCap 使用配置
+### MetaForge 使用配置
 
 ---
 
-在 DataCap 中文件系统用于配置系统的缓冲以及临时文件的存储。修改 `application.properties` 文件如下内容：
+在 MetaForge 中文件系统用于配置系统的缓冲以及临时文件的存储。修改 `application.properties` 文件如下内容：
 
 ```properties
-datacap.fs.type=Local
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=Local
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: 文件系统的类型只能是 **Local**
-- `datacap.fs.access`: 不做任何设置
-- `datacap.fs.secret`: 不做任何设置
-- `datacap.fs.endpoint`: 不做任何设置
-- `datacap.fs.bucket`: 如果设置则为目录的名称，不设置则不做任何设置
+- `metaforge.fs.type`: 文件系统的类型只能是 **Local**
+- `metaforge.fs.access`: 不做任何设置
+- `metaforge.fs.secret`: 不做任何设置
+- `metaforge.fs.endpoint`: 不做任何设置
+- `metaforge.fs.bucket`: 如果设置则为目录的名称，不设置则不做任何设置
 
 ### 依赖使用方式
 
@@ -36,8 +36,8 @@ datacap.fs.bucket=
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-fs-local</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-fs-local</artifactId>
     <version>${VERSION}</version>
 </dependency>
 ```
@@ -45,7 +45,7 @@ datacap.fs.bucket=
 使用代码如下：
 
 ```java
-package io.edurt.datacap.fs;
+package org.devlive.metaforge.fs;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -79,7 +79,7 @@ public class LocalFsTest
             .secret(null)
             .endpoint(String.join(File.separator, System.getProperty("user.dir"), "data"))
             .bucket("tmp")
-            .localPath(String.join(File.separator, System.getProperty("user.dir"), "src/main/java/io/edurt/datacap/fs/LocalFs.java"))
+            .localPath(String.join(File.separator, System.getProperty("user.dir"), "src/main/java/org/devlive/metaforge/fs/LocalFs.java"))
             .fileName("LocalFs.java")
             .build();
     }

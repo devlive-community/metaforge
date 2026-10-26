@@ -2,7 +2,7 @@
 title: 自定义 Notify 通知器
 ---
 
-DataCap 支持自定义通知器，使用者可以编写自己的通知器集成到 DataCap 中。该文档主要讲解如何快速集成一个通知器到 DataCap 系统中。
+MetaForge 支持自定义通知器，使用者可以编写自己的通知器集成到 MetaForge 中。该文档主要讲解如何快速集成一个通知器到 MetaForge 系统中。
 
 该模块我们主要使用到的是 `notify` 模块内的代码，我们本文使用钉钉通知器来做示例。
 
@@ -15,24 +15,24 @@ DataCap 支持自定义通知器，使用者可以编写自己的通知器集成
 ```xml
 <dependencies>
     <dependency>
-        <groupId>io.edurt.datacap</groupId>
-        <artifactId>datacap-notify-spi</artifactId>
+        <groupId>org.devlive.metaforge</groupId>
+        <artifactId>metaforge-notify-spi</artifactId>
         <version>${project.version}</version>
     </dependency>
 </dependencies>
 ```
-我们添加 `datacap-notify-spi` 依赖，这样我们就可以实现集成通知器。
+我们添加 `metaforge-notify-spi` 依赖，这样我们就可以实现集成通知器。
 
 ### 模块加载器
 
 ---
 
 ```kotlin
-package io.edurt.datacap.notify.dingtalk
+package org.devlive.metaforge.notify.dingtalk
 
 import com.google.inject.multibindings.Multibinder
-import io.edurt.datacap.notify.Notify
-import io.edurt.datacap.notify.NotifyModule
+import org.devlive.metaforge.notify.Notify
+import org.devlive.metaforge.notify.NotifyModule
 
 class DingTalkModule : NotifyModule()
 {
@@ -50,11 +50,11 @@ class DingTalkModule : NotifyModule()
 ---
 
 ```kotlin
-package io.edurt.datacap.notify.dingtalk
+package org.devlive.metaforge.notify.dingtalk
 
-import io.edurt.datacap.notify.Notify
-import io.edurt.datacap.notify.model.NotifyRequest
-import io.edurt.datacap.notify.model.NotifyResponse
+import org.devlive.metaforge.notify.Notify
+import org.devlive.metaforge.notify.model.NotifyRequest
+import org.devlive.metaforge.notify.model.NotifyResponse
 
 class DingTalkNotify : Notify
 {
@@ -74,18 +74,18 @@ class DingTalkNotify : Notify
 ---
 
 ```kotlin
-package io.edurt.datacap.notify.dingtalk
+package org.devlive.metaforge.notify.dingtalk
 
-import io.edurt.datacap.common.utils.JsonUtils
-import io.edurt.datacap.common.utils.SignUtils
-import io.edurt.datacap.lib.http.HttpClient
-import io.edurt.datacap.lib.http.HttpConfigure
-import io.edurt.datacap.lib.http.HttpMethod
-import io.edurt.datacap.notify.NotifyType
-import io.edurt.datacap.notify.dingtalk.model.ReturnModel
-import io.edurt.datacap.notify.dingtalk.model.TextModel
-import io.edurt.datacap.notify.model.NotifyRequest
-import io.edurt.datacap.notify.model.NotifyResponse
+import org.devlive.metaforge.common.utils.JsonUtils
+import org.devlive.metaforge.common.utils.SignUtils
+import org.devlive.metaforge.lib.http.HttpClient
+import org.devlive.metaforge.lib.http.HttpConfigure
+import org.devlive.metaforge.lib.http.HttpMethod
+import org.devlive.metaforge.notify.NotifyType
+import org.devlive.metaforge.notify.dingtalk.model.ReturnModel
+import org.devlive.metaforge.notify.dingtalk.model.TextModel
+import org.devlive.metaforge.notify.model.NotifyRequest
+import org.devlive.metaforge.notify.model.NotifyResponse
 import org.apache.commons.lang3.StringUtils.isNotEmpty
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory.getLogger
@@ -158,18 +158,18 @@ object DingTalkUtils
 
 ---
 
-在 `resources` 源目录下添加 `META-INF` 和 `services` 目录，格式为 `resources/META-INF/services`，创建 `io.edurt.datacap.fs.FsModule` 文件，内容如下
+在 `resources` 源目录下添加 `META-INF` 和 `services` 目录，格式为 `resources/META-INF/services`，创建 `org.devlive.metaforge.fs.FsModule` 文件，内容如下
 
 ```kotlin
-io.edurt.datacap.notify.dingtalk.DingTalkModule
+org.devlive.metaforge.notify.dingtalk.DingTalkModule
 ```
 
 > 通过以上内容我们实现了 DingTalk 通知器的支持。我们只需要在要使用 DingTalk 通知器器的地方引用该模块即可。比如我们在 server 模块中使用到该模块，则在 server/pom.xml 文件中增加以下内容
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-notify-dingtalk</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-notify-dingtalk</artifactId>
     <version>${project.version}</version>
 </dependency>
 ```
@@ -177,9 +177,9 @@ io.edurt.datacap.notify.dingtalk.DingTalkModule
 ### `DingTalk Utils` 测试
 
 ```kotlin
-package io.edurt.datacap.notify.dingtalk
+package org.devlive.metaforge.notify.dingtalk
 
-import io.edurt.datacap.notify.model.NotifyRequest
+import org.devlive.metaforge.notify.model.NotifyRequest
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
@@ -210,14 +210,14 @@ class DingTalkUtilsTest
 ### `DingTalk Module` 测试
 
 ```kotlin
-package io.edurt.datacap.notify.dingtalk
+package org.devlive.metaforge.notify.dingtalk
 
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.Key
 import com.google.inject.TypeLiteral
-import io.edurt.datacap.notify.Notify
-import io.edurt.datacap.notify.NotifyManager
+import org.devlive.metaforge.notify.Notify
+import org.devlive.metaforge.notify.NotifyManager
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
@@ -247,15 +247,15 @@ class DingTalkModuleTest
 ### `DingTalk SPI` 测试
 
 ```kotlin
-package io.edurt.datacap.notify.dingtalk
+package org.devlive.metaforge.notify.dingtalk
 
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.Key
 import com.google.inject.TypeLiteral
-import io.edurt.datacap.notify.Notify
-import io.edurt.datacap.notify.NotifyManager
-import io.edurt.datacap.notify.model.NotifyRequest
+import org.devlive.metaforge.notify.Notify
+import org.devlive.metaforge.notify.NotifyManager
+import org.devlive.metaforge.notify.model.NotifyRequest
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test

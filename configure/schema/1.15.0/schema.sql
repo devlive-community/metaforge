@@ -1,10 +1,10 @@
 USE
-    `datacap`;
+    `metaforge`;
 
 ALTER TABLE `template_sql`
     CHANGE COLUMN `system` `is_system` BOOLEAN;
 
-CREATE TABLE `datacap_metadata_database`
+CREATE TABLE `metaforge_metadata_database`
 (
     id          INT PRIMARY KEY AUTO_INCREMENT,
     name        VARCHAR(255),
@@ -15,13 +15,13 @@ CREATE TABLE `datacap_metadata_database`
     catalog     VARCHAR(255)
 );
 
-CREATE TABLE `datacap_metadata_database_source_relation`
+CREATE TABLE `metaforge_metadata_database_source_relation`
 (
     source_id   INT,
     database_id INT
 );
 
-create table `datacap_metadata_table`
+create table `metaforge_metadata_table`
 (
     id             int auto_increment primary key,
     name           varchar(255)         null,
@@ -43,13 +43,13 @@ create table `datacap_metadata_table`
     auto_increment varchar(100)         null
 );
 
-CREATE TABLE `datacap_metadata_table_database_relation`
+CREATE TABLE `metaforge_metadata_table_database_relation`
 (
     table_id    INT,
     database_id INT
 );
 
-create table `datacap_metadata_column`
+create table `metaforge_metadata_column`
 (
     id             bigint auto_increment primary key,
     name           varchar(255)         null,
@@ -70,13 +70,13 @@ create table `datacap_metadata_column`
     extra          varchar(250)         null
 );
 
-CREATE TABLE `datacap_metadata_column_table_relation`
+CREATE TABLE `metaforge_metadata_column_table_relation`
 (
     table_id  INT,
     column_id INT
 );
 
-CREATE TABLE `datacap_scheduled_history`
+CREATE TABLE `metaforge_scheduled_history`
 (
     id          BIGINT PRIMARY KEY AUTO_INCREMENT,
     name        VARCHAR(255),
@@ -87,7 +87,7 @@ CREATE TABLE `datacap_scheduled_history`
     state       VARCHAR(100)
 );
 
-CREATE TABLE `datacap_scheduled_history_relation`
+CREATE TABLE `metaforge_scheduled_history_relation`
 (
     scheduled_id INT,
     history_id   INT

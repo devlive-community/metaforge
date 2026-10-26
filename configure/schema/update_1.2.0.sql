@@ -1,2 +1,2 @@
-UPDATE `datacap`.`source`
+UPDATE `metaforge`.`source`
 SET `protocol` = 'JDBC';

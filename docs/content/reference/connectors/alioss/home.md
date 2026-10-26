@@ -12,7 +12,7 @@ Fully managed object storage service to store and access any amount of data from
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.6.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.6.x`
 
 !!!
 
@@ -22,7 +22,7 @@ Support Time: `2023-02-23`
 
 ---
 
-This chapter describes the SQL syntax used in Aliyun OSS on DataCap.
+This chapter describes the SQL syntax used in Aliyun OSS on MetaForge.
 
 ##### SELECT
 
@@ -80,11 +80,11 @@ This chapter describes the SQL syntax used in Aliyun OSS on DataCap.
 
 ---
 
-DataCap uses configuration files by default [alioss.json](https://github.com/EdurtIO/datacap/blob/dev/server/src/main/etc/conf/plugins/native/alioss.json)
+MetaForge uses configuration files by default [alioss.json](https://github.com/EdurtIO/metaforge/blob/dev/server/src/main/etc/conf/plugins/native/alioss.json)
 
 !!! note
 
-    If your Aliyun OSS service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your Aliyun OSS service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -111,7 +111,7 @@ DataCap uses configuration files by default [alioss.json](https://github.com/Edu
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
     - [x] `all version`
 

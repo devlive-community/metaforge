@@ -64,15 +64,15 @@ fi
 echo "Building and pushing Docker images..."
 echo "构建并推送 Docker 镜像..."
 if docker buildx build --platform linux/amd64,linux/arm64 \
- -t devliveorg/datacap:${APP_VERSION} \
- -t devliveorg/datacap:latest \
+ -t devliveorg/metaforge:${APP_VERSION} \
+ -t devliveorg/metaforge:latest \
  . --push; then
    # Print success message
    # 打印成功信息
    echo "Successfully built and pushed images:"
    echo "成功构建并推送以下镜像："
-   echo "- devliveorg/datacap:${APP_VERSION}"
-   echo "- devliveorg/datacap:latest"
+   echo "- devliveorg/metaforge:${APP_VERSION}"
+   echo "- devliveorg/metaforge:latest"
 else
    echo "Error: Failed to build and push Docker images"
    echo "错误：构建并推送 Docker 镜像失败"

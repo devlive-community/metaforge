@@ -12,7 +12,7 @@ Apache Kafka is an open-source distributed event streaming platform used by thou
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.7.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.7.x`
 
 !!!
 
@@ -22,7 +22,7 @@ Support Time: `2023-03-06`
 
 ---
 
-This chapter describes the SQL syntax used in DataCap Kafka plugin.
+This chapter describes the SQL syntax used in MetaForge Kafka plugin.
 
 - SHOW TOPICS
 - SHOW CONSUMERS
@@ -31,11 +31,11 @@ This chapter describes the SQL syntax used in DataCap Kafka plugin.
 
 ---
 
-DataCap uses configuration files by default [kafka.json](https://github.com/EdurtIO/datacap/blob/dev/server/src/main/etc/conf/plugins/native/kafka.json)
+MetaForge uses configuration files by default [kafka.json](https://github.com/EdurtIO/metaforge/blob/dev/server/src/main/etc/conf/plugins/native/kafka.json)
 
 !!! note
 
-    If your Apache Kafka service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your Apache Kafka service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -53,7 +53,7 @@ DataCap uses configuration files by default [kafka.json](https://github.com/Edur
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
     - [x] `1.0.0`
     - [x] `1.1.0`

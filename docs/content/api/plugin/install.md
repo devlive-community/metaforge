@@ -13,8 +13,8 @@ title: 安装插件
     
     ```json
     {
-        "url": "https://cdn.north.devlive.org/applications/datacap/plugins/2024.4.0-SNAPSHOT/plugin/datacap-plugin-mysql-bin.tar.gz",
-        "name": "datacap-plugin-mysql"
+        "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2024.4.0-SNAPSHOT/plugin/metaforge-plugin-mysql-bin.tar.gz",
+        "name": "metaforge-plugin-mysql"
     }
     ```
 

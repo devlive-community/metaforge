@@ -16,7 +16,7 @@ ParadeDB is not a fork of Postgres, but regular Postgres with custom extensions 
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `2024.02.1`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `2024.02.1`
 
 Support Time: `2024-02-05`
 
@@ -55,6 +55,6 @@ Support Time: `2024-02-05`
 
 !!! Version
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/devlive-community/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/devlive-community/metaforge/issues/new/choose) to us
 
 - [x] `all`

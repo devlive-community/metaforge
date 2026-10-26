@@ -10,7 +10,7 @@ Execute your most critical workloads on top of Snowflake's multi-cluster shared 
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.4.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.4.x`
 
 !!!
 
@@ -20,11 +20,11 @@ Support Time: `2023-01-29`
 
 ---
 
-DataCap uses configuration files by default [snowflake.json](https://github.com/EdurtIO/datacap/blob/develop/server/src/main/etc/conf/plugins/jdbc/snowflake.json)
+MetaForge uses configuration files by default [snowflake.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/snowflake.json)
 
 !!! note
 
-    If your Snowflake service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your Snowflake service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -59,6 +59,6 @@ DataCap uses configuration files by default [snowflake.json](https://github.com/
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
 !!!

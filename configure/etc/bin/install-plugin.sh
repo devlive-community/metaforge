@@ -2,7 +2,7 @@
 
 HOME=$(pwd)
 VERSION=2026.0.0
-CDN_CENTER="https://repo1.maven.org/maven2/io/edurt/datacap"
+CDN_CENTER="https://repo1.maven.org/maven2/org/devlive/metaforge"
 
 install_package() {
     DOWNLOAD_URL=$1

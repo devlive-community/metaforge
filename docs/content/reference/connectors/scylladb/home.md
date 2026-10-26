@@ -12,7 +12,7 @@ ScyllaDB 是一个分布式 NoSQL 宽列数据库，适用于需要高性能和�
 
 !!! note
 
-    如果需要使用此数据源，则需要将 DataCap 服务升级到 >= `2024.01.1`
+    如果需要使用此数据源，则需要将 MetaForge 服务升级到 >= `2024.01.1`
 
 !!!
 
@@ -52,7 +52,7 @@ ScyllaDB 是一个分布式 NoSQL 宽列数据库，适用于需要高性能和�
 
 !!! warning
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/EdurtIO/datacap/issues/new/choose)
+    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
 
     - [x] `all`
 

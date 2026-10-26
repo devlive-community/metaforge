@@ -2,7 +2,7 @@
 HOME=$(pwd)
 
 echo "Clean dependencies"
-cd "$HOME/core/datacap-ui"
+cd "$HOME/core/metaforge-ui"
 
 echo "Task: check dependencies"
 depcheck --json > depcheck-output.json

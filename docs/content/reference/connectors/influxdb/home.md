@@ -8,7 +8,7 @@ InfluxDB 是一个由 InfluxData 开发的开源时序型数据库。它由 Go �
 
 ---
 
-DataCap 整合 InfluxDB 模块，用于实现对 InfluxDB 数据源的数据操作。
+MetaForge 整合 InfluxDB 模块，用于实现对 InfluxDB 数据源的数据操作。
 
 在该模块中我们使用的是 `influxdb-jdbc` 依赖，版本为 `0.2.6`。
 
@@ -32,7 +32,7 @@ DataCap 整合 InfluxDB 模块，用于实现对 InfluxDB 数据源的数据操�
 
 !!! note
 
-    如果需要使用该数据源，需要将 DataCap 服务升级到 >= `2024.03.7`
+    如果需要使用该数据源，需要将 MetaForge 服务升级到 >= `2024.03.7`
 
 !!!
 
@@ -45,7 +45,7 @@ DataCap 整合 InfluxDB 模块，用于实现对 InfluxDB 数据源的数据操�
 
 !!! note
 
-    如果您的服务版本需要其他特殊配置，请参考修改配置文件并重启 DataCap 服务。
+    如果您的服务版本需要其他特殊配置，请参考修改配置文件并重启 MetaForge 服务。
 
 !!!
 

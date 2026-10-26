@@ -2,7 +2,7 @@
 title: Deploying in Self Host
 ---
 
-DataCap enables users to deploy services to their own machines. This document allows users to learn how to deploy DataCap in an autonomous machine.
+MetaForge enables users to deploy services to their own machines. This document allows users to learn how to deploy MetaForge in an autonomous machine.
 
 ### System Requirements
 
@@ -35,18 +35,18 @@ DataCap enables users to deploy services to their own machines. This document al
 
 2. Run the following command after downloading the binaries locally
 ```bash
-tar -xvzf datacap-release.tar.gz
+tar -xvzf metaforge-release.tar.gz
 ```
 3. Go to the root directory of the software
 ```bash
-cd datacap
+cd metaforge
 ```
 
 ### Software configuration
 
 ---
 
-For the first installation of the software, you need to import the sql script from the `schema/datacap.sql` file into the MySQL server. Note: The scripts that need to be imported are matched based on the downloaded package
+For the first installation of the software, you need to import the sql script from the `schema/metaforge.sql` file into the MySQL server. Note: The scripts that need to be imported are matched based on the downloaded package
 
 !!! danger "Warning"
 
@@ -54,7 +54,7 @@ For the first installation of the software, you need to import the sql script fr
 
 !!!
 
-All configurations in the DataCap software are in the `configure/application.properties` file.
+All configurations in the MetaForge software are in the `configure/application.properties` file.
 
 #### Basic configuration
 
@@ -66,20 +66,20 @@ server.address=localhost
 # Fixed serialized data missing for 8 hours
 spring.jackson.time-zone=GMT+8
 spring.jackson.date-format=yyyy-MM-dd HH:mm:ss
-# datacap security management configuration
-datacap.security.secret=DataCapSecretKey
-datacap.security.expiration=86400000
-# datacap editor configuration
-datacap.editor.sugs.maxSize=1000
+# metaforge security management configuration
+metaforge.security.secret=MetaForgeSecretKey
+metaforge.security.expiration=86400000
+# metaforge editor configuration
+metaforge.editor.sugs.maxSize=1000
 ```
 
 - `server.port`: The port on which the service initiates the listener on the server
 - `server.address`: Configure the local listening address of the service
 - `spring.jackson.time-zone`: Used to configure the time zone
 - `spring.jackson.date-format`: Lets you configure the date format
-- `datacap.security.secret`: The key used to configure data security management
-- `datacap.security.expiration`: The expiration time for configuring data security management
-- `datacap.editor.sugs.maxSize`: Lets you configure the maximum number of rows in the data editor
+- `metaforge.security.secret`: The key used to configure data security management
+- `metaforge.security.expiration`: The expiration time for configuring data security management
+- `metaforge.editor.sugs.maxSize`: Lets you configure the maximum number of rows in the data editor
 
 #### Web service configuration
 
@@ -102,7 +102,7 @@ spring.web.resources.add-mappings=true
 !!!
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/datacap?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&useOldAliasMetadataBehavior=true&jdbcCompliantTruncation=false&allowPublicKeyRetrieval=true
+spring.datasource.url=jdbc:mysql://localhost:3306/metaforge?useUnicode=true&characterEncoding=UTF-8&zeroDateTimeBehavior=convertToNull&allowMultiQueries=true&useSSL=false&useOldAliasMetadataBehavior=true&jdbcCompliantTruncation=false&allowPublicKeyRetrieval=true
 spring.datasource.username=root
 spring.datasource.password=12345678
 ```
@@ -119,64 +119,64 @@ spring.datasource.password=12345678
 
 #### Actuator configuration
 
-Since `2026.0.0`, executor configuration (formerly `datacap.executor.*`) has moved to the database table `datacap_configure` (category = `EXECUTOR`) and is no longer set via `application.properties`.
+Since `2026.0.0`, executor configuration (formerly `metaforge.executor.*`) has moved to the database table `metaforge_configure` (category = `EXECUTOR`) and is no longer set via `application.properties`.
 
 - Default values are declared by each executor plugin (`ExecutorPlugin.configures()`) and **auto-seeded on first startup**.
 - Administrators can edit every field in the UI under **System Configuration → Runtime Configuration** (`/system/configure`).
 - Regular users can override `tunable=true` fields **per sync invocation** (not persisted).
-- The effective configuration JSON used by each sync is recorded in `datacap_dataset_history.executor_configure` for audit.
+- The effective configuration JSON used by each sync is recorded in `metaforge_dataset_history.executor_configure` for audit.
 
 #### Upload the configuration
 
 ```properties
-datacap.config.data=
-datacap.cache.data=
+metaforge.config.data=
+metaforge.cache.data=
 ```
 
-- `datacap.config.data`: The path used to configure the upload profile
-- `datacap.cache.data`: Lets you configure the path to upload the cache file
+- `metaforge.config.data`: The path used to configure the upload profile
+- `metaforge.cache.data`: Lets you configure the path to upload the cache file
 
 #### OpenAi configuration
 
 ```properties
-datacap.openai.backend=https://api.openai.com
-datacap.openai.token=
-datacap.openai.model=GPT_35_TURBO_0613
-datacap.openai.timeout=30
+metaforge.openai.backend=https://api.openai.com
+metaforge.openai.token=
+metaforge.openai.model=GPT_35_TURBO_0613
+metaforge.openai.timeout=30
 ```
 
-- `datacap.openai.backend`: Used to configure OpenAI's backend address
-- `datacap.openai.token`: The token used to configure OpenAI
-- `datacap.openai.model`: The model used to configure OpenAI
-- `datacap.openai.timeout`: Used to configure the timeout period for OpenAI
+- `metaforge.openai.backend`: Used to configure OpenAI's backend address
+- `metaforge.openai.token`: The token used to configure OpenAI
+- `metaforge.openai.model`: The model used to configure OpenAI
+- `metaforge.openai.timeout`: Used to configure the timeout period for OpenAI
 
 #### Primary system configuration
 
 ```properties
-datacap.registration.enable=
-datacap.captcha.enable=
-datacap.cache.maximum=100000
-datacap.cache.expiration=5
-datacap.audit.sql.print=false
+metaforge.registration.enable=
+metaforge.captcha.enable=
+metaforge.cache.maximum=100000
+metaforge.cache.expiration=5
+metaforge.audit.sql.print=false
 ```
 
-- `datacap.registration.enable`: Used to configure whether to enable registration
-- `datacap.captcha.enable`: This parameter is used to configure whether to enable the verification code
-- `datacap.cache.maximum`: Lets you configure the maximum cache value
-- `datacap.cache.expiration`: Lets you configure the cache expiration time
-- `datacap.audit.sql.print`: This parameter is used to configure whether to print SQL statements
+- `metaforge.registration.enable`: Used to configure whether to enable registration
+- `metaforge.captcha.enable`: This parameter is used to configure whether to enable the verification code
+- `metaforge.cache.maximum`: Lets you configure the maximum cache value
+- `metaforge.cache.expiration`: Lets you configure the cache expiration time
+- `metaforge.audit.sql.print`: This parameter is used to configure whether to print SQL statements
 
 #### Pipeline configuration
 
 ```properties
-datacap.pipeline.maxRunning=100
-datacap.pipeline.maxQueue=200
-datacap.pipeline.reset=STOPPED
+metaforge.pipeline.maxRunning=100
+metaforge.pipeline.maxQueue=200
+metaforge.pipeline.reset=STOPPED
 ```
 
-- `datacap.pipeline.maxRunning`: Used to configure the maximum number of runs
-- `datacap.pipeline.maxQueue`: Used to configure the maximum queue
-- `datacap.pipeline.reset`: Lets you configure a reset policy
+- `metaforge.pipeline.maxRunning`: Used to configure the maximum number of runs
+- `metaforge.pipeline.maxQueue`: Used to configure the maximum queue
+- `metaforge.pipeline.reset`: Lets you configure a reset policy
 
 #### Storage configuration
 
@@ -191,54 +191,54 @@ Storage currently supports
 ##### Local storage configuration
 
 ```properties
-datacap.fs.type=Local
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=Local
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: used to configure the file system type
-- `datacap.fs.access`: used to configure file system access, this type can be empty
-- `datacap.fs.secret`: used to configure the file system key, this type can be empty
-- `datacap.fs.endpoint`: used to configure the file system endpoint. If filled in, it will be appended as a directory **This type can be empty**
-- `datacap.fs.bucket`: used to configure the file system bucket, this type can be empty
+- `metaforge.fs.type`: used to configure the file system type
+- `metaforge.fs.access`: used to configure file system access, this type can be empty
+- `metaforge.fs.secret`: used to configure the file system key, this type can be empty
+- `metaforge.fs.endpoint`: used to configure the file system endpoint. If filled in, it will be appended as a directory **This type can be empty**
+- `metaforge.fs.bucket`: used to configure the file system bucket, this type can be empty
 
 ##### Alibaba Cloud OSS configuration
 
 ```properties
-datacap.fs.type=AliOss
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=AliOss
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: AliOss
+- `metaforge.fs.type`: AliOss
 
 ##### Qiniu Cloud Configuration
 
 ```properties
-datacap.fs.type=Qiniu
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=Qiniu
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: Qiniu
+- `metaforge.fs.type`: Qiniu
 
 #### Experimental features
 
 ```properties
-datacap.experimental.autoLimit=true
-datacap.experimental.data={user.dir}/data
-datacap.experimental.avatarPath={username}/avatar/
+metaforge.experimental.autoLimit=true
+metaforge.experimental.data={user.dir}/data
+metaforge.experimental.avatarPath={username}/avatar/
 ```
 
-- `datacap.experimental.autoLimit`: This parameter specifies whether to automatically increase the LIMIT
-- `datacap.experimental.data`: The data path used to configure the experimental feature
-- `datacap.experimental.avatarPath`: Avatar path to configure experimental features
+- `metaforge.experimental.autoLimit`: This parameter specifies whether to automatically increase the LIMIT
+- `metaforge.experimental.data`: The data path used to configure the experimental feature
+- `metaforge.experimental.avatarPath`: Avatar path to configure experimental features
 
 #### Log configuration
 
@@ -262,7 +262,7 @@ datacap.experimental.avatarPath={username}/avatar/
 
 #### Start the service
 
-DataCap service startup is very simple, execute the following script
+MetaForge service startup is very simple, execute the following script
 
 ```bash
 ./bin/startup.sh

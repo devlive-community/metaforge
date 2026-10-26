@@ -12,7 +12,7 @@ ZooKeeper is a centralized service for maintaining configuration information, na
 
 !!! note
 
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.5.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.5.x`
 
 !!!
 
@@ -22,7 +22,7 @@ Support Time: `2023-02-07`
 
 ---
 
-This chapter describes the SQL syntax used in Zookeeper on DataCap.
+This chapter describes the SQL syntax used in Zookeeper on MetaForge.
 
 ##### SELECT
 
@@ -81,11 +81,11 @@ This chapter describes the SQL syntax used in Zookeeper on DataCap.
 
 ---
 
-DataCap uses configuration files by default [zookeeper.json](https://github.com/EdurtIO/datacap/blob/dev/server/src/main/etc/conf/plugins/native/zookeeper.json)
+MetaForge uses configuration files by default [zookeeper.json](https://github.com/EdurtIO/metaforge/blob/dev/server/src/main/etc/conf/plugins/native/zookeeper.json)
 
 !!! note
 
-    If your Zookeeper service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your Zookeeper service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -104,7 +104,7 @@ DataCap uses configuration files by default [zookeeper.json](https://github.com/
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
     - [x] `3.1.x` - `3.7.x`
 

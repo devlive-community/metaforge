@@ -2,7 +2,7 @@
 title: UI 端
 ---
 
-本文章主要用来介绍我们如何来贡献 datacap UI 端源码。
+本文章主要用来介绍我们如何来贡献 metaforge UI 端源码。
 
 ### 准备工作
 
@@ -11,7 +11,7 @@ title: UI 端
 **重要** 克隆源码到本地（如果您需要提交代码到主仓库中需要先将源码 fork 到您的 github 账户中）
 
 ```bash
-git clone https://github.com/devlive-community/datacap.git
+git clone https://github.com/devlive-community/metaforge.git
 ```
 
 !!! note
@@ -41,7 +41,7 @@ git clone https://github.com/devlive-community/datacap.git
 - 进入源码目录
 
 ```sql
-cd core/datacap-ui
+cd core/metaforge-ui
 ```
 
 - 安装依赖 (推荐使用 yarn 或 pnpm)

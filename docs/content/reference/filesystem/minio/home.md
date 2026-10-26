@@ -2,31 +2,31 @@
 title: MinIO
 ---
 
-在 DataCap 中目前已经支持 MinIO，支持功能如下：
+在 MetaForge 中目前已经支持 MinIO，支持功能如下：
 
 - 上传文件
 - 预览&下载文件
 - 删除文件
 
-### DataCap 使用配置
+### MetaForge 使用配置
 
 ---
 
-在 DataCap 中文件系统用于配置系统的缓冲以及临时文件的存储。修改 `application.properties` 文件如下内容：
+在 MetaForge 中文件系统用于配置系统的缓冲以及临时文件的存储。修改 `application.properties` 文件如下内容：
 
 ```properties
-datacap.fs.type=MinIO
-datacap.fs.access=
-datacap.fs.secret=
-datacap.fs.endpoint=
-datacap.fs.bucket=
+metaforge.fs.type=MinIO
+metaforge.fs.access=
+metaforge.fs.secret=
+metaforge.fs.endpoint=
+metaforge.fs.bucket=
 ```
 
-- `datacap.fs.type`: 文件系统的类型只能是 **MinIO**
-- `datacap.fs.access`: MinIO 的 AccessKey
-- `datacap.fs.secret`: MinIO 的 SecretKey
-- `datacap.fs.endpoint`: MinIO 的 Endpoint，如 `http://localhost:9000`
-- `datacap.fs.bucket`: MinIO 的存储桶名称，如 `datacap`
+- `metaforge.fs.type`: 文件系统的类型只能是 **MinIO**
+- `metaforge.fs.access`: MinIO 的 AccessKey
+- `metaforge.fs.secret`: MinIO 的 SecretKey
+- `metaforge.fs.endpoint`: MinIO 的 Endpoint，如 `http://localhost:9000`
+- `metaforge.fs.bucket`: MinIO 的存储桶名称，如 `metaforge`
 
 ### 依赖使用方式
 
@@ -36,8 +36,8 @@ datacap.fs.bucket=
 
 ```xml
 <dependency>
-    <groupId>io.edurt.datacap</groupId>
-    <artifactId>datacap-fs-minio</artifactId>
+    <groupId>org.devlive.metaforge</groupId>
+    <artifactId>metaforge-fs-minio</artifactId>
     <version>${VERSION}</version>
 </dependency>
 ```
@@ -45,15 +45,15 @@ datacap.fs.bucket=
 使用代码如下：
 
 ```kotlin
-package io.edurt.datacap.fs.minio
+package org.devlive.metaforge.fs.minio
 
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.Key
 import com.google.inject.TypeLiteral
-import io.edurt.datacap.fs.FsService
-import io.edurt.datacap.fs.FsManager
-import io.edurt.datacap.fs.FsRequest
+import org.devlive.metaforge.fs.FsService
+import org.devlive.metaforge.fs.FsManager
+import org.devlive.metaforge.fs.FsRequest
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -91,7 +91,7 @@ class MinIOFsTest
         {}))
         val plugin: Fs? = plugins?.first { v -> v?.name().equals(name) }
 
-        val stream = FileInputStream("src/test/kotlin/io/edurt/datacap/fs/minio/${fileName}")
+        val stream = FileInputStream("src/test/kotlin/org/devlive/metaforge/fs/minio/${fileName}")
         request.stream = stream
         val response = plugin !!.writer(request)
         assertTrue(response.isSuccessful)

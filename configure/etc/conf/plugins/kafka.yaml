@@ -45,7 +45,7 @@ pipelines:
         required: false
         override: true
         input: true
-        value: DataCap-Pipeline-Group
+        value: MetaForge-Pipeline-Group
         width: 300
         type: INPUT
       - field: checkpoint

@@ -1,4 +1,4 @@
-USE `datacap`;
+USE `metaforge`;
 
 INSERT INTO `template_sql` (`name`, `content`, `description`, `plugin`, `configure`)
 VALUES ('getAllDatabase', 'SHOW DATABASES', 'Gets a list of all databases', 'ClickHouse,MySQL', '{}'),

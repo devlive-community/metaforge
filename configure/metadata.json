@@ -5,1025 +5,1025 @@
   "i18nFormat": true,
   "children": [
     {
-      "key": "datacap-plugin-mysql",
+      "key": "metaforge-plugin-mysql",
       "label": "MySQL",
       "description": "A powerful MySQL integration plugin that provides comprehensive database connectivity. Features include table/view management, data import/export, SQL query execution, stored procedure support, and real-time data synchronization. Optimized for high-performance data operations with connection pooling and batch processing capabilities.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/mysql.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mysql.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "8.0",
         "5.7"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-mysql/2026.0.0/datacap-plugin-mysql-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mysql/2026.0.0/metaforge-plugin-mysql-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-clickhouse",
+      "key": "metaforge-plugin-clickhouse",
       "label": "ClickHouse",
       "description": "ClickHouse is a distributed column-oriented database. It is a distributed database with a focus on performance, scalability, and ease of use.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/clickhouse.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/clickhouse.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-clickhouse/2026.0.0/datacap-plugin-clickhouse-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse/2026.0.0/metaforge-plugin-clickhouse-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-influxdb",
+      "key": "metaforge-plugin-influxdb",
       "label": "Influxdb",
       "description": "InfluxDB is a time series database that stores and retrieves data points. It is a distributed database with a focus on performance, scalability, and ease of use.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/influxdb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/influxdb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-influxdb/2026.0.0/datacap-plugin-influxdb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-influxdb/2026.0.0/metaforge-plugin-influxdb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-solr",
+      "key": "metaforge-plugin-solr",
       "label": "Apache Solr",
       "description": "Solr is highly reliable, scalable and fault tolerant, providing distributed indexing, replication and load-balanced querying, automated failover and recovery, centralized configuration and more. Solr powers the search and navigation features of many of the world's largest internet sites.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/solr.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/solr.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-solr/2026.0.0/datacap-plugin-solr-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-solr/2026.0.0/metaforge-plugin-solr-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-cratedb",
+      "key": "metaforge-plugin-cratedb",
       "label": "CrateDB",
       "description": "CrateDB is a hyper-fast database for real-time analytics and hybrid search. It handles multiple types of data and combines the simplicity of SQL with the scalability of a distributed architecture.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/cratedb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/cratedb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-cratedb/2026.0.0/datacap-plugin-cratedb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb/2026.0.0/metaforge-plugin-cratedb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-cratedb-http",
+      "key": "metaforge-plugin-cratedb-http",
       "label": "CrateDB HTTP",
       "description": "Use HTTP to access the remote CrateDB database",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/cratedbhttp.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/cratedbhttp.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-cratedb-http/2026.0.0/datacap-plugin-cratedb-http-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb-http/2026.0.0/metaforge-plugin-cratedb-http-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-zookeeper",
+      "key": "metaforge-plugin-zookeeper",
       "label": "Apache Zookeeper",
       "description": "Zookeeper is a distributed, distributed configuration service. It is a distributed database with a focus on performance, scalability, and ease of use.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/zookeeper.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/zookeeper.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-zookeeper/2026.0.0/datacap-plugin-zookeeper-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-zookeeper/2026.0.0/metaforge-plugin-zookeeper-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-kafka",
+      "key": "metaforge-plugin-kafka",
       "label": "Apache Kafka",
       "description": "Apache Kafka is an open-source distributed event streaming platform used by thousands of companies for high-performance data pipelines, streaming analytics, data integration, and mission-critical applications.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/kafka.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/kafka.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-kafka/2026.0.0/datacap-plugin-kafka-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kafka/2026.0.0/metaforge-plugin-kafka-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-redis",
+      "key": "metaforge-plugin-redis",
       "label": "Redis",
       "description": "Redis is an in-memory data store used by millions of developers as a cache, vector database, document database, streaming engine, and message broker. Redis has built-in replication and different levels of on-disk persistence. It supports complex data types (for example, strings, hashes, lists, sets, sorted sets, and JSON), with atomic operations defined on those data types.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/redis.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/redis.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-redis/2026.0.0/datacap-plugin-redis-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.0.0/metaforge-plugin-redis-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-h2",
+      "key": "metaforge-plugin-h2",
       "label": "H2",
       "description": "H2 is a small, fast, and easy-to-use in-memory database.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/h2.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/h2.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-h2/2026.0.0/datacap-plugin-h2-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2/2026.0.0/metaforge-plugin-h2-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-db2",
+      "key": "metaforge-plugin-db2",
       "label": "DB2",
       "description": "IBM® Db2® is the cloud-native database built to power low-latency transactions, real-time analytics and AI applications at scale.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/db2.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/db2.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-db2/2026.0.0/datacap-plugin-db2-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-db2/2026.0.0/metaforge-plugin-db2-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-dm",
+      "key": "metaforge-plugin-dm",
       "label": "Dameng",
       "description": "A professional database software developer and service provider, we provide users with technically advanced and detailed products.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/dm.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dm.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-dm/2026.0.0/datacap-plugin-dm-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dm/2026.0.0/metaforge-plugin-dm-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-hdfs",
+      "key": "metaforge-plugin-hdfs",
       "label": "Apache HDFS",
       "description": "Hadoop Distributed File System (HDFS) is a distributed file system based on the Hadoop project.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/hdfs.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hdfs.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-hdfs/2026.0.0/datacap-plugin-hdfs-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hdfs/2026.0.0/metaforge-plugin-hdfs-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-alioss",
+      "key": "metaforge-plugin-alioss",
       "label": "Ali OSS",
       "description": "Ali OSS is a cloud storage service that provides a simple, secure and efficient way to store and manage data.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/alioss.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/alioss.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-alioss/2026.0.0/datacap-plugin-alioss-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-alioss/2026.0.0/metaforge-plugin-alioss-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-dremio",
+      "key": "metaforge-plugin-dremio",
       "label": "Dremio",
       "description": "Dremio is a free, open source, distributed data platform.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/dremio.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dremio.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-dremio/2026.0.0/datacap-plugin-dremio-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dremio/2026.0.0/metaforge-plugin-dremio-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-druid",
+      "key": "metaforge-plugin-druid",
       "label": "Apache Druid",
       "description": "A high performance, real-time analytics database that delivers sub-second queries on streaming and batch data at scale and under load.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/druid.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/druid.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-druid/2026.0.0/datacap-plugin-druid-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-druid/2026.0.0/metaforge-plugin-druid-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-duckdb",
+      "key": "metaforge-plugin-duckdb",
       "label": "DuckDB",
       "description": "To use DuckDB, you must first create a connection to a database. The exact syntax varies between the client APIs but it typically involves passing an argument to configure persistence.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/duckdb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/duckdb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-duckdb/2026.0.0/datacap-plugin-duckdb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-duckdb/2026.0.0/metaforge-plugin-duckdb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-pinot",
+      "key": "metaforge-plugin-pinot",
       "label": "Apache Pinot",
       "description": "Apache Pinot is a real-time distributed OLAP datastore, built to deliver scalable real-time analytics with low latency. It can ingest from batch data sources (such as Hadoop HDFS, Amazon S3, Azure ADLS, Google Cloud Storage) as well as stream data sources (such as Apache Kafka).",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/pinot.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/pinot.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-pinot/2026.0.0/datacap-plugin-pinot-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-pinot/2026.0.0/metaforge-plugin-pinot-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-cassandra",
+      "key": "metaforge-plugin-cassandra",
       "label": "Apache Cassandra",
       "description": "Cassandra is a distributed key-value store for the cloud.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/cassandra.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/cassandra.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-cassandra/2026.0.0/datacap-plugin-cassandra-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cassandra/2026.0.0/metaforge-plugin-cassandra-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-matrixone",
+      "key": "metaforge-plugin-matrixone",
       "label": "MatrixOne",
       "description": "MatrixOne is a hyper-converged cloud & edge native distributed database with a structure that separates storage, computation, and transactions to form a consolidated HSTAP data engine. This engine enables a single database system to accommodate diverse business loads such as OLTP, OLAP, and stream computing. It also supports deployment and utilization across public, private, and edge clouds, ensuring compatibility with diverse infrastructures.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/matrixone.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/matrixone.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-matrixone/2026.0.0/datacap-plugin-matrixone-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-matrixone/2026.0.0/metaforge-plugin-matrixone-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-scylladb",
+      "key": "metaforge-plugin-scylladb",
       "label": "ScyllaDB",
       "description": "ScyllaDB is a distributed database written in C++ and designed to fully exploit modern cloud infrastructure. It utilizes a shard-per-core architecture, meaning each CPU core has dedicated resources that independently handle data for maximum efficiency. ",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/scylladb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/scylladb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-scylladb/2026.0.0/datacap-plugin-scylladb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-scylladb/2026.0.0/metaforge-plugin-scylladb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-paradedb",
+      "key": "metaforge-plugin-paradedb",
       "label": "ParadeDB",
       "description": "ParadeDB is a modern Elasticsearch alternative built on Postgres. Built for real-time, update-heavy workloads.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/paradedb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/paradedb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-paradedb/2026.0.0/datacap-plugin-paradedb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-paradedb/2026.0.0/metaforge-plugin-paradedb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-hive-2x",
+      "key": "metaforge-plugin-hive-2x",
       "label": "Apache Hive 2.x",
       "description": "The Apache Hive ™ is a distributed, fault-tolerant data warehouse system that enables analytics at a massive scale and facilitates reading, writing, and managing petabytes of data residing in distributed storage using SQL.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/hive2x.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hive2x.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "2.x"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-hive-2x/2026.0.0/datacap-plugin-hive-2x-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hive-2x/2026.0.0/metaforge-plugin-hive-2x-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-kyuubi",
+      "key": "metaforge-plugin-kyuubi",
       "label": "Apache Kyuubi",
       "description": "Apache Kyuubi, a distributed and multi-tenant gateway to provide serverless SQL on lakehouses.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/kyuubi.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/kyuubi.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-kyuubi/2026.0.0/datacap-plugin-kyuubi-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kyuubi/2026.0.0/metaforge-plugin-kyuubi-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-ignite",
+      "key": "metaforge-plugin-ignite",
       "label": "Apache Ignite",
       "description": "Apache Ignite is a distributed database for high-performance computing with in-memory speed.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/ignite.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ignite.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-ignite/2026.0.0/datacap-plugin-ignite-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ignite/2026.0.0/metaforge-plugin-ignite-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-impala",
+      "key": "metaforge-plugin-impala",
       "label": "Apache Impala",
       "description": "Apache Impala is the open source, native analytic database for open data and table formats.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/impala.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/impala.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-impala/2026.0.0/datacap-plugin-impala-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-impala/2026.0.0/metaforge-plugin-impala-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-kylin",
+      "key": "metaforge-plugin-kylin",
       "label": "Apache Kylin",
       "description": "Apache Kylin is a leading open source OLAP engine for Big Data capable for sub-second query latency on trillions of records. Since being created and open sourced by eBay in 2014, and graduated to Top Level Project of Apache Software Foundation in 2015. Kylin has quickly been adopted by thousands of organizations world widely as their critical analytics application for Big Data.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/kylin.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/kylin.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-kylin/2026.0.0/datacap-plugin-kylin-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kylin/2026.0.0/metaforge-plugin-kylin-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-timescale",
+      "key": "metaforge-plugin-timescale",
       "label": "Timescale",
       "description": "TimescaleDB is an open-source database designed to make SQL scalable for time-series data. It is engineered up from PostgreSQL and packaged as a PostgreSQL extension, providing automatic partitioning across time and space (partitioning key), as well as full SQL support.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/timescale.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/timescale.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-timescale/2026.0.0/datacap-plugin-timescale-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-timescale/2026.0.0/metaforge-plugin-timescale-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-iotdb",
+      "key": "metaforge-plugin-iotdb",
       "label": "Apache IoTDB",
       "description": "Apache IoTDB (Database for Internet of Things) is an IoT native database with high performance for data management and analysis, deployable on the edge and the cloud. ",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/iotdb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/iotdb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-iotdb/2026.0.0/datacap-plugin-iotdb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-iotdb/2026.0.0/metaforge-plugin-iotdb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-monetdb",
+      "key": "metaforge-plugin-monetdb",
       "label": "MonetDB",
       "description": "MonetDB is a high performance relational database system for analytics.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/monetdb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/monetdb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-monetdb/2026.0.0/datacap-plugin-monetdb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-monetdb/2026.0.0/metaforge-plugin-monetdb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-ydb",
+      "key": "metaforge-plugin-ydb",
       "label": "YDB",
       "description": "YDB is a versatile open source Distributed SQL Database that combines high availability and scalability with strong consistency and ACID transactions. It accommodates transactional (OLTP), analytical (OLAP), and streaming workloads simultaneously.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/ydb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ydb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-ydb/2026.0.0/datacap-plugin-ydb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ydb/2026.0.0/metaforge-plugin-ydb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-neo4j",
+      "key": "metaforge-plugin-neo4j",
       "label": "Neo4j",
       "description": "Neo4j is a graph database for knowledge management and analysis.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/neo4j.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/neo4j.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-neo4j/2026.0.0/datacap-plugin-neo4j-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-neo4j/2026.0.0/metaforge-plugin-neo4j-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-oceanbase",
+      "key": "metaforge-plugin-oceanbase",
       "label": "OceanBase",
       "description": "OceanBase is an enterprise distributed relational database with high availability, high performance, horizontal scalability, and compatibility with SQL standards.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/oceanbase.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/oceanbase.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-oceanbase/2026.0.0/datacap-plugin-oceanbase-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oceanbase/2026.0.0/metaforge-plugin-oceanbase-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-oracle",
+      "key": "metaforge-plugin-oracle",
       "label": "Oracle",
       "description": "Oracle is an advanced, enterprise-class relational database management system.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/oracle.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/oracle.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-oracle/2026.0.0/datacap-plugin-oracle-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oracle/2026.0.0/metaforge-plugin-oracle-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-phoenix",
+      "key": "metaforge-plugin-phoenix",
       "label": "Apache Phoenix",
       "description": "Apache Phoenix is a SQL skin over HBase delivered as a client-embedded JDBC driver targeting low latency queries over HBase data. ",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/phoenix.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/phoenix.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-phoenix/2026.0.0/datacap-plugin-phoenix-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-phoenix/2026.0.0/metaforge-plugin-phoenix-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-postgresql",
+      "key": "metaforge-plugin-postgresql",
       "label": "PostgreSQL",
       "description": "PostgreSQL is a powerful, open source object-relational database system.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/postgresql.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/postgresql.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-postgresql/2026.0.0/datacap-plugin-postgresql-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-postgresql/2026.0.0/metaforge-plugin-postgresql-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-presto",
+      "key": "metaforge-plugin-presto",
       "label": "Presto",
       "description": "Presto is a distributed SQL query engine for big data.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/presto.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/presto.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-presto/2026.0.0/datacap-plugin-presto-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-presto/2026.0.0/metaforge-plugin-presto-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-snowflake",
+      "key": "metaforge-plugin-snowflake",
       "label": "Snowflake",
       "description": "Snowflake is a database for analytics.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/snowflake.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/snowflake.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-snowflake/2026.0.0/datacap-plugin-snowflake-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-snowflake/2026.0.0/metaforge-plugin-snowflake-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-sqlserver",
+      "key": "metaforge-plugin-sqlserver",
       "label": "Microsoft SQL Server",
       "description": "Microsoft SQL Server is a relational database management system.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/sqlserver.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/sqlserver.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-sqlserver/2026.0.0/datacap-plugin-sqlserver-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-sqlserver/2026.0.0/metaforge-plugin-sqlserver-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-tdengine",
+      "key": "metaforge-plugin-tdengine",
       "label": "TDengine",
       "description": "TDengine is an open source, high-performance, cloud native time-series database optimized for Internet of Things (IoT), Connected Cars, and Industrial IoT.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/tdengine.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/tdengine.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-tdengine/2026.0.0/datacap-plugin-tdengine-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-tdengine/2026.0.0/metaforge-plugin-tdengine-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-trino",
+      "key": "metaforge-plugin-trino",
       "label": "Trino",
       "description": "Trino is a distributed SQL query engine for big data.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/trino.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/trino.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-trino/2026.0.0/datacap-plugin-trino-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-trino/2026.0.0/metaforge-plugin-trino-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-doris",
+      "key": "metaforge-plugin-doris",
       "label": "Apache Doris",
       "description": "Apache Doris is a distributed OLAP database.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/doris.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/doris.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-doris/2026.0.0/datacap-plugin-doris-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-doris/2026.0.0/metaforge-plugin-doris-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-starrocks",
+      "key": "metaforge-plugin-starrocks",
       "label": "StarRocks",
       "description": "StarRocks is a distributed OLAP database.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/starrocks.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/starrocks.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-starrocks/2026.0.0/datacap-plugin-starrocks-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-starrocks/2026.0.0/metaforge-plugin-starrocks-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-hologres",
+      "key": "metaforge-plugin-hologres",
       "label": "Hologres",
       "description": "Hologres is a unified real-time data warehousing service developed by Alibaba Cloud. You can use Hologres to write, update, process, and analyze large amounts of data in real time.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/hologres.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hologres.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-hologres/2026.0.0/datacap-plugin-hologres-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hologres/2026.0.0/metaforge-plugin-hologres-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-greptimedb",
+      "key": "metaforge-plugin-greptimedb",
       "label": "GreptimeDB",
       "description": "GreptimeDB is an open-source unified & cost-effective time-series database for Metrics, Logs, and Events (also Traces in plan). You can gain real-time insights from Edge to Cloud at Any Scale.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/greptimedb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/greptimedb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-greptimedb/2026.0.0/datacap-plugin-greptimedb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-greptimedb/2026.0.0/metaforge-plugin-greptimedb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-questdb",
+      "key": "metaforge-plugin-questdb",
       "label": "QuestDB",
       "description": "QuestDB is the world's fastest growing open-source time-series database. It offers massive ingestion throughput, millisecond queries, powerful time-series SQL extensions, and scales well with minimal and maximal hardware. Save costs with better performance and efficiency.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/questdb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/questdb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-questdb/2026.0.0/datacap-plugin-questdb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-questdb/2026.0.0/metaforge-plugin-questdb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-h2-tcp",
+      "key": "metaforge-plugin-h2-tcp",
       "label": "H2 TCP",
       "description": "Use TCP to access the remote H2 database",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/h2tcp.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/h2tcp.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-h2-tcp/2026.0.0/datacap-plugin-h2-tcp-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2-tcp/2026.0.0/metaforge-plugin-h2-tcp-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-clickhouse-http",
+      "key": "metaforge-plugin-clickhouse-http",
       "label": "ClickHouse HTTP",
       "description": "Use HTTP to access the remote ClickHouse database",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/clickhousehttp.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/clickhousehttp.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-clickhouse-http/2026.0.0/datacap-plugin-clickhouse-http-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse-http/2026.0.0/metaforge-plugin-clickhouse-http-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-ceresdb",
+      "key": "metaforge-plugin-ceresdb",
       "label": "CeresDB",
       "description": "CeresDB is a database system designed to allow for the storage and retrieval of semi-structured data, i.e. data that conforms to a “top-level schema” where columns types are known, but those columns can in-turn contain dictionaries or lists.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/ceresdb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ceresdb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-ceresdb/2026.0.0/datacap-plugin-ceresdb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ceresdb/2026.0.0/metaforge-plugin-ceresdb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-redis-jdbc",
+      "key": "metaforge-plugin-redis-jdbc",
       "label": "Redis JDBC",
       "description": "Use JDBC to access Redis",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/redisjdbc.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/redisjdbc.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-redis-jdbc/2026.0.0/datacap-plugin-redis-jdbc-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis-jdbc/2026.0.0/metaforge-plugin-redis-jdbc-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-elasticsearch-8x",
+      "key": "metaforge-plugin-elasticsearch-8x",
       "label": "Elasticsearch 8.x",
       "description": "Use Elasticsearch 8.x",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/elasticsearch8x.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/elasticsearch8x.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "8.x"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-elasticsearch-8x/2026.0.0/datacap-plugin-elasticsearch-8x-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-elasticsearch-8x/2026.0.0/metaforge-plugin-elasticsearch-8x-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-mongo-atlas",
+      "key": "metaforge-plugin-mongo-atlas",
       "label": "MongoDB Atlas",
       "description": "The MongoDB Atlas SQL JDBC Driver provides SQL connectivity to MongoDB Atlas for client applications developed in Java.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/mongoatlas.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mongoatlas.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-mongo-atlas/2026.0.0/datacap-plugin-mongo-atlas-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-atlas/2026.0.0/metaforge-plugin-mongo-atlas-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-mongo-community",
+      "key": "metaforge-plugin-mongo-community",
       "label": "MongoDB Community",
       "description": "The MongoDB Community SQL JDBC Driver provides SQL connectivity to MongoDB Community for client applications developed in Java.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/mongocommunity.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mongocommunity.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-mongo-community/2026.0.0/datacap-plugin-mongo-community-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-community/2026.0.0/metaforge-plugin-mongo-community-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-plugin-dolphindb",
+      "key": "metaforge-plugin-dolphindb",
       "label": "DolphinDB",
       "description": "DolphinDB is a real-time platform for analytics and stream processing, powered by a high-performance time series database. It offers capabilities related to efficient writes, fast queries, complex analysis, distributed parallel computing, and low-latency stream computing. It also supports high availability.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/plugin/dolphindb.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dolphindb.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-plugin-dolphindb/2026.0.0/datacap-plugin-dolphindb-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dolphindb/2026.0.0/metaforge-plugin-dolphindb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-convert-csv",
+      "key": "metaforge-convert-csv",
       "label": "Csv Convert",
-      "description": "A CSV file conversion plugin for DataCap.",
+      "description": "A CSV file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/convert/csv.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/csv.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-convert-csv/2026.0.0/datacap-convert-csv-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-csv/2026.0.0/metaforge-convert-csv-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-convert-txt",
+      "key": "metaforge-convert-txt",
       "label": "Txt Convert",
-      "description": "A TXT file conversion plugin for DataCap.",
+      "description": "A TXT file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/convert/txt.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/txt.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-convert-txt/2026.0.0/datacap-convert-txt-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-txt/2026.0.0/metaforge-convert-txt-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-convert-json",
+      "key": "metaforge-convert-json",
       "label": "Json Convert",
-      "description": "A JSON file conversion plugin for DataCap.",
+      "description": "A JSON file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/convert/json.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/json.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-convert-json/2026.0.0/datacap-convert-json-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-json/2026.0.0/metaforge-convert-json-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-convert-xml",
+      "key": "metaforge-convert-xml",
       "label": "Xml Convert",
-      "description": "A XML file conversion plugin for DataCap.",
+      "description": "A XML file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/convert/xml.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/xml.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-convert-xml/2026.0.0/datacap-convert-xml-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-xml/2026.0.0/metaforge-convert-xml-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-convert-none",
+      "key": "metaforge-convert-none",
       "label": "None Convert",
-      "description": "A multidimensional arrays file conversion plugin for DataCap.",
+      "description": "A multidimensional arrays file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/convert/none.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/none.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-convert-none/2026.0.0/datacap-convert-none-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-none/2026.0.0/metaforge-convert-none-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-executor-local",
+      "key": "metaforge-executor-local",
       "label": "Local Executor",
-      "description": "A local execution plugin for DataCap.",
+      "description": "A local execution plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Executor",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/executor/local.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/executor/local.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-executor-local/2026.0.0/datacap-executor-local-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-local/2026.0.0/metaforge-executor-local-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-executor-seatunnel",
+      "key": "metaforge-executor-seatunnel",
       "label": "Seatunnel Executor",
-      "description": "A Seatunnel execution plugin for DataCap.",
+      "description": "A Seatunnel execution plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Executor",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/executor/seatunnel.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/executor/seatunnel.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-executor-seatunnel/2026.0.0/datacap-executor-seatunnel-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-seatunnel/2026.0.0/metaforge-executor-seatunnel-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-scheduler-local",
+      "key": "metaforge-scheduler-local",
       "label": "Local Scheduler",
-      "description": "A local scheduling plugin for DataCap.",
+      "description": "A local scheduling plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Scheduler",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/scheduler/local.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/scheduler/local.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-scheduler-local/2026.0.0/datacap-scheduler-local-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-scheduler-local/2026.0.0/metaforge-scheduler-local-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-fs-local",
+      "key": "metaforge-fs-local",
       "label": "Local FileSystem",
-      "description": "A local file system plugin for DataCap.",
+      "description": "A local file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/fs/local.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/local.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-fs-local/2026.0.0/datacap-fs-local-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-local/2026.0.0/metaforge-fs-local-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-fs-qiniu",
+      "key": "metaforge-fs-qiniu",
       "label": "Qiniu FileSystem",
-      "description": "A Qiniu file system plugin for DataCap.",
+      "description": "A Qiniu file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/fs/qiniu.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/qiniu.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-fs-qiniu/2026.0.0/datacap-fs-qiniu-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-qiniu/2026.0.0/metaforge-fs-qiniu-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-fs-alioss",
+      "key": "metaforge-fs-alioss",
       "label": "AliYun OSS FileSystem",
-      "description": "A Ali OSS file system plugin for DataCap.",
+      "description": "A Ali OSS file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/fs/alioss.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/alioss.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-fs-alioss/2026.0.0/datacap-fs-alioss-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-alioss/2026.0.0/metaforge-fs-alioss-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-fs-tencent-cos",
+      "key": "metaforge-fs-tencent-cos",
       "label": "Tencent COS FileSystem",
-      "description": "A Tencent COS file system plugin for DataCap.",
+      "description": "A Tencent COS file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/fs/tencent-cos.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/tencent-cos.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-fs-tencent-cos/2026.0.0/datacap-fs-tencent-cos-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-tencent-cos/2026.0.0/metaforge-fs-tencent-cos-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-fs-amazon-s3",
+      "key": "metaforge-fs-amazon-s3",
       "label": "Amazon S3 FileSystem",
-      "description": "A Amazon S3 file system plugin for DataCap.",
+      "description": "A Amazon S3 file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/fs/amazon-s3.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/amazon-s3.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-fs-amazon-s3/2026.0.0/datacap-fs-amazon-s3-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-amazon-s3/2026.0.0/metaforge-fs-amazon-s3-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "datacap-fs-minio",
+      "key": "metaforge-fs-minio",
       "label": "Minio FileSystem",
-      "description": "A Minio file system plugin for DataCap.",
+      "description": "A Minio file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
       "version": "2026.0.0",
-      "author": "datacap-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/datacap/resources/logo/fs/minio.svg",
+      "author": "metaforge-community",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/minio.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/io/edurt/datacap/datacap-fs-minio/2026.0.0/datacap-fs-minio-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-minio/2026.0.0/metaforge-fs-minio-2026.0.0-bin.tar.gz"
     }
   ]
 }

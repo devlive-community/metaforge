@@ -3,7 +3,7 @@ If you are upgrading to 2024.03.1 from a different version, execute the followin
 # Если вы обновляетесь до версии 2024.03.1 с другой версии, выполните следующую инструкцию SQL
 # 如果您是通过其他版本升级到 2024.03.1, 请执行以下 SQL 语句
 
-USE `datacap`;
+USE `metaforge`;
 
 UPDATE `menus`
 SET `url` = '/home'
@@ -17,9 +17,9 @@ UPDATE `menus`
 SET `url` = '/admin/query'
 WHERE `id` = 2;
 
-ALTER TABLE `datacap_source`
+ALTER TABLE `metaforge_source`
     ADD COLUMN `code` VARCHAR(100);
 
-UPDATE `datacap_source`
+UPDATE `metaforge_source`
 SET `code` = REPLACE(UUID(), '-', '')
 WHERE `code` IS NULL;

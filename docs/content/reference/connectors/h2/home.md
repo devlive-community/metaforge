@@ -11,7 +11,7 @@ H2 is an embedded database developed in Java that is itself just a class library
 ---
 
 !!! note
-    If you need to use this data source, you need to upgrade the DataCap service to >= `1.8.x`
+    If you need to use this data source, you need to upgrade the MetaForge service to >= `1.8.x`
 !!!
 
 Support Time: `2023-04-05`
@@ -22,7 +22,7 @@ Support Time: `2023-04-05`
 
 !!! note
 
-    If your h2 service version requires other special configurations, please refer to modifying the configuration file and restarting the DataCap service.
+    If your h2 service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
 !!!
 
@@ -48,7 +48,7 @@ Support Time: `2023-04-05`
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/datacap/issues/new/choose) to us
+    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
 
     - [x] `all`
 

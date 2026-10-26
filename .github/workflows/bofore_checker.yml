@@ -25,7 +25,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 20.x
-      - run: cd core/datacap-ui && npm install pnpm@9.13.2 -g && pnpm install && pnpm run build
+      - run: cd core/metaforge-ui && npm install pnpm@9.13.2 -g && pnpm install && pnpm run build
 
   before_checker_style:
     runs-on: ubuntu-latest
@@ -59,9 +59,9 @@ jobs:
       - name: Run SpotBugs skip server
         env:
           MAVEN_OPTS: -Xmx1024m
-        run: ./mvnw clean install spotbugs:spotbugs -pl '!core/datacap-server' -Dcheckstyle.skip -Dgpg.skip -Dskip.pnpm -DskipTests=true
+        run: ./mvnw clean install spotbugs:spotbugs -pl '!core/metaforge-server' -Dcheckstyle.skip -Dgpg.skip -Dskip.pnpm -DskipTests=true
       - name: Run SpotBugs for server
-        run: ./mvnw clean install spotbugs:spotbugs -Dcheckstyle.skip -Dgpg.skip -Dskip.pnpm -DskipTests=true -f core/datacap-server/pom.xml
+        run: ./mvnw clean install spotbugs:spotbugs -Dcheckstyle.skip -Dgpg.skip -Dskip.pnpm -DskipTests=true -f core/metaforge-server/pom.xml
 
   before_checker_test:
     runs-on: ubuntu-latest

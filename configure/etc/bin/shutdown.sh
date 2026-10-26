@@ -1,7 +1,7 @@
 #!/bin/sh
 
 HOME=$(pwd)
-APPLICATION_NAME='io.edurt.datacap.server.DataCap'
+APPLICATION_NAME='org.devlive.metaforge.server.MetaForge'
 APPLICATION_PID=
 
 job_before_echo_basic() {
