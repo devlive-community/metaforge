@@ -11,11 +11,11 @@
             @select="onSelect">
       <template #title="{ node }">
         <div class="flex items-center space-x-1">
-          <component :is="node.level === 2 ? DatabaseOutlined :
-                          node.level === 3 ? TableOutlined :
-                          node.level === 4 ? InsertRowRightOutlined :
-                          DatabaseOutlined
-                     " class="text-xs font-semibold text-gray-500" :style="{ fontSize: '13px' }"/>
+          <component :size="13" :is="node.level === 2 ? Database :
+                          node.level === 3 ? Table :
+                          node.level === 4 ? Columns3 :
+                          Database
+                     " class="text-xs font-semibold text-gray-500" />
           <span class="text-sm font-normal text-gray-500">{{ node.title }}</span>
         </div>
       </template>
@@ -29,7 +29,7 @@ import { MfMessage } from 'metaforge-ui'
 import { StructureEnum, StructureModel } from '@/model/structure'
 import MetadataService from '@/services/metadata.ts'
 import { ObjectUtils } from '@/utils/object'
-import { DatabaseOutlined, InsertRowRightOutlined, TableOutlined } from '@ant-design/icons-vue'
+import { Columns3, Database, Table } from '@lucide/vue'
 
 defineOptions({ name: 'MetadataTree' })
 

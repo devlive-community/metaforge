@@ -30,7 +30,7 @@
             <MdPreview :modelValue="toMarkdown(record.info)" style="padding: 0"/>
           </template>
           <MfButton variant="ghost" size="sm">
-            <EyeOutlined :style="{ fontSize: '20px' }"/>
+            <Eye :size="20" />
           </MfButton>
         </MfTooltip>
       </template>
@@ -57,7 +57,7 @@ import Common, { useUtil } from '@/utils/common'
 import SourceService from '@/services/source'
 import { MdPreview } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
-import { EyeOutlined } from '@ant-design/icons-vue'
+import { Eye } from '@lucide/vue'
 
 defineOptions({ name: 'SourceHistory' })
 

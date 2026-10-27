@@ -5,7 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.devlive.metaforge.service.configure.IConfigure;
+import org.devlive.metaforge.plugin.configure.PluginConfigure;
 
 @Data
 @ToString
@@ -18,5 +18,5 @@ public class SourceBody
     private String type;
     private String name;
     private String version;
-    private IConfigure configure;
+    private PluginConfigure configure;
 }

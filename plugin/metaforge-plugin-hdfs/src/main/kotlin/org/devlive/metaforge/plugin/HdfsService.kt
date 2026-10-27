@@ -3,7 +3,7 @@ package org.devlive.metaforge.plugin
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.PluginService
 import org.devlive.metaforge.spi.adapter.Adapter
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import org.devlive.metaforge.spi.parser.SqlParser
 import org.apache.commons.beanutils.BeanUtils
@@ -16,7 +16,7 @@ class HdfsService : PluginService
 {
     private val log: Logger = getLogger(HdfsService::class.java)
 
-    private var configure: Configure? = null
+    private var configure: RuntimeConfigure? = null
     private var connection: HdfsConnection? = null
     private var response: Response? = null
 
@@ -25,12 +25,12 @@ class HdfsService : PluginService
         return "SHOW DATABASES"
     }
 
-    override fun connect(configure: Configure?)
+    override fun connect(configure: RuntimeConfigure?)
     {
         try
         {
             this.response = Response()
-            this.configure = Configure()
+            this.configure = RuntimeConfigure()
             BeanUtils.copyProperties(this.configure, configure)
             this.connection = HdfsConnection(this.configure !!, this.response !!)
         }
@@ -55,7 +55,7 @@ class HdfsService : PluginService
         return response !!
     }
 
-    override fun execute(configure: Configure?, content: String?): Response
+    override fun execute(configure: RuntimeConfigure?, content: String?): Response
     {
         connect(configure)
         return execute(content)

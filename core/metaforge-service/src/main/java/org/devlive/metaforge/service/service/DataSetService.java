@@ -33,7 +33,7 @@ public interface DataSetService
      * 供同步对话框预填表单使用。
      * Return the executor's tunable fields with defaultValue pre-populated from current effective config.
      */
-    CommonResponse<java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField>> getSyncFields(String code);
+    CommonResponse<java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField>> getSyncFields(String code);
 
     CommonResponse<Boolean> clearData(String code);
 

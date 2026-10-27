@@ -5,7 +5,7 @@ import org.devlive.metaforge.executor.configure.ExecutorProgressListener
 import org.devlive.metaforge.executor.configure.OriginColumn
 import org.devlive.metaforge.spi.PluginService
 import org.devlive.metaforge.spi.adapter.BatchWriter
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.slf4j.Logger
 
 /** 每处理多少行上报一次进度 / 打一次日志。行为与重构前保持一致。 */
@@ -60,11 +60,11 @@ internal fun <T> BatchWriter.runCancelable(token: CancellationToken, block: (Bat
 @SuppressFBWarnings(value = ["EI_EXPOSE_REP", "EI_EXPOSE_REP2"])
 internal class SyncContext(
     val inputPlugin: PluginService,
-    val inputConfigure: Configure,
+    val inputConfigure: RuntimeConfigure,
     val query: String,
     val fetchSize: Int,
     val outputPlugin: PluginService,
-    val outputConfigure: Configure,
+    val outputConfigure: RuntimeConfigure,
     val database: String,
     val table: String,
     val originColumns: List<OriginColumn>,

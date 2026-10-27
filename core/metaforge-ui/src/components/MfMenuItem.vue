@@ -23,6 +23,13 @@ const subKey = inject<{ key: string | number } | null>('mfSubMenu', null)
 const itemKey = computed(() => props.key_)
 const selected = computed(() => menu?.selectedKeys.value.includes(itemKey.value) ?? false)
 
+function onClickCapture(event: MouseEvent): void {
+    if (props.disabled) {
+        event.preventDefault()
+        event.stopImmediatePropagation()
+    }
+}
+
 function onClick(): void {
     if (props.disabled || !menu) return
     const keyPath = subKey ? [itemKey.value, subKey.key] : [itemKey.value]
@@ -34,11 +41,11 @@ const horizontal = computed(() => menu?.mode.value === 'horizontal')
 const itemClass = computed(() => clsx(
     'relative flex cursor-pointer items-center gap-2.5 rounded-mf-md px-3 py-2 font-medium',
     'transition-[color,background-color] duration-(--mf-duration-fast) ease-(--mf-easing)',
-    horizontal ? '' : 'w-full',
+    horizontal.value ? '' : 'w-full',
     props.danger ? 'text-danger' : 'text-content-secondary',
-    props.disabled && 'cursor-not-allowed opacity-40',
-    !props.disabled && !selected && 'hover:bg-surface-hover hover:text-content',
-    selected && clsx('bg-surface-active', props.danger ? 'text-danger' : 'text-primary'),
+    props.disabled && 'cursor-not-allowed opacity-40 [&_a]:cursor-not-allowed',
+    !props.disabled && !selected.value && 'hover:bg-surface-hover hover:text-content',
+    selected.value && clsx('bg-surface-active', props.danger ? 'text-danger' : 'text-primary'),
 ))
 </script>
 
@@ -46,10 +53,13 @@ const itemClass = computed(() => clsx(
     <li
         role="menuitem"
         :aria-selected="selected"
+        :aria-disabled="disabled || undefined"
         :class="itemClass"
+        @click.capture="onClickCapture"
+        @auxclick.capture="onClickCapture"
         @click="onClick"
     >
         <slot name="icon" />
-        <span class="truncate"><slot /></span>
+        <span class="min-w-0 flex-1 truncate [&>a:only-child]:after:absolute [&>a:only-child]:after:inset-0 [&>a:only-child]:after:rounded-mf-md [&>a:only-child]:after:content-['']"><slot /></span>
     </li>
 </template>

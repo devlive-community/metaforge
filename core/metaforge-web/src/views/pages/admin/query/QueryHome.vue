@@ -15,14 +15,14 @@
             <template #header>
               <MfSpace v-if="selectSource.code">
                 <MfButton variant="primary" :loading="loading.running" :disabled="(!selectSource.id && !loading.running) || loading.running" @click="onRun()">
-                  <CaretRightOutlined :style="{ fontSize: '15px' }"/>
+                  <Play :size="15" />
                   {{ $t('query.common.execute') }}
                 </MfButton>
 
                 <MfButton :loading="loading.formatting"
                           :disabled="(!selectSource.id && !loading.formatting) || loading.formatting"
                           @click="onFormat()">
-                  <ClearOutlined :style="{ fontSize: '15px' }"/>
+                  <Eraser :size="15" />
                   {{ $t('query.common.format') }}
                 </MfButton>
 
@@ -30,12 +30,12 @@
                           :loading="loading.formatting"
                           :disabled="!selectSource.id || !loading.running"
                           @click="onCancel()">
-                  <StopOutlined :style="{ fontSize: '15px' }"/>
+                  <CircleStop :size="15" />
                   {{ $t('common.cancel') }}
                 </MfButton>
 
                 <MfButton v-if="responseConfigure.response" variant="primary" @click="visibleSnippet(true)">
-                  <PlusOutlined :style="{ fontSize: '15px' }"/>
+                  <Plus :size="15" />
                   {{ $t('common.snippet') }}
                 </MfButton>
 
@@ -56,7 +56,7 @@
                     </template>
 
                     <MfButton>
-                      <ClockCircleOutlined :style="{ fontSize: '15px' }"/>
+                      <Clock :size="15" />
                       {{ responseConfigure.response.data.processor.elapsed }} ms
                     </MfButton>
                   </MfTooltip>
@@ -64,13 +64,13 @@
 
                 <MfButton v-if="selectSource.id && (responseConfigure.response?.data || !responseConfigure.response?.status)"
                           variant="primary" @click="visibleQueryHelp(true)">
-                  <RobotOutlined :style="{ fontSize: '15px' }"/>
+                  <Bot :size="15" />
 
                   {{ $t('query.common.help') }}
                 </MfButton>
 
                 <MfButton :disabled="!selectSource.code" @click="onPlusEditor">
-                  <EditOutlined :style="{ fontSize: '15px' }"/>
+                  <Pencil :size="15" />
 
                   {{ $t('common.createEditor') }}
                 </MfButton>
@@ -96,7 +96,7 @@
                           class="inline-flex size-4 items-center justify-center rounded-mf-sm text-content-tertiary hover:bg-surface-hover hover:text-content"
                           role="button"
                           @click.stop="onEditTabs(item.key, 'remove')">
-                      <CloseOutlined :style="{ fontSize: '10px' }"/>
+                      <X :size="10" />
                     </span>
                   </span>
                 </template>
@@ -169,7 +169,7 @@ import { SnippetModel, SnippetRequest } from '@/model/snippet'
 import SnippetInfo from '@/views/pages/admin/snippet/SnippetInfo.vue'
 import { TokenUtils } from '@/utils/token.ts'
 import axios from 'axios'
-import { CaretRightOutlined, ClearOutlined, ClockCircleOutlined, CloseOutlined, EditOutlined, PlusOutlined, RobotOutlined, StopOutlined } from '@ant-design/icons-vue'
+import { Bot, CircleStop, Clock, Eraser, Pencil, Play, Plus, X } from '@lucide/vue'
 
 interface EditorInstance
 {

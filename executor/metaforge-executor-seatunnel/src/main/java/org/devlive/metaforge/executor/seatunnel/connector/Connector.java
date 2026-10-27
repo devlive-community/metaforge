@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Maps;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.executor.configure.ExecutorConfigure;
-import org.devlive.metaforge.spi.model.Configure;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.util.Map;
 import java.util.Properties;
@@ -56,7 +56,7 @@ public abstract class Connector
         return properties;
     }
 
-    protected Properties formatToProperties(Configure originalConfigure)
+    protected Properties formatToProperties(RuntimeConfigure originalConfigure)
     {
         return new Properties();
     }

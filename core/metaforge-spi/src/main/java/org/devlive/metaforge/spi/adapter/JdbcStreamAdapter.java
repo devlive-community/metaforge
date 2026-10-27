@@ -4,8 +4,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.connection.JdbcConnection;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -28,7 +28,7 @@ public final class JdbcStreamAdapter
 
     public static void executeStream(
             PluginService plugin,
-            Configure configure,
+            RuntimeConfigure configure,
             String sql,
             int fetchSize,
             RowCallback callback)
@@ -101,7 +101,7 @@ public final class JdbcStreamAdapter
 
     public static BatchWriter openBatchWriter(
             PluginService plugin,
-            Configure configure,
+            RuntimeConfigure configure,
             String database,
             String table,
             List<String> columns,
@@ -121,7 +121,7 @@ public final class JdbcStreamAdapter
         return new JdbcBatchWriter(jdbcConnection, connection, database, table, columns, effectiveBatchSize);
     }
 
-    private static JdbcConnection openConnection(PluginService plugin, Configure configure)
+    private static JdbcConnection openConnection(PluginService plugin, RuntimeConfigure configure)
     {
         Response response = new Response();
         configure.setDriver(plugin.driver());
@@ -130,7 +130,7 @@ public final class JdbcStreamAdapter
         return new JdbcConnection(configure, response);
     }
 
-    private static void applyFetchSize(Statement statement, int fetchSize, Configure configure)
+    private static void applyFetchSize(Statement statement, int fetchSize, RuntimeConfigure configure)
     {
         try {
             String type = configure.getType();

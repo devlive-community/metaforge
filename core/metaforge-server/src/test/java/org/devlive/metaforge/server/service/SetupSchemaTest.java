@@ -32,6 +32,7 @@ public class SetupSchemaTest
                 for (int attempt = 0; attempt < 2; attempt++) {
                     ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema/setup-schema-h2.sql"));
                     ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema/setup-data.sql"));
+                    NavigationMigration.apply(connection);
                 }
             }
             factory.setDataSource(dataSource);

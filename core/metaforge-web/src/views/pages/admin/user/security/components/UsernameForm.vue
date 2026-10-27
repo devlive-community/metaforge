@@ -22,9 +22,9 @@
                 <MfInput v-model="formState.newUsername"
                          @input="onUsernameInput">
                   <template #suffix>
-                    <CheckCircleFilled v-if="checkState === 'success'" class="dc-rename__check--success"/>
-                    <CloseCircleFilled v-else-if="checkState === 'error'" class="dc-rename__check--error"/>
-                    <LoadingOutlined v-else-if="checkState === 'loading'" class="dc-rename__check--loading"/>
+                    <CircleCheck :size="14" v-if="checkState === 'success'" class="dc-rename__check--success"/>
+                    <CircleX :size="14" v-else-if="checkState === 'error'" class="dc-rename__check--error"/>
+                    <LoaderCircle :size="14" v-else-if="checkState === 'loading'" class="dc-rename__check--loading"/>
                   </template>
                 </MfInput>
                 <div v-if="checkState === 'error'" class="dc-rename__field-error">{{ checkMessage }}</div>
@@ -57,7 +57,7 @@
         <div class="dc-rename__card dc-rename__info">
           <div class="dc-rename__info-head">
             <div class="dc-rename__info-icon">
-              <SafetyCertificateOutlined :style="{ fontSize: '16px' }"/>
+              <ShieldCheck :size="16" />
             </div>
             <div class="dc-rename__info-title">{{ $t('user.common.modifyUsernameTip') }}</div>
           </div>
@@ -81,12 +81,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
-import {
-  CheckCircleFilled,
-  CloseCircleFilled,
-  LoadingOutlined,
-  SafetyCertificateOutlined
-} from '@ant-design/icons-vue'
+import { CircleCheck, CircleX, LoaderCircle, ShieldCheck } from '@lucide/vue'
 import UserService from '@/services/user'
 import { UsernameModel } from '@/model/user'
 import Common from '@/utils/common'

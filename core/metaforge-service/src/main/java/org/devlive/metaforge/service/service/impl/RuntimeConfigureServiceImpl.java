@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.common.response.CommonResponse;
-import org.devlive.metaforge.plugin.configure.PluginConfigureField;
+import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
 import org.devlive.metaforge.service.entity.ConfigureEntity;
 import org.devlive.metaforge.service.repository.ConfigureRepository;
 import org.devlive.metaforge.service.service.RuntimeConfigureService;
@@ -36,12 +36,12 @@ public class RuntimeConfigureServiceImpl
     }
 
     @Override
-    public Map<String, String> getEffective(String category, String name, List<PluginConfigureField> fields)
+    public Map<String, String> getEffective(String category, String name, List<RuntimeConfigureField> fields)
     {
         Map<String, String> result = new LinkedHashMap<>();
         // 先 fill 默认值，保证调用方拿到的 map 字段齐全
         if (fields != null) {
-            for (PluginConfigureField field : fields) {
+            for (RuntimeConfigureField field : fields) {
                 if (field.getDefaultValue() != null) {
                     result.put(field.getName(), field.getDefaultValue());
                 }
@@ -89,14 +89,14 @@ public class RuntimeConfigureServiceImpl
     }
 
     @Override
-    public void seedIfAbsent(String category, String name, List<PluginConfigureField> fields, String description)
+    public void seedIfAbsent(String category, String name, List<RuntimeConfigureField> fields, String description)
     {
         if (repository.existsByCategoryAndName(category, name)) {
             return;
         }
         Map<String, String> defaults = new LinkedHashMap<>();
         if (fields != null) {
-            for (PluginConfigureField field : fields) {
+            for (RuntimeConfigureField field : fields) {
                 if (field.getDefaultValue() != null) {
                     defaults.put(field.getName(), field.getDefaultValue());
                 }

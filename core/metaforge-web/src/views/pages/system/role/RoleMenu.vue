@@ -4,7 +4,11 @@
       <div v-if="loading" class="flex items-center justify-center py-8">
         <MfSpinner size="lg"/>
       </div>
-      <template v-else>
+      <div v-else-if="loadError" class="flex flex-col items-start gap-3">
+        <MfAlert variant="danger">{{ loadError }}</MfAlert>
+        <MfButton @click="handlerInitialize">{{ $t('common.refresh') }}</MfButton>
+      </div>
+      <template v-else-if="loaded">
         <!-- a-tree checkable 等价实现：MfCheckbox + 扁平化缩进渲染（级联勾选） -->
         <div class="flex flex-col gap-1 max-h-[50vh] overflow-y-auto pr-1">
           <div v-for="node in flatNodes"
@@ -13,9 +17,10 @@
                :style="{ paddingLeft: `${ node.depth * 20 }px` }">
             <button v-if="node.hasChildren"
                     type="button"
+                    :aria-label="$t(expandedNodes.includes(node.key) ? 'role.tip.collapseMenu' : 'role.tip.expandMenu').replace('$NAME', node.label)"
                     class="inline-flex size-5 shrink-0 items-center justify-center rounded-mf-sm text-content-tertiary hover:bg-surface-hover hover:text-content"
                     @click="toggleExpand(node.key)">
-              <RightOutlined :class="['transition-transform duration-200', expandedNodes.includes(node.key) && 'rotate-90']" :style="{ fontSize: '12px' }"/>
+              <ChevronRight :size="12" :class="['transition-transform duration-200', expandedNodes.includes(node.key) && 'rotate-90']" />
             </button>
             <span v-else class="inline-block size-5 shrink-0"/>
             <MfCheckbox :model-value="isChecked(node.key)"
@@ -27,7 +32,7 @@
         </div>
 
         <div class="flex justify-end">
-          <MfButton variant="primary" :loading="saving" :disabled="saving" @click="onSubmit()">
+          <MfButton variant="primary" :loading="saving" :disabled="saving || !loaded" @click="onSubmit()">
             {{ title }}
           </MfButton>
         </div>
@@ -37,14 +42,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { RightOutlined } from '@ant-design/icons-vue'
+import { ChevronRight } from '@lucide/vue'
 import { RoleModel } from '@/model/role'
 import UserService from '@/services/user'
 import RoleService from '@/services/role'
-import CommonUtils from '@/utils/common'
+import { useUserStore } from '@/stores/user'
+import { roleErrorKey } from '@/utils/role-code'
 
 defineOptions({ name: 'RoleMenu' })
 
@@ -66,12 +72,17 @@ const saving = ref(false)
 const title = ref<string | null>(null)
 const data = ref<any[]>([])
 const menus = ref<any[]>([])
+const loaded = ref(false)
+const loadError = ref('')
+const userStore = useUserStore()
+let loadRequest = 0
+onBeforeUnmount(() => { loadRequest++ })
 
 const handleData = (source: any[]): any[] => {
   return source.map(item => {
     const node: { value: any; label: any; children: any[] } = {
       value: item.id,
-      label: item.title,
+      label: item.i18nKey && t(item.i18nKey) !== item.i18nKey ? t(item.i18nKey) : item.title,
       children: []
     }
     if (item.children) {
@@ -133,24 +144,18 @@ const toFlatNodes = (nodes: any[], depth: number): MenuFlatNode[] => {
 
 const flatNodes = computed(() => toFlatNodes(data.value, 0))
 
-// 与 antd 级联语义一致：父选中则子孙选中；子全选则父选中
+// 按实际子节点计算回显；保存了父级关联不代表其全部子菜单都被授权。
 const checkedKeySet = computed(() => {
   const set = new Set<any>(menus.value)
-  const addDown = (nodes: any[]) => {
-    nodes.forEach((node: any) => {
-      if (set.has(node.value) && node.children?.length) {
-        node.children.forEach((child: any) => set.add(child.value))
-        addDown(node.children)
-      }
-    })
-  }
-  addDown(data.value)
   const markUp = (nodes: any[]) => {
     nodes.forEach((node: any) => {
       if (node.children?.length) {
         markUp(node.children)
         if (node.children.every((child: any) => set.has(child.value))) {
           set.add(node.value)
+        }
+        else {
+          set.delete(node.value)
         }
       }
     })
@@ -166,7 +171,7 @@ const isIndeterminate = (key: any): boolean => {
   if (!kids.length) {
     return false
   }
-  return kids.some(kid => checkedKeySet.value.has(kid) || isIndeterminate(kid))
+  return !isChecked(key) && (menus.value.includes(key) || kids.some(kid => checkedKeySet.value.has(kid) || isIndeterminate(kid)))
 }
 
 const toggleExpand = (key: any) => {
@@ -208,44 +213,58 @@ const onCheck = (node: MenuFlatNode, checked: boolean) => {
   menus.value = Array.from(set)
 }
 
-const handlerInitialize = () => {
+const handlerInitialize = async () => {
+  const request = ++loadRequest
   loading.value = true
-  if (props.info) {
-    title.value = t('role.common.assignMenu').replace('$NAME', props.info.name as string)
-    RoleService.getAllMenuById(props.info?.id as number)
-               .then((response) => {
-                 if (response.status) {
-                   const source = response.data
-                   data.value = handleData(source)
-                   menus.value = extractSelectedItems(source).map(item => item.id)
-                 }
-               })
-               .finally(() => (loading.value = false))
+  loaded.value = false
+  loadError.value = ''
+  if (!props.info?.id) {
+    loadError.value = t('role.validate.identityMismatch')
+    loading.value = false
+    return
   }
+  title.value = t('role.common.assignMenu').replace('$NAME', props.info.name as string)
+  try {
+    const response = await RoleService.getAllMenuById(props.info.id)
+    if (request !== loadRequest) return
+    if (response.status && Array.isArray(response.data)) {
+      data.value = handleData(response.data)
+      menus.value = extractSelectedItems(response.data).map(item => item.id)
+      loaded.value = true
+    }
+    else {
+      loadError.value = t(roleErrorKey(response.code) || 'role.validate.menuLoadFailed')
+    }
+  }
+  catch {
+    if (request === loadRequest) loadError.value = t('role.validate.menuLoadFailed')
+  }
+  finally { if (request === loadRequest) loading.value = false }
 }
 
 const onCancel = () => {
   visible.value = false
 }
 
-const onSubmit = () => {
+const onSubmit = async () => {
+  if (!loaded.value || loading.value || saving.value) return
   saving.value = true
-  RoleService.saveMenu(props.info?.id as number, menus.value)
-             .then((response) => {
-               if (response.status) {
-                 UserService.getMenus()
-                            .then(res => {
-                              if (res.status) {
-                                localStorage.setItem(CommonUtils.menu, JSON.stringify(res.data))
-                              }
-                            })
-                 onCancel()
-               }
-               else {
-                 MfMessage.error(response.message)
-               }
-             })
-             .finally(() => (saving.value = false))
+  try {
+    const response = await RoleService.saveMenu(props.info?.id as number, [...menus.value])
+    if (!response.status) {
+      MfMessage.error(t(roleErrorKey(response.code) || 'role.validate.menuSaveFailed'))
+      return
+    }
+    try {
+      const refresh = await UserService.getMenus()
+      if (refresh.status && Array.isArray(refresh.data)) userStore.updateMenu(refresh.data)
+      else MfMessage.error(t('role.tip.menuRefreshFailed'))
+    }
+    catch { MfMessage.error(t('role.tip.menuRefreshFailed')) }
+    onCancel()
+  }
+  catch { MfMessage.error(t('role.validate.menuSaveFailed')) }
+  finally { saving.value = false }
 }
 
 handlerInitialize()

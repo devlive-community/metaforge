@@ -5,7 +5,7 @@ import org.devlive.metaforge.spi.PluginService
 import org.devlive.metaforge.spi.PluginType
 import org.devlive.metaforge.spi.adapter.BatchWriter
 import org.devlive.metaforge.spi.adapter.RowCallback
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Proxy
@@ -65,7 +65,7 @@ class FakePluginService(
 
     override fun type(): PluginType = if (streaming) PluginType.JDBC else PluginType.HTTP
 
-    override fun executeStream(configure: Configure, content: String, fetchSize: Int, callback: RowCallback)
+    override fun executeStream(configure: RuntimeConfigure, content: String, fetchSize: Int, callback: RowCallback)
     {
         callback.onStatement(newFakeStatement())
         callback.onSchema(headers, types)
@@ -82,7 +82,7 @@ class FakePluginService(
     }
 
     override fun openBatchWriter(
-        configure: Configure,
+        configure: RuntimeConfigure,
         database: String,
         table: String,
         columns: List<String>,
@@ -94,7 +94,7 @@ class FakePluginService(
         return writer
     }
 
-    override fun execute(configure: Configure, content: String): Response
+    override fun execute(configure: RuntimeConfigure, content: String): Response
     {
         executedSql.add(content)
         return executeHandler?.invoke(content)

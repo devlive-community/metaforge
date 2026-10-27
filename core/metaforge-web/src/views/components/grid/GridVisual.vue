@@ -109,7 +109,7 @@ const onSubmit = () => {
                  .then((response) => {
                    if (response.status) {
                      MfMessage.success(t('report.tip.publishSuccess').replace('$VALUE', formState.value.name))
-                     router.push('/admin/report')
+                     router.push('/report')
                    }
                    else {
                      MfMessage.error(response.message)

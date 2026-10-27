@@ -3,7 +3,7 @@ package org.devlive.metaforge.executor.configure
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.common.RunProtocol
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import java.util.*
 
 @SuppressFBWarnings(value = ["EI_EXPOSE_REP", "EI_EXPOSE_REP2"])
@@ -16,7 +16,7 @@ data class ExecutorConfigure(
     var query: String? = null,
     var database: String? = null,
     var table: String? = null,
-    var originConfigure: Configure? = null,
+    var originConfigure: RuntimeConfigure? = null,
     var originColumns: Set<OriginColumn> = mutableSetOf()
 )
 {

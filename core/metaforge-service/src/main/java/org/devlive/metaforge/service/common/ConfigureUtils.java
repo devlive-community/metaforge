@@ -10,18 +10,19 @@ import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.common.enums.ServiceState;
 import org.devlive.metaforge.common.utils.BeanToPropertiesUtils;
 import org.devlive.metaforge.common.utils.JsonUtils;
+import org.devlive.metaforge.plugin.Plugin;
+import org.devlive.metaforge.plugin.PluginManager;
+import org.devlive.metaforge.plugin.configure.FieldType;
+import org.devlive.metaforge.plugin.configure.PluginConfigure;
+import org.devlive.metaforge.plugin.configure.PluginConfigureExecutor;
+import org.devlive.metaforge.plugin.configure.PluginConfigureExecutorField;
+import org.devlive.metaforge.plugin.configure.PluginConfigureField;
+import org.devlive.metaforge.plugin.configure.PluginConfigureFieldName;
+import org.devlive.metaforge.plugin.configure.PluginConfigureFieldType;
+import org.devlive.metaforge.plugin.configure.PluginConfigurePipelineType;
 import org.devlive.metaforge.service.body.PipelineFieldBody;
-import org.devlive.metaforge.service.configure.FieldType;
-import org.devlive.metaforge.service.configure.IConfigure;
-import org.devlive.metaforge.service.configure.IConfigureExecutor;
-import org.devlive.metaforge.service.configure.IConfigureExecutorField;
-import org.devlive.metaforge.service.configure.IConfigureField;
-import org.devlive.metaforge.service.configure.IConfigureFieldName;
-import org.devlive.metaforge.service.configure.IConfigureFieldType;
-import org.devlive.metaforge.service.configure.IConfigurePipelineType;
 import org.devlive.metaforge.service.entity.SourceEntity;
-import org.devlive.metaforge.spi.model.Configure;
-import org.springframework.core.env.Environment;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -43,7 +44,7 @@ public class ConfigureUtils
     private ConfigureUtils()
     {}
 
-    public static String preparedMessage(List<IConfigureField> configures)
+    public static String preparedMessage(List<PluginConfigureField> configures)
     {
         StringBuffer buffer = new StringBuffer();
         buffer.append(ServiceState.PLUGIN_CONFIGURE_REQUIRED.getValue());
@@ -54,33 +55,33 @@ public class ConfigureUtils
         return buffer.toString();
     }
 
-    public static Configure preparedConfigure(List<IConfigureField> configures)
+    public static RuntimeConfigure preparedConfigure(List<PluginConfigureField> configures)
     {
-        Configure configure = new Configure();
+        RuntimeConfigure configure = new RuntimeConfigure();
         configures.forEach(v -> {
             switch (v.getField()) {
                 case host:
-                    configure.setHost(ConfigureUtils.getStringValue(configures, IConfigureFieldName.host));
+                    configure.setHost(ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.host));
                     break;
                 case port:
-                    configure.setPort(ConfigureUtils.getIntegerValue(configures, IConfigureFieldName.port));
+                    configure.setPort(ConfigureUtils.getIntegerValue(configures, PluginConfigureFieldName.port));
                     break;
                 case username:
-                    configure.setUsername(Optional.ofNullable(ConfigureUtils.getStringValue(configures, IConfigureFieldName.username)));
+                    configure.setUsername(Optional.ofNullable(ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.username)));
                     break;
                 case password:
-                    configure.setPassword(Optional.ofNullable(ConfigureUtils.getStringValue(configures, IConfigureFieldName.password)));
+                    configure.setPassword(Optional.ofNullable(ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.password)));
                     break;
                 case database:
-                    String database = ConfigureUtils.getStringValue(configures, IConfigureFieldName.database);
+                    String database = ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.database);
                     Optional<String> _database = StringUtils.isNotEmpty(database) ? Optional.ofNullable(database) : Optional.empty();
                     configure.setDatabase(_database);
                     break;
                 case ssl:
-                    configure.setSsl(Optional.ofNullable(ConfigureUtils.getBooleanValue(configures, IConfigureFieldName.ssl)));
+                    configure.setSsl(Optional.ofNullable(ConfigureUtils.getBooleanValue(configures, PluginConfigureFieldName.ssl)));
                     break;
                 case configures:
-                    configure.setEnv(Optional.ofNullable(ConfigureUtils.getMapValue(configures, IConfigureFieldName.configures)));
+                    configure.setEnv(Optional.ofNullable(ConfigureUtils.getMapValue(configures, PluginConfigureFieldName.configures)));
                     break;
                 case file:
                     configure.setUsedConfig(true);
@@ -91,7 +92,7 @@ public class ConfigureUtils
         return configure;
     }
 
-    public static IConfigure preparedConfigure(IConfigure configure, SourceEntity source)
+    public static PluginConfigure preparedConfigure(PluginConfigure configure, SourceEntity source)
     {
         configure.getConfigures().forEach(v -> {
             switch (v.getField()) {
@@ -122,10 +123,13 @@ public class ConfigureUtils
                 case configures:
                     List<Map<String, Object>> fields = new ArrayList<>();
                     if (ObjectUtils.isNotEmpty(source.getConfigures())) {
-                        source.getConfigures().entrySet().forEach(entry -> {
+                        source.getConfigures().forEach((key, value) -> {
+                            if (ObjectUtils.isEmpty(key)) {
+                                return;
+                            }
                             Map<String, Object> map = new LinkedHashMap<>();
-                            map.put(IConfigureFieldName.field.name(), entry.getKey());
-                            map.put(IConfigureFieldName.value.name(), entry.getValue());
+                            map.put(PluginConfigureFieldName.field.name(), key);
+                            map.put(PluginConfigureFieldName.value.name(), value);
                             fields.add(map);
                         });
                     }
@@ -136,38 +140,38 @@ public class ConfigureUtils
         return configure;
     }
 
-    public static SourceEntity preparedSourceEntity(List<IConfigureField> configures)
+    public static SourceEntity preparedSourceEntity(List<PluginConfigureField> configures)
     {
         SourceEntity configure = new SourceEntity();
         configures.forEach(v -> {
             switch (v.getField()) {
                 case name:
-                    configure.setName(ConfigureUtils.getStringValue(configures, IConfigureFieldName.name));
+                    configure.setName(ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.name));
                 case host:
-                    configure.setHost(ConfigureUtils.getStringValue(configures, IConfigureFieldName.host));
+                    configure.setHost(ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.host));
                     break;
                 case port:
-                    configure.setPort(ConfigureUtils.getIntegerValue(configures, IConfigureFieldName.port));
+                    configure.setPort(ConfigureUtils.getIntegerValue(configures, PluginConfigureFieldName.port));
                     break;
                 case username:
-                    configure.setUsername(ConfigureUtils.getStringValue(configures, IConfigureFieldName.username));
+                    configure.setUsername(ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.username));
                     break;
                 case password:
-                    configure.setPassword(ConfigureUtils.getStringValue(configures, IConfigureFieldName.password));
+                    configure.setPassword(ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.password));
                     break;
                 case database:
-                    String database = ConfigureUtils.getStringValue(configures, IConfigureFieldName.database);
+                    String database = ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.database);
                     configure.setDatabase(database);
                     break;
                 case catalog:
-                    String catalog = ConfigureUtils.getStringValue(configures, IConfigureFieldName.catalog);
+                    String catalog = ConfigureUtils.getStringValue(configures, PluginConfigureFieldName.catalog);
                     configure.setCatalog(catalog);
                     break;
                 case ssl:
-                    configure.setSsl(ConfigureUtils.getBooleanValue(configures, IConfigureFieldName.ssl));
+                    configure.setSsl(ConfigureUtils.getBooleanValue(configures, PluginConfigureFieldName.ssl));
                     break;
                 case configures:
-                    configure.setOriginalConfigure(JsonUtils.toJSON(ConfigureUtils.getMapValue(configures, IConfigureFieldName.configures)));
+                    configure.setOriginalConfigure(JsonUtils.toJSON(ConfigureUtils.getMapValue(configures, PluginConfigureFieldName.configures)));
                     break;
                 case file:
                     configure.setUsedConfig(true);
@@ -178,12 +182,12 @@ public class ConfigureUtils
         return configure;
     }
 
-    public static List<IConfigureField> filterNotEmpty(List<IConfigureField> configures)
+    public static List<PluginConfigureField> filterNotEmpty(List<PluginConfigureField> configures)
     {
         return configures.stream().filter(v -> !isEmpty(v)).collect(Collectors.toList());
     }
 
-    public static boolean isEmpty(IConfigureField field)
+    public static boolean isEmpty(PluginConfigureField field)
     {
         boolean flag = true;
         switch (field.getType()) {
@@ -198,44 +202,58 @@ public class ConfigureUtils
         return flag;
     }
 
-    public static IConfigureField getConfigure(List<IConfigureField> configures, IConfigureFieldName key)
+    public static PluginConfigureField getConfigure(List<PluginConfigureField> configures, PluginConfigureFieldName key)
     {
-        Optional<IConfigureField> configureFieldOptional = configures.stream().filter(v -> v.getField().equals(key)).findFirst();
+        Optional<PluginConfigureField> configureFieldOptional = configures.stream().filter(v -> v.getField().equals(key)).findFirst();
         return configureFieldOptional.get();
     }
 
-    public static String getStringValue(List<IConfigureField> configures, IConfigureFieldName key)
+    public static String getStringValue(List<PluginConfigureField> configures, PluginConfigureFieldName key)
     {
         return String.valueOf(getConfigure(configures, key).getValue());
     }
 
-    public static Integer getIntegerValue(List<IConfigureField> configures, IConfigureFieldName key)
+    public static Integer getIntegerValue(List<PluginConfigureField> configures, PluginConfigureFieldName key)
     {
         return Integer.valueOf(getStringValue(configures, key));
     }
 
-    public static Long getLongValue(List<IConfigureField> configures, IConfigureFieldName key)
+    public static Long getLongValue(List<PluginConfigureField> configures, PluginConfigureFieldName key)
     {
         return Long.valueOf(getStringValue(configures, key));
     }
 
-    public static Boolean getBooleanValue(List<IConfigureField> configures, IConfigureFieldName key)
+    public static Boolean getBooleanValue(List<PluginConfigureField> configures, PluginConfigureFieldName key)
     {
         return Boolean.valueOf(getStringValue(configures, key));
     }
 
-    public static Map<String, Object> getMapValue(List<IConfigureField> configures, IConfigureFieldName key)
+    public static Map<String, Object> getMapValue(List<PluginConfigureField> configures, PluginConfigureFieldName key)
     {
         Map<String, Object> values = new ConcurrentHashMap<>();
-        IConfigureField configureField = getConfigure(configures, key);
-        if (configureField.getType().equals(IConfigureFieldType.Array)) {
+        PluginConfigureField configureField = getConfigure(configures, key);
+        if (configureField.getType().equals(PluginConfigureFieldType.Array)) {
             List<LinkedHashMap<String, Object>> list = (List<LinkedHashMap<String, Object>>) configureField.getValue();
-            list.forEach(map -> values.put(String.valueOf(map.get(IConfigureFieldName.field.name())), map.get(IConfigureFieldName.value.name())));
+            list.forEach(map -> values.put(String.valueOf(map.get(PluginConfigureFieldName.field.name())), map.get(PluginConfigureFieldName.value.name())));
         }
         else {
             Preconditions.checkArgument(false, "Not Support type");
         }
         return values;
+    }
+
+    /**
+     * Resolves the configure declared inside the plugin code for the given plugin name.
+     *
+     * @param pluginManager the plugin manager
+     * @param type the plugin name (source type)
+     * @return the plugin configure, or null when the plugin is absent or declares none
+     */
+    private static PluginConfigure resolvePluginConfigure(PluginManager pluginManager, String type)
+    {
+        return pluginManager.getPlugin(type)
+                .map(Plugin::describe)
+                .orElse(null);
     }
 
     /**
@@ -249,17 +267,17 @@ public class ConfigureUtils
      * @param fieldBody the field body
      * @return the merged properties
      */
-    public static Properties convertProperties(SourceEntity entity, Environment environment,
-            IConfigurePipelineType pipelineType, String executor, String query, PipelineFieldBody fieldBody)
+    public static Properties convertProperties(SourceEntity entity, PluginManager pluginManager,
+            PluginConfigurePipelineType pipelineType, String executor, String query, PipelineFieldBody fieldBody)
     {
-        IConfigure yamlConfigure = PluginUtils.loadYamlConfigure(entity.getProtocol(), entity.getType(), entity.getType(), environment);
-        if (ObjectUtils.isEmpty(yamlConfigure.getPipelines())) {
+        PluginConfigure yamlConfigure = resolvePluginConfigure(pluginManager, entity.getType());
+        if (ObjectUtils.isEmpty(yamlConfigure) || ObjectUtils.isEmpty(yamlConfigure.getPipelines())) {
             String message = String.format("From source [ %s ] is not supported pipeline, type [ %s ]", entity.getId(), entity.getType());
             Preconditions.checkArgument(!message.isEmpty(), message);
         }
 
-        List<IConfigureExecutorField> fields = Lists.newArrayList();
-        Optional<IConfigureExecutor> configureExecutor = yamlConfigure.getPipelines()
+        List<PluginConfigureExecutorField> fields = Lists.newArrayList();
+        Optional<PluginConfigureExecutor> configureExecutor = yamlConfigure.getPipelines()
                 .stream()
                 .filter(v -> v.getExecutor().equals(executor) && v.getType().equals(pipelineType))
                 .findFirst();
@@ -274,7 +292,7 @@ public class ConfigureUtils
         }
 
         Properties originProperties = fieldBody.getConfigures();
-        if (pipelineType.equals(IConfigurePipelineType.INPUT)) {
+        if (pipelineType.equals(PluginConfigurePipelineType.INPUT)) {
             if (!originProperties.containsKey("context") && query != null) {
                 originProperties.setProperty("context", query);
             }
@@ -282,19 +300,19 @@ public class ConfigureUtils
         return mergeProperties(entity, fields, originProperties);
     }
 
-    public static PipelineFieldBody convertFieldBody(SourceEntity entity, String executor, IConfigurePipelineType pipelineType, Environment environment, Properties originProperties)
+    public static PipelineFieldBody convertFieldBody(SourceEntity entity, String executor, PluginConfigurePipelineType pipelineType, PluginManager pluginManager, Properties originProperties)
     {
         try {
             PipelineFieldBody body = new PipelineFieldBody();
             body.setProtocol(entity.getProtocol());
-            IConfigure yamlConfigure = PluginUtils.loadYamlConfigure(entity.getProtocol(), entity.getType(), entity.getType(), environment);
+            PluginConfigure yamlConfigure = resolvePluginConfigure(pluginManager, entity.getType());
             if (yamlConfigure == null) {
-                throw new IllegalArgumentException("Failed to load YAML configuration");
+                throw new IllegalArgumentException("Failed to load plugin configuration");
             }
 
             // Pipeline 条目可能缺少 executor/type 字段（如 Doris 的 YAML 配置），
             // 直接在条目上调用 equals 会抛出 NPE，比较方向必须固定
-            IConfigureExecutor matchedExecutor = findPipelineExecutor(yamlConfigure, executor, pipelineType);
+            PluginConfigureExecutor matchedExecutor = findPipelineExecutor(yamlConfigure, executor, pipelineType);
             if (matchedExecutor != null) {
                 body.setConfigures(mergeProperties(entity, matchedExecutor.getFields(), originProperties));
             }
@@ -318,7 +336,7 @@ public class ConfigureUtils
      * @param pipelineType 管道类型 | Pipeline type
      * @return 匹配的执行器配置，未命中时返回 null | Matched executor configure, or null
      */
-    static IConfigureExecutor findPipelineExecutor(IConfigure yamlConfigure, String executor, IConfigurePipelineType pipelineType)
+    static PluginConfigureExecutor findPipelineExecutor(PluginConfigure yamlConfigure, String executor, PluginConfigurePipelineType pipelineType)
     {
         return Optional.ofNullable(yamlConfigure.getPipelines())
                 .orElseGet(ArrayList::new)
@@ -337,10 +355,10 @@ public class ConfigureUtils
      * @param pipelineType the type of pipeline to convert options for
      * @return a set of strings representing the converted options
      */
-    public static Set<String> convertOptions(SourceEntity entity, Environment environment, String executor, IConfigurePipelineType pipelineType)
+    public static Set<String> convertOptions(SourceEntity entity, PluginManager pluginManager, String executor, PluginConfigurePipelineType pipelineType)
     {
         Set<String> fromOptions = Sets.newHashSet();
-        IConfigure yamlConfigure = PluginUtils.loadYamlConfigure(entity.getProtocol(), entity.getType(), entity.getType(), environment);
+        PluginConfigure yamlConfigure = resolvePluginConfigure(pluginManager, entity.getType());
         yamlConfigure.getPipelines()
                 .stream()
                 .filter(v -> v.getExecutor().equals(executor) && v.getType().equals(pipelineType))
@@ -348,7 +366,7 @@ public class ConfigureUtils
                 .ifPresent(iConfigureExecutor -> iConfigureExecutor
                         .getFields()
                         .stream()
-                        .filter(IConfigureExecutorField::isRequired)
+                        .filter(PluginConfigureExecutorField::isRequired)
                         .forEach(v -> fromOptions.add(v.getField())));
         return fromOptions;
     }
@@ -361,11 +379,11 @@ public class ConfigureUtils
      * @param configure the configure properties to be merged with the source entity properties
      * @return the merged properties
      */
-    private static Properties mergeProperties(SourceEntity entity, List<IConfigureExecutorField> fields, Properties configure)
+    private static Properties mergeProperties(SourceEntity entity, List<PluginConfigureExecutorField> fields, Properties configure)
     {
         Properties properties = new Properties();
         Properties convertBeanProperties = BeanToPropertiesUtils.convertBeanToProperties(entity);
-        for (IConfigureExecutorField field : fields) {
+        for (PluginConfigureExecutorField field : fields) {
             if (field.isOverride()) {
                 setProperty(field, properties, configure);
             }
@@ -383,7 +401,7 @@ public class ConfigureUtils
      * @param properties the properties object to store the property
      * @param configure the configuration properties object
      */
-    private static void setProperty(IConfigureExecutorField field, Properties properties, Properties configure)
+    private static void setProperty(PluginConfigureExecutorField field, Properties properties, Properties configure)
     {
         Object value = "None";
         if (ObjectUtils.isNotEmpty(field.getOrigin())) {
@@ -411,17 +429,17 @@ public class ConfigureUtils
      * If a field is of type SELECT and the value in the configuration is not one of the default values,
      * an error message is added to the list.
      *
-     * @param fields a list of IConfigureExecutorField objects representing the fields to check
+     * @param fields a list of PluginConfigureExecutorField objects representing the fields to check
      * @param configures the configuration properties to check against
      * @param name the name of the field being checked
      * @param type the type of the pipeline being checked
      * @return a list of error messages for fields that do not meet the requirements
      */
-    public static List<String> checkField(List<IConfigureExecutorField> fields, Properties configures, String name, String type)
+    public static List<String> checkField(List<PluginConfigureExecutorField> fields, Properties configures, String name, String type)
     {
         List<String> list = Lists.newArrayList();
         fields.stream()
-                .filter(IConfigureExecutorField::isInput)
+                .filter(PluginConfigureExecutorField::isInput)
                 .forEach(field -> {
                     if (field.isRequired() && field.isInput() && field.isOverride()) {
                         if (ObjectUtils.isEmpty(configures.get(field.getField()))) {

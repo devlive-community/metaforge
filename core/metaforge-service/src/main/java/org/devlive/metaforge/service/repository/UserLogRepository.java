@@ -4,10 +4,11 @@ import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.entity.UserLogEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface UserLogRepository
-        extends PagingAndSortingRepository<UserLogEntity, Long>
+        extends PagingAndSortingRepository<UserLogEntity, Long>, JpaSpecificationExecutor<UserLogEntity>
 {
     Page<UserLogEntity> findAllByUserOrderByCreateTimeDesc(UserEntity user, Pageable pageable);
 }

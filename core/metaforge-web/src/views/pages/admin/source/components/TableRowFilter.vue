@@ -22,7 +22,7 @@
 
         <MfFormItem name="">
           <MfButton variant="ghost" size="sm" class="text-danger" @click="onRemoveFilter(index)">
-            <MinusOutlined :style="{ fontSize: '16px' }"/>
+            <Minus :size="16" />
           </MfButton>
         </MfFormItem>
       </div>
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { cloneDeep } from 'lodash'
-import { MinusOutlined } from '@ant-design/icons-vue'
+import { Minus } from '@lucide/vue'
 
 defineOptions({ name: 'TableRowFilter' })
 

@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.plugin.container.DmContainer;
 import org.devlive.metaforge.plugin.utils.PluginPathUtils;
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.model.Configure;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Assume;
@@ -28,7 +28,7 @@ public class DmServiceTest
 
     private PluginManager pluginManager;
     private Plugin plugin;
-    private Configure configure;
+    private RuntimeConfigure configure;
 
     @BeforeClass
     public static void assumeDockerAvailable()
@@ -97,7 +97,7 @@ public class DmServiceTest
             throw new RuntimeException("Container is stopped.");
         }
 
-        configure = Configure.builder()
+        configure = RuntimeConfigure.builder()
                 .username(Optional.of(CONTAINER.getUsername()))
                 .password(Optional.of(CONTAINER.getPassword()))
                 .port(CONTAINER.getPort())

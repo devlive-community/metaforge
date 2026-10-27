@@ -70,6 +70,8 @@ public class SecurityConfigure
                 .authorizeRequests()
                 .antMatchers("/", "/**/*.js", "/**/*.css", "/api/auth/**", "/fonts/**", "/static/**", "/h2-console/**", "/api/v1/captcha", "/api/v1/table/dataDownload/**", "/upload/**", "/api/v1/i18n/**", "/api/v1/setup/**")
                 .permitAll()
+                .requestMatchers(new AdminApiRequestMatcher())
+                .hasAuthority("ADMIN")
                 .anyRequest()
                 .authenticated();
         // Fixed load denied by X-Frame-Options

@@ -45,7 +45,7 @@
       </MfFormItem>
     </MfForm>
 
-    <div class="flex justify-end mt-2">
+    <template #footer>
       <MfSpace>
         <MfButton variant="danger" :loading="loading" :disabled="loading" @click="onCancel()">
           {{ $t('common.cancel') }}
@@ -54,7 +54,7 @@
           {{ $t('function.common.import') }}
         </MfButton>
       </MfSpace>
-    </div>
+    </template>
   </MfDrawer>
 </template>
 

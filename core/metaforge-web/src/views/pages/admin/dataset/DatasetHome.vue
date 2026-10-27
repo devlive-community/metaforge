@@ -1,6 +1,6 @@
 <template>
 
-    <DataTable :title="$t('dataset.common.list')"
+    <DataTable filterable :filter-fields="tableFilters" :title="$t('dataset.common.list')"
                :columns="headers"
                :data-source="data"
                :loading="loading"
@@ -8,6 +8,8 @@
                :page-size="pageSize"
                :total="dataCount"
                @refresh="handleInitialize"
+               @search="onSearch"
+               @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #bodyCell="{ column, record }">
@@ -32,68 +34,68 @@
         <template v-else-if="column.key === 'action'">
           <MfSpace>
             <MfTooltip :content="$t('dataset.common.adhoc')">
-              <router-link v-if="isSuccess(record?.state)" :to="`/admin/dataset/adhoc/${ record?.code }`" target="_blank">
+              <router-link v-if="isSuccess(record?.state)" :to="`/dataset/adhoc/${ record?.code }`" target="_blank">
                 <MfButton variant="ghost" size="sm">
-                  <BarChartOutlined :style="{ fontSize: '15px' }"/>
+                  <ChartColumn :size="15" />
                 </MfButton>
               </router-link>
               <MfButton v-else variant="ghost" size="sm" disabled>
-                <BarChartOutlined :style="{ fontSize: '15px' }"/>
+                <ChartColumn :size="15" />
               </MfButton>
             </MfTooltip>
 
             <MfDropdown trigger="click" placement="bottomRight">
               <MfButton variant="ghost" size="sm">
-                <SettingOutlined :style="{ fontSize: '15px' }"/>
+                <Settings :size="15" />
               </MfButton>
 
               <template #overlay>
                 <MfMenu>
                   <MfMenuItem key_="info">
-                    <router-link :to="`/admin/dataset/info/${ record?.code }`" target="_blank" class="flex items-center">
-                      <InfoCircleOutlined :style="{ fontSize: '15px' }"/>
+                    <router-link :to="`/dataset/info/${ record?.code }`" target="_blank" class="flex items-center">
+                      <Info :size="15" />
                       <span class="ml-2">{{ $t('dataset.common.info') }}</span>
                     </router-link>
                   </MfMenuItem>
 
                   <MfMenuItem key_="sync" :disabled="!isSuccess(record?.state)" @click="visibleSyncData(record, true)">
                     <div class="flex items-center space-x-2">
-                      <SyncOutlined :style="{ fontSize: '15px' }"/>
+                      <RefreshCw :size="15" />
                       <span>{{ $t('dataset.common.syncData') }}</span>
                     </div>
                   </MfMenuItem>
 
                   <MfMenuItem key_="history" @click="visibleHistory(record, true)">
                     <div class="flex items-center space-x-2">
-                      <HistoryOutlined :style="{ fontSize: '15px' }"/>
+                      <History :size="15" />
                       <span>{{ $t('dataset.common.history') }}</span>
                     </div>
                   </MfMenuItem>
 
                   <MfMenuItem key_="error" :disabled="isSuccess(record?.state)" @click="!isSuccess(record?.state) && visibleError(record, true)">
                     <div class="flex items-center space-x-2">
-                      <WarningOutlined :style="{ fontSize: '15px' }"/>
+                      <TriangleAlert :size="15" />
                       <span>{{ $t('dataset.common.error') }}</span>
                     </div>
                   </MfMenuItem>
 
                   <MfMenuItem key_="rebuild" :disabled="isSuccess(record?.state)" @click="visibleRebuild(record, true)">
                     <div class="flex items-center space-x-2">
-                      <component :is="record?.state === 'SUCCESS' ? PlayCircleOutlined : PauseCircleOutlined" :style="{ fontSize: '15px' }"/>
+                      <component :size="15" :is="record?.state === 'SUCCESS' ? CirclePlay : CirclePause" />
                       <span>{{ $t('dataset.common.rebuild') }}</span>
                     </div>
                   </MfMenuItem>
 
                   <MfMenuItem key_="clear" :disabled="!(record?.totalRows > 0)" @click="visibleClearData(record, true)">
                     <div class="flex items-center space-x-2">
-                      <CloseSquareOutlined :style="{ fontSize: '15px' }"/>
+                      <SquareX :size="15" />
                       <span>{{ $t('dataset.common.clearData') }}</span>
                     </div>
                   </MfMenuItem>
 
                   <MfMenuItem key_="delete" @click="visibleDelete(record, true)">
                     <div class="flex items-center space-x-2">
-                      <DeleteOutlined :style="{ fontSize: '15px' }"/>
+                      <Trash2 :size="15" />
                       <span>{{ $t('dataset.common.delete') }}</span>
                     </div>
                   </MfMenuItem>
@@ -138,11 +140,12 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { FilterModel } from '@/model/filter'
+import { FilterModel, type TableFilters } from '@/model/filter'
 import { useDatasetHeaders } from './DatasetUtils'
 import { DatasetModel } from '@/model/dataset'
 import { useUtil } from '@/utils/common'
 import DataTable from '@/views/components/table/DataTable.vue'
+import { useTableFilters } from '@/views/components/table/tableFilters'
 import DatasetService from '@/services/dataset'
 import DatasetState from '@/views/pages/admin/dataset/components/DatasetState.vue'
 import DatasetSync from '@/views/pages/admin/dataset/DatasetSync.vue'
@@ -151,10 +154,11 @@ import MarkdownPreview from '@/views/components/markdown/MarkdownView.vue'
 import DatasetRebuild from '@/views/pages/admin/dataset/DatasetRebuild.vue'
 import DatasetClear from '@/views/pages/admin/dataset/DatasetClear.vue'
 import DatasetDelete from '@/views/pages/admin/dataset/DatasetDelete.vue'
-import { BarChartOutlined, CloseSquareOutlined, DeleteOutlined, HistoryOutlined, InfoCircleOutlined, PauseCircleOutlined, PlayCircleOutlined, SettingOutlined, SyncOutlined, WarningOutlined } from '@ant-design/icons-vue'
+import { ChartColumn, CirclePause, CirclePlay, History, Info, RefreshCw, Settings, SquareX, Trash2, TriangleAlert } from '@lucide/vue'
 
 defineOptions({ name: 'DatasetHome' })
 
+const tableFilters = useTableFilters('dataset')
 const filter: FilterModel = new FilterModel()
 const { headers } = useDatasetHeaders()
 const { getDatasetStateText } = useUtil()
@@ -172,10 +176,19 @@ const clearDataVisible = ref(false)
 const errorVisible = ref(false)
 const deleteVisible = ref(false)
 
+const onSearch = (values: TableFilters) => {
+  Object.assign(filter, values, { page: 1 })
+  pageIndex.value = 1
+  handleInitialize()
+}
+
+let latestRequest = 0
 const handleInitialize = () => {
+  const request = ++latestRequest
   loading.value = true
-  DatasetService.getAll(filter)
+  DatasetService.getAll({ ...filter })
                 .then((response) => {
+                 if (request !== latestRequest) return
                   if (response.status) {
                     data.value = response.data.content
                     dataCount.value = response.data.total
@@ -183,7 +196,7 @@ const handleInitialize = () => {
                     pageIndex.value = response.data.page
                   }
                 })
-                .finally(() => (loading.value = false))
+                .finally(() => { if (request === latestRequest) loading.value = false })
 }
 
 const fetchData = (value: number) => {

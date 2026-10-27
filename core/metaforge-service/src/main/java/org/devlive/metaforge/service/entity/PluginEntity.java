@@ -3,7 +3,7 @@ package org.devlive.metaforge.service.entity;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.ToString;
-import org.devlive.metaforge.service.configure.IConfigure;
+import org.devlive.metaforge.plugin.configure.PluginConfigure;
 
 @Data
 @ToString
@@ -13,5 +13,5 @@ public class PluginEntity
     private String name;
     private String description;
     private String type;
-    private IConfigure configure;
+    private PluginConfigure configure;
 }

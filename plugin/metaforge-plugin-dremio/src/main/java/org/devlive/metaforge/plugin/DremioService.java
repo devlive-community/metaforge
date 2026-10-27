@@ -3,7 +3,7 @@ package org.devlive.metaforge.plugin;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.model.Configure;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.util.List;
 import java.util.Map;
@@ -27,7 +27,7 @@ public class DremioService
     }
 
     @Override
-    public String url(Configure configure)
+    public String url(RuntimeConfigure configure)
     {
         StringBuilder buffer = new StringBuilder();
         buffer.append("jdbc:");

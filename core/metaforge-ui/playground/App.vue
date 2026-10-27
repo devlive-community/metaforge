@@ -17,21 +17,40 @@ import {
     MfCheckbox,
     MfConfigProvider,
     MfDivider,
+    MfDatePicker,
     MfInput,
+    MfMenu,
+    MfMenuItem,
     MfModal,
     MfRadio,
     MfRadioGroup,
     MfSelect,
     MfSpace,
     MfSpinner,
+    MfSubMenu,
     MfSwitch,
     MfTag,
+    MfTableToolbar,
     MfTextarea,
     MfTooltip,
 } from '../src/index'
 
 const mode = ref<MfThemeMode>('light')
+const menuMode = ref<'horizontal' | 'inline'>('horizontal')
+const menuSelectedKeys = ref<(string | number)[]>(['/home'])
+const menuClickCount = ref(0)
+const navigation = [
+    { key: '/home', label: '首页' },
+    { key: '/dashboard', label: '仪表盘' },
+    { key: '/dataset', label: '数据集' },
+    { key: '/store', label: '商店' },
+    { key: '/query', label: '查询' },
+]
 const primary = ref('#2563eb')
+const toolbarKeyword = ref('')
+const toolbarCode = ref('')
+const toolbarDate = ref('')
+const toolbarSearches = ref(0)
 
 const presets = {
     light: mfLightPreset,
@@ -115,6 +134,47 @@ function simulateLoading(): void {
             </header>
 
             <main class="mx-auto grid max-w-4xl gap-6">
+                <div>
+                    <h2 class="mb-3 font-semibold text-content">数据列表功能区</h2>
+                    <MfTableToolbar search-text="查询" reset-text="重置" more-text="更多筛选" less-text="收起筛选"
+                                    @search="toolbarSearches++" @reset="toolbarKeyword = ''; toolbarCode = ''; toolbarDate = ''">
+                        <template #filter>
+                            <label class="flex flex-col gap-1.5 text-sm text-content-secondary">关键词<MfInput v-model="toolbarKeyword" placeholder="按名称搜索"/></label>
+                        </template>
+                        <template #advanced-filter>
+                            <label class="flex flex-col gap-1.5 text-sm text-content-secondary">编码<MfInput v-model="toolbarCode"/></label>
+                            <label class="flex flex-col gap-1.5 text-sm text-content-secondary">创建日期<MfDatePicker v-model="toolbarDate" locale="zh-cn" placeholder="请选择日期" today-text="今天" clear-text="清空"/></label>
+                        </template>
+                        <template #actions><MfButton variant="primary">创建数据源</MfButton></template>
+                        <template #tools><MfButton>刷新</MfButton><MfButton>列设置</MfButton></template>
+                    </MfTableToolbar>
+                    <p class="text-xs text-content-tertiary">查询次数：{{ toolbarSearches }}</p>
+                </div>
+                <MfCard title="Navigation">
+                    <div class="space-y-4">
+                        <MfRadioGroup v-model="menuMode" variant="button">
+                            <MfRadio value="horizontal">顶部导航</MfRadio>
+                            <MfRadio value="inline">侧边导航</MfRadio>
+                        </MfRadioGroup>
+                        <MfMenu :mode="menuMode" :selected-keys="menuSelectedKeys" @click="menuSelectedKeys = [$event.key]; menuClickCount++">
+                            <MfMenuItem v-for="item in navigation" :key="item.key" :key_="item.key">
+                                <a :href="`#${item.key}`" class="flex items-center">{{ item.label }}</a>
+                            </MfMenuItem>
+                            <MfMenuItem key_="/disabled" disabled>
+                                <a href="#disabled" class="flex items-center">禁用链接</a>
+                            </MfMenuItem>
+                            <MfSubMenu key_="/workspace" title="数据开发">
+                                <MfMenuItem key_="/source">数据源</MfMenuItem>
+                                <MfMenuItem key_="/workflow">工作流</MfMenuItem>
+                            </MfSubMenu>
+                            <MfSubMenu key_="/admin" title="系统管理">
+                                <MfMenuItem key_="/admin/user">用户</MfMenuItem>
+                                <MfMenuItem key_="/admin/configure">运行时配置</MfMenuItem>
+                            </MfSubMenu>
+                        </MfMenu>
+                        <p class="text-xs text-content-tertiary">触发次数：{{ menuClickCount }}</p>
+                    </div>
+                </MfCard>
                 <MfCard title="Buttons">
                     <MfSpace wrap>
                         <MfButton variant="primary">Primary</MfButton>
@@ -210,6 +270,14 @@ function simulateLoading(): void {
                 </MfCard>
 
                 <MfCard title="Overlay">
+                    <div class="mb-4 overflow-x-auto rounded-mf-md border border-line p-3">
+                        <div class="flex items-center justify-between gap-4">
+                            <span class="text-sm text-content-secondary">表格滚动容器边缘提示</span>
+                            <MfTooltip content="分配菜单 [ 系统管理员路由 ]：长提示在视口内换行，不应撑大表格滚动范围。">
+                                <MfButton variant="ghost">分配菜单</MfButton>
+                            </MfTooltip>
+                        </div>
+                    </div>
                     <MfSpace>
                         <MfButton variant="primary" @click="modalOpen = true">Open modal</MfButton>
                         <MfCheckbox v-model="engines" value="local" label="local" />

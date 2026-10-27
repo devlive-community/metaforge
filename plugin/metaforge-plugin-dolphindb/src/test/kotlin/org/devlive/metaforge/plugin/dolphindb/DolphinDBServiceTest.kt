@@ -5,7 +5,7 @@ import org.devlive.metaforge.plugin.PluginConfigure
 import org.devlive.metaforge.plugin.PluginManager
 import org.devlive.metaforge.plugin.utils.PluginPathUtils
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.junit.After
 import org.junit.Assert
 import org.junit.Before
@@ -25,7 +25,7 @@ class DolphinDBServiceTest
 
     private lateinit var pluginManager: PluginManager
     private lateinit var plugin: Plugin
-    private lateinit var configure: Configure
+    private lateinit var configure: RuntimeConfigure
 
     @Before
     fun init()
@@ -74,14 +74,14 @@ class DolphinDBServiceTest
             throw RuntimeException("Container is stopped.")
         }
 
-        configure = Configure.builder()
+        configure = RuntimeConfigure.builder()
             .port(CONTAINER.port)
             .host(CONTAINER.host)
             .plugin(plugin)
             .pluginManager(pluginManager)
             .build()
 
-        log.info("Configure initialized with host: {}:{}", CONTAINER.host, CONTAINER.port)
+        log.info("RuntimeConfigure initialized with host: {}:{}", CONTAINER.host, CONTAINER.port)
     }
 
     @Test
@@ -133,10 +133,10 @@ class DolphinDBServiceTest
     @Test
     fun testConfigureValidation()
     {
-        Assert.assertNotNull("Configure should not be null", configure)
+        Assert.assertNotNull("RuntimeConfigure should not be null", configure)
         Assert.assertNotNull("Host should not be null", configure.host)
         Assert.assertTrue("Port should be valid", configure.port > 0)
 
-        log.info("Configure validation passed - {}:{}", configure.host, configure.port)
+        log.info("RuntimeConfigure validation passed - {}:{}", configure.host, configure.port)
     }
 }

@@ -24,6 +24,28 @@ class ScheduleService
     {
         return new HttpUtils().post(`${DEFAULT_PATH}/${id}/history`, filter)
     }
+
+    /**
+     * Trigger the scheduled task manually.
+     *
+     * @param {number} id - the ID of the schedule
+     * @return {Promise<ResponseModel>} the response model promise
+     */
+    trigger(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${DEFAULT_PATH}/${id}/trigger`, {})
+    }
+
+    /**
+     * Get the upcoming execution times of the schedule.
+     *
+     * @param {number} id - the ID of the schedule
+     * @return {Promise<ResponseModel>} the response model promise
+     */
+    getUpcomingTimes(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${DEFAULT_PATH}/${id}/upcoming`, {})
+    }
 }
 
 export default new ScheduleService()

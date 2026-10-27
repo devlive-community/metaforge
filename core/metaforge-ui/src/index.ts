@@ -10,6 +10,7 @@ import MfCheckbox from './components/MfCheckbox.vue'
 import MfCheckboxGroup from './components/MfCheckboxGroup.vue'
 import MfConfigProvider from './components/MfConfigProvider.vue'
 import MfDivider from './components/MfDivider.vue'
+import MfDatePicker from './components/MfDatePicker.vue'
 import MfDrawer from './components/MfDrawer.vue'
 import MfDropdown from './components/MfDropdown.vue'
 import MfForm from './components/MfForm.vue'
@@ -32,6 +33,7 @@ import MfSubMenu from './components/MfSubMenu.vue'
 import MfSwitch from './components/MfSwitch.vue'
 import MfTabPane from './components/MfTabPane.vue'
 import MfTable from './components/MfTable.vue'
+import MfTableToolbar from './components/MfTableToolbar.vue'
 import MfTabs from './components/MfTabs.vue'
 import MfTag from './components/MfTag.vue'
 import MfTextarea from './components/MfTextarea.vue'
@@ -53,6 +55,7 @@ export const components = {
     MfCheckboxGroup,
     MfConfigProvider,
     MfDivider,
+    MfDatePicker,
     MfDrawer,
     MfDropdown,
     MfForm,
@@ -75,6 +78,7 @@ export const components = {
     MfSwitch,
     MfTabPane,
     MfTable,
+    MfTableToolbar,
     MfTabs,
     MfTag,
     MfTextarea,
@@ -107,6 +111,7 @@ export {
     MfCheckboxGroup,
     MfConfigProvider,
     MfDivider,
+    MfDatePicker,
     MfDrawer,
     MfDropdown,
     MfForm,
@@ -129,6 +134,7 @@ export {
     MfSwitch,
     MfTabPane,
     MfTable,
+    MfTableToolbar,
     MfTabs,
     MfTag,
     MfTextarea,
@@ -139,5 +145,6 @@ export {
 
 export * from './theme/theme'
 export * from './theme/message'
+export { useDismissableLayer } from './composables/useDismissableLayer'
 
 export default { install, version }

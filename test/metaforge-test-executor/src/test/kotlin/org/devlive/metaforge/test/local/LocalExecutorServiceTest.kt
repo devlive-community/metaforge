@@ -9,7 +9,7 @@ import org.devlive.metaforge.plugin.PluginConfigure
 import org.devlive.metaforge.plugin.PluginManager
 import org.devlive.metaforge.plugin.utils.PluginPathUtils
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import junit.framework.TestCase.assertNotNull
 import org.junit.Assume
 import org.junit.BeforeClass
@@ -56,7 +56,7 @@ class LocalExecutorServiceTest
             .get()
             .getService(PluginService::class.java)
 
-        val inputConfigure = Configure()
+        val inputConfigure = RuntimeConfigure()
         inputConfigure.host = "localhost"
         inputConfigure.port = 5432
         inputConfigure.username = Optional.of("test")
@@ -87,7 +87,7 @@ class LocalExecutorServiceTest
             this.originColumns = originColumns
         }
 
-        val outputConfigure = Configure()
+        val outputConfigure = RuntimeConfigure()
         outputConfigure.host = "localhost"
         outputConfigure.port = 3306
         inputConfigure.username = Optional.of("test")

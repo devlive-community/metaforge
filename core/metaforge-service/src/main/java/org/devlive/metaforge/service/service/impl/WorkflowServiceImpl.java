@@ -150,7 +150,7 @@ public class WorkflowServiceImpl
                                 java.util.Map<String, String> executorCfg = runtimeConfigureService.getEffective(
                                         RuntimeConfigureService.CATEGORY_EXECUTOR,
                                         plugin.getName(),
-                                        plugin.configures()
+                                        plugin.runtimeConfigures()
                                 );
                                 log.debug("Executor home directory: {}", executorCfg.get("home"));
 

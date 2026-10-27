@@ -110,6 +110,22 @@ public class ScheduleRunner
         }
     }
 
+    /**
+     * Trigger a scheduled task manually
+     *
+     * @param task the scheduled task to trigger
+     * @return true when the task type is supported and submitted, false otherwise
+     */
+    public boolean triggerManually(ScheduledEntity task)
+    {
+        Function<String, Runnable> taskFactory = taskFactories.get(task.getType());
+        if (taskFactory == null) {
+            return false;
+        }
+        executorService.submit(taskFactory.apply(task.getName()));
+        return true;
+    }
+
     @PreDestroy
     public void shutdown()
     {

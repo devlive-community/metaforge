@@ -6,7 +6,7 @@ const props = withDefaults(defineProps<{
     /** antd-compatible alias: `direction="vertical"` equals `vertical`. */
     direction?: 'horizontal' | 'vertical'
     vertical?: boolean
-    size?: 'xs' | 'sm' | 'md' | 'lg'
+    size?: 'xs' | 'sm' | 'md' | 'lg' | number
     wrap?: boolean
     fill?: boolean
 }>(), {
@@ -28,14 +28,18 @@ const isVertical = computed(() => props.vertical || props.direction === 'vertica
 
 const classes = computed(() => clsx(
     'flex',
-    isVertical.value ? 'flex-col' : 'items-center flex-wrap',
-    GAP[props.size],
+    isVertical.value ? 'flex-col' : clsx('items-center', props.wrap ? 'flex-wrap' : 'flex-nowrap'),
+    typeof props.size === 'string' && GAP[props.size],
     props.fill && 'w-full',
 ))
+
+const spacingStyle = computed(() => typeof props.size === 'number'
+    ? { gap: `${Math.max(0, props.size)}px` }
+    : undefined)
 </script>
 
 <template>
-    <div :class="classes">
+    <div :class="classes" :style="spacingStyle">
         <slot />
     </div>
 </template>

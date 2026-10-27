@@ -3,16 +3,16 @@
     <template #header>
       <MfSpace>
         <MfButton>
-          <router-link :to="`/admin/dataset/info/source/${configure.code}?tempId=${tempId}`" target="_blank">
+          <router-link :to="`/dataset/info/source/${configure.code}?tempId=${tempId}`" target="_blank">
               <span class="flex items-center">
-                <PlusOutlined :style="{ fontSize: '15px' }"/>
+                <Plus :size="15" />
                 <span>{{ $t('common.dataset') }}</span>
               </span>
           </router-link>
         </MfButton>
 
         <MfButton @click="visualVisible = true">
-          <BarChartOutlined :style="{ fontSize: '15px' }"/>
+          <ChartColumn :size="15" />
           <span>{{ $t('dataset.common.visual') }}</span>
         </MfButton>
 
@@ -22,7 +22,7 @@
 
         <MfTooltip :content="$t('query.tip.smallTips')">
           <MfButton variant="ghost" shape="circle">
-            <QuestionCircleOutlined :style="{ fontSize: '15px' }"/>
+            <CircleHelp :size="15" />
           </MfButton>
         </MfTooltip>
       </MfSpace>
@@ -52,7 +52,7 @@ import GridOptions from '@/views/components/grid/GridOptions'
 import { GridColumn } from '@/views/components/grid/GridColumn'
 import { ObjectUtils } from '@/utils/object'
 import GridVisual from '@/views/components/grid/GridVisual.vue'
-import { BarChartOutlined, PlusOutlined, QuestionCircleOutlined } from '@ant-design/icons-vue'
+import { ChartColumn, CircleHelp, Plus } from '@lucide/vue'
 
 defineOptions({ name: 'GridTable' })
 

@@ -6,7 +6,7 @@ import org.devlive.metaforge.spi.PluginService
 import org.devlive.metaforge.spi.PluginType
 import org.devlive.metaforge.spi.adapter.BatchWriter
 import org.devlive.metaforge.spi.adapter.RowCallback
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import java.math.BigDecimal
 import java.sql.Connection
@@ -45,7 +45,7 @@ class JdbcPluginService(
         return conn
     }
 
-    override fun executeStream(configure: Configure, content: String, fetchSize: Int, callback: RowCallback)
+    override fun executeStream(configure: RuntimeConfigure, content: String, fetchSize: Int, callback: RowCallback)
     {
         val conn = open()
         try
@@ -84,7 +84,7 @@ class JdbcPluginService(
     }
 
     override fun openBatchWriter(
-        configure: Configure,
+        configure: RuntimeConfigure,
         database: String,
         table: String,
         columns: List<String>,
@@ -100,7 +100,7 @@ class JdbcPluginService(
         return RealJdbcBatchWriter(conn, ps, columns.size, if (batchSize > 0) batchSize else 1000)
     }
 
-    override fun execute(configure: Configure, content: String): Response
+    override fun execute(configure: RuntimeConfigure, content: String): Response
     {
         return try
         {

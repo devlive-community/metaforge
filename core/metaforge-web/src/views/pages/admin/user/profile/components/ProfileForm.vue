@@ -21,7 +21,7 @@
           {{ (formState?.username || '?').charAt(0).toUpperCase() }}
         </MfAvatar>
         <span class="dc-profile__avatar-badge">
-          <CameraOutlined :style="{ fontSize: '13px' }"/>
+          <Camera :size="13" />
         </span>
       </div>
 
@@ -44,7 +44,7 @@
 
       <div class="dc-profile__hero-actions">
         <MfButton @click="triggerUpload">
-          <CameraOutlined/>
+          <Camera :size="14"/>
           {{ $t('user.common.uploadAvatar') }}
         </MfButton>
       </div>
@@ -56,7 +56,7 @@
         <div class="dc-profile__card dc-profile__section">
           <div class="dc-profile__section-head">
             <div class="dc-profile__section-icon dc-profile__section-icon--primary">
-              <UserOutlined :style="{ fontSize: '16px' }"/>
+              <User :size="16" />
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.basicInfo') }}</div>
@@ -91,7 +91,7 @@
         <div class="dc-profile__card dc-profile__section">
           <div class="dc-profile__section-head">
             <div class="dc-profile__section-icon dc-profile__section-icon--primary">
-              <SafetyCertificateOutlined :style="{ fontSize: '16px' }"/>
+              <ShieldCheck :size="16" />
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.preferences') }}</div>
@@ -101,7 +101,7 @@
 
           <div class="dc-profile__pref">
             <div class="dc-profile__pref-label">
-              <GlobalOutlined class="dc-profile__pref-icon"/>
+              <Globe :size="14" class="dc-profile__pref-icon"/>
               <span>{{ $t('user.common.language') }}</span>
             </div>
             <MfSelect :model-value="language"
@@ -118,7 +118,7 @@
         <div class="dc-profile__card dc-profile__section">
           <div class="dc-profile__section-head">
             <div class="dc-profile__section-icon dc-profile__section-icon--primary">
-              <BarChartOutlined :style="{ fontSize: '16px' }"/>
+              <ChartColumn :size="16" />
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.overview') }}</div>
@@ -129,7 +129,7 @@
           <div class="dc-profile__tiles">
             <div class="dc-profile__tile">
               <div class="dc-profile__tile-icon dc-profile__tile-icon--info">
-                <CrownOutlined/>
+                <Crown :size="16"/>
               </div>
               <div class="min-w-0">
                 <div class="dc-profile__tile-label">{{ $t('user.common.accountRole') }}</div>
@@ -140,7 +140,7 @@
 
             <div class="dc-profile__tile">
               <div class="dc-profile__tile-icon dc-profile__tile-icon--success">
-                <SafetyCertificateOutlined/>
+                <ShieldCheck :size="16"/>
               </div>
               <div class="min-w-0">
                 <div class="dc-profile__tile-label">{{ $t('user.common.accountState') }}</div>
@@ -153,7 +153,7 @@
 
             <div class="dc-profile__tile">
               <div class="dc-profile__tile-icon dc-profile__tile-icon--primary">
-                <CalendarOutlined/>
+                <Calendar :size="16"/>
               </div>
               <div class="min-w-0">
                 <div class="dc-profile__tile-label">{{ $t('user.common.registerTime') }}</div>
@@ -166,7 +166,7 @@
 
             <div class="dc-profile__tile">
               <div class="dc-profile__tile-icon dc-profile__tile-icon--neutral">
-                <ClockCircleOutlined/>
+                <Clock :size="16"/>
               </div>
               <div class="min-w-0">
                 <div class="dc-profile__tile-label">{{ $t('user.common.lastLogin') }}</div>
@@ -211,16 +211,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import VuePictureCropper, { cropper } from 'vue-picture-cropper'
-import {
-  BarChartOutlined,
-  CalendarOutlined,
-  CameraOutlined,
-  ClockCircleOutlined,
-  CrownOutlined,
-  GlobalOutlined,
-  SafetyCertificateOutlined,
-  UserOutlined
-} from '@ant-design/icons-vue'
+import { Calendar, Camera, ChartColumn, Clock, Crown, Globe, ShieldCheck, User } from '@lucide/vue'
 import UserService from '@/services/user'
 import { UserModel } from '@/model/user'
 import { FilterModel } from '@/model/filter.ts'

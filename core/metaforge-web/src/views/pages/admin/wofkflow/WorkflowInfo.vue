@@ -151,7 +151,7 @@ const onSubmit = () => {
                  .then((response) => {
                    if (response.status) {
                      MfMessage.success(`${ t('workflow.tip.publishSuccess').replace('$VALUE', response.data.name) }`)
-                     router.push('/admin/workflow')
+                     router.push('/workflow')
                      visible.value = false
                    }
                    else {

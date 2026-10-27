@@ -7,20 +7,20 @@
     <div v-else-if="dataInfo">
       <div class="mt-4 grid grid-cols-3 gap-5">
         <div class="flex items-center space-x-2">
-          <DatabaseOutlined :style="{ fontSize: '16px' }"/>
+          <Database :size="16" />
           <span>{{ dataInfo.object_name || dataInfo.schema_name || dataInfo.SCHEMA_NAME }}</span>
         </div>
 
         <MfTooltip :content="$t('common.createTime')">
           <div class="flex items-center space-x-2">
-            <ClockCircleOutlined :style="{ fontSize: '16px' }"/>
+            <Clock :size="16" />
             <span>{{ dataInfo.object_create_time === null ? $t('source.common.notSpecified') : dataInfo.object_create_time }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('common.updateTime')">
           <div class="flex items-center space-x-2">
-            <ClockCircleOutlined :style="{ fontSize: '16px' }"/>
+            <Clock :size="16" />
             <span>{{ dataInfo.object_update_time === null ? $t('source.common.notUpdated') : dataInfo.object_update_time }}</span>
           </div>
         </MfTooltip>
@@ -99,7 +99,7 @@ import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import MetadataService from '@/services/metadata.ts'
-import { ClockCircleOutlined, DatabaseOutlined } from '@ant-design/icons-vue'
+import { Clock, Database } from '@lucide/vue'
 
 defineOptions({ name: 'SourceDatabase' })
 

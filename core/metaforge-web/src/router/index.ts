@@ -4,6 +4,8 @@ import { createDefaultRouter } from '@/router/default'
 import { createHttpRoute } from '@/router/http'
 import { createSetupRoute } from '@/router/setup'
 import SetupService from '@/services/setup'
+import { TokenUtils } from '@/utils/token'
+import { pageAccess } from './navigation'
 
 const routes: Array<RouteRecordRaw> = []
 
@@ -49,7 +51,9 @@ router.beforeEach(async (_to, _from, _next) => {
         _next('/auth/signin')
     }
     else {
-        _next()
+        const access = pageAccess(_to, TokenUtils.getAuthUser())
+        if (access === true) _next()
+        else _next(access)
     }
 })
 

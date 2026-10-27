@@ -8,7 +8,7 @@ import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.ExecutorResponse
 import org.devlive.metaforge.executor.configure.OriginColumn
 import org.devlive.metaforge.executor.local.LocalExecutorService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.test.local.support.JdbcPluginService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -203,12 +203,12 @@ class LocalExecutorPostgresE2ETest
             this.query = query
             database = "public"
             table = targetTable
-            originConfigure = Configure()
+            originConfigure = RuntimeConfigure()
             originColumns = columns
         }
         val output = ExecutorConfigure("postgresql", null, emptySet()).apply {
             plugin = service
-            originConfigure = Configure()
+            originConfigure = RuntimeConfigure()
         }
         return ExecutorRequest(null, input, output).apply {
             this.taskName = taskName

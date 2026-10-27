@@ -5,7 +5,7 @@ import org.devlive.metaforge.plugin.PluginConfigure
 import org.devlive.metaforge.plugin.PluginManager
 import org.devlive.metaforge.plugin.utils.PluginPathUtils
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.junit.Assert.assertNotNull
 import org.junit.Assume
 import org.junit.BeforeClass
@@ -86,7 +86,7 @@ class InfluxdbServiceTest
         val plugin = pluginManager.getPlugin(pluginName).get()
         assertNotNull(plugin)
 
-        val configure: Configure = Configure.builder()
+        val configure: RuntimeConfigure = RuntimeConfigure.builder()
             .host(container.host)
             .port(InfluxdbContainer.PORT)
             .username(Optional.of(InfluxdbContainer.USERNAME))

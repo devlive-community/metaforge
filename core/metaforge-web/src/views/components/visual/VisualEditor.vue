@@ -38,7 +38,7 @@
               <MfSpace class="items-center" wrap>
                   <MfRadio :disabled="configuration.headers.length === 0" :value="Type.TABLE">
                     <MfTooltip :content="$t('dataset.common.visualTypeTable')">
-                      <TableOutlined :style="{ fontSize: '20px' }"/>
+                      <Table :size="20" />
                     </MfTooltip>
                   </MfRadio>
 
@@ -251,7 +251,7 @@ import VisualFunnel from '@/views/components/visual/components/VisualFunnel.vue'
 import VisualGauge from '@/views/components/visual/components/VisualGauge.vue'
 import { createdConfigure } from '@/views/components/visual/Utils.ts'
 import VisualRose from '@/views/components/visual/components/VisualRose.vue'
-import { TableOutlined } from '@ant-design/icons-vue'
+import { Table } from '@lucide/vue'
 
 defineOptions({ name: 'VisualEditor' })
 

@@ -25,6 +25,7 @@ import org.devlive.metaforge.executor.configure.OriginColumn;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginMetadata;
+import org.devlive.metaforge.plugin.configure.PluginConfigurePipelineType;
 import org.devlive.metaforge.scheduler.SchedulerRequest;
 import org.devlive.metaforge.scheduler.SchedulerService;
 import org.devlive.metaforge.service.adapter.PageRequestAdapter;
@@ -34,7 +35,6 @@ import org.devlive.metaforge.service.body.PipelineFieldBody;
 import org.devlive.metaforge.service.body.adhoc.Adhoc;
 import org.devlive.metaforge.service.common.ConfigureUtils;
 import org.devlive.metaforge.service.common.FolderUtils;
-import org.devlive.metaforge.service.configure.IConfigurePipelineType;
 import org.devlive.metaforge.service.entity.DataSetColumnEntity;
 import org.devlive.metaforge.service.entity.DataSetEntity;
 import org.devlive.metaforge.service.entity.DatasetHistoryEntity;
@@ -64,8 +64,8 @@ import org.devlive.metaforge.service.service.RuntimeConfigureService;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.PluginType;
 import org.devlive.metaforge.spi.generator.definition.TableDefinition;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.sql.EngineType;
 import org.devlive.metaforge.sql.builder.ColumnBuilder;
 import org.devlive.metaforge.sql.builder.TableBuilder;
@@ -483,9 +483,9 @@ public class DataSetServiceImpl
         }
     }
 
-    private Configure getConfigure(String database, Plugin plugin)
+    private RuntimeConfigure getConfigure(String database, Plugin plugin)
     {
-        return Configure.builder()
+        return RuntimeConfigure.builder()
                 .host(initializerConfigure.getDataSetConfigure().getHost())
                 .port(Integer.valueOf(initializerConfigure.getDataSetConfigure().getPort()))
                 .username(Optional.ofNullable(initializerConfigure.getDataSetConfigure().getUsername()))
@@ -608,7 +608,7 @@ public class DataSetServiceImpl
                                 String sql = TableBuilder.Companion.SQL();
                                 log.info("Create table sql \n {} \n on dataset [ {} ]", sql, entity.getName());
 
-                                Configure targetConfigure = new Configure();
+                                RuntimeConfigure targetConfigure = new RuntimeConfigure();
                                 targetConfigure.setHost(initializerConfigure.getDataSetConfigure().getHost());
                                 targetConfigure.setPort(Integer.valueOf(initializerConfigure.getDataSetConfigure().getPort()));
                                 targetConfigure.setUsername(Optional.ofNullable(initializerConfigure.getDataSetConfigure().getUsername()));
@@ -775,21 +775,21 @@ public class DataSetServiceImpl
     }
 
     @Override
-    public CommonResponse<java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField>> getSyncFields(String code)
+    public CommonResponse<java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField>> getSyncFields(String code)
     {
         return repository.findByCode(code)
-                .<CommonResponse<java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField>>>map(entity -> {
+                .<CommonResponse<java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField>>>map(entity -> {
                     return pluginManager.getPlugin(entity.getExecutor())
                             .map(plugin -> {
-                                java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField> schema = plugin.configures();
+                                java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField> schema = plugin.runtimeConfigures();
                                 java.util.Map<String, String> effective = runtimeConfigureService.getEffective(
                                         RuntimeConfigureService.CATEGORY_EXECUTOR,
                                         plugin.getName(),
                                         schema
                                 );
-                                java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField> tunable = schema.stream()
-                                        .filter(org.devlive.metaforge.plugin.configure.PluginConfigureField::isTunable)
-                                        .map(f -> new org.devlive.metaforge.plugin.configure.PluginConfigureField(
+                                java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField> tunable = schema.stream()
+                                        .filter(org.devlive.metaforge.plugin.configure.RuntimeConfigureField::isTunable)
+                                        .map(f -> new org.devlive.metaforge.plugin.configure.RuntimeConfigureField(
                                                 f.getName(),
                                                 f.getType(),
                                                 effective.getOrDefault(f.getName(), f.getDefaultValue()),
@@ -799,10 +799,10 @@ public class DataSetServiceImpl
                                         .collect(java.util.stream.Collectors.toList());
                                 return CommonResponse.success(tunable);
                             })
-                            .orElseGet(() -> CommonResponse.<java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField>>failure(
+                            .orElseGet(() -> CommonResponse.<java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField>>failure(
                                     String.format("Executor [ %s ] not found", entity.getExecutor())));
                 })
-                .orElseGet(() -> CommonResponse.<java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField>>failure(
+                .orElseGet(() -> CommonResponse.<java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField>>failure(
                         String.format("DataSet [ %s ] not found", code)));
     }
 
@@ -900,7 +900,7 @@ public class DataSetServiceImpl
      * @param database the database name
      * @param configure the configuration settings
      */
-    private void flushTableMetadata(DataSetEntity entity, PluginService pluginService, String database, Configure configure, Plugin plugin)
+    private void flushTableMetadata(DataSetEntity entity, PluginService pluginService, String database, RuntimeConfigure configure, Plugin plugin)
     {
         // Get the total number of rows and the total size of the dataset
         log.info("Get the total number of rows and the total size of the dataset [ {} ]", entity.getName());
@@ -1096,14 +1096,14 @@ public class DataSetServiceImpl
                                                     PipelineFieldBody inputFieldBody = ConfigureUtils.convertFieldBody(
                                                             source,
                                                             entity.getExecutor(),
-                                                            IConfigurePipelineType.INPUT,
-                                                            environment,
+                                                            PluginConfigurePipelineType.INPUT,
+                                                            pluginManager,
                                                             originInputProperties
                                                     );
 
                                                     Properties inputProperties = ConfigureUtils.convertProperties(
-                                                            source, environment,
-                                                            IConfigurePipelineType.INPUT,
+                                                            source, pluginManager,
+                                                            PluginConfigurePipelineType.INPUT,
                                                             entity.getExecutor(),
                                                             entity.getQuery(),
                                                             inputFieldBody
@@ -1111,12 +1111,12 @@ public class DataSetServiceImpl
 
                                                     Set<String> inputOptions = ConfigureUtils.convertOptions(
                                                             source,
-                                                            environment,
+                                                            pluginManager,
                                                             entity.getExecutor(),
-                                                            IConfigurePipelineType.INPUT
+                                                            PluginConfigurePipelineType.INPUT
                                                     );
 
-                                                    Configure inputConfigure = source.toConfigure(pluginManager, plugin);
+                                                    RuntimeConfigure inputConfigure = source.toConfigure(pluginManager, plugin);
                                                     inputConfigure.setPluginManager(pluginManager);
                                                     ExecutorConfigure input = new ExecutorConfigure(
                                                             source.getType(),
@@ -1154,15 +1154,15 @@ public class DataSetServiceImpl
                                                                 PipelineFieldBody outputFieldBody = ConfigureUtils.convertFieldBody(
                                                                         outputSource,
                                                                         entity.getExecutor(),
-                                                                        IConfigurePipelineType.OUTPUT,
-                                                                        environment,
+                                                                        PluginConfigurePipelineType.OUTPUT,
+                                                                        pluginManager,
                                                                         originOutputProperties
                                                                 );
 
                                                                 Properties outputProperties = ConfigureUtils.convertProperties(
                                                                         outputSource,
-                                                                        environment,
-                                                                        IConfigurePipelineType.OUTPUT,
+                                                                        pluginManager,
+                                                                        PluginConfigurePipelineType.OUTPUT,
                                                                         entity.getExecutor(),
                                                                         entity.getQuery(),
                                                                         outputFieldBody
@@ -1170,9 +1170,9 @@ public class DataSetServiceImpl
 
                                                                 Set<String> outputOptions = ConfigureUtils.convertOptions(
                                                                         outputSource,
-                                                                        environment,
+                                                                        pluginManager,
                                                                         entity.getExecutor(),
-                                                                        IConfigurePipelineType.OUTPUT
+                                                                        PluginConfigurePipelineType.OUTPUT
                                                                 );
 
                                                                 ExecutorConfigure output = new ExecutorConfigure(
@@ -1203,14 +1203,14 @@ public class DataSetServiceImpl
                                                                 java.util.Map<String, String> executorCfg = runtimeConfigureService.getEffective(
                                                                         RuntimeConfigureService.CATEGORY_EXECUTOR,
                                                                         executor.getName(),
-                                                                        executor.configures()
+                                                                        executor.runtimeConfigures()
                                                                 );
                                                                 // 本次同步如有用户临时覆盖：只接受 tunable=true 的字段，其余忽略
                                                                 java.util.Map<String, String> overrides = currentSyncOverrides.get();
                                                                 if (overrides != null && !overrides.isEmpty()) {
-                                                                    java.util.Set<String> tunableKeys = executor.configures().stream()
-                                                                            .filter(org.devlive.metaforge.plugin.configure.PluginConfigureField::isTunable)
-                                                                            .map(org.devlive.metaforge.plugin.configure.PluginConfigureField::getName)
+                                                                    java.util.Set<String> tunableKeys = executor.runtimeConfigures().stream()
+                                                                            .filter(org.devlive.metaforge.plugin.configure.RuntimeConfigureField::isTunable)
+                                                                            .map(org.devlive.metaforge.plugin.configure.RuntimeConfigureField::getName)
                                                                             .collect(java.util.stream.Collectors.toSet());
                                                                     overrides.forEach((k, v) -> {
                                                                         if (tunableKeys.contains(k) && v != null) {

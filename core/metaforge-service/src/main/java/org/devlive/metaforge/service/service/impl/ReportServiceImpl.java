@@ -1,7 +1,6 @@
 package org.devlive.metaforge.service.service.impl;
 
 import org.devlive.metaforge.common.response.CommonResponse;
-import org.devlive.metaforge.service.adapter.PageRequestAdapter;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.ReportEntity;
@@ -11,7 +10,6 @@ import org.devlive.metaforge.service.repository.ReportRepository;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.ReportService;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -32,8 +30,7 @@ public class ReportServiceImpl
     @Override
     public CommonResponse<PageEntity<ReportEntity>> getAll(FilterBody filter)
     {
-        Pageable pageable = PageRequestAdapter.of(filter);
-        return CommonResponse.success(PageEntity.build(repository.findAllByUser(UserDetailsService.getUser(), pageable)));
+        return CommonResponse.success(PageEntity.build(repository.findFiltered(filter, UserDetailsService.getUser())));
     }
 
     @Override

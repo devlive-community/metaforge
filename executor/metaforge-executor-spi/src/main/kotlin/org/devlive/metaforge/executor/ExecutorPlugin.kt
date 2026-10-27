@@ -8,12 +8,12 @@ import org.devlive.metaforge.plugin.PluginType
  * - 类型固定为 EXECUTOR
  * - 名称自动从子类类名末尾剥掉 "Executor" 后缀。
  *   例如 SeatunnelExecutor -> "Seatunnel"，LocalExecutor -> "Local"。
- * - 可配置字段通过 Plugin.configures() 声明（继承自 metaforge-plugin 通用机制）。
+ * - 可配置字段通过 Plugin.runtimeConfigures() 声明（继承自 metaforge-plugin 通用机制）。
  *
  * Common base for all executor plugins.
  * - Type is fixed to EXECUTOR.
  * - Name auto-derives from the subclass simple name by stripping the trailing "Executor".
- * - Configurable fields are declared via Plugin.configures() (inherited from metaforge-plugin).
+ * - Configurable fields are declared via Plugin.runtimeConfigures() (inherited from metaforge-plugin).
  */
 abstract class ExecutorPlugin : Plugin()
 {

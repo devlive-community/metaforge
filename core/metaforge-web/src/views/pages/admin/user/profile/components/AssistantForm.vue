@@ -15,7 +15,7 @@
         <div class="dc-ai__card">
           <div class="dc-ai__section-head">
             <div class="dc-ai__section-icon">
-              <SettingOutlined :style="{ fontSize: '16px' }"/>
+              <Settings :size="16" />
             </div>
             <div>
               <div class="dc-ai__section-title">{{ $t('user.common.basicConfig') }}</div>
@@ -81,7 +81,7 @@
         <div class="dc-ai__card">
           <div class="dc-ai__section-head">
             <div class="dc-ai__section-icon">
-              <BookOutlined :style="{ fontSize: '16px' }"/>
+              <BookOpen :size="16" />
             </div>
             <div class="dc-ai__section-title">{{ $t('user.common.configGuide') }}</div>
           </div>
@@ -102,7 +102,7 @@
         <div class="dc-ai__card">
           <div class="dc-ai__section-head">
             <div class="dc-ai__section-icon">
-              <ThunderboltOutlined :style="{ fontSize: '16px' }"/>
+              <Zap :size="16" />
             </div>
             <div>
               <div class="dc-ai__section-title">{{ $t('user.common.quickConfig') }}</div>
@@ -116,7 +116,7 @@
                  class="dc-ai__provider"
                  @click="selectProvider(provider)">
               <span class="dc-ai__provider-icon" :style="{ background: provider.tint }">
-                <component :is="provider.icon" :style="{ fontSize: '15px', color: provider.color }"/>
+                <component :size="15" :is="provider.icon" :style="{ color: provider.color }"/>
               </span>
               <span class="dc-ai__provider-name">{{ provider.name }}</span>
             </div>
@@ -136,13 +136,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import {
-  ApiOutlined,
-  BookOutlined,
-  CompassOutlined,
-  SettingOutlined,
-  ThunderboltOutlined
-} from '@ant-design/icons-vue'
+import { BookOpen, Compass, Plug, Settings, Zap } from '@lucide/vue'
 import UserService from '@/services/user'
 import { UserChatModel } from '@/model/user'
 import Common from '@/utils/common'
@@ -160,10 +154,10 @@ const testing = ref(false)
 const formState = ref<UserChatModel | null>(null)
 
 const providers = computed(() => ([
-  { name: 'OpenAI', host: 'https://api.openai.com/v1', icon: ApiOutlined, tint: 'rgba(0,0,0,0.06)', color: 'rgba(0,0,0,0.8)' },
-  { name: 'Claude', host: 'https://api.anthropic.com/v1', icon: ThunderboltOutlined, tint: 'rgba(217, 119, 87, 0.12)', color: '#d97757' },
-  { name: 'DeepSeek', host: 'https://api.deepseek.com/v1', icon: CompassOutlined, tint: 'rgba(77, 107, 254, 0.1)', color: '#4d6bfe' },
-  { name: t('user.provider.custom'), host: '', icon: SettingOutlined, tint: 'var(--dc-primary-light)', color: 'var(--dc-primary)' }
+  { name: 'OpenAI', host: 'https://api.openai.com/v1', icon: Plug, tint: 'rgba(0,0,0,0.06)', color: 'rgba(0,0,0,0.8)' },
+  { name: 'Claude', host: 'https://api.anthropic.com/v1', icon: Zap, tint: 'rgba(217, 119, 87, 0.12)', color: '#d97757' },
+  { name: 'DeepSeek', host: 'https://api.deepseek.com/v1', icon: Compass, tint: 'rgba(77, 107, 254, 0.1)', color: '#4d6bfe' },
+  { name: t('user.provider.custom'), host: '', icon: Settings, tint: 'var(--dc-primary-light)', color: 'var(--dc-primary)' }
 ]))
 
 const guides = [

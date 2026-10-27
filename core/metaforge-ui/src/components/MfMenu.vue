@@ -44,9 +44,9 @@ const horizontal = computed(() => props.mode === 'horizontal')
 
 const rootClass = computed(() => clsx(
     'flex text-sm select-none',
-    horizontal
-        ? 'flex-row items-center'
-        : clsx('flex-col', props.collapsed && 'items-center'),
+    horizontal.value
+        ? 'flex-row items-center gap-1.5'
+        : clsx('flex-col gap-1', props.collapsed && 'items-center'),
 ))
 </script>
 

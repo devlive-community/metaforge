@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, inject, provide, ref } from 'vue'
+import { computed, inject, provide, ref, watch } from 'vue'
 import clsx from 'clsx'
+import { useDismissableLayer } from '../composables/useDismissableLayer'
 
 const props = withDefaults(defineProps<{
     key_?: string | number
@@ -26,6 +27,10 @@ provide('mfSubMenu', { key: props.key_ })
 const open = computed(() => menu?.openKeys.value.includes(props.key_) ?? false)
 const horizontal = computed(() => menu?.mode.value === 'horizontal')
 const popup = ref(false)
+const root = ref<HTMLElement>()
+
+useDismissableLayer(root, computed(() => horizontal.value && popup.value), () => { popup.value = false })
+watch(horizontal, () => { popup.value = false })
 
 function toggle(): void {
     if (props.disabled) return
@@ -51,6 +56,7 @@ const chevron = computed(() => clsx(
 
 <template>
     <li
+        ref="root"
         class="relative"
         :class="horizontal ? 'flex items-center' : 'w-full'"
         role="menuitem"

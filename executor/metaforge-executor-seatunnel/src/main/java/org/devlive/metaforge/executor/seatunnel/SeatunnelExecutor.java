@@ -1,8 +1,8 @@
 package org.devlive.metaforge.executor.seatunnel;
 
 import org.devlive.metaforge.executor.ExecutorPlugin;
-import org.devlive.metaforge.plugin.configure.PluginConfigureField;
-import org.devlive.metaforge.plugin.configure.PluginFieldType;
+import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
+import org.devlive.metaforge.plugin.configure.RuntimeConfigureFieldType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -11,47 +11,47 @@ public class SeatunnelExecutor
         extends ExecutorPlugin
 {
     @Override
-    public List<PluginConfigureField> configures()
+    public List<RuntimeConfigureField> runtimeConfigures()
     {
         return Arrays.asList(
-                new PluginConfigureField(
+                new RuntimeConfigureField(
                         "home",
-                        PluginFieldType.STRING,
+                        RuntimeConfigureFieldType.STRING,
                         "/opt/lib/seatunnel",
                         "SeaTunnel installation root (was metaforge.executor.seatunnel.home).",
                         false
                 ),
-                new PluginConfigureField(
+                new RuntimeConfigureField(
                         "startScript",
-                        PluginFieldType.STRING,
+                        RuntimeConfigureFieldType.STRING,
                         "start-seatunnel-spark-connector-v2.sh",
                         "SeaTunnel launcher script under {home}/bin.",
                         false
                 ),
-                new PluginConfigureField(
+                new RuntimeConfigureField(
                         "engine",
-                        PluginFieldType.STRING,
+                        RuntimeConfigureFieldType.STRING,
                         "SPARK",
                         "Underlying engine: SPARK / FLINK / SEATUNNEL.",
                         false
                 ),
-                new PluginConfigureField(
+                new RuntimeConfigureField(
                         "way",
-                        PluginFieldType.STRING,
+                        RuntimeConfigureFieldType.STRING,
                         "LOCAL",
                         "Run way: LOCAL / CLUSTER.",
                         false
                 ),
-                new PluginConfigureField(
+                new RuntimeConfigureField(
                         "mode",
-                        PluginFieldType.STRING,
+                        RuntimeConfigureFieldType.STRING,
                         "CLIENT",
                         "Run mode: CLIENT / SERVER.",
                         false
                 ),
-                new PluginConfigureField(
+                new RuntimeConfigureField(
                         "data",
-                        PluginFieldType.STRING,
+                        RuntimeConfigureFieldType.STRING,
                         "",
                         "Executor data buffer path; empty means project root /data.",
                         false

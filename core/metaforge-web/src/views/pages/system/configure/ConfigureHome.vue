@@ -11,7 +11,7 @@
           <div class="dc-rt__guide-pop">{{ $t('configure.runtime.bandTip') }}</div>
         </template>
         <MfButton class="dc-rt__guide-btn">
-          <QuestionCircleOutlined/>
+          <CircleHelp :size="14"/>
           {{ $t('configure.runtime.guide') }}
         </MfButton>
       </MfPopover>
@@ -68,7 +68,7 @@
                   <div class="dc-rt__field-label">
                     <span>{{ field.name }}</span>
                     <MfTooltip v-if="field.description" :content="field.description">
-                      <QuestionCircleOutlined class="dc-rt__field-q"/>
+                      <CircleHelp :size="14" class="dc-rt__field-q"/>
                     </MfTooltip>
                     <span v-if="!field.tunable" class="dc-rt__field-admin">[{{ $t('configure.runtime.adminOnly') }}]</span>
                   </div>
@@ -99,7 +99,7 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { QuestionCircleOutlined } from '@ant-design/icons-vue'
+import { CircleHelp } from '@lucide/vue'
 import RuntimeConfigureService from '@/services/runtimeConfigure'
 
 interface PluginConfigureField

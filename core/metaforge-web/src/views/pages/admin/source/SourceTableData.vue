@@ -8,7 +8,7 @@
                       size="sm"
                       :disabled="!configure.pagination.hasPrevious"
                       @click="onApplyPagination(configure.operator.FIRST)">
-              <MenuFoldOutlined :style="{ fontSize: '15px' }"/>
+              <PanelLeftClose :size="15" />
             </MfButton>
           </MfTooltip>
 
@@ -17,7 +17,7 @@
                       size="sm"
                       :disabled="!configure.pagination.hasPrevious"
                       @click="onApplyPagination(configure.operator.PREVIOUS)">
-              <ArrowLeftOutlined :style="{ fontSize: '15px' }"/>
+              <ArrowLeft :size="15" />
             </MfButton>
           </MfTooltip>
 
@@ -26,7 +26,7 @@
                       size="sm"
                       :disabled="!configure.pagination.hasNext"
                       @click="onApplyPagination(configure.operator.NEXT)">
-              <ArrowRightOutlined :style="{ fontSize: '15px' }"/>
+              <ArrowRight :size="15" />
             </MfButton>
           </MfTooltip>
 
@@ -35,13 +35,13 @@
                       size="sm"
                       :disabled="!configure.pagination.hasNext"
                       @click="onApplyPagination(configure.operator.LAST)">
-              <MenuUnfoldOutlined :style="{ fontSize: '15px' }"/>
+              <PanelLeftOpen :size="15" />
             </MfButton>
           </MfTooltip>
 
           <MfTooltip :content="$t('user.common.setting')">
             <MfButton variant="ghost" size="sm" @click="visibleSettings(true)">
-              <SettingOutlined :style="{ fontSize: '15px' }"/>
+              <Settings :size="15" />
             </MfButton>
           </MfTooltip>
 
@@ -54,7 +54,7 @@
 
           <MfTooltip :content="$t('source.common.addRows')">
             <MfButton variant="ghost" size="sm" @click="onAddOrCloneRow(false)">
-              <PlusOutlined :style="{ fontSize: '15px' }"/>
+              <Plus :size="15" />
             </MfButton>
           </MfTooltip>
 
@@ -63,7 +63,7 @@
                       size="sm"
                       :disabled="dataSelectedChanged.columns.length === 0"
                       @click="onAddOrCloneRow(true)">
-              <CopyOutlined :style="{ fontSize: '15px' }"/>
+              <Copy :size="15" />
             </MfButton>
           </MfTooltip>
 
@@ -72,7 +72,7 @@
                       size="sm"
                       :disabled="!dataSelectedChanged.changed"
                       @click="visibleChanged(true)">
-              <MinusOutlined :style="{ fontSize: '15px' }"/>
+              <Minus :size="15" />
             </MfButton>
           </MfTooltip>
 
@@ -81,19 +81,19 @@
                       size="sm"
                       :disabled="dataCellChanged.changed && dataCellChanged.columns.length === 0"
                       @click="visibleCellChanged(true)">
-              <EllipsisOutlined :style="{ fontSize: '15px' }"/>
+              <Ellipsis :size="15" />
             </MfButton>
           </MfTooltip>
 
           <MfTooltip :content="$t('common.preview')">
             <MfButton variant="ghost" size="sm" @click="visibleContents(true)">
-              <EyeOutlined :style="{ fontSize: '15px' }"/>
+              <Eye :size="15" />
             </MfButton>
           </MfTooltip>
 
           <MfTooltip :content="$t('common.refresh')">
             <MfButton variant="ghost" size="sm" @click="onRefresh">
-              <ReloadOutlined :style="{ fontSize: '15px' }"/>
+              <RotateCw :size="15" />
             </MfButton>
           </MfTooltip>
         </MfSpace>
@@ -103,13 +103,13 @@
         <MfSpace class="items-center">
           <MfTooltip :content="$t('source.common.visibleColumn')">
             <MfButton variant="ghost" size="sm" @click="visibleColumns(null, true)">
-              <InsertRowRightOutlined :style="{ fontSize: '15px' }"/>
+              <Columns3 :size="15" />
             </MfButton>
           </MfTooltip>
 
           <MfTooltip :content="$t('source.common.filterData')">
             <MfButton variant="ghost" size="sm" @click="onFilterConfigure(true)">
-              <FilterOutlined :style="{ fontSize: '15px' }"/>
+              <Filter :size="15" />
             </MfButton>
           </MfTooltip>
         </MfSpace>
@@ -206,7 +206,7 @@ import TableRowFilter from '@/views/pages/admin/source/components/TableRowFilter
 import SqlInfo from '@/views/components/sql/SqlInfo.vue'
 import TablePagination from '@/views/pages/admin/source/components/TablePagination.vue'
 import MetadataService from '@/services/metadata'
-import { ArrowLeftOutlined, ArrowRightOutlined, CopyOutlined, EllipsisOutlined, EyeOutlined, FilterOutlined, InsertRowRightOutlined, MenuFoldOutlined, MenuUnfoldOutlined, MinusOutlined, PlusOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { ArrowLeft, ArrowRight, Columns3, Copy, Ellipsis, Eye, Filter, Minus, PanelLeftClose, PanelLeftOpen, Plus, RotateCw, Settings } from '@lucide/vue'
 
 defineOptions({ name: 'SourceTableData' })
 

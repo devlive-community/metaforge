@@ -1,16 +1,35 @@
 <template>
   <div class="dc-table">
-    <!-- 卡片头：标题 + 描述 + 页面动作（新增等） + 通用工具（刷新 / 列设置 / 下载） -->
-    <div v-if="title || description || $slots.actions || $slots.tools" class="dc-table__head">
+    <div v-if="title || description" class="dc-table__head">
       <div class="dc-table__head-main">
-        <div v-if="title" class="dc-table__title">{{ title }}</div>
-        <div v-if="description" class="dc-table__desc">{{ description }}</div>
+        <h1 v-if="title" class="m-0 text-xl leading-7 font-semibold text-content">{{ title }}</h1>
+        <p v-if="description" class="mt-1 mb-0 text-sm leading-5 text-content-secondary">{{ description }}</p>
       </div>
-      <div class="dc-table__head-tools">
+    </div>
+
+    <MfTableToolbar :loading="loading"
+                    :search-text="t('dataTable.search')"
+                    :reset-text="t('common.reset')"
+                    :more-text="t('dataTable.moreFilters')"
+                    :less-text="t('dataTable.lessFilters')"
+                    @search="onSearch"
+                    @reset="onReset">
+      <template v-if="filterable || $slots.filter" #filter>
+        <slot name="filter">
+          <TableFilterControl v-for="field in basicFilters" :key="field.key" :field="field" :model-value="filterValue(field.key)" @update:model-value="setFilter(field, $event)"/>
+        </slot>
+      </template>
+      <template v-if="advancedFilters.length || $slots['advanced-filter']" #advanced-filter>
+        <slot name="advanced-filter">
+          <TableFilterControl v-for="field in advancedFilters" :key="field.key" :field="field" :model-value="filterValue(field.key)" @update:model-value="setFilter(field, $event)"/>
+        </slot>
+      </template>
+      <template v-if="$slots.actions" #actions><slot name="actions"/></template>
+      <template #tools>
         <slot name="tools"/>
         <MfTooltip :content="t('common.refresh')">
-          <MfButton variant="ghost" @click="emit('refresh')">
-            <ReloadOutlined/>
+          <MfButton :aria-label="t('common.refresh')" :disabled="loading" @click="emit('refresh')">
+            <RotateCw :size="14"/>
           </MfButton>
         </MfTooltip>
 
@@ -26,29 +45,20 @@
             </div>
           </template>
           <MfTooltip :content="columnsText">
-            <MfButton>
-              <SettingOutlined/>
+            <MfButton :aria-label="columnsText">
+              <Settings :size="14"/>
             </MfButton>
           </MfTooltip>
         </MfPopover>
 
         <MfTooltip :content="downloadText">
-          <MfButton @click="onDownload">
-            <DownloadOutlined/>
+          <MfButton :aria-label="downloadText" :disabled="loading || dataSource.length === 0" @click="onDownload">
+            <DownloadIcon :size="14"/>
           </MfButton>
         </MfTooltip>
-      </div>
-    </div>
-
-    <!-- 页面动作区（新增等大按钮） -->
-    <div v-if="$slots.actions" class="dc-table__actions">
-      <slot name="actions"/>
-    </div>
-
-    <!-- 顶部筛选区：各页面自定义（关键词 / 状态 / 归属等 + 查询 / 重置） -->
-    <div v-if="$slots.filter" class="dc-table__filter">
-      <slot name="filter"/>
-    </div>
+      </template>
+    </MfTableToolbar>
+    <p v-if="filterError" role="alert" class="mb-3 text-sm text-danger">{{ filterError }}</p>
 
     <!-- 表格 + 分页 -->
     <MfTable :columns="tableColumns"
@@ -100,9 +110,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { DownloadOutlined, ReloadOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { DownloadIcon, RotateCw, Settings } from '@lucide/vue'
+import { emptyTableFilters, type TableFilters } from '@/model/filter'
+import TableFilterControl from './TableFilterControl.vue'
+import type { TableFilterField } from './tableFilters'
 
 interface TableColumn
 {
@@ -138,6 +151,8 @@ const props = withDefaults(defineProps<{
   rowSelection?: boolean
   /** 批量操作按钮（行多选启用时渲染于表格底部） */
   batchActions?: TableBatchAction[]
+  filterable?: boolean
+  filterFields?: TableFilterField[]
 }>(), {
   title: '',
   description: '',
@@ -150,11 +165,15 @@ const props = withDefaults(defineProps<{
   pageSizeOptions: () => ['10', '20', '50'],
   lockedColumnKeys: () => ['action'],
   rowSelection: false,
-  batchActions: () => []
+  batchActions: () => [],
+  filterable: false,
+  filterFields: () => [],
 })
 
 const emit = defineEmits<{
   (e: 'refresh'): void
+  (e: 'search', filters: TableFilters): void
+  (e: 'reset', filters: TableFilters): void
   (e: 'download'): void
   (e: 'page-change', page: number, size: number): void
   (e: 'size-change', current: number, size: number): void
@@ -163,6 +182,32 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const draft = reactive(emptyTableFilters())
+const filterError = ref('')
+const basicFilters = computed(() => props.filterFields.filter(field => !field.advanced))
+const advancedFilters = computed(() => props.filterFields.filter(field => field.advanced))
+const directFields = ['keyword', 'code', 'createdFrom', 'createdTo'] as const
+const isDirect = (key: string): key is typeof directFields[number] => directFields.some(field => field === key)
+const filterValue = (key: string) => isDirect(key) ? draft[key] : draft.conditions[key]?.value || ''
+const setFilter = (field: TableFilterField, value: string) => {
+  if (isDirect(field.key)) draft[field.key] = value
+  else if (!value) delete draft.conditions[field.key]
+  else draft.conditions[field.key] = { value, exact: field.type === 'select' }
+}
+const snapshot = () => ({ ...draft, conditions: Object.fromEntries(Object.entries(draft.conditions).map(([key, value]) => [key, { ...value }])) })
+const onSearch = () => {
+  if (draft.createdFrom && draft.createdTo && draft.createdFrom > draft.createdTo) {
+    filterError.value = t('dataTable.invalidDateRange')
+    return
+  }
+  filterError.value = ''
+  emit('search', snapshot())
+}
+const onReset = () => {
+  Object.assign(draft, emptyTableFilters())
+  filterError.value = ''
+  emit('reset', snapshot())
+}
 
 // download / columns 键在服务端 i18n 可能尚未提供，缺失时回退到中性文案
 const columnsText = computed(() => {
@@ -288,42 +333,7 @@ const onDownload = () => {
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 14px;
-}
-
-.dc-table__title {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--dc-text-title);
-}
-
-.dc-table__desc {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
-.dc-table__head-tools {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-}
-
-.dc-table__actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-}
-
-.dc-table__filter {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 14px;
+    margin-bottom: 16px;
 }
 
 .dc-table__footer {

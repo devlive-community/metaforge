@@ -234,6 +234,13 @@
 
         <resources>
             <resource>
+                <directory>../../configure/etc/conf/i18n</directory>
+                <targetPath>i18n</targetPath>
+                <includes>
+                    <include>messages_*.properties</include>
+                </includes>
+            </resource>
+            <resource>
                 <directory>../metaforge-web/dist</directory>
                 <targetPath>resources</targetPath>
             </resource>

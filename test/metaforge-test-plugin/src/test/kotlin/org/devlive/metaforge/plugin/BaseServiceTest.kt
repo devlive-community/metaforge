@@ -3,7 +3,7 @@ package org.devlive.metaforge.plugin
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.plugin.utils.PluginPathUtils
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
@@ -83,5 +83,5 @@ abstract class BaseServiceTest<T : BaseContainer<T>>(
         assertNotNull(response)
     }
 
-    protected abstract fun createConfigure(): Configure
+    protected abstract fun createConfigure(): RuntimeConfigure
 }

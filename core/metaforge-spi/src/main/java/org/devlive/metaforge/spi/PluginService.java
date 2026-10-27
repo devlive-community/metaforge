@@ -32,9 +32,9 @@ import org.devlive.metaforge.spi.generator.table.InsertTable;
 import org.devlive.metaforge.spi.generator.table.SelectTable;
 import org.devlive.metaforge.spi.generator.table.TruncateTable;
 import org.devlive.metaforge.spi.generator.table.UpdateTable;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Pagination;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,7 +93,7 @@ public interface PluginService
         return false;
     }
 
-    default void connect(Configure configure)
+    default void connect(RuntimeConfigure configure)
     {
         Response response = new Response();
         try {
@@ -116,7 +116,7 @@ public interface PluginService
      * @param configure 配置信息 | Configuration information
      * @return 驱动路径 | Driver path
      */
-    default String url(Configure configure)
+    default String url(RuntimeConfigure configure)
     {
         if (configure.getUrl().isPresent()) {
             return configure.getUrl().get();
@@ -184,7 +184,7 @@ public interface PluginService
         return response;
     }
 
-    default Response execute(Configure configure, String content)
+    default Response execute(RuntimeConfigure configure, String content)
     {
         this.connect(configure);
         return this.execute(content);
@@ -205,7 +205,7 @@ public interface PluginService
      * Stream rows out of the source one at a time. The implementation must NOT materialize
      * the full result set in heap.
      */
-    default void executeStream(Configure configure, String content, int fetchSize, RowCallback callback)
+    default void executeStream(RuntimeConfigure configure, String content, int fetchSize, RowCallback callback)
     {
         if (type().equals(PluginType.JDBC)) {
             JdbcStreamAdapter.executeStream(this, configure, content, fetchSize, callback);
@@ -221,7 +221,7 @@ public interface PluginService
      * and on close(). Must be closed by the caller.
      */
     default BatchWriter openBatchWriter(
-            Configure configure,
+            RuntimeConfigure configure,
             String database,
             String table,
             java.util.List<String> columns,
@@ -275,7 +275,7 @@ public interface PluginService
      * @param configure 配置信息 | Configuration information
      * @return 数据库列表 | Database list
      */
-    default Response getDatabases(Configure configure)
+    default Response getDatabases(RuntimeConfigure configure)
     {
         String sql = "SELECT\n" +
                 "    SCHEMA_NAME AS object_name,\n" +
@@ -297,7 +297,7 @@ public interface PluginService
      * @param configure 配置信息 | Configuration information
      * @return 数据库列表 | Database list
      */
-    default Response metadataDatabases(Configure configure)
+    default Response metadataDatabases(RuntimeConfigure configure)
     {
         Response response = new Response();
         response.setHeaders(Lists.newArrayList("object_name", "object_type", "object_comment"));
@@ -341,7 +341,7 @@ public interface PluginService
      * @param configure 配置信息 | Configuration information
      * @return 原生 JDBC 连接 | Native JDBC connection
      */
-    private java.sql.Connection openJdbcConnection(Configure configure)
+    private java.sql.Connection openJdbcConnection(RuntimeConfigure configure)
     {
         this.connect(configure);
         Connection connection = local.get();
@@ -359,7 +359,7 @@ public interface PluginService
      * @param database 数据库 | Database
      * @return 数据表结构 | Table structure
      */
-    default Response getTables(Configure configure, String database)
+    default Response getTables(RuntimeConfigure configure, String database)
     {
         String sql = "SELECT\n" +
                 "    CASE\n" +
@@ -433,7 +433,7 @@ public interface PluginService
      * @param database 数据库 | Database
      * @return 数据表列表 | Table list
      */
-    default Response metadataTables(Configure configure, String database)
+    default Response metadataTables(RuntimeConfigure configure, String database)
     {
         Response response = new Response();
         response.setHeaders(Lists.newArrayList("type_name", "object_name", "object_comment"));
@@ -473,7 +473,7 @@ public interface PluginService
      * @param table 数据表 | Table
      * @return 数据列结构 | Column structure
      */
-    default Response getColumns(Configure configure, String database, String table)
+    default Response getColumns(RuntimeConfigure configure, String database, String table)
     {
         String sql = "SELECT detail.*\n" +
                 "FROM (\n" +
@@ -593,7 +593,7 @@ public interface PluginService
      * @param table 数据表 | Table
      * @return 数据列结构 | Column structure
      */
-    default Response metadataColumns(Configure configure, String database, String table)
+    default Response metadataColumns(RuntimeConfigure configure, String database, String table)
     {
         Response response = new Response();
         response.setHeaders(Lists.newArrayList(
@@ -655,7 +655,7 @@ public interface PluginService
         return response;
     }
 
-    default Response getPrimaryKeys(Configure configure, String database, String table)
+    default Response getPrimaryKeys(RuntimeConfigure configure, String database, String table)
     {
         String sql = "SELECT \n" +
                 "    COLUMN_NAME as object_name,\n" +
@@ -686,7 +686,7 @@ public interface PluginService
      * @param database 数据库 | Database
      * @return 数据库信息 | Database information
      */
-    default Response getDatabase(Configure configure, String database)
+    default Response getDatabase(RuntimeConfigure configure, String database)
     {
         String sql = "SELECT \n" +
                 "    s.SCHEMA_NAME as object_name,\n" +
@@ -749,7 +749,7 @@ public interface PluginService
      * @param table 表 | Table
      * @return 表信息 | Table information
      */
-    default Response getTable(Configure configure, String database, String table)
+    default Response getTable(RuntimeConfigure configure, String database, String table)
     {
         String sql = "WITH object_info AS (\n" +
                 "    -- 获取表和视图类型\n" +
@@ -854,7 +854,7 @@ public interface PluginService
         );
     }
 
-    default Response getTableStatement(Configure configure, TableDefinition definition)
+    default Response getTableStatement(RuntimeConfigure configure, TableDefinition definition)
     {
         String sql = "WITH index_list AS (\n" +
                 "    SELECT\n" +
@@ -969,7 +969,7 @@ public interface PluginService
         );
     }
 
-    default Response getSuggests(Configure configure, String keyword)
+    default Response getSuggests(RuntimeConfigure configure, String keyword)
     {
         String sql = "(\n" +
                 "    -- 数据库\n" +
@@ -1077,7 +1077,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response changeAutoIncrement(Configure configure, TableDefinition definition)
+    default Response changeAutoIncrement(RuntimeConfigure configure, TableDefinition definition)
     {
         String sql = AlterTable.create(definition.getDatabase(), definition.getName())
                 .autoIncrement(definition.getAutoIncrement())
@@ -1094,7 +1094,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response createTable(Configure configure, TableDefinition definition)
+    default Response createTable(RuntimeConfigure configure, TableDefinition definition)
     {
         AbstractTable tableDefinition = CreateTable.create(definition.getDatabase(), definition.getName())
                 .comment(definition.getComment())
@@ -1125,7 +1125,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response dropTable(Configure configure, TableDefinition definition)
+    default Response dropTable(RuntimeConfigure configure, TableDefinition definition)
     {
         DropTable tableDefinition = DropTable.create(definition.getDatabase(), definition.getName())
                 .ifExists();
@@ -1141,7 +1141,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response truncateTable(Configure configure, TableDefinition definition)
+    default Response truncateTable(RuntimeConfigure configure, TableDefinition definition)
     {
         TruncateTable tableDefinition = TruncateTable.create(definition.getDatabase(), definition.getName());
 
@@ -1156,7 +1156,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response queryTable(Configure configure, TableDefinition definition)
+    default Response queryTable(RuntimeConfigure configure, TableDefinition definition)
     {
         SelectTable tableDefinition = SelectTable.create(definition.getDatabase(), definition.getName())
                 .limit(definition.getPagination().getSize())
@@ -1187,7 +1187,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response deleteData(Configure configure, TableDefinition definition)
+    default Response deleteData(RuntimeConfigure configure, TableDefinition definition)
     {
         Set<String> set = Sets.newHashSet();
 
@@ -1212,7 +1212,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response createColumn(Configure configure, TableDefinition definition)
+    default Response createColumn(RuntimeConfigure configure, TableDefinition definition)
     {
         AlterTable tableDefinition = AlterTable.create(definition.getDatabase(), definition.getName());
 
@@ -1233,7 +1233,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response dropColumn(Configure configure, TableDefinition definition)
+    default Response dropColumn(RuntimeConfigure configure, TableDefinition definition)
     {
         AlterTable tableDefinition = AlterTable.create(definition.getDatabase(), definition.getName());
 
@@ -1254,7 +1254,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response getColumn(Configure configure, TableDefinition definition)
+    default Response getColumn(RuntimeConfigure configure, TableDefinition definition)
     {
         Optional<ColumnDefinition> column = definition.getColumns().stream().findAny();
 
@@ -1387,7 +1387,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response changeColumn(Configure configure, TableDefinition definition)
+    default Response changeColumn(RuntimeConfigure configure, TableDefinition definition)
     {
         AlterTable tableDefinition = AlterTable.create(definition.getDatabase(), definition.getName());
 
@@ -1408,7 +1408,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response insertData(Configure configure, TableDefinition definition)
+    default Response insertData(RuntimeConfigure configure, TableDefinition definition)
     {
         InsertTable tableDefinition = InsertTable.create(definition.getDatabase(), definition.getName())
                 .addValues(definition.getRows())
@@ -1429,7 +1429,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 执行结果 | Execution result
      */
-    default Response updateData(Configure configure, TableDefinition definition)
+    default Response updateData(RuntimeConfigure configure, TableDefinition definition)
     {
         UpdateTable tableDefinition = UpdateTable.create(definition.getDatabase(), definition.getName())
                 .addPrimaryKeys(this.formatPrimaryKeys(configure, definition.getDatabase(), definition.getName()));
@@ -1446,7 +1446,7 @@ public interface PluginService
         );
     }
 
-    default Response getResponse(String sql, Configure configure, BaseDefinition definition)
+    default Response getResponse(String sql, RuntimeConfigure configure, BaseDefinition definition)
     {
         Response response;
         if (definition.isPreview()) {
@@ -1466,7 +1466,7 @@ public interface PluginService
         return response;
     }
 
-    private Response getResponse(String sql, Configure configure, TableDefinition definition, Pagination pagination)
+    private Response getResponse(String sql, RuntimeConfigure configure, TableDefinition definition, Pagination pagination)
     {
         Response response = this.getResponse(sql, configure, definition);
         response.setPagination(pagination);
@@ -1500,7 +1500,7 @@ public interface PluginService
      * @param definition 表配置定义 | Table configuration definition
      * @return 分页 | Pagination
      */
-    default Pagination getPagination(Configure configure, TableDefinition definition)
+    default Pagination getPagination(RuntimeConfigure configure, TableDefinition definition)
     {
         try {
             /*
@@ -1531,7 +1531,7 @@ public interface PluginService
         }
     }
 
-    default Pagination formatPagination(Configure configure, String sql, TableDefinition definition)
+    default Pagination formatPagination(RuntimeConfigure configure, String sql, TableDefinition definition)
     {
         Response response = this.getResponse(
                 sql.replace("{0}", definition.getDatabase())
@@ -1553,7 +1553,7 @@ public interface PluginService
                 .endIndex(node.get("object_end_index").asInt());
     }
 
-    default List<String> formatPrimaryKeys(Configure configure, String database, String table)
+    default List<String> formatPrimaryKeys(RuntimeConfigure configure, String database, String table)
     {
         List<String> columns = Lists.newArrayList();
 

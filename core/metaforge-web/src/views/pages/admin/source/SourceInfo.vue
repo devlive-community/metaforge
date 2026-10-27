@@ -1,6 +1,6 @@
 <template>
   <MfModal v-model:open="visible"
-           width="1180px"
+           :width="currentStep === 0 ? '1180px' : '720px'"
            :close-on-overlay="false"
            class="dc-src-modal">
     <!-- 头部 -->
@@ -18,8 +18,8 @@
             {{ index + 1 }}
           </span>
           <span class="text-xs leading-tight">
-            <span class="block font-medium" :class="index <= currentStep ? 'text-primary' : 'text-content-secondary'">{{ $t(step.titleKey) }}</span>
-            <span class="block text-content-tertiary">{{ $t(step.descKey) }}</span>
+            <span class="block whitespace-nowrap font-medium" :class="index <= currentStep ? 'text-primary' : 'text-content-secondary'">{{ $t(step.titleKey) }}</span>
+            <span class="block whitespace-nowrap text-content-tertiary">{{ $t(step.descKey) }}</span>
           </span>
         </div>
         <span v-if="index < stepDefs.length - 1" class="h-px w-8 shrink-0 bg-line"></span>
@@ -31,7 +31,7 @@
     <!-- 步骤 1：选择数据源类型 -->
     <div v-if="currentStep === 0" class="dc-src__type-step">
       <!-- 左侧分类 -->
-      <div class="dc-src__catalog">
+      <div class="dc-src__catalog flex flex-col gap-1">
         <div v-for="cat in categoryList"
              :key="cat.key"
              class="dc-src__cat-item"
@@ -70,7 +70,7 @@
                :class="{ 'dc-src__grid-item--selected': formState?.type === src.name }"
                @click="selectSource(src.name)">
             <span v-if="formState?.type === src.name" class="dc-src__grid-check">
-              <CheckCircleFilled/>
+              <CircleCheck :size="14"/>
             </span>
             <img class="dc-src__grid-logo" :src="'/static/images/plugin/' + src.name.toLowerCase() + '.svg'" :alt="src.name">
             <span class="dc-src__grid-name">{{ src.name }}</span>
@@ -96,7 +96,7 @@
             <div v-for="(feature, index) in catalogEntry.features[detailLocale] || catalogEntry.features.zh"
                  :key="index"
                  class="dc-src__detail-feature">
-              <CheckCircleFilled class="dc-src__detail-feature-icon"/>
+              <CircleCheck :size="12" class="dc-src__detail-feature-icon"/>
               <span>{{ feature }}</span>
             </div>
           </template>
@@ -112,7 +112,7 @@
 
           <a class="dc-src__detail-docs" href="https://metaforge.devlive.org/" target="_blank" rel="noopener noreferrer">
             {{ $t('source.common.viewDocs') }}
-            <ArrowRightOutlined/>
+            <ArrowRight :size="14"/>
           </a>
         </template>
       </div>
@@ -122,58 +122,77 @@
     <div v-else class="dc-src__config-step">
       <div class="relative">
         <MfForm v-if="formState" :model="formState" layout="vertical" @finish="onSubmit">
-          <template v-for="configure in stepFields" :key="configure.field">
-            <MfFormItem :name="configure.field"
-                        :label="$t('source.common.' + configure.field)">
-              <MfInput v-if="configure.type === 'String'" v-model="configure.value" :disabled="configure.disabled"/>
+          <div class="dc-src__field-grid">
+            <template v-for="configure in stepFields" :key="configure.field">
+              <div class="dc-src__field" :class="{ 'dc-src__field--full': ['Boolean', 'Array', 'File'].includes(configure.type) }">
+                <MfFormItem :name="configure.field"
+                            :label="$t('source.common.' + configure.field)">
+                  <MfInput v-if="configure.type === 'String'" v-model="configure.value" :disabled="configure.disabled"/>
 
-              <MfInputNumber v-else-if="configure.type === 'Number'"
-                             v-model="configure.value"
-                             :disabled="configure.disabled"
-                             :max="configure.max"
-                             :min="configure.min"
-                             :style="{ width: '100%' }"/>
+                  <MfInputNumber v-else-if="configure.type === 'Number'"
+                                 v-model="configure.value"
+                                 :disabled="configure.disabled"
+                                 :controls="false"
+                                 :max="configure.max"
+                                 :min="configure.min"
+                                 :style="{ width: '100%' }"/>
 
-              <MfSwitch v-else-if="configure.type === 'Boolean'" v-model="configure.value" :disabled="configure.disabled"/>
+                  <MfSwitch v-else-if="configure.type === 'Boolean'" v-model="configure.value" :disabled="configure.disabled"/>
 
-              <MfUpload v-else-if="configure.type === 'File'"
-                        action="http://localhost:9096/api/v1/source/uploadFile"
-                        multiple
-                        accept=".xml"
-                        :headers="{ 'Authorization': auth?.type + ' ' + auth?.token, 'PluginType': (formState.type as string).split(' ')[0] }"
-                        @change="onUploadChange">
-                {{ $t('common.upload') }}
-              </MfUpload>
+                  <MfUpload v-else-if="configure.type === 'File'"
+                            action="http://localhost:9096/api/v1/source/uploadFile"
+                            multiple
+                            accept=".xml"
+                            :headers="{ 'Authorization': auth?.type + ' ' + auth?.token, 'PluginType': (formState.type as string).split(' ')[0] }"
+                            @change="onUploadChange">
+                    {{ $t('common.upload') }}
+                  </MfUpload>
 
-              <div v-else>
-                <MfSpace direction="vertical" fill>
-                  <MfButton variant="ghost" size="sm" @click="onPlusConfigure(configure.value)">
-                    <PlusOutlined :style="{ fontSize: '16px' }"/>
-                  </MfButton>
+                  <div v-else class="dc-src__kv">
+                    <div class="dc-src__kv-tabs">
+                      <button type="button"
+                              class="dc-src__kv-tab"
+                              :class="{ 'dc-src__kv-tab--active': !kvTextModes[configure.field] }"
+                              title="Form"
+                              @click="toggleKvMode(configure, false)">
+                        <List :size="14"/>
+                      </button>
+                      <button type="button"
+                              class="dc-src__kv-tab"
+                              :class="{ 'dc-src__kv-tab--active': kvTextModes[configure.field] }"
+                              title="Text"
+                              @click="toggleKvMode(configure, true)">
+                        <FileText :size="14"/>
+                      </button>
+                    </div>
 
-                  <div v-for="(element, index) in configure.value" :key="index" class="grid grid-cols-[5fr_6fr_1fr] gap-2.5">
-                    <MfFormItem :label="$t('common.field')">
-                      <MfInput v-model="element.field"/>
-                    </MfFormItem>
+                    <template v-if="!kvTextModes[configure.field]">
+                      <div v-for="(element, index) in configure.value || []" :key="index" class="dc-src__kv-row">
+                        <MfInput v-model="element.field" :placeholder="$t('common.field')"/>
+                        <MfInput v-model="element.value" :placeholder="$t('common.value')"/>
+                        <button type="button" class="dc-src__kv-remove" @click="onMinusConfigure(element, configure.value)">
+                          <Minus :size="14"/>
+                        </button>
+                      </div>
+                      <button type="button" class="dc-src__kv-add" @click="onPlusConfigure(configure)">
+                        <Plus :size="14" />
+                      </button>
+                    </template>
 
-                    <MfFormItem :label="$t('common.value')">
-                      <MfInput v-model="element.value"/>
-                    </MfFormItem>
-
-                    <MfFormItem :label="' '">
-                      <MfButton variant="ghost" size="sm" class="text-danger" @click="onMinusConfigure(element, configure.value)">
-                        <MinusOutlined :style="{ fontSize: '16px' }"/>
-                      </MfButton>
-                    </MfFormItem>
+                    <MfTextarea v-else
+                                :model-value="kvTextValues[configure.field] || ''"
+                                :rows="8"
+                                placeholder="key=value"
+                                @update:model-value="(value: string) => onKvTextChange(configure, value)"/>
                   </div>
-                </MfSpace>
-              </div>
-            </MfFormItem>
+                </MfFormItem>
 
-            <div v-if="configure.description" class="-mt-3 text-xs text-content-tertiary">
-              {{ configure.description }}
-            </div>
-          </template>
+                <div v-if="configure.description" class="-mt-1 text-xs text-content-tertiary">
+                  {{ configure.description }}
+                </div>
+              </div>
+            </template>
+          </div>
         </MfForm>
 
         <div v-if="loading" class="absolute inset-0 z-10 flex items-center justify-center">
@@ -183,40 +202,42 @@
     </div>
 
     <!-- 底部 -->
-    <div class="dc-src__footer">
-      <div v-if="currentStep === 0" class="dc-src__footer-left">
-        <InfoCircleOutlined class="dc-src__footer-info-icon"/>
-        <span>{{ $t('source.wizard.notFound') }}</span>
-        <a href="https://github.com/devlive-community/metaforge/issues" target="_blank" rel="noopener noreferrer" class="dc-src__footer-link">
-          {{ $t('source.common.requestNew') }}
-        </a>
+    <template #footer>
+      <div class="dc-src__footer">
+        <div v-if="currentStep === 0" class="dc-src__footer-left">
+          <Info :size="12" class="dc-src__footer-info-icon"/>
+          <span>{{ $t('source.wizard.notFound') }}</span>
+          <a href="https://github.com/devlive-community/metaforge/issues" target="_blank" rel="noopener noreferrer" class="dc-src__footer-link">
+            {{ $t('source.common.requestNew') }}
+          </a>
+        </div>
+        <div class="dc-src__footer-actions">
+          <MfButton v-if="currentStep > 0" @click="currentStep--">{{ $t('source.wizard.previous') }}</MfButton>
+          <MfButton variant="danger" @click="onCancel">{{ $t('common.cancel') }}</MfButton>
+          <MfButton v-if="currentStep < 3"
+                    variant="primary"
+                    :disabled="!formState?.type"
+                    @click="currentStep++">
+            {{ $t('source.wizard.next') }}
+          </MfButton>
+          <MfButton v-if="currentStep === 3"
+                    variant="ghost"
+                    :loading="testing"
+                    :disabled="testing || !formState.type"
+                    @click="onTest()">
+            {{ $t('common.test') }}
+          </MfButton>
+          <MfButton v-if="currentStep === 3"
+                    variant="primary"
+                    type="submit"
+                    :loading="saving"
+                    :disabled="!testInfo.connected || saving"
+                    @click="onSubmit">
+            {{ $t('common.save') }}
+          </MfButton>
+        </div>
       </div>
-      <div class="dc-src__footer-actions">
-        <MfButton v-if="currentStep > 0" @click="currentStep--">{{ $t('source.wizard.previous') }}</MfButton>
-        <MfButton variant="danger" @click="onCancel">{{ $t('common.cancel') }}</MfButton>
-        <MfButton v-if="currentStep < 3"
-                  variant="primary"
-                  :disabled="!formState?.type"
-                  @click="currentStep++">
-          {{ $t('source.wizard.next') }}
-        </MfButton>
-        <MfButton v-if="currentStep === 3"
-                  variant="ghost"
-                  :loading="testing"
-                  :disabled="testing || !formState.type"
-                  @click="onTest()">
-          {{ $t('common.test') }}
-        </MfButton>
-        <MfButton v-if="currentStep === 3"
-                  variant="primary"
-                  type="submit"
-                  :loading="saving"
-                  :disabled="!testInfo.connected || saving"
-                  @click="onSubmit">
-          {{ $t('common.save') }}
-        </MfButton>
-      </div>
-    </div>
+    </template>
   </MfModal>
 </template>
 
@@ -224,8 +245,7 @@
 import { computed, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons-vue'
-import { ArrowRightOutlined, CheckCircleFilled, DatabaseOutlined, InfoCircleOutlined } from '@ant-design/icons-vue'
+import { ArrowRight, CircleCheck, Database, FileText, Info, List, Minus, Plus } from '@lucide/vue'
 import { cloneDeep, pick } from 'lodash'
 import { SourceModel, SourceRequest } from '@/model/source'
 import SourceService from '@/services/source'
@@ -283,8 +303,8 @@ const wizardTitle = computed(() => props.info
   ? `${ t('source.common.modify').replace('$NAME', String(props.info.name || '...')) }`
   : t('source.common.create'))
 
-/** 步骤对应的字段分组 */
-const stepGroup = computed(() => ['source', 'authorization', 'advanced'][currentStep.value - 1] || '')
+/** 步骤对应的字段分组（与后端 IConfigureFieldGroup 枚举一致：configure/authorization/advanced/custom） */
+const stepGroup = computed(() => ['configure', 'authorization', 'advanced'][currentStep.value - 1] || '')
 
 const stepFields = computed(() => {
   if (currentStep.value === 0 || !pluginConfigure.value) {
@@ -293,8 +313,8 @@ const stepFields = computed(() => {
   if (currentStep.value < 3) {
     return pluginConfigure.value.filter((field: { group: string }) => field.group === stepGroup.value)
   }
-  // 高级：除 source / authorization 之外的所有分组
-  return pluginConfigure.value.filter((field: { group: string }) => field.group !== 'source' && field.group !== 'authorization')
+  // 高级：除 configure / authorization 之外的所有分组
+  return pluginConfigure.value.filter((field: { group: string }) => field.group !== 'configure' && field.group !== 'authorization')
 })
 
 // ---- 步骤 1：数据源类型选择 ----
@@ -312,7 +332,7 @@ const chips = [
 
 const categoryList = computed(() => {
   const defs: Array<{ key: SourceCategoryKey | 'all'; labelKey: string; icon?: any; count: number }> = [
-    { key: 'all', labelKey: 'source.catalog.all', icon: DatabaseOutlined, count: 0 }
+    { key: 'all', labelKey: 'source.catalog.all', icon: Database, count: 0 }
   ]
   const categoryDefs: Array<{ key: SourceCategoryKey; labelKey: string }> = [
     { key: 'rdb', labelKey: 'source.category.rdb' },
@@ -325,14 +345,19 @@ const categoryList = computed(() => {
     { key: 'other', labelKey: 'source.category.other' }
   ]
   for (const def of categoryDefs) {
-    defs.push({ ...def, count: plugins.value.filter(p => catalogCategory(p.name) === def.key).length })
+    defs.push({ ...def, count: plugins.value.filter(p => pluginCategory(p) === def.key).length })
   }
   defs[0].count = plugins.value.length
   return defs
 })
 
-const catalogCategory = (name: string): SourceCategoryKey => {
-  return findCatalogEntry(name).category
+/** 分类：优先插件 describe() 声明的 category，前端目录仅兜底 */
+const pluginCategory = (p: { name?: string, configure?: { category?: string } }): SourceCategoryKey => {
+  const declared = p.configure?.category
+  if (declared) {
+    return String(declared).toLowerCase() as SourceCategoryKey
+  }
+  return findCatalogEntry(p.name || '').category
 }
 
 const catalogEntryFor = (name: string) => findCatalogEntry(name)
@@ -340,8 +365,28 @@ const catalogEntryFor = (name: string) => findCatalogEntry(name)
 const selectedCatalogKey = ref('')
 
 const selectedSource = computed(() => plugins.value.find(p => p.name === selectedCatalogKey.value) || null)
-const catalogEntry = computed(() => catalogEntryFor(selectedCatalogKey.value))
 const detailLocale = computed(() => (locale.value.startsWith('zh') ? 'zh' : 'en') as 'zh' | 'en')
+
+const hasContent = (value: unknown) => !!value && Object.keys(value as object).length > 0
+
+/**
+ * 右侧详情面板数据：优先用插件 describe() 声明的双语文案
+ * （descriptions/features/scenes/popular），前端目录仅作未声明插件的兜底。
+ */
+const catalogEntry = computed(() => {
+  const base = catalogEntryFor(selectedCatalogKey.value)
+  const declared = selectedSource.value?.configure
+  if (!declared) {
+    return base
+  }
+  return {
+    ...base,
+    popular: declared.popular ?? base.popular,
+    desc: hasContent(declared.descriptions) ? declared.descriptions : base.desc,
+    features: hasContent(declared.features) ? declared.features : base.features,
+    scenes: hasContent(declared.scenes) ? declared.scenes : base.scenes
+  }
+})
 
 const filteredSources = computed(() => {
   let list = plugins.value
@@ -350,13 +395,13 @@ const filteredSources = computed(() => {
     list = list.filter(p => p.name?.toLowerCase().includes(keyword))
   }
   if (activeCategory.value !== 'all') {
-    list = list.filter(p => catalogCategory(p.name) === activeCategory.value)
+    list = list.filter(p => pluginCategory(p) === activeCategory.value)
   }
   if (activeChip.value === 'popular') {
-    list = list.filter(p => catalogEntryFor(p.name).popular)
+    list = list.filter(p => p.configure?.popular ?? catalogEntryFor(p.name).popular)
   }
   else if (activeChip.value !== 'all') {
-    list = list.filter(p => catalogCategory(p.name) === activeChip.value)
+    list = list.filter(p => pluginCategory(p) === activeChip.value)
   }
   return list
 })
@@ -453,7 +498,7 @@ const onTest = () => {
   const configure = {
     type: formState.value.type,
     configure: {
-      configures: configures.map((item: any) => pick(item, ['field', 'required', 'type', 'min', 'max', 'message', 'value']))
+      configures: configures.filter((item: any) => item.field).map((item: any) => pick(item, ['field', 'required', 'type', 'min', 'max', 'message', 'value']))
     }
   }
   SourceService.testConnection(configure)
@@ -482,7 +527,7 @@ const onSubmit = () => {
     code: formState.value.code,
     name: formState.value.type,
     configure: {
-      configures: configures.map((item: any) => pick(item, ['field', 'required', 'type', 'min', 'max', 'message', 'value']))
+      configures: configures.filter((item: any) => item.field).map((item: any) => pick(item, ['field', 'required', 'type', 'min', 'max', 'message', 'value']))
     },
     type: formState.value.type,
     version: formState.value.version
@@ -510,11 +555,38 @@ const handlerUploadSuccess = (response: ResponseModel) => {
   }
 }
 
-const onPlusConfigure = (array: Array<any>) => {
-  if (!array) {
-    array = new Array<any>()
+const onPlusConfigure = (configure: any) => {
+  if (!configure.value) {
+    configure.value = []
   }
-  array.push({ field: '', value: '' })
+  configure.value.push({ field: '', value: '' })
+}
+
+// Array 字段双视图：false = 逐行表单（默认），true = key=value 文本（每行一条）
+const kvTextModes = ref<Record<string, boolean>>({})
+const kvTextValues = ref<Record<string, string>>({})
+
+const toggleKvMode = (configure: any, textMode: boolean) => {
+  if (textMode) {
+    kvTextValues.value[configure.field] = (configure.value || [])
+      .filter((element: any) => element.field)
+      .map((element: any) => `${element.field}=${element.value ?? ''}`)
+      .join('\n')
+  }
+  kvTextModes.value[configure.field] = textMode
+}
+
+const onKvTextChange = (configure: any, text: string) => {
+  kvTextValues.value[configure.field] = text
+  configure.value = text.split('\n')
+                       .map(line => line.trim())
+                       .filter(line => line.length > 0)
+                       .map(line => {
+                         const separator = line.indexOf('=')
+                         return separator === -1
+                           ? { field: line, value: '' }
+                           : { field: line.slice(0, separator).trim(), value: line.slice(separator + 1).trim() }
+                       })
 }
 
 const onMinusConfigure = (configure: any, array: Array<any>) => {
@@ -798,8 +870,105 @@ handleInitialize()
     color: var(--dc-primary);
 }
 
-.dc-src__config-step {
-    min-height: 420px;
+.dc-src__field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 20px;
+    align-content: start;
+}
+
+.dc-src__field {
+    min-width: 0;
+}
+
+.dc-src__field--full {
+    grid-column: 1 / -1;
+}
+
+.dc-src__kv {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.dc-src__kv-tabs {
+    align-self: flex-end;
+    display: inline-flex;
+    gap: 2px;
+    padding: 2px;
+    border: 1px solid var(--dc-border-light);
+    border-radius: var(--dc-radius-sm);
+}
+
+.dc-src__kv-tab {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 22px;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--dc-text-secondary);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+}
+
+.dc-src__kv-tab:hover {
+    color: var(--dc-text-primary);
+    background: var(--dc-menu-hover);
+}
+
+.dc-src__kv-tab--active {
+    background: var(--dc-primary-light);
+    color: var(--dc-primary);
+}
+
+.dc-src__kv-row {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 6fr) 32px;
+    gap: 8px;
+    align-items: center;
+}
+
+.dc-src__kv-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: none;
+    border-radius: var(--dc-radius-sm);
+    background: transparent;
+    color: var(--dc-text-secondary);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s;
+}
+
+.dc-src__kv-remove:hover {
+    color: var(--dc-danger);
+    background: var(--dc-danger-bg);
+}
+
+.dc-src__kv-add {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 32px;
+    border: 1px dashed var(--dc-border);
+    border-radius: var(--dc-radius-sm);
+    background: transparent;
+    color: var(--dc-text-secondary);
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.dc-src__kv-add:hover {
+    border-color: var(--dc-primary);
+    color: var(--dc-primary);
 }
 
 .dc-src__footer {
@@ -807,9 +976,7 @@ handleInitialize()
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    border-top: 1px solid var(--dc-border-light);
-    padding-top: 14px;
-    margin-top: 8px;
+    width: 100%;
 }
 
 .dc-src__footer-left {

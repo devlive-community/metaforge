@@ -3,7 +3,7 @@
     <MfForm v-if="formState" :model="formModel" layout="vertical" @finish="onSubmit">
       <div class="mb-2">
         <MfButton variant="ghost" size="sm" @click="onAdd">
-          <PlusOutlined :style="{ fontSize: '15px' }"/>
+          <Plus :size="15" />
         </MfButton>
       </div>
 
@@ -12,7 +12,7 @@
 
         <div class="mb-2">
           <MfButton variant="ghost" size="sm" class="text-danger" :disabled="item.removed" @click="onRemove(index)">
-            <MinusOutlined :style="{ fontSize: '15px' }"/>
+            <Minus :size="15" />
           </MfButton>
         </div>
 
@@ -88,7 +88,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import MetadataService from '@/services/metadata'
-import { MinusOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import { Minus, Plus } from '@lucide/vue'
 
 defineOptions({ name: 'ColumnCreate' })
 

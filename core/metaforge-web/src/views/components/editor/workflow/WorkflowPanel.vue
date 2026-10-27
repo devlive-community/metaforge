@@ -6,7 +6,7 @@
                clearable
                :placeholder="$t('common.search') || 'Search'">
         <template #prefix>
-          <SearchOutlined :style="{ fontSize: '12px' }"/>
+          <SearchIcon :size="12" />
         </template>
       </MfInput>
     </div>
@@ -22,7 +22,7 @@
              class="dc-workflow-panel__node flex items-center gap-2 px-2 py-1.5 mb-1 rounded border bg-white cursor-grab hover:border-[var(--dc-primary)] hover:shadow-sm text-sm"
              draggable="true"
              @dragstart="onDragStart($event, node)">
-          <component :is="categoryIcon(category.value)" :style="{ fontSize: '14px' }"/>
+          <component :size="14" :is="categoryIcon(category.value)" />
           <div class="flex-1 min-w-0">
             <div class="truncate">{{ node.label }}</div>
             <div class="text-xs text-gray-400 truncate">{{ node.description }}</div>
@@ -36,10 +36,10 @@
 <script lang="ts">
 import { defineComponent, computed, PropType } from 'vue'
 import { CategoryDefinition, NodeDefinition } from './types'
-import { CloudServerOutlined, DatabaseOutlined, SearchOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { Database, SearchIcon, Server, Settings } from '@lucide/vue'
 
 export default defineComponent({
-  components: { SearchOutlined },
+  components: { SearchIcon },
     props: {
     categories: {
       type: Array as PropType<CategoryDefinition[]>,
@@ -75,12 +75,12 @@ export default defineComponent({
 
     const categoryIcon = (category: string): any => {
       if (category === 'source') {
-        return DatabaseOutlined
+        return Database
       }
       if (category === 'sink') {
-        return CloudServerOutlined
+        return Server
       }
-      return SettingOutlined
+      return Settings
     }
 
     const onDragStart = (event: DragEvent, node: NodeDefinition) => {

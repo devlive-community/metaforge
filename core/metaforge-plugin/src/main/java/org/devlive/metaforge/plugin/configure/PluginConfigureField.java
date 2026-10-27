@@ -1,34 +1,61 @@
 package org.devlive.metaforge.plugin.configure;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
+import org.devlive.metaforge.common.view.EntityView;
 
-/**
- * 描述一个插件可配置字段。所有插件类型（Executor / Scheduler / FS / …）共用。
- * - name:         字段 key，序列化到 JSON 配置中的属性名
- * - type:         字段类型，决定 UI 渲染（文本框 / 数字 / 开关 / 密码）
- * - defaultValue: 默认值的字符串表示；调用方按 type 解析
- * - description:  字段说明，UI tooltip 用
- * - tunable:      true = 普通用户在触发任务时可临时覆盖；false = 仅管理员可在系统配置改
- *
- * Generic configurable-field descriptor used by any plugin category.
- * - tunable=false fields are administrator-only.
- * - tunable=true fields can also be overridden by end users at task invocation time.
- */
 @Data
+@ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class PluginConfigureField
 {
-    private String name;
-    private PluginFieldType type;
-    private String defaultValue;
-    private String description;
-    private boolean tunable;
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private PluginConfigureFieldName field; // The field name of the tag configuration
 
-    public PluginConfigureField(String name, PluginFieldType type, String defaultValue, String description)
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private PluginConfigureFieldType type;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private boolean required;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Long min;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Long max;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String message;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Object value;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private boolean disabled;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    @Builder.Default
+    private PluginConfigureFieldGroup group = PluginConfigureFieldGroup.configure;
+
+    public static PluginConfigureField of(PluginConfigureFieldName field, PluginConfigureFieldType type, boolean required, Object value, PluginConfigureFieldGroup group)
     {
-        this(name, type, defaultValue, description, false);
+        PluginConfigureField configureField = PluginConfigureField.builder()
+                .field(field)
+                .type(type)
+                .required(required)
+                .build();
+        if (value != null) {
+            configureField.setValue(value);
+        }
+        if (group != null) {
+            configureField.setGroup(group);
+        }
+        return configureField;
     }
 }

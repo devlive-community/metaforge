@@ -1,6 +1,6 @@
 <template>
 
-    <DataTable :title="$t('snippet.common.list')"
+    <DataTable filterable :filter-fields="tableFilters" :title="$t('snippet.common.list')"
                :columns="headers"
                :data-source="data"
                :loading="loading"
@@ -8,6 +8,8 @@
                :page-size="pageSize"
                :total="dataCount"
                @refresh="handleInitialize"
+               @search="onSearch"
+               @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #bodyCell="{ column, record }">
@@ -18,21 +20,21 @@
           <MfSpace>
             <MfTooltip :content="$t('snippet.common.modify').replace('$VALUE', record.name)">
               <MfButton variant="ghost" size="sm" class="rounded-full!" @click="visibleInfo(true, record)">
-                <EditOutlined :style="{ fontSize: '15px' }"/>
+                <Pencil :size="15" />
               </MfButton>
             </MfTooltip>
 
             <MfDropdown trigger="click">
               <MfButton variant="ghost" size="sm" class="rounded-full!">
-                <SettingOutlined :style="{ fontSize: '15px' }"/>
+                <Settings :size="15" />
               </MfButton>
 
               <template #overlay>
                 <MfMenu>
                   <MfMenuItem>
-                    <router-link :to="`/admin/query/snippet/${ record?.code }`" target="_blank">
+                    <router-link :to="`/query/snippet/${ record?.code }`" target="_blank">
                       <div class="flex items-center space-x-2">
-                        <SnippetsOutlined :style="{ fontSize: '15px' }"/>
+                        <FileCode2 :size="15" />
                         <span>{{ $t('query.common.quoteRecord') }}</span>
                       </div>
                     </router-link>
@@ -40,14 +42,14 @@
 
                   <MfMenuItem @click="visibleContent(true, record?.context)">
                     <div class="flex items-center space-x-2">
-                      <RightOutlined :style="{ fontSize: '15px' }"/>
+                      <ChevronRight :size="15" />
                       <span>{{ $t('query.common.showSql') }}</span>
                     </div>
                   </MfMenuItem>
 
                   <MfMenuItem @click="visibleDelete(true, record)">
                     <div class="flex items-center space-x-2">
-                      <DeleteOutlined :style="{ fontSize: '15px' }"/>
+                      <Trash2 :size="15" />
                       <span>{{ $t('snippet.common.delete') }}</span>
                     </div>
                   </MfMenuItem>
@@ -78,18 +80,20 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { MfMessage } from 'metaforge-ui'
-import { FilterModel } from '@/model/filter.ts'
+import { FilterModel, type TableFilters } from '@/model/filter.ts'
 import { useHeaders } from '@/views/pages/admin/snippet/SnippetUtils'
 import { SnippetModel } from '@/model/snippet'
 import DataTable from '@/views/components/table/DataTable.vue'
+import { useTableFilters } from '@/views/components/table/tableFilters'
 import SnippetService from '@/services/snippet'
 import SnippetInfo from '@/views/pages/admin/snippet/SnippetInfo.vue'
 import SqlInfo from '@/views/components/sql/SqlInfo.vue'
 import SnippetDelete from '@/views/pages/admin/snippet/SnippetDelete.vue'
-import { DeleteOutlined, EditOutlined, RightOutlined, SettingOutlined, SnippetsOutlined } from '@ant-design/icons-vue'
+import { ChevronRight, FileCode2, Pencil, Settings, Trash2 } from '@lucide/vue'
 
 defineOptions({ name: 'SnippetHome' })
 
+const tableFilters = useTableFilters('snippet')
 const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 
@@ -104,10 +108,19 @@ const contentVisible = ref(false)
 const content = ref<string | null>(null)
 const dataDeleteVisible = ref(false)
 
+const onSearch = (values: TableFilters) => {
+  Object.assign(filter, values, { page: 1 })
+  pageIndex.value = 1
+  handleInitialize()
+}
+
+let latestRequest = 0
 const handleInitialize = () => {
+  const request = ++latestRequest
   loading.value = true
-  SnippetService.getAll(filter)
+  SnippetService.getAll({ ...filter })
                 .then(response => {
+                 if (request !== latestRequest) return
                   if (response.status) {
                     data.value = response.data.content
                     dataCount.value = response.data.total
@@ -118,7 +131,7 @@ const handleInitialize = () => {
                     MfMessage.error(response.message)
                   }
                 })
-                .finally(() => (loading.value = false))
+                .finally(() => { if (request === latestRequest) loading.value = false })
 }
 
 const fetchData = (value: number) => {

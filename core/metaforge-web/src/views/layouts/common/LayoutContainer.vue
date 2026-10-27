@@ -5,14 +5,13 @@
     </div>
 
     <div v-show="!loadingState">
-      <div class="flex w-full flex-col">
+      <div class="relative z-30 flex w-full flex-col">
         <LayoutHeader/>
       </div>
 
-      <div class="container my-2 min-h-screen">
-        <LayoutBreadcrumb class="mb-2"/>
+      <main class="container isolate min-h-screen py-6">
         <RouterView/>
-      </div>
+      </main>
 
       <LayoutFooter/>
     </div>
@@ -23,7 +22,6 @@
 import { onBeforeMount } from 'vue'
 import LayoutHeader from '@/views/layouts/common/components/LayoutHeader.vue'
 import LayoutFooter from '@/views/layouts/common/components/LayoutFooter.vue'
-import LayoutBreadcrumb from '@/views/layouts/common/components/LayoutBreadcrumb.vue'
 import { provideI18nHandler } from '@/i18n/I18n'
 
 const { loadLocale, loadingState, loadingText } = provideI18nHandler()

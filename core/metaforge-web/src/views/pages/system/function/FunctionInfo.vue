@@ -3,7 +3,7 @@
     <div v-if="loading" class="flex items-center justify-center py-8">
       <MfSpinner size="lg"/>
     </div>
-    <MfForm v-else-if="formState" :model="formState" layout="vertical" @finish="onSubmit">
+    <MfForm v-else-if="formState" id="function-info-form" :model="formState" layout="vertical" @finish="onSubmit">
       <MfFormItem name="name"
                   :label="$t('common.name')"
                   :rules="[{ required: true, message: $t('common.name') }]">
@@ -36,12 +36,16 @@
                   :options="types"/>
       </MfFormItem>
 
-      <div class="flex justify-end">
-        <MfButton variant="primary" type="submit" :loading="saving" :disabled="saving">
-          {{ $t('common.save') }}
-        </MfButton>
-      </div>
     </MfForm>
+
+    <template #footer>
+      <MfButton @click="visible = false">
+        {{ $t('common.cancel') }}
+      </MfButton>
+      <MfButton variant="primary" type="submit" form="function-info-form" :loading="saving" :disabled="saving">
+        {{ $t('common.save') }}
+      </MfButton>
+    </template>
   </MfDrawer>
 </template>
 

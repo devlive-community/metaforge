@@ -3,7 +3,7 @@
     <div v-if="loading" class="flex items-center justify-center py-8">
       <MfSpinner size="lg"/>
     </div>
-    <MfForm v-else-if="formState" :model="formState" layout="vertical" @finish="onSubmit">
+    <MfForm v-else-if="formState" id="snippet-info-form" :model="formState" layout="vertical" @finish="onSubmit">
       <MfFormItem name="name"
                   :label="$t('common.name')"
                   :rules="[{ required: true, message: $t('common.name') }]">
@@ -18,17 +18,18 @@
         <AceEditor :value="formState.context" @update:value="formState.context = $event"/>
       </MfFormItem>
 
-      <div class="flex justify-end">
-        <MfSpace>
-          <MfButton variant="danger" @click="onCancel()">
-            {{ $t('common.cancel') }}
-          </MfButton>
-          <MfButton variant="primary" type="submit" :loading="loading" :disabled="loading">
-            {{ $t('common.save') }}
-          </MfButton>
-        </MfSpace>
-      </div>
     </MfForm>
+
+    <template #footer>
+      <MfSpace>
+        <MfButton variant="danger" @click="onCancel()">
+          {{ $t('common.cancel') }}
+        </MfButton>
+        <MfButton variant="primary" type="submit" form="snippet-info-form" :loading="loading" :disabled="loading">
+          {{ $t('common.save') }}
+        </MfButton>
+      </MfSpace>
+    </template>
   </MfDrawer>
 </template>
 

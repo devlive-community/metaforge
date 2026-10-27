@@ -2,7 +2,7 @@ package org.devlive.metaforge.executor.seatunnel.connector;
 
 import com.google.common.collect.Maps;
 import org.devlive.metaforge.executor.configure.ExecutorConfigure;
-import org.devlive.metaforge.spi.model.Configure;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.util.Map;
 import java.util.Properties;
@@ -16,7 +16,7 @@ public class ConnectorJdbc
     }
 
     @Override
-    protected Properties formatToProperties(Configure originalConfigure)
+    protected Properties formatToProperties(RuntimeConfigure originalConfigure)
     {
         Properties properties = new Properties();
         return properties;

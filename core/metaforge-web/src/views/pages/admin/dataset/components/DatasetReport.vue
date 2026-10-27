@@ -81,7 +81,7 @@ const onSubmit = () => {
                  if (response.status) {
                    MfMessage.success(t('report.tip.publishSuccess').replace('$VALUE', String(formState.value.name)))
                    if (formState.value.build) {
-                     router.push('/admin/report')
+                     router.push('/report')
                    }
                    onCancel()
                  }

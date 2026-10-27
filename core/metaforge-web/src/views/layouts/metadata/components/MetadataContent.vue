@@ -7,7 +7,7 @@
     <MfTabPane item-key="info" :tab="$t('source.common.info')">
       <template #tab>
         <span class="inline-flex items-center gap-1.5">
-          <InfoCircleOutlined :style="{ fontSize: '16px' }"/>
+          <Info :size="16" />
           {{ $t('source.common.info') }}
         </span>
       </template>
@@ -17,7 +17,7 @@
     <MfTabPane item-key="structure" :tab="$t('source.common.structure')" :disabled="!originalTable">
       <template #tab>
         <span class="inline-flex items-center gap-1.5">
-          <AppstoreOutlined :style="{ fontSize: '16px' }"/>
+          <LayoutGrid :size="16" />
           {{ $t('source.common.structure') }}
         </span>
       </template>
@@ -27,7 +27,7 @@
     <MfTabPane item-key="data" :tab="$t('source.common.tableData')" :disabled="!originalTable">
       <template #tab>
         <span class="inline-flex items-center gap-1.5">
-          <TableOutlined :style="{ fontSize: '16px' }"/>
+          <Table :size="16" />
           {{ $t('source.common.tableData') }}
         </span>
       </template>
@@ -37,7 +37,7 @@
     <MfTabPane item-key="statement" :tab="$t('source.common.statement')" :disabled="!originalTable">
       <template #tab>
         <span class="inline-flex items-center gap-1.5">
-          <CloudServerOutlined :style="{ fontSize: '16px' }"/>
+          <Server :size="16" />
           {{ $t('source.common.statement') }}
         </span>
       </template>
@@ -47,7 +47,7 @@
     <MfTabPane item-key="erDiagram" :tab="$t('source.common.erDiagram')" :disabled="!originalTable">
       <template #tab>
         <span class="inline-flex items-center gap-1.5">
-          <CloudOutlined :style="{ fontSize: '16px' }"/>
+          <Cloud :size="16" />
           {{ $t('source.common.erDiagram') }}
         </span>
       </template>
@@ -59,7 +59,7 @@
 <script lang="ts" setup>
 import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { AppstoreOutlined, CloudOutlined, CloudServerOutlined, InfoCircleOutlined, TableOutlined } from '@ant-design/icons-vue'
+import { Cloud, Info, LayoutGrid, Server, Table } from '@lucide/vue'
 
 defineOptions({ name: 'MetadataContent' })
 
@@ -78,7 +78,7 @@ const handleInitialize = () => {
   selectTab.value = String(route.meta.type || '')
 }
 
-const onChange = () => router.push(`/admin/source/${ originalSource.value }/d/${ originalDatabase.value }/t/${ selectTab.value }/${ originalTable.value }`)
+const onChange = () => router.push(`/source/${ originalSource.value }/d/${ originalDatabase.value }/t/${ selectTab.value }/${ originalTable.value }`)
 
 watch(
     () => route.params.table,

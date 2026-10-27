@@ -101,7 +101,7 @@ import UserService from '@/services/user'
 import CaptchaService from '@/services/captcha'
 import CommonUtils from '@/utils/common'
 import router from '@/router'
-import { createDefaultRouter } from '@/router/default'
+import { signInTarget } from '@/router/navigation'
 import BaseLayout from '@/views/layouts/base/BaseLayout.vue'
 
 interface Props
@@ -152,14 +152,14 @@ const onSubmit = async () => {
 
     if (loginResponse.status) {
       localStorage.setItem(CommonUtils.token, JSON.stringify(loginResponse.data))
+      userStore.userInfo = loginResponse.data
 
       // 获取用户信息和菜单
       const menuResponse = await UserService.getMenus()
       if (menuResponse.status) {
         userStore.updateMenu(menuResponse.data)
         // 更新路由并跳转
-        createDefaultRouter(router)
-        router.push('/home')
+        await router.replace(signInTarget(router.currentRoute.value.query.redirect))
       }
       else {
         if (!menuResponse.status) {

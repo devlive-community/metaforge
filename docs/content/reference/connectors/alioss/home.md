@@ -80,7 +80,7 @@ This chapter describes the SQL syntax used in Aliyun OSS on MetaForge.
 
 ---
 
-MetaForge uses configuration files by default [alioss.json](https://github.com/EdurtIO/metaforge/blob/dev/server/src/main/etc/conf/plugins/native/alioss.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `AliossPlugin#describe`)
 
 !!! note
 

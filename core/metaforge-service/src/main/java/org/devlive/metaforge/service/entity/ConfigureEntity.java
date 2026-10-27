@@ -18,7 +18,7 @@ import javax.persistence.UniqueConstraint;
 
 /**
  * 通用配置表，承载 EXECUTOR / DATASET 等不同范畴的运行时配置。
- * 字段 schema 由各插件通过 Plugin.configures() 声明；value 为序列化后的 JSON。
+ * 字段 schema 由各插件通过 Plugin.runtimeConfigures() 声明；value 为序列化后的 JSON。
  *
  * Generic configuration row keyed by (category, name).
  * - category: e.g. "EXECUTOR", "DATASET"

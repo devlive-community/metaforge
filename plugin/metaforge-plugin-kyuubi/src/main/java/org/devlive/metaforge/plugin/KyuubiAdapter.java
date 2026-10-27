@@ -6,8 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.adapter.JdbcAdapter;
 import org.devlive.metaforge.spi.column.JdbcColumn;
 import org.devlive.metaforge.spi.connection.JdbcConnection;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.spi.model.Time;
 
 import java.sql.Connection;
@@ -39,7 +39,7 @@ public class KyuubiAdapter
         processorTime.setStart(new Date().getTime());
         Response response = this.connection.getResponse();
         Connection connection = (Connection) this.connection.getConnection();
-        Configure configure = this.connection.getConfigure();
+        RuntimeConfigure configure = this.connection.getConfigure();
         if (response.getIsConnected()) {
             try (PreparedStatement statement = connection.prepareStatement(content)) {
                 List<String> headers = new ArrayList<>();

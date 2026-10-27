@@ -4,7 +4,7 @@
       <div class="dc-adhoc__side">
         <div class="dc-adhoc__dataset">
           <div class="dc-adhoc__dataset-icon">
-            <DatabaseOutlined :style="{ fontSize: '18px', color: 'var(--dc-primary)' }"/>
+            <Database :size="18" :style="{ color: 'var(--dc-primary)' }"/>
           </div>
           <div class="min-w-0 flex-1">
             <div class="dc-adhoc__dataset-name">{{ dataInfo.name || code }}</div>
@@ -14,7 +14,7 @@
 
         <MfInput v-model="fieldSearch" class="dc-adhoc__search" :placeholder="$t('dataset.search.fields')">
           <template #prefix>
-            <SearchOutlined :style="{ fontSize: '13px', color: 'var(--dc-text-secondary)' }"/>
+            <Search :size="13" :style="{ color: 'var(--dc-text-secondary)' }"/>
           </template>
         </MfInput>
 
@@ -39,7 +39,7 @@
         <div class="relative">
           <div v-if="!initialize && showMetrics" class="dc-adhoc__group">
             <div class="dc-adhoc__group-title">
-              <BarChartOutlined class="dc-adhoc__group-icon"/>
+              <ChartColumn :size="14" class="dc-adhoc__group-icon"/>
               <span>{{ $t('dataset.common.columnModeMetric') }}</span>
             </div>
             <Draggable item-key="id"
@@ -60,7 +60,7 @@
 
           <div v-if="!initialize && showDimensions" class="dc-adhoc__group">
             <div class="dc-adhoc__group-title">
-              <AppstoreOutlined class="dc-adhoc__group-icon"/>
+              <LayoutGrid :size="14" class="dc-adhoc__group-icon"/>
               <span>{{ $t('dataset.common.columnModeDimension') }}</span>
             </div>
             <Draggable item-key="id"
@@ -95,19 +95,19 @@
             </div>
             <div class="dc-adhoc__head-actions">
               <MfButton @click="onClear">
-                <ClearOutlined/>
+                <Eraser :size="14"/>
                 {{ $t('dataset.adhoc.clear') }}
               </MfButton>
               <MfButton :disabled="!showSql.content || loading" @click="visibleShowSql(true)">
-                <EyeOutlined/>
+                <Eye :size="14"/>
                 {{ $t('dataset.adhoc.preview') }}
               </MfButton>
               <MfButton variant="primary" :disabled="loading" :loading="loading" @click="onApplyAdhoc">
-                <PlayCircleOutlined/>
+                <CirclePlay :size="14"/>
                 {{ $t('dataset.adhoc.query') }}
               </MfButton>
               <MfDropdown placement="bottomRight">
-                <MfButton><EllipsisOutlined/></MfButton>
+                <MfButton><Ellipsis :size="14"/></MfButton>
                 <template #overlay>
                   <MfMenu>
                     <MfMenuItem key_="publish" @click="publishVisible = true">{{ $t('common.publish') }}</MfMenuItem>
@@ -127,7 +127,7 @@
             <div class="dc-adhoc__zone dc-adhoc__zone--metric"
                  :class="{ 'dc-adhoc__zone--highlight': highlight.active && highlight.type === ColumnType.METRIC }">
               <div class="dc-adhoc__zone-head dc-adhoc__zone-head--green">
-                <BarChartOutlined class="dc-adhoc__zone-icon"/>
+                <ChartColumn :size="14" class="dc-adhoc__zone-icon"/>
                 <span class="dc-adhoc__zone-label">{{ $t('dataset.common.columnModeMetric') }} (Measures)</span>
                 <span class="dc-adhoc__zone-hint">{{ $t('dataset.adhoc.dropMetric') }}</span>
               </div>
@@ -140,9 +140,9 @@
                       </span>
                       <span class="ml-2 flex items-center space-x-1">
                         <MfTooltip :content="$t('common.configure')">
-                          <SettingOutlined class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.METRIC)" :style="{ fontSize: '13px' }"/>
+                          <Settings :size="13" class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.METRIC)" />
                         </MfTooltip>
-                        <CloseOutlined class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, metrics)" :style="{ fontSize: '11px' }"/>
+                        <X :size="11" class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, metrics)" />
                       </span>
                     </MfTag>
                   </template>
@@ -153,7 +153,7 @@
             <div class="dc-adhoc__zone dc-adhoc__zone--dimension"
                  :class="{ 'dc-adhoc__zone--highlight': highlight.active && highlight.type === ColumnType.DIMENSION }">
               <div class="dc-adhoc__zone-head dc-adhoc__zone-head--blue">
-                <AppstoreOutlined class="dc-adhoc__zone-icon"/>
+                <LayoutGrid :size="14" class="dc-adhoc__zone-icon"/>
                 <span class="dc-adhoc__zone-label">{{ $t('dataset.common.columnModeDimension') }} (Dimensions)</span>
                 <span class="dc-adhoc__zone-hint">{{ $t('dataset.adhoc.dropDimension') }}</span>
               </div>
@@ -166,9 +166,9 @@
                       </span>
                       <span class="ml-2 flex items-center space-x-1">
                         <MfTooltip :content="$t('common.configure')">
-                          <SettingOutlined class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.DIMENSION)" :style="{ fontSize: '13px' }"/>
+                          <Settings :size="13" class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.DIMENSION)" />
                         </MfTooltip>
-                        <CloseOutlined class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, dimensions)" :style="{ fontSize: '11px' }"/>
+                        <X :size="11" class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, dimensions)" />
                       </span>
                     </MfTag>
                   </template>
@@ -179,7 +179,7 @@
             <div class="dc-adhoc__zone dc-adhoc__zone--filter"
                  :class="{ 'dc-adhoc__zone--highlight': highlight.active && highlight.type === ColumnType.FILTER }">
               <div class="dc-adhoc__zone-head dc-adhoc__zone-head--purple">
-                <FilterOutlined class="dc-adhoc__zone-icon"/>
+                <Filter :size="14" class="dc-adhoc__zone-icon"/>
                 <span class="dc-adhoc__zone-label">{{ $t('dataset.common.columnModeFilter') }} (Filters)</span>
                 <span class="dc-adhoc__zone-hint">{{ $t('dataset.adhoc.dropFilter') }}</span>
               </div>
@@ -192,9 +192,9 @@
                       </span>
                       <span class="ml-2 flex items-center space-x-1">
                         <MfTooltip :content="$t('common.configure')">
-                          <SettingOutlined class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.FILTER)" :style="{ fontSize: '13px' }"/>
+                          <Settings :size="13" class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.FILTER)" />
                         </MfTooltip>
-                        <CloseOutlined class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, filters)" :style="{ fontSize: '11px' }"/>
+                        <X :size="11" class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, filters)" />
                       </span>
                     </MfTag>
                   </template>
@@ -220,7 +220,7 @@
             <div class="dc-adhoc__result-footer">
               <span class="dc-adhoc__result-total">{{ $t('dataset.adhoc.totalRows', { limit: configure.limit }) }}</span>
               <MfButton size="sm" @click="exportResults">
-                <DownloadOutlined/>
+                <Download :size="14"/>
                 {{ $t('dataset.adhoc.export') }}
               </MfButton>
             </div>
@@ -268,20 +268,7 @@ import DatasetColumnMetric from '@/views/pages/admin/dataset/components/adhoc/Da
 import DatasetColumnConfigure from '@/views/pages/admin/dataset/components/adhoc/DatasetColumnConfigure.vue'
 import SqlInfo from '@/views/components/sql/SqlInfo.vue'
 import DatasetReport from '@/views/pages/admin/dataset/components/DatasetReport.vue'
-import {
-  AppstoreOutlined,
-  BarChartOutlined,
-  ClearOutlined,
-  CloseOutlined,
-  DatabaseOutlined,
-  DownloadOutlined,
-  EllipsisOutlined,
-  EyeOutlined,
-  FilterOutlined,
-  PlayCircleOutlined,
-  SearchOutlined,
-  SettingOutlined
-} from '@ant-design/icons-vue'
+import { ChartColumn, CirclePlay, Database, Download, Ellipsis, Eraser, Eye, Filter, LayoutGrid, Search, Settings, X } from '@lucide/vue'
 
 defineOptions({ name: 'DatasetAdhoc' })
 

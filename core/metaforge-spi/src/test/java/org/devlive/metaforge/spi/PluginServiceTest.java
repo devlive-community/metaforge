@@ -1,7 +1,7 @@
 package org.devlive.metaforge.spi;
 
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -11,9 +11,9 @@ import java.util.Optional;
 
 public class PluginServiceTest
 {
-    private Configure configure()
+    private RuntimeConfigure configure()
     {
-        Configure configure = new Configure();
+        RuntimeConfigure configure = new RuntimeConfigure();
         configure.setType("mysql");
         configure.setHost("127.0.0.1");
         configure.setPort(3306);
@@ -32,7 +32,7 @@ public class PluginServiceTest
     @Test
     public void testBuildUrlWithSsl()
     {
-        Configure configure = configure();
+        RuntimeConfigure configure = configure();
         configure.setSsl(Optional.of(true));
         Assert.assertEquals("jdbc:mysql://127.0.0.1:3306/test?ssl=true", new PluginService()
         {
@@ -42,7 +42,7 @@ public class PluginServiceTest
     @Test
     public void testBuildUrlWithEnv()
     {
-        Configure configure = configure();
+        RuntimeConfigure configure = configure();
         Map<String, Object> env = new HashMap<>();
         env.put("serverTimezone", "Asia/Shanghai");
         configure.setEnv(Optional.of(env));
@@ -55,7 +55,7 @@ public class PluginServiceTest
     public void testBuildUrlRejectsH2InitInjectionViaDatabase()
     {
         // issue #966 的 H2 RCE 载荷：通过 database 注入 INIT 参数
-        Configure configure = configure();
+        RuntimeConfigure configure = configure();
         configure.setDatabase(Optional.of("testdb;INIT=CREATE ALIAS EXEC AS 'void cmd_exec(String cmd) throws java.lang.Exception {Runtime.getRuntime().exec(cmd)\\;}'\\;CALL EXEC ('touch /tmp/pwned')\\;"));
         new PluginService()
         {
@@ -65,7 +65,7 @@ public class PluginServiceTest
     @Test(expected = IllegalArgumentException.class)
     public void testBuildUrlRejectsInjectionViaHost()
     {
-        Configure configure = configure();
+        RuntimeConfigure configure = configure();
         configure.setHost("127.0.0.1?allowLoadLocalInfile=true");
         new PluginService()
         {
@@ -76,7 +76,7 @@ public class PluginServiceTest
     public void testBuildUrlRejectsForbiddenEnvParameter()
     {
         // issue #966 的 MySQL 任意文件读取载荷：allowLoadLocalInfile 参数
-        Configure configure = configure();
+        RuntimeConfigure configure = configure();
         Map<String, Object> env = new HashMap<>();
         env.put("allow_load_local_infile", "true");
         configure.setEnv(Optional.of(env));
@@ -95,7 +95,7 @@ public class PluginServiceTest
         PluginService service = new PluginService()
         {
             @Override
-            public Response execute(Configure configure, String content)
+            public Response execute(RuntimeConfigure configure, String content)
             {
                 return expected;
             }
@@ -110,7 +110,7 @@ public class PluginServiceTest
         PluginService service = new PluginService()
         {
             @Override
-            public Response execute(Configure configure, String content)
+            public Response execute(RuntimeConfigure configure, String content)
             {
                 return Response.builder()
                         .isConnected(Boolean.TRUE)
@@ -137,7 +137,7 @@ public class PluginServiceTest
         PluginService service = new PluginService()
         {
             @Override
-            public Response execute(Configure configure, String content)
+            public Response execute(RuntimeConfigure configure, String content)
             {
                 return expected;
             }
@@ -151,7 +151,7 @@ public class PluginServiceTest
         PluginService service = new PluginService()
         {
             @Override
-            public Response execute(Configure configure, String content)
+            public Response execute(RuntimeConfigure configure, String content)
             {
                 return Response.builder()
                         .isConnected(Boolean.TRUE)
@@ -171,7 +171,7 @@ public class PluginServiceTest
         PluginService service = new PluginService()
         {
             @Override
-            public Response execute(Configure configure, String content)
+            public Response execute(RuntimeConfigure configure, String content)
             {
                 return Response.builder()
                         .isConnected(Boolean.TRUE)

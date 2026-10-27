@@ -20,7 +20,7 @@ Support Time: `2022-09-19`
 
 ---
 
-MetaForge uses configuration files by default [mysql.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/mysql.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `MySQLPlugin#describe`)
 
 !!! note
 

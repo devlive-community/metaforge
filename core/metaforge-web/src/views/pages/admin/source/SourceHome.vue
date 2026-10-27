@@ -1,6 +1,6 @@
 <template>
 
-    <DataTable :title="$t('source.common.list')"
+    <DataTable filterable :filter-fields="tableFilters" :title="$t('source.common.list')"
                :columns="headers"
                :data-source="data"
                :loading="loading"
@@ -8,11 +8,13 @@
                :page-size="pageSize"
                :total="dataCount"
                @refresh="handlerInitialize"
+               @search="onSearch"
+               @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #actions>
         <MfButton variant="primary" @click="visibleInfo(true, null)">
-          <PlusOutlined :style="{ fontSize: '16px' }"/>
+          <Plus :size="16" />
           {{ $t('source.common.create') }}
         </MfButton>
       </template>
@@ -34,36 +36,36 @@
         </template>
         <template v-else-if="column.key === 'available'">
           <MfTooltip v-if="!record.available" :content="record.message">
-            <CloseCircleOutlined class="cursor-pointer text-red-500" :style="{ fontSize: '20px' }"/>
+            <CircleX :size="20" class="cursor-pointer text-red-500" />
           </MfTooltip>
-          <PlayCircleOutlined v-else="" class="text-green-500" :style="{ fontSize: '20px' }"/>
+          <CirclePlay :size="20" v-else="" class="text-green-500" />
         </template>
         <template v-else-if="column.key === 'action'">
           <MfSpace>
             <MfTooltip :content="$t('source.common.modify').replace('$NAME', record.name)">
               <MfButton variant="ghost" size="sm" :disabled="loginUserCode !== record.user.code" @click="visibleInfo(true, record)">
-                <EditOutlined :style="{ fontSize: '15px' }"/>
+                <Pencil :size="15" />
               </MfButton>
             </MfTooltip>
 
             <MfDropdown trigger="click" placement="bottomRight">
               <MfButton variant="ghost" size="sm">
-                <SettingOutlined :style="{ fontSize: '15px' }"/>
+                <Settings :size="15" />
               </MfButton>
 
               <template #overlay>
                 <MfMenu>
                   <MfMenuItem v-if="(loginUserCode === record.user.code) && record.available && record.isSupportMeta" key_="manager">
-                    <router-link :to="`/admin/source/${ record?.code }`" target="_blank">
+                    <router-link :to="`/source/${ record?.code }`" target="_blank">
                       <div class="flex items-center space-x-2">
-                        <SettingOutlined :style="{ fontSize: '15px' }"/>
+                        <Settings :size="15" />
                         <span>{{ $t('source.common.manager') }}</span>
                       </div>
                     </router-link>
                   </MfMenuItem>
                   <MfMenuItem v-else key_="manager" disabled>
                     <div class="flex items-center space-x-2">
-                      <SettingOutlined :style="{ fontSize: '15px' }"/>
+                      <Settings :size="15" />
                       <span>{{ $t('source.common.manager') }}</span>
                     </div>
                   </MfMenuItem>
@@ -72,7 +74,7 @@
                               :disabled="loginUserCode !== record.user.code"
                               @click="loginUserCode === record.user.code && visibleDelete(true, record)">
                     <div class="flex items-center space-x-2">
-                      <DeleteOutlined :style="{ fontSize: '15px' }"/>
+                      <Trash2 :size="15" />
                       <span>{{ $t('common.deleteData') }}</span>
                     </div>
                   </MfMenuItem>
@@ -109,18 +111,20 @@
 import { onMounted, ref } from 'vue'
 import Common from '@/utils/common'
 import { useHeaders } from '@/views/pages/admin/source/SourceUtils'
-import { FilterModel } from '@/model/filter'
+import { FilterModel, type TableFilters } from '@/model/filter'
 import { SourceModel } from '@/model/source'
 import DataTable from '@/views/components/table/DataTable.vue'
+import { useTableFilters } from '@/views/components/table/tableFilters'
 import SourceService from '@/services/source'
 import SourceInfo from '@/views/pages/admin/source/SourceInfo.vue'
 import SourceHistory from '@/views/pages/admin/source/SourceHistory.vue'
 import SourceDelete from '@/views/pages/admin/source/SourceDelete.vue'
 import SourceMetadata from '@/views/pages/admin/source/SourceMetadata.vue'
-import { CloseCircleOutlined, DeleteOutlined, EditOutlined, PlayCircleOutlined, PlusOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { CirclePlay, CircleX, Pencil, Plus, Settings, Trash2 } from '@lucide/vue'
 
 defineOptions({ name: 'SourceHome' })
 
+const tableFilters = useTableFilters('source')
 const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 const loginUserCode = Common.getCurrentUserCode()
@@ -136,10 +140,19 @@ const dataDeleteVisible = ref(false)
 const dataSyncMetadataVisible = ref(false)
 const dataHistoryVisible = ref(false)
 
+const onSearch = (values: TableFilters) => {
+  Object.assign(filter, values, { page: 1 })
+  pageIndex.value = 1
+  handlerInitialize()
+}
+
+let latestRequest = 0
 const handlerInitialize = () => {
+  const request = ++latestRequest
   loading.value = true
-  SourceService.getAll(filter)
+  SourceService.getAll({ ...filter })
                .then((response) => {
+                 if (request !== latestRequest) return
                  if (response.status) {
                    data.value = response.data.content
                    dataCount.value = response.data.total
@@ -147,7 +160,7 @@ const handlerInitialize = () => {
                    pageIndex.value = response.data.page
                  }
                })
-               .finally(() => (loading.value = false))
+               .finally(() => { if (request === latestRequest) loading.value = false })
 }
 
 const fetchData = (value: number) => {

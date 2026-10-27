@@ -13,7 +13,7 @@
                class="flex items-center gap-2 px-2 py-1.5 mb-1 rounded border bg-white cursor-grab hover:border-[var(--dc-primary)] hover:shadow-sm text-sm"
                draggable="true"
                @dragstart="onPanelDragStart($event, child)">
-            <AppstoreOutlined :style="{ fontSize: '14px' }" class="text-gray-500"/>
+            <LayoutGrid :size="14"  class="text-gray-500"/>
             <span class="truncate">
               <slot name="panel-label" :item="child">{{ child.label }}</slot>
             </span>
@@ -118,7 +118,7 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onBeforeUnmount, PropType } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
-import { AppstoreOutlined } from '@ant-design/icons-vue'
+import { LayoutGrid } from '@lucide/vue'
 
 interface BuilderPanelItem
 {
@@ -143,7 +143,7 @@ interface PlacedComponent
 }
 
 export default defineComponent({
-  components: { AppstoreOutlined },
+  components: { LayoutGrid },
     props: {
     panelWidth: {
       type: Number,

@@ -6,21 +6,21 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.connection.Connection;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 @Slf4j
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP"})
 public class AliossConnection
         extends Connection
 {
-    private Configure configure;
+    private RuntimeConfigure configure;
     private Response response;
 
     @Getter
     private OSS ossClient;
 
-    public AliossConnection(Configure configure, Response response)
+    public AliossConnection(RuntimeConfigure configure, Response response)
     {
         super(configure, response);
     }

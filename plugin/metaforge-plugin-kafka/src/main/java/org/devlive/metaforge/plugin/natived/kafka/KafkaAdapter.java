@@ -9,8 +9,8 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.ConsumerGroupDescription;
 import org.apache.kafka.clients.admin.DescribeConsumerGroupsResult;
 import org.devlive.metaforge.spi.adapter.NativeAdapter;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.spi.model.Time;
 import org.devlive.metaforge.sql.node.element.SelectElement;
 import org.devlive.metaforge.sql.statement.SQLStatement;
@@ -45,7 +45,7 @@ public class KafkaAdapter
         Time processorTime = new Time();
         processorTime.setStart(new Date().getTime());
         Response response = this.kafkaConnection.getResponse();
-        Configure configure = this.kafkaConnection.getConfigure();
+        RuntimeConfigure configure = this.kafkaConnection.getConfigure();
         if (response.getIsConnected()) {
             List<String> headers = new ArrayList<>();
             List<String> types = new ArrayList<>();

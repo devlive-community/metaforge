@@ -7,28 +7,19 @@ import org.devlive.metaforge.common.utils.CodeUtils;
 import org.devlive.metaforge.common.utils.NullAwareBeanUtils;
 import org.devlive.metaforge.common.utils.ReflectionUtils;
 import org.devlive.metaforge.service.SelfException;
-import org.devlive.metaforge.service.adapter.PageRequestAdapter;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.entity.BaseEntity;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
-import org.springframework.data.domain.Pageable;
 
 public interface BaseService<T extends BaseEntity>
 {
     default CommonResponse<PageEntity<T>> getAll(BaseRepository<T, Long> repository, FilterBody filter)
     {
         try {
-            Pageable pageable = PageRequestAdapter.of(filter);
-
-            try {
-                return CommonResponse.success(PageEntity.build(repository.findAllByUser(UserDetailsService.getUser(), pageable)));
-            }
-            catch (UnsupportedOperationException e) {
-                return CommonResponse.success(PageEntity.build(repository.findAll(pageable)));
-            }
+            return CommonResponse.success(PageEntity.build(repository.findFiltered(filter, UserDetailsService.getUser())));
         }
         catch (Exception e) {
             return CommonResponse.failure("Failed to fetch data: " + e.getMessage());

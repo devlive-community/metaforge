@@ -16,7 +16,7 @@ export function useHeaders()
         { title: t('common.type'), dataIndex: 'type', key: 'type' },
         { title: t('common.createTime'), dataIndex: 'createTime', key: 'createTime' },
         { title: t('common.updateTime'), dataIndex: 'updateTime', key: 'updateTime' },
-        { title: t('common.action'), key: 'action' }
+        { title: t('common.action'), key: 'action', width: '150px' }
     ])
 
     // MfTable 列格式（bodyCell 契约）

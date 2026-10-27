@@ -1,6 +1,6 @@
 <template>
 
-    <DataTable :title="$t('user.common.list')"
+    <DataTable filterable :filter-fields="tableFilters" :title="$t('user.common.list')"
                :columns="headers"
                :data-source="data"
                :loading="loading"
@@ -8,11 +8,13 @@
                :page-size="pageSize"
                :total="dataCount"
                @refresh="handlerInitialize"
+               @search="onSearch"
+               @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #actions>
         <MfButton variant="primary" @click="handlerChangeInfo(true, null)">
-          <PlusOutlined :style="{ fontSize: '16px' }"/>
+          <Plus :size="16" />
           {{ $t('user.common.create') }}
         </MfButton>
       </template>
@@ -25,13 +27,13 @@
           <MfSpace>
             <MfTooltip :content="$t('user.common.assignRole')">
               <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerChangeRole(true, record)">
-                <ArrowUpOutlined :style="{ fontSize: '15px' }"/>
+                <ArrowUp :size="15" />
               </MfButton>
             </MfTooltip>
 
             <MfTooltip :content="$t('common.editData')">
               <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerChangeInfo(true, record)">
-                <EditOutlined :style="{ fontSize: '15px' }"/>
+                <Pencil :size="15" />
               </MfButton>
             </MfTooltip>
           </MfSpace>
@@ -52,17 +54,19 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { FilterModel } from '@/model/filter'
+import { FilterModel, type TableFilters } from '@/model/filter'
 import { useHeaders } from './UserUtils'
 import { UserModel } from '@/model/user'
 import DataTable from '@/views/components/table/DataTable.vue'
+import { useTableFilters } from '@/views/components/table/tableFilters'
 import UserInfo from '@/views/pages/system/user/UserInfo.vue'
 import UserRole from '@/views/pages/system/user/components/UserRole.vue'
 import UserService from '@/services/user'
-import { ArrowUpOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import { ArrowUp, Pencil, Plus } from '@lucide/vue'
 
 defineOptions({ name: 'UserHome' })
 
+const tableFilters = useTableFilters('user')
 const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 
@@ -75,10 +79,19 @@ const dataCount = ref(0)
 const dataInfo = ref<UserModel | null>(null)
 const dataInfoVisible = ref(false)
 
+const onSearch = (values: TableFilters) => {
+  Object.assign(filter, values, { page: 1 })
+  pageIndex.value = 1
+  handlerInitialize()
+}
+
+let latestRequest = 0
 const handlerInitialize = () => {
+  const request = ++latestRequest
   loading.value = true
-  UserService.getAll(filter)
+  UserService.getAll({ ...filter })
              .then((response) => {
+                 if (request !== latestRequest) return
                if (response.status) {
                  data.value = response.data.content
                  dataCount.value = response.data.total
@@ -86,7 +99,7 @@ const handlerInitialize = () => {
                  pageIndex.value = response.data.page
                }
              })
-             .finally(() => (loading.value = false))
+             .finally(() => { if (request === latestRequest) loading.value = false })
 }
 
 const fetchData = (value: number) => {

@@ -4,8 +4,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import org.devlive.metaforge.spi.adapter.NativeAdapter;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.spi.model.Time;
 import org.devlive.metaforge.sql.node.element.SelectElement;
 import org.devlive.metaforge.sql.statement.SelectStatement;
@@ -38,7 +38,7 @@ public class ZookeeperAdapter
         Time processorTime = new Time();
         processorTime.setStart(new Date().getTime());
         Response response = this.zookeeperConnection.getResponse();
-        Configure configure = this.zookeeperConnection.getConfigure();
+        RuntimeConfigure configure = this.zookeeperConnection.getConfigure();
         if (response.getIsConnected()) {
             List<String> headers = new ArrayList<>();
             List<String> types = new ArrayList<>();

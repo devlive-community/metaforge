@@ -7,8 +7,8 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.connection.HttpConfigure;
 import org.devlive.metaforge.spi.connection.HttpConnection;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 @Slf4j
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP"})
@@ -20,7 +20,7 @@ public class QuestDBService
     private Response response;
 
     @Override
-    public void connect(Configure configure)
+    public void connect(RuntimeConfigure configure)
     {
         try {
             this.response = new Response();
@@ -49,7 +49,7 @@ public class QuestDBService
     }
 
     @Override
-    public Response execute(Configure configure, String content)
+    public Response execute(RuntimeConfigure configure, String content)
     {
         connect(configure);
         return execute(content);

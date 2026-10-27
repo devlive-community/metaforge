@@ -2,11 +2,11 @@ package org.devlive.metaforge.plugin
 
 import com.datastax.oss.driver.api.core.CqlSession
 import org.devlive.metaforge.spi.connection.Connection
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import java.net.InetSocketAddress
 
-class CassandraConnection(configure: Configure, response: Response) : Connection(configure, response)
+class CassandraConnection(configure: RuntimeConfigure, response: Response) : Connection(configure, response)
 {
     private var session: CqlSession? = null
 

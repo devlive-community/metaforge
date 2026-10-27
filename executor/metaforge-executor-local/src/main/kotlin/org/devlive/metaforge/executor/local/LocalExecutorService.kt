@@ -8,7 +8,7 @@ import org.devlive.metaforge.executor.configure.ExecutorResponse
 import org.devlive.metaforge.lib.logger.LoggerExecutor
 import org.devlive.metaforge.lib.logger.logback.LogbackExecutor
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ScheduledFuture
@@ -265,7 +265,7 @@ class LocalExecutorService : ExecutorService
      * 跑 SELECT COUNT(*) FROM (userQuery) 估算总行数。失败时返回 -1，不影响后续流程。
      * Run SELECT COUNT(*) over the user's query. On failure returns -1 — progress just lacks the denominator.
      */
-    private fun preCount(plugin: PluginService, configure: Configure, query: String, taskLog: Logger): Long
+    private fun preCount(plugin: PluginService, configure: RuntimeConfigure, query: String, taskLog: Logger): Long
     {
         return try
         {

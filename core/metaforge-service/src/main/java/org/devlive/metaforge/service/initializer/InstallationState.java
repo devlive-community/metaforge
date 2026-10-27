@@ -1,5 +1,6 @@
 package org.devlive.metaforge.service.initializer;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -20,6 +21,7 @@ public class InstallationState
 {
     private final DataSource dataSource;
 
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "DataSource is an injected Spring-managed singleton")
     public InstallationState(DataSource dataSource)
     {
         this.dataSource = dataSource;

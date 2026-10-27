@@ -20,7 +20,7 @@ Support Time: `2023-01-29`
 
 ---
 
-MetaForge uses configuration files by default [snowflake.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/snowflake.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `SnowflakePlugin#describe`)
 
 !!! note
 

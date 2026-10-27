@@ -38,7 +38,7 @@
 
             <template #extra>
               <MfButton variant="ghost" size="sm" class="rounded-full! text-danger!" @click="onRemove(item.i)">
-                <DeleteOutlined :style="{ fontSize: '15px' }"/>
+                <Trash2 :size="15" />
               </MfButton>
             </template>
 
@@ -112,7 +112,7 @@ import { DashboardModel, DashboardRequest } from '@/model/dashboard.ts'
 import CropperHome from '@/views/components/cropper/CropperHome.vue'
 import UploadService from '@/services/upload'
 import ChartContainer from '@/views/pages/admin/dashboard/components/ChartContainer.vue'
-import { DeleteOutlined } from '@ant-design/icons-vue'
+import { Trash2 } from '@lucide/vue'
 
 defineOptions({ name: 'DashboardEditor' })
 
@@ -232,7 +232,7 @@ const onSubmit = () => {
                       if (response.status) {
                         MfMessage.success(t('dashboard.tip.publishSuccess').replace('$VALUE', String(formState.value?.name)))
                         if (response.data) {
-                          router.push(`/admin/dashboard/preview/${ response.data?.code }`)
+                          router.push(`/dashboard/preview/${ response.data?.code }`)
                         }
                         else {
                           router.push('/console/dashboard')

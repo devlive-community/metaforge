@@ -26,8 +26,15 @@
 }
 
 
-/* 容器：接近全宽 + 固定侧边距（原型比例），替代 1400px 居中限宽 */
+/* 页面容器铺满可用宽度，左右保留一致的内容边距。 */
 html .container {
-    max-width: 1520px;
+    width: 100%;
+    max-width: none;
     padding-inline: 40px;
+}
+
+@media (max-width: 767px) {
+    html .container {
+        padding-inline: 16px;
+    }
 }

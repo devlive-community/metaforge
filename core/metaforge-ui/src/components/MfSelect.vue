@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import clsx from 'clsx'
 import { CONTROL_SIZES, TRANSITION, type MfControlSize, type MfSelectOption } from './common'
+import { useDismissableLayer } from '../composables/useDismissableLayer'
 
 const props = withDefaults(defineProps<{
     modelValue?: string | number | (string | number)[]
@@ -57,14 +58,7 @@ function close(): void {
     query.value = ''
 }
 
-function onDocClick(event: MouseEvent): void {
-    if (root.value && !root.value.contains(event.target as Node)) {
-        close()
-    }
-}
-
-onMounted(() => document.addEventListener('mousedown', onDocClick))
-onBeforeUnmount(() => document.removeEventListener('mousedown', onDocClick))
+useDismissableLayer(root, open, close)
 
 const isMultiple = computed(() => props.multiple || props.tags)
 
@@ -228,7 +222,7 @@ watch(open, value => {
             <ul
                 v-if="open"
                 role="listbox"
-                class="absolute z-40 mt-1.5 max-h-64 w-full min-w-32 overflow-y-auto rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg"
+                class="absolute left-0 top-full z-40 mt-1.5 flex max-h-64 w-full min-w-32 origin-top flex-col gap-1 overflow-y-auto rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg"
             >
                 <template v-for="[group, groupOptions] in grouped" :key="group || 'default'">
                     <li v-if="group" class="px-2.5 pt-1.5 pb-1 text-xs font-semibold text-content-tertiary">

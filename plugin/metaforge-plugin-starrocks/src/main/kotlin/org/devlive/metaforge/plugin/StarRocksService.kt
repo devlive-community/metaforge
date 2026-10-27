@@ -3,7 +3,7 @@ package org.devlive.metaforge.plugin
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.PluginService
 import org.devlive.metaforge.spi.generator.definition.TableDefinition
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 
 @SuppressFBWarnings(value = ["NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"])
@@ -24,7 +24,7 @@ class StarRocksService : PluginService
         return true
     }
 
-    override fun getTables(configure: Configure?, database: String?): Response
+    override fun getTables(configure: RuntimeConfigure?, database: String?): Response
     {
         val sql = """SELECT
                         CASE
@@ -91,7 +91,7 @@ class StarRocksService : PluginService
         return this.execute(configure, sql.replace("{0}", database !!))
     }
 
-    override fun getColumns(configure: Configure?, database: String?, table: String?): Response
+    override fun getColumns(configure: RuntimeConfigure?, database: String?, table: String?): Response
     {
         val sql = """SELECT detail.*
                         FROM (
@@ -196,7 +196,7 @@ class StarRocksService : PluginService
         )
     }
 
-    override fun getSuggests(configure: Configure?, keyword: String?): Response
+    override fun getSuggests(configure: RuntimeConfigure?, keyword: String?): Response
     {
         val sql = """SELECT * FROM (
                         -- 数据库
@@ -299,7 +299,7 @@ class StarRocksService : PluginService
         )
     }
 
-    override fun getColumn(configure: Configure?, definition: TableDefinition?): Response
+    override fun getColumn(configure: RuntimeConfigure?, definition: TableDefinition?): Response
     {
         val column = definition !!.columns.stream().findAny()
 

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import clsx from 'clsx'
+import MfSelect from './MfSelect.vue'
 
 const props = withDefaults(defineProps<{
     current?: number
@@ -8,6 +9,7 @@ const props = withDefaults(defineProps<{
     pageSize?: number
     pageSizes?: number[]
     showSize?: boolean
+    showTotal?: boolean
     simple?: boolean
 }>(), {
     current: 1,
@@ -15,6 +17,7 @@ const props = withDefaults(defineProps<{
     pageSize: 10,
     pageSizes: () => [10, 20, 50, 100],
     showSize: true,
+    showTotal: false,
     simple: false,
 })
 
@@ -34,11 +37,13 @@ function go(page: number): void {
     }
 }
 
-function changeSize(event: Event): void {
-    const size = Number((event.target as HTMLSelectElement).value)
+function changeSize(value: string | number | (string | number)[]): void {
+    const size = Number(value)
     emit('update:pageSize', size)
     emit('change', 1, size)
 }
+
+const sizeOptions = computed(() => props.pageSizes.map(size => ({ label: `${size} / page`, value: size })))
 
 const items = computed<(number | '...')[]>(() => {
     const total = pages.value
@@ -102,16 +107,14 @@ function itemClass(item: number | '...'): string {
             <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 6l6 6-6 6" /></svg>
         </button>
 
-        <label v-if="showSize" class="ml-2 inline-flex items-center gap-1.5 text-content-tertiary">
-            <select
-                class="h-8 rounded-mf-md border border-line bg-surface px-2 text-sm text-content outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-                :value="pageSize"
-                @change="changeSize"
-            >
-                <option v-for="size in pageSizes" :key="size" :value="size">{{ size }} / page</option>
-            </select>
-        </label>
+        <div v-if="showSize" class="ml-2 w-28">
+            <MfSelect
+                :model-value="pageSize"
+                :options="sizeOptions"
+                @update:model-value="changeSize"
+            />
+        </div>
 
-        <span class="ml-1 text-content-tertiary">{{ total }}</span>
+        <span v-if="showTotal" class="ml-1 text-content-tertiary">{{ total }}</span>
     </nav>
 </template>

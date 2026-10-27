@@ -1,6 +1,6 @@
 <template>
 
-    <DataTable :title="$t('function.common.list')"
+    <DataTable filterable :filter-fields="tableFilters" :title="$t('function.common.list')"
                :columns="headers"
                :data-source="data"
                :loading="loading"
@@ -8,15 +8,17 @@
                :page-size="pageSize"
                :total="dataCount"
                @refresh="handlerInitialize"
+               @search="onSearch"
+               @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #actions>
         <MfButton variant="primary" @click="handlerInfo(true, null)">
-          <PlusOutlined :style="{ fontSize: '16px' }"/>
+          <Plus :size="16" />
           {{ $t('function.common.create') }}
         </MfButton>
         <MfButton @click="handlerImport(true)">
-          <ImportOutlined :style="{ fontSize: '16px' }"/>
+          <Import :size="16" />
           {{ $t('function.common.import') }}
         </MfButton>
       </template>
@@ -36,7 +38,7 @@
         <template v-else-if="column.key === 'action'">
           <MfTooltip :content="$t('common.editData')">
             <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerInfo(true, record)">
-              <EditOutlined :style="{ fontSize: '15px' }"/>
+              <Pencil :size="15" />
             </MfButton>
           </MfTooltip>
         </template>
@@ -53,17 +55,19 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { FilterModel } from '@/model/filter'
+import { FilterModel, type TableFilters } from '@/model/filter'
 import { useHeaders } from '@/views/pages/system/function/FunctionUtils'
 import { FunctionModel } from '@/model/function'
 import DataTable from '@/views/components/table/DataTable.vue'
+import { useTableFilters } from '@/views/components/table/tableFilters'
 import FunctionService from '@/services/function'
 import FunctionInfo from '@/views/pages/system/function/FunctionInfo.vue'
 import FunctionImport from '@/views/pages/system/function/FunctionImport.vue'
-import { EditOutlined, ImportOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import { Import, Pencil, Plus } from '@lucide/vue'
 
 defineOptions({ name: 'FunctionHome' })
 
+const tableFilters = useTableFilters('function')
 const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 
@@ -76,10 +80,19 @@ const pageSize = ref(10)
 const dataCount = ref(0)
 const dataInfo = ref<FunctionModel | null>(null)
 
+const onSearch = (values: TableFilters) => {
+  Object.assign(filter, values, { page: 1 })
+  pageIndex.value = 1
+  handlerInitialize()
+}
+
+let latestRequest = 0
 const handlerInitialize = () => {
+  const request = ++latestRequest
   loading.value = true
-  FunctionService.getAll(filter)
+  FunctionService.getAll({ ...filter })
                  .then((response) => {
+                 if (request !== latestRequest) return
                    if (response.status) {
                      data.value = response.data.content
                      dataCount.value = response.data.total
@@ -87,7 +100,7 @@ const handlerInitialize = () => {
                      pageIndex.value = response.data.page
                    }
                  })
-                 .finally(() => (loading.value = false))
+                 .finally(() => { if (request === latestRequest) loading.value = false })
 }
 
 const fetchData = (value: number) => {

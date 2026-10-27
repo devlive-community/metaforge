@@ -1,33 +1,33 @@
 <template>
   <MfAlert variant="info" closable class="dc-header-banner rounded-none!">
-    <router-link to="/admin/chat" target="_blank" class="hover:text-primary">
+    <router-link to="/chat" target="_blank" class="hover:text-primary">
       Support ChatGPT
     </router-link>
   </MfAlert>
 
   <!-- 白底铺满整行：底色在宽屏下从两侧透出来 -->
   <div class="dc-header__bar">
-    <div class="container flex h-full items-center justify-between w-full">
-      <div class="flex items-center">
+    <div class="container dc-header__layout flex min-h-16 w-full items-center justify-between gap-6 py-3">
+      <div class="dc-header__navigation flex min-w-0 flex-1 items-center gap-6">
         <router-link to="/" class="flex items-center gap-2 shrink-0">
           <MfAvatar src="/static/images/logo.png" alt="MetaForge Logo" :size="34"/>
           <span class="dc-header__wordmark">MetaForge</span>
         </router-link>
 
-        <div class="ml-6">
+        <div class="min-w-0">
           <MfMenu mode="horizontal" class="dc-header__menu" :selected-keys="selectedKeys">
             <template v-for="item in activeMenus" :key="item.id">
               <MfSubMenu v-if="item.children" :key_="item.url || item.id">
                 <template #title>
                   <div class="flex items-center space-x-2">
-                    <component v-if="item.icon" :is="menuIcons[item.icon]" :style="{ fontSize: '16px' }"/>
+                    <component :size="16" v-if="item.icon" :is="menuIcons[item.icon]" />
                     <span>{{ item.i18nKey ? $t(item.i18nKey) : 'Unknown' }}</span>
                   </div>
                 </template>
 
                 <MfMenuItem v-for="children in item.children" :key_="children.url">
                   <router-link :to="children.url" class="flex items-center space-x-2">
-                    <component v-if="children.icon" :is="menuIcons[children.icon]" :style="{ fontSize: '16px' }"/>
+                    <component :size="16" v-if="children.icon" :is="menuIcons[children.icon]" />
                     <span>{{ children.i18nKey ? $t(children.i18nKey) : 'Unknown' }}</span>
                   </router-link>
                 </MfMenuItem>
@@ -35,7 +35,7 @@
 
               <MfMenuItem v-else :key_="item.url">
                 <router-link :to="item.url" class="flex items-center space-x-2">
-                  <component v-if="item.icon" :is="menuIcons[item.icon]" :style="{ fontSize: '16px' }"/>
+                  <component :size="16" v-if="item.icon" :is="menuIcons[item.icon]" />
                   <span>{{ item.i18nKey ? $t(item.i18nKey) : 'Unknown' }}</span>
                 </router-link>
               </MfMenuItem>
@@ -44,14 +44,14 @@
         </div>
       </div>
 
-        <MfSpace :size="16">
+        <MfSpace :size="16" :wrap="false" class="dc-header__actions shrink-0">
           <!-- 全局搜索 -->
           <MfInput ref="searchInputRef"
                    v-model="searchText"
                    class="dc-header__search"
                    :placeholder="$t('common.searchPlaceholder')">
             <template #prefix>
-              <SearchOutlined :style="{ fontSize: '14px', color: 'var(--dc-text-secondary)' }"/>
+              <Search :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
             </template>
             <template #suffix>
               <span class="dc-header__kbd">⌘K</span>
@@ -61,12 +61,12 @@
           <!-- 帮助 -->
           <MfTooltip :content="$t('common.feedback')">
             <a href="https://github.com/devlive-community/metaforge" target="_blank" rel="noopener noreferrer"
-               class="dc-header__help">
-              <QuestionCircleOutlined :style="{ fontSize: '18px' }"/>
+               class="dc-header__icon-action" :aria-label="$t('common.feedback')">
+              <CircleHelp :size="18" />
             </a>
           </MfTooltip>
 
-          <div v-if="userInfo">
+          <div v-if="userInfo" class="flex items-center">
             <MfPopover trigger="click" placement="bottomRight">
               <template #content>
                 <div class="dc-notify" style="width: 340px; max-height: 300px; overflow-y: auto;" @scroll="onNotifyScroll">
@@ -83,7 +83,7 @@
                         <span>{{ $t(`common.${ item.entityType?.toLowerCase() || '' }`) }}</span>
 
                         <template v-if="item.entityType === 'DATASET'">
-                          <router-link :to="`/admin/dataset/info/${item.entityCode}`" target="_blank" class="hover:text-primary flex items-center">
+                          <router-link :to="`/dataset/info/${item.entityCode}`" target="_blank" class="hover:text-primary flex items-center">
                             [ {{ item.entityName }} ]
                           </router-link>
                         </template>
@@ -105,7 +105,9 @@
               </template>
 
               <MfBadge :count="userInfo?.unreadCount || 0">
-                <BellOutlined class="dc-header__bell cursor-pointer" :style="{ fontSize: '20px' }"/>
+                <button type="button" class="dc-header__icon-action" :aria-label="$t('notify.text.center')">
+                  <Bell :size="20" />
+                </button>
               </MfBadge>
             </MfPopover>
           </div>
@@ -119,14 +121,16 @@
               <MfButton>{{ $t('user.common.signup') }}</MfButton>
             </router-link>
           </MfSpace>
-          <div v-else>
+          <div v-else class="flex items-center">
             <MfDropdown placement="bottomRight" trigger="click">
-              <MfAvatar class="dc-header__avatar cursor-pointer"
-                        :size="34"
-                        :src="userInfo?.avatarConfigure?.path"
-                        :alt="userInfo?.username">
-                {{ (userInfo?.username || '?').charAt(0).toUpperCase() }}
-              </MfAvatar>
+              <button type="button" class="inline-flex shrink-0 rounded-mf-full outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-offset-2" :aria-label="userInfo?.username || $t('user.common.setting')" aria-haspopup="menu">
+                <MfAvatar class="dc-header__avatar"
+                          :size="34"
+                          :src="userInfo?.avatarConfigure?.path"
+                          :alt="userInfo?.username">
+                  {{ (userInfo?.username || '?').charAt(0).toUpperCase() }}
+                </MfAvatar>
+              </button>
 
               <template #overlay>
                 <MfMenu class="min-w-40">
@@ -139,7 +143,7 @@
                   <li class="my-1 border-t border-line" role="separator" />
 
                   <MfMenuItem>
-                    <router-link to="/admin/user" class="flex items-center space-x-2">
+                    <router-link to="/account/profile" class="flex items-center space-x-2">
                       <SettingOutlined :style="{ fontSize: '16px' }"/>
                       <span>{{ $t('user.common.setting') }}</span>
                     </router-link>
@@ -147,7 +151,7 @@
 
                   <MfMenuItem @click="logout">
                     <div class="flex items-center space-x-2">
-                      <LogoutOutlined :style="{ fontSize: '16px' }"/>
+                      <LogOut :size="16" />
                       <span>{{ $t('user.common.signout') }}</span>
                     </div>
                   </MfMenuItem>
@@ -168,15 +172,15 @@ import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { TokenUtils } from '@/utils/token'
 import router from '@/router'
-import { createDefaultRouter } from '@/router/default'
 import NotificationService from '@/services/notification'
 import { FilterModel } from '@/model/filter.ts'
-import { BellOutlined, BgColorsOutlined, SearchOutlined, CodeOutlined, DashboardOutlined, HistoryOutlined, HomeOutlined, LogoutOutlined, ProjectOutlined, QuestionCircleOutlined, RightOutlined, SettingOutlined, ToolOutlined, UnorderedListOutlined } from '@ant-design/icons-vue'
+import { Bell, CircleHelp, LogOut, Search } from '@lucide/vue'
+import { MENU_ICONS } from '@/config/menu-icons'
 
 defineOptions({ name: 'LayoutHeader' })
 
 /**
- * 顶级菜单高亮：按路径前缀匹配（子页面如 /admin/user/profile 也命中所属菜单）
+ * 顶级菜单高亮：按路径前缀匹配（子页面如 /account/profile 也命中所属菜单）
  */
 const selectedKeys = computed(() => {
     const urls: string[] = []
@@ -196,18 +200,8 @@ const selectedKeys = computed(() => {
     return matched ? [matched] : []
 })
 
-// 后端菜单返回的是图标名字符串，这里映射到图标组件
-const menuIcons: Record<string, any> = {
-    Contrast: BgColorsOutlined,
-    Gauge: DashboardOutlined,
-    Hammer: ToolOutlined,
-    History: HistoryOutlined,
-    Home: HomeOutlined,
-    List: UnorderedListOutlined,
-    SquareChevronRight: RightOutlined,
-    SquareDashedBottomCode: CodeOutlined,
-    SquareKanban: ProjectOutlined
-}
+// 后端菜单返回的是图标名字符串，映射表统一维护在 src/config/menu-icons.ts
+const menuIcons = MENU_ICONS
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -255,7 +249,7 @@ const onNotifyScroll = (event: any) => {
 
 onMounted(async () => {
   if (TokenUtils.getAuthUser()) {
-    await userStore.fetchUserInfo()
+    await Promise.all([userStore.fetchUserInfo(), userStore.fetchMenus()])
     await fetchMessages()
   }
   window.addEventListener('keydown', onGlobalKeydown)
@@ -279,7 +273,6 @@ const onGlobalKeydown = (event: KeyboardEvent) => {
 
 const logout = () => {
   userStore.logout()
-  createDefaultRouter(router)
   router.push('/auth/signin')
 }
 
@@ -311,7 +304,7 @@ const handleNotificationClick = (msg: any) => {
 }
 
 .dc-header__bar {
-    height: 64px;
+    min-height: 64px;
     display: flex;
     align-items: center;
     background: var(--dc-header);
@@ -325,28 +318,50 @@ const handleNotificationClick = (msg: any) => {
     letter-spacing: 0.2px;
 }
 
-.dc-header__bell {
-    color: var(--dc-text-primary);
-    transition: color 0.2s;
-}
-
-.dc-header__bell:hover {
-    color: var(--dc-primary);
-}
-
-.dc-header__help {
-    display: flex;
+.dc-header__icon-action {
+    display: inline-flex;
     align-items: center;
-    color: var(--dc-text-secondary);
-    transition: color 0.2s;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    border-radius: var(--mf-radius-md);
+    color: var(--mf-color-content-secondary);
+    cursor: pointer;
+    transition: color var(--mf-duration-fast), background-color var(--mf-duration-fast);
 }
 
-.dc-header__help:hover {
-    color: var(--dc-primary);
+.dc-header__icon-action:hover {
+    color: var(--mf-color-primary);
+    background-color: var(--mf-color-surface-hover);
+}
+
+.dc-header__icon-action:focus-visible {
+    outline: 2px solid var(--mf-color-primary);
+    outline-offset: 2px;
 }
 
 .dc-header__search {
-    width: 240px;
+    width: clamp(160px, 15vw, 240px);
+}
+
+:deep(.dc-header__menu) {
+    flex-wrap: wrap;
+}
+
+@media (max-width: 1200px) {
+    .dc-header__layout {
+        flex-wrap: wrap;
+        row-gap: 12px;
+    }
+
+    .dc-header__navigation {
+        flex-basis: 100%;
+    }
+
+    .dc-header__actions {
+        margin-left: auto;
+    }
 }
 
 .dc-header__kbd {

@@ -17,13 +17,13 @@
             <div class="space-x-2">
               <MfTooltip :content="$t('pipeline.common.resetTransform')">
                 <MfButton variant="ghost" size="sm" class="rounded-full!" @click="resetTransform">
-                  <SyncOutlined :style="{ fontSize: '16px' }"/>
+                  <RefreshCw :size="16" />
                 </MfButton>
               </MfTooltip>
 
               <MfTooltip :content="$t('common.save')">
                 <MfButton variant="ghost" size="sm" class="rounded-full!" @click="saveConfigure(configure)">
-                  <SaveOutlined :style="{ fontSize: '16px' }"/>
+                  <Save :size="16" />
                 </MfButton>
               </MfTooltip>
             </div>
@@ -51,7 +51,7 @@ import { MfMessage } from 'metaforge-ui'
 import { Configuration } from '@/views/components/editor/flow/Configuration.ts'
 import FlowSider from '@/views/components/editor/flow/components/FlowSider.vue'
 import FlowConfigure from '@/views/components/editor/flow/components/FlowConfigure.vue'
-import { SaveOutlined, SyncOutlined } from '@ant-design/icons-vue'
+import { RefreshCw, Save } from '@lucide/vue'
 
 defineOptions({ name: 'FlowEditor' })
 

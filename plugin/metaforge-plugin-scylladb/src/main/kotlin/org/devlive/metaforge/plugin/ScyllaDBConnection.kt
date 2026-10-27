@@ -2,13 +2,13 @@ package org.devlive.metaforge.plugin
 
 import com.datastax.oss.driver.api.core.CqlSession
 import org.devlive.metaforge.spi.connection.Connection
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import java.lang.Boolean
 import java.net.InetSocketAddress
 import kotlin.Exception
 
-class ScyllaDBConnection(configure: Configure, response: Response) : Connection(configure, response)
+class ScyllaDBConnection(configure: RuntimeConfigure, response: Response) : Connection(configure, response)
 {
     private var session: CqlSession? = null
 

@@ -5,8 +5,8 @@ import com.aliyun.oss.model.ObjectListing;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.adapter.NativeAdapter;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.spi.model.Time;
 import org.devlive.metaforge.sql.node.element.SelectElement;
 import org.devlive.metaforge.sql.statement.SelectStatement;
@@ -39,7 +39,7 @@ public class AliossAdapter
         Time processorTime = new Time();
         processorTime.setStart(new Date().getTime());
         Response response = this.aliossConnection.getResponse();
-        Configure configure = this.aliossConnection.getConfigure();
+        RuntimeConfigure configure = this.aliossConnection.getConfigure();
         if (response.getIsConnected()) {
             List<String> headers = new ArrayList<>();
             List<String> types = new ArrayList<>();

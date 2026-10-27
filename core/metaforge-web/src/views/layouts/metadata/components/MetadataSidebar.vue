@@ -12,14 +12,14 @@
               @select="onSelect">
         <template #title="{ node }">
           <div class="flex items-center space-x-1" @contextmenu.prevent="visibleContextMenu($event, node)">
-            <TableOutlined v-if="node.level === StructureEnum.TYPE && node.type === 'table'" class="text-xs font-semibold text-gray-500" :style="{ fontSize: '16px' }"/>
-            <EyeOutlined v-else-if="node.level === StructureEnum.TYPE && node.type === 'view'" class="text-xs font-semibold text-gray-500" :style="{ fontSize: '16px' }"/>
-            <FunctionOutlined v-else-if="node.level === StructureEnum.TYPE && node.type === 'function'" class="text-xs font-semibold text-gray-500" :style="{ fontSize: '16px' }"/>
-            <ApiOutlined v-else-if="node.level === StructureEnum.TYPE && node.type === 'procedure'" class="text-xs font-semibold text-gray-500" :style="{ fontSize: '16px' }"/>
-            <InsertRowRightOutlined v-else-if="node.level === StructureEnum.TYPE && node.type === 'column'" class="text-xs font-semibold text-gray-500" :style="{ fontSize: '16px' }"/>
-            <PartitionOutlined v-else-if="node.level === StructureEnum.TYPE && node.type === 'index'" class="text-xs font-semibold text-gray-500" :style="{ fontSize: '16px' }"/>
-            <ThunderboltOutlined v-else-if="node.level === StructureEnum.TYPE && node.type === 'trigger'" class="text-xs font-semibold text-gray-500" :style="{ fontSize: '16px' }"/>
-            <KeyOutlined v-else-if="node.level === StructureEnum.TYPE && node.type === 'primary'" class="text-xs font-semibold text-gray-500" :style="{ fontSize: '16px' }"/>
+            <Table :size="16" v-if="node.level === StructureEnum.TYPE && node.type === 'table'" class="text-xs font-semibold text-gray-500" />
+            <Eye :size="16" v-else-if="node.level === StructureEnum.TYPE && node.type === 'view'" class="text-xs font-semibold text-gray-500" />
+            <SquareFunction :size="16" v-else-if="node.level === StructureEnum.TYPE && node.type === 'function'" class="text-xs font-semibold text-gray-500" />
+            <Plug :size="16" v-else-if="node.level === StructureEnum.TYPE && node.type === 'procedure'" class="text-xs font-semibold text-gray-500" />
+            <Columns3 :size="16" v-else-if="node.level === StructureEnum.TYPE && node.type === 'column'" class="text-xs font-semibold text-gray-500" />
+            <Layers :size="16" v-else-if="node.level === StructureEnum.TYPE && node.type === 'index'" class="text-xs font-semibold text-gray-500" />
+            <Zap :size="16" v-else-if="node.level === StructureEnum.TYPE && node.type === 'trigger'" class="text-xs font-semibold text-gray-500" />
+            <Key :size="16" v-else-if="node.level === StructureEnum.TYPE && node.type === 'primary'" class="text-xs font-semibold text-gray-500" />
 
             <span class="text-sm font-normal text-gray-500">
               {{ node.title }}
@@ -33,6 +33,7 @@
       </MfTree>
 
       <div v-if="contextmenu.visible && dataInfo"
+           ref="contextMenuRoot"
            class="dc-ctxmenu"
            :style="{ left: contextmenu.position.x + 'px', top: contextmenu.position.y + 'px' }"
            @click.stop>
@@ -42,14 +43,14 @@
                      :title="$t('source.common.menuNew')">
             <MfMenuItem v-if="dataInfo.level === StructureEnum.TABLE || dataInfo.type === 'table'" key_="new-table" @click="visibleCreateTable(true)">
               <div class="flex items-center space-x-1">
-                <TableOutlined :style="{ fontSize: '16px' }"/>
+                <Table :size="16" />
                 <span>{{ $t('source.common.menuNewTable') }}</span>
               </div>
             </MfMenuItem>
 
             <MfMenuItem v-if="dataInfo.level === StructureEnum.COLUMN || dataInfo.type === 'column' || dataInfo.level === StructureEnum.TABLE" key_="new-column" @click="visibleCreateColumn(true)">
               <div class="flex items-center space-x-1">
-                <InsertRowRightOutlined :style="{ fontSize: '16px' }"/>
+                <Columns3 :size="16" />
                 <span>{{ $t('source.common.newColumn') }}</span>
               </div>
             </MfMenuItem>
@@ -58,7 +59,7 @@
           <MfSubMenu v-if="dataInfo.level === StructureEnum.TABLE" key_="export" :title="$t('source.common.menuExport')">
             <MfMenuItem key_="export-data" @click="visibleExportData(true)">
               <div class="flex items-center space-x-1">
-                <VerticalAlignTopOutlined :style="{ fontSize: '16px' }"/>
+                <ArrowUpToLine :size="16" />
                 <span>{{ $t('source.common.exportData') }}</span>
               </div>
             </MfMenuItem>
@@ -66,28 +67,28 @@
 
           <MfMenuItem v-if="dataInfo.level === StructureEnum.TABLE" key_="truncate" @click="visibleTruncateTable(true)">
             <div class="flex items-center space-x-1">
-              <DeleteOutlined :style="{ fontSize: '16px' }"/>
+              <Trash2 :size="16" />
               <span>{{ $t('source.common.truncateTable') }}</span>
             </div>
           </MfMenuItem>
 
           <MfMenuItem v-if="dataInfo.level === StructureEnum.TABLE" key_="drop-table" @click="visibleDropTable(true)">
             <div class="flex items-center space-x-1">
-              <DeleteOutlined :style="{ fontSize: '16px' }"/>
+              <Trash2 :size="16" />
               <span>{{ $t('source.common.dropTable') }}</span>
             </div>
           </MfMenuItem>
 
           <MfMenuItem v-if="dataInfo.level === StructureEnum.COLUMN" key_="change-column" @click="visibleChangeColumn(true)">
             <div class="flex items-center space-x-1">
-              <EditOutlined :style="{ fontSize: '16px' }"/>
+              <Pencil :size="16" />
               <span>{{ $t('source.common.changeColumn') }}</span>
             </div>
           </MfMenuItem>
 
           <MfMenuItem v-if="dataInfo.level === StructureEnum.COLUMN" key_="drop-column" @click="visibleDropColumn(true)">
             <div class="flex items-center space-x-1">
-              <DeleteOutlined :style="{ fontSize: '16px' }"/>
+              <Trash2 :size="16" />
               <span>{{ $t('source.common.dropColumn') }}</span>
             </div>
           </MfMenuItem>
@@ -123,10 +124,10 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, onUnmounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { MfMessage } from 'metaforge-ui'
+import { MfMessage, useDismissableLayer } from 'metaforge-ui'
 import MetadataService from '@/services/metadata.ts'
 import { StructureEnum, StructureModel } from '@/model/structure.ts'
 import ColumnCreate from '@/views/pages/admin/source/components/ColumnCreate.vue'
@@ -136,7 +137,7 @@ import ColumnChange from '@/views/pages/admin/source/components/ColumnChange.vue
 import TableTruncate from '@/views/pages/admin/source/components/TableTruncate.vue'
 import TableDrop from '@/views/pages/admin/source/components/TableDrop.vue'
 import TableCreate from '@/views/pages/admin/source/components/TableCreate.vue'
-import { ApiOutlined, DeleteOutlined, EditOutlined, EyeOutlined, FunctionOutlined, InsertRowRightOutlined, KeyOutlined, PartitionOutlined, TableOutlined, ThunderboltOutlined, VerticalAlignTopOutlined } from '@ant-design/icons-vue'
+import { ArrowUpToLine, Columns3, Eye, Key, Layers, Pencil, Plug, SquareFunction, Table, Trash2, Zap } from '@lucide/vue'
 
 interface MenuItem
 {
@@ -190,6 +191,7 @@ const tableDropVisible = ref(false)
 const columnCreateVisible = ref(false)
 const columnChangeVisible = ref(false)
 const columnDropVisible = ref(false)
+const contextMenuRoot = ref<HTMLElement>()
 const contextmenu = reactive({
   visible: false,
   position: { x: 0, y: 0 }
@@ -270,7 +272,7 @@ const onChangeDatabase = () => {
                      }
                    }
                    else {
-                     router.push(`/admin/source/${ originalSource.value }/d/${ selectDatabase.value }`)
+                     router.push(`/source/${ originalSource.value }/d/${ selectDatabase.value }`)
                    }
                  })
 }
@@ -312,7 +314,7 @@ const onSelect = (_keys: any[], info: any) => {
   }
 
   const type = route.meta.type
-  router.push(`/admin/source/${ originalSource.value }/d/${ selectDatabase.value }/t/${ type ? type : 'info' }/${ node.code }`)
+  router.push(`/source/${ originalSource.value }/d/${ selectDatabase.value }/t/${ type ? type : 'info' }/${ node.code }`)
 }
 
 const onLoadData = (treeNode: any): Promise<void> => {
@@ -350,6 +352,8 @@ const visibleContextMenu = (event: any, node: any) => {
 const closeContextMenu = () => {
   contextmenu.visible = false
 }
+
+useDismissableLayer(contextMenuRoot, computed(() => contextmenu.visible && !!dataInfo.value), closeContextMenu)
 
 const visibleCreateTable = (opened: boolean) => {
   tableCreateVisible.value = opened
@@ -398,11 +402,6 @@ const visibleDropColumn = (opened: boolean) => {
 onMounted(() => {
   originalSource.value = route.params?.source as string
   handleInitialize()
-  window.addEventListener('click', closeContextMenu)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('click', closeContextMenu)
 })
 </script>
 

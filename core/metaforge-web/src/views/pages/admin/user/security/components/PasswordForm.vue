@@ -19,7 +19,7 @@
                        show-password
                        :placeholder="$t('user.placeholder.currentPassword')">
                 <template #prefix>
-                  <LockOutlined :style="{ fontSize: '14px', color: 'var(--dc-text-secondary)' }"/>
+                  <Lock :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
                 </template>
               </MfInput>
               <div class="dc-password__hint">{{ $t('user.tip.currentPasswordLive') }}</div>
@@ -31,7 +31,7 @@
                        show-password
                        :placeholder="$t('user.placeholder.newPassword')">
                 <template #prefix>
-                  <LockOutlined :style="{ fontSize: '14px', color: 'var(--dc-text-secondary)' }"/>
+                  <Lock :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
                 </template>
               </MfInput>
               <div class="dc-password__hint">{{ $t('user.tip.newPasswordFormat') }}</div>
@@ -67,7 +67,7 @@
                        show-password
                        :placeholder="$t('user.placeholder.confirmNewPassword')">
                 <template #prefix>
-                  <LockOutlined :style="{ fontSize: '14px', color: 'var(--dc-text-secondary)' }"/>
+                  <Lock :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
                 </template>
               </MfInput>
               <div class="dc-password__hint">{{ $t('user.tip.confirmNewPassword') }}</div>
@@ -93,7 +93,7 @@
         <div class="dc-password__card dc-password__tips">
           <div class="dc-password__section-head">
             <div class="dc-password__section-icon">
-              <SafetyCertificateOutlined :style="{ fontSize: '16px' }"/>
+              <ShieldCheck :size="16" />
             </div>
             <div class="dc-password__section-title">{{ $t('user.common.securityTips') }}</div>
           </div>
@@ -109,7 +109,7 @@
 
           <div class="dc-password__tips-promo">
             <div class="dc-password__tips-promo-icon">
-              <LockOutlined :style="{ fontSize: '18px', color: '#fff' }"/>
+              <Lock :size="18" :style="{ color: '#fff' }"/>
             </div>
             <div class="min-w-0">
               <div class="dc-password__tips-promo-title">{{ $t('user.common.protectAccount') }}</div>
@@ -126,10 +126,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import {
-  LockOutlined,
-  SafetyCertificateOutlined
-} from '@ant-design/icons-vue'
+import { Lock, ShieldCheck } from '@lucide/vue'
 import UserService from '@/services/user'
 import { UserPasswordModel } from '@/model/user'
 import router from '@/router'

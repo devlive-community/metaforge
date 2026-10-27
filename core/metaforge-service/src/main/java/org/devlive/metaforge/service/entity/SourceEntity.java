@@ -14,9 +14,9 @@ import org.devlive.metaforge.common.utils.JsonUtils;
 import org.devlive.metaforge.common.view.EntityView;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
-import org.devlive.metaforge.service.configure.IConfigure;
-import org.devlive.metaforge.service.configure.IConfigureExecutor;
-import org.devlive.metaforge.spi.model.Configure;
+import org.devlive.metaforge.plugin.configure.PluginConfigure;
+import org.devlive.metaforge.plugin.configure.PluginConfigureExecutor;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.CascadeType;
@@ -127,11 +127,11 @@ public class SourceEntity
 
     @Transient
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
-    private IConfigure schema;
+    private PluginConfigure schema;
 
     @Transient
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
-    private List<IConfigureExecutor> pipelines;
+    private List<PluginConfigureExecutor> pipelines;
 
     @Transient
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
@@ -152,7 +152,7 @@ public class SourceEntity
 
     @Transient
     @JsonProperty(value = "configure")
-    private IConfigure configure;
+    private PluginConfigure configure;
 
     @Transient
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
@@ -174,19 +174,19 @@ public class SourceEntity
         return configures;
     }
 
-    public Configure toConfigure(PluginManager pluginManager, Plugin plugin)
+    public RuntimeConfigure toConfigure(PluginManager pluginManager, Plugin plugin)
     {
         return toConfigure("JsonConvert", pluginManager, plugin);
     }
 
     /**
-     * Converts the current object to a Configure object.
+     * Converts the current object to a RuntimeConfigure object.
      *
-     * @return The Configure object created from the current object.
+     * @return The RuntimeConfigure object created from the current object.
      */
-    public Configure toConfigure(String format, PluginManager pluginManager, Plugin plugin)
+    public RuntimeConfigure toConfigure(String format, PluginManager pluginManager, Plugin plugin)
     {
-        return Configure.builder()
+        return RuntimeConfigure.builder()
                 .host(this.getHost())
                 .port(this.getPort())
                 .username(Optional.ofNullable(this.getUsername()))

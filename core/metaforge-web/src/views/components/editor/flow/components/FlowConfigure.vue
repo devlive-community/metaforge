@@ -52,7 +52,7 @@
 
       <template #footer>
         <MfButton variant="primary" @click="onSubmit()">
-          <SaveOutlined :style="{ fontSize: '16px' }"/>
+          <Save :size="16" />
           <span>{{ $t('common.save') }}</span>
         </MfButton>
       </template>
@@ -63,7 +63,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Configuration } from '@/views/components/editor/flow/Configuration.ts'
-import { SaveOutlined } from '@ant-design/icons-vue'
+import { Save } from '@lucide/vue'
 
 defineOptions({ name: 'FlowConfigure' })
 

@@ -65,9 +65,9 @@ const style = computed(() => ({ maxWidth: props.width }))
                         role="dialog"
                         aria-modal="true"
                         :style="style"
-                        class="relative w-full rounded-mf-lg bg-surface shadow-mf-lg"
+                        class="relative flex max-h-full w-full flex-col overflow-hidden rounded-mf-lg bg-surface shadow-mf-lg"
                     >
-                        <header v-if="title || $slots.title" class="flex items-center justify-between border-b border-line px-5 py-4">
+                        <header v-if="title || $slots.title" class="flex shrink-0 items-center justify-between border-b border-line px-5 py-4">
                             <h3 class="text-base font-medium text-content">
                                 <slot name="title">{{ title }}</slot>
                             </h3>
@@ -82,10 +82,10 @@ const style = computed(() => ({ maxWidth: props.width }))
                                 </svg>
                             </button>
                         </header>
-                        <div class="px-5 py-4 text-sm text-content">
+                        <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm text-content">
                             <slot />
                         </div>
-                        <footer v-if="$slots.footer" class="flex justify-end gap-2 border-t border-line px-5 py-3">
+                        <footer v-if="$slots.footer" class="flex shrink-0 justify-end gap-2 border-t border-line px-5 py-3">
                             <slot name="footer" />
                         </footer>
                     </div>

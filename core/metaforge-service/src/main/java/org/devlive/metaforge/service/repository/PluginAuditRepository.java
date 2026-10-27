@@ -5,6 +5,7 @@ import org.devlive.metaforge.service.entity.PluginAuditEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,6 +15,12 @@ import java.util.Map;
 public interface PluginAuditRepository
         extends BaseRepository<PluginAuditEntity, Long>
 {
+    @Override
+    default Specification<PluginAuditEntity> visibleTo(UserEntity user)
+    {
+        return (root, query, builder) -> builder.equal(root.get("user"), user);
+    }
+
     Page<PluginAuditEntity> findAllByUser(UserEntity user, Pageable pageable);
 
     Long countByUser(UserEntity user);

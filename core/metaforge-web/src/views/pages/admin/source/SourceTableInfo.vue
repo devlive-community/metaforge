@@ -5,88 +5,88 @@
     <div v-else-if="dataInfo">
       <div class="mt-4 grid grid-cols-3 gap-5">
         <div class="flex items-center space-x-2">
-          <FontSizeOutlined :style="{ fontSize: '16px' }"/>
+          <Type :size="16" />
           <span>{{ $t('common.'+ dataInfo.type_name) }}</span>
         </div>
 
         <div class="flex items-center space-x-2">
-          <TableOutlined :style="{ fontSize: '16px' }"/>
+          <Table :size="16" />
           <span>{{ dataInfo.object_name }}</span>
         </div>
 
         <MfTooltip :content="$t('common.createTime')">
           <div class="flex items-center space-x-2">
-            <ClockCircleOutlined :style="{ fontSize: '16px' }"/>
+            <Clock :size="16" />
             <span>{{ dataInfo?.object_create_time === null ? $t('source.common.notSpecified') : dataInfo.object_create_time }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('common.updateTime')">
           <div class="flex items-center space-x-2">
-            <ClockCircleOutlined :style="{ fontSize: '16px' }"/>
+            <Clock :size="16" />
             <span>{{ dataInfo?.object_update_time === null ? $t('source.common.notUpdated') : dataInfo.object_update_time }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('source.common.engine')">
           <div class="flex items-center space-x-2">
-            <CalendarOutlined :style="{ fontSize: '16px' }"/>
+            <Calendar :size="16" />
             <span>{{ dataInfo.object_engine === null ? $t('source.common.notSpecifiedEngine') : dataInfo.object_engine }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('source.common.collation')">
           <div class="flex items-center space-x-2">
-            <ColumnHeightOutlined :style="{ fontSize: '16px' }"/>
+            <MoveVertical :size="16" />
             <span>{{ dataInfo.object_collation === null ? $t('source.common.notSpecifiedCollation') : dataInfo.object_collation }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('source.common.totalRows')">
           <div class="flex items-center space-x-2">
-            <SplitCellsOutlined :style="{ fontSize: '16px' }"/>
+            <Rows3 :size="16" />
             <span>{{ dataInfo.object_rows }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('source.common.format')">
           <div class="flex items-center space-x-2">
-            <ClearOutlined :style="{ fontSize: '16px' }"/>
+            <Eraser :size="16" />
             <span>{{ dataInfo.object_format === null ? $t('source.common.notSpecifiedFormat') : dataInfo.object_format }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('source.common.avgRowLength')">
           <div class="flex items-center space-x-2">
-            <SortAscendingOutlined :style="{ fontSize: '16px' }"/>
+            <ArrowUpNarrowWide :size="16" />
             <span>{{ dataInfo.object_avg_row_length === null ? 0 : dataInfo.object_avg_row_length }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('source.common.dataSize')">
           <div class="flex items-center space-x-2">
-            <ColumnHeightOutlined :style="{ fontSize: '16px' }"/>
+            <MoveVertical :size="16" />
             <span>{{ dataInfo.object_data_size === null ? 0 : dataInfo.object_data_size }} MB</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('source.common.indexSize')">
           <div class="flex items-center space-x-2">
-            <SearchOutlined :style="{ fontSize: '16px' }"/>
+            <Search :size="16" />
             <span>{{ dataInfo.object_index_size === null ? $t('source.common.notSpecifiedIndex') : dataInfo.object_index_size }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('common.columnCount')">
           <div class="flex items-center space-x-2">
-            <InsertRowRightOutlined :style="{ fontSize: '16px' }"/>
+            <Columns3 :size="16" />
             <span>{{ dataInfo.object_column_count === null ? $t('source.common.notSpecifiedIndex') : dataInfo.object_column_count }}</span>
           </div>
         </MfTooltip>
 
         <MfTooltip :content="$t('common.indexCount')">
           <div class="flex items-center space-x-2">
-            <SearchOutlined :style="{ fontSize: '16px' }"/>
+            <Search :size="16" />
             <span>{{ dataInfo.object_index_count === null ? $t('source.common.notSpecifiedIndex') : dataInfo.object_index_count }}</span>
           </div>
         </MfTooltip>
@@ -94,14 +94,14 @@
         <div class="flex items-center space-x-4 justify-between">
           <MfTooltip :content="$t('source.common.autoIncrement')">
             <div class="flex items-center space-x-2">
-              <ColumnHeightOutlined :style="{ fontSize: '16px' }"/>
+              <MoveVertical :size="16" />
               <span>{{ dataInfo.object_auto_increment === null ? $t('source.common.notSpecifiedPrimaryKey') : dataInfo.object_auto_increment }}</span>
             </div>
           </MfTooltip>
           <div>
             <MfTooltip :content="$t('source.common.resetAutoIncrement')">
               <MfButton variant="ghost" size="sm" :disabled="dataInfo.object_auto_increment === null" @click="autoIncrement = true">
-                <SettingOutlined :style="{ fontSize: '16px' }"/>
+                <Settings :size="16" />
               </MfButton>
             </MfTooltip>
           </div>
@@ -130,7 +130,7 @@ import { useRoute } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import MetadataService from '@/services/metadata.ts'
 import TableAutoIncrement from '@/views/pages/admin/source/components/TableAutoIncrement.vue'
-import { CalendarOutlined, ClearOutlined, ClockCircleOutlined, ColumnHeightOutlined, FontSizeOutlined, InsertRowRightOutlined, SearchOutlined, SettingOutlined, SortAscendingOutlined, SplitCellsOutlined, TableOutlined } from '@ant-design/icons-vue'
+import { ArrowUpNarrowWide, Calendar, Clock, Columns3, Eraser, MoveVertical, Rows3, Search, Settings, Table, Type } from '@lucide/vue'
 
 defineOptions({ name: 'SourceTableInfo' })
 

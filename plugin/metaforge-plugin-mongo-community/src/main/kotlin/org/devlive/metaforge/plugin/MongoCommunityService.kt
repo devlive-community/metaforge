@@ -1,7 +1,7 @@
 package org.devlive.metaforge.plugin
 
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import java.util.*
 
 class MongoCommunityService : PluginService
@@ -11,7 +11,7 @@ class MongoCommunityService : PluginService
         return "mongodb"
     }
 
-    override fun url(configure: Configure): String
+    override fun url(configure: RuntimeConfigure): String
     {
         val buffer = StringBuilder()
         buffer.append("jdbc:")

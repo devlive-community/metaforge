@@ -5,9 +5,6 @@ import lombok.Data;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginMetadata;
-import org.devlive.metaforge.plugin.PluginType;
-import org.devlive.metaforge.service.common.PluginUtils;
-import org.springframework.core.env.Environment;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,7 +17,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/api/v1/plugin")
@@ -28,26 +24,17 @@ import java.util.stream.Collectors;
 public class PluginController
 {
     private final PluginManager pluginManager;
-    private final Environment environment;
 
-    public PluginController(PluginManager pluginManager, Environment environment)
+    public PluginController(PluginManager pluginManager)
     {
         this.pluginManager = pluginManager;
-        this.environment = environment;
     }
 
     @GetMapping
     public CommonResponse<List<PluginMetadata>> getPlugins(@RequestParam(value = "hasConfigure", required = false) boolean hasConfigure)
     {
-        List<PluginMetadata> plugins = pluginManager.getPluginInfos()
-                .stream()
-                .filter(v -> v.getType().equals(PluginType.CONNECTOR))
-                .collect(Collectors.toList());
-
-        if (hasConfigure) {
-            plugins.forEach(plugin -> plugin.setConfigure(PluginUtils.loadYamlConfigure("JDBC", plugin.getName(), plugin.getName(), environment)));
-        }
-
+        // Configure 由插件代码内声明，PluginManager 加载时已填充到 PluginMetadata
+        // Configure is declared in plugin code and populated into PluginMetadata by PluginManager at load time
         return CommonResponse.success(pluginManager.getPluginInfos());
     }
 

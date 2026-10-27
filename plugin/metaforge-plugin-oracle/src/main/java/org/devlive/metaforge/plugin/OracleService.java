@@ -1,7 +1,7 @@
 package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.model.Configure;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.util.List;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class OracleService
     }
 
     @Override
-    public String url(Configure configure)
+    public String url(RuntimeConfigure configure)
     {
         StringBuilder buffer = new StringBuilder();
         buffer.append("jdbc:");

@@ -21,7 +21,7 @@
                     <MfCard :title="item.name">
                       <template #extra>
                         <MfTooltip v-if="item.description" :content="item.description">
-                          <InfoCircleOutlined :style="{ fontSize: '20px' }"/>
+                          <Info :size="20" />
                         </MfTooltip>
                       </template>
 
@@ -74,7 +74,7 @@ import ReportService from '@/services/report.ts'
 import { FilterModel } from '@/model/filter.ts'
 import { ReportModel } from '@/model/report.ts'
 import VisualView from '@/views/components/visual/VisualView.vue'
-import { InfoCircleOutlined } from '@ant-design/icons-vue'
+import { Info } from '@lucide/vue'
 
 defineOptions({ name: 'ChartContainer' })
 

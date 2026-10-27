@@ -6,7 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import okhttp3.MediaType;
 import org.devlive.metaforge.spi.connection.http.HttpMethod;
-import org.devlive.metaforge.spi.model.Configure;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.util.Map;
 
@@ -15,7 +15,7 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = false)
 @SuppressFBWarnings(value = {"EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC", "EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public class HttpConfigure
-        extends Configure
+        extends RuntimeConfigure
 {
     private String protocol = "http";
     private String path;

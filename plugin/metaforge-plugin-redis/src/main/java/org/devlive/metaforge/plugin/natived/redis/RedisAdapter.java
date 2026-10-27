@@ -4,8 +4,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.devlive.metaforge.spi.adapter.NativeAdapter;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.spi.model.Time;
 import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
@@ -36,7 +36,7 @@ public class RedisAdapter
         Time processorTime = new Time();
         processorTime.setStart(new Date().getTime());
         Response response = this.redisConnection.getResponse();
-        Configure configure = this.redisConnection.getConfigure();
+        RuntimeConfigure configure = this.redisConnection.getConfigure();
         if (response.getIsConnected()) {
             List<String> headers = new ArrayList<>();
             List<String> types = new ArrayList<>();

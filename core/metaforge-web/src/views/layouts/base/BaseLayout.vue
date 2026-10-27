@@ -22,6 +22,7 @@
 
 <script setup lang="ts">
 import { onBeforeMount } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { provideI18nHandler } from '@/i18n/I18n'
 
 const {
@@ -31,11 +32,11 @@ const {
   errorState,
   errorMessage
 } = provideI18nHandler()
+const { locale } = useI18n()
 
 const handleRetry = async () => {
   try {
-    const locale = localStorage.getItem('locale') || 'zh_cn'
-    await loadLocale(locale)
+    await loadLocale(locale.value)
   }
   catch (error) {
     console.error('Failed to load locale:', error)

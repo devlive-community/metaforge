@@ -14,6 +14,7 @@ export class RoleRequest
     {
         return {
             id: undefined,
+            code: undefined,
             name: undefined,
             description: undefined
         }

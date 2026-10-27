@@ -19,7 +19,7 @@ Support Time: `2022-12-01`
 
 ---
 
-MetaForge uses configuration files by default [redis.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/native/redis.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `RedisPlugin#describe`)
 
 !!! note
 

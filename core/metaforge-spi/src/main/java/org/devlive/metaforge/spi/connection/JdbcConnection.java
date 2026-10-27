@@ -4,8 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.devlive.metaforge.plugin.PluginContextManager;
 import org.devlive.metaforge.plugin.loader.PluginClassLoader;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.sql.Connection;
 import java.sql.Driver;
@@ -21,7 +21,7 @@ public class JdbcConnection
 {
     private java.sql.Connection jdbcConnection;
 
-    public JdbcConnection(Configure configure, Response response)
+    public JdbcConnection(RuntimeConfigure configure, Response response)
     {
         super(configure, response);
     }

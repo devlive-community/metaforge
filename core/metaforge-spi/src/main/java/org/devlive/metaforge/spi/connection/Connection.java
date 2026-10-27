@@ -1,8 +1,8 @@
 package org.devlive.metaforge.spi.connection;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.spi.model.Time;
 
 import java.util.Date;
@@ -10,11 +10,11 @@ import java.util.Date;
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"})
 public abstract class Connection
 {
-    protected final Configure configure;
+    protected final RuntimeConfigure configure;
     protected final Response response;
     protected Object connection;
 
-    public Connection(Configure configure, Response response)
+    public Connection(RuntimeConfigure configure, Response response)
     {
         this.configure = configure;
         this.response = response;
@@ -37,7 +37,7 @@ public abstract class Connection
         return this.response;
     }
 
-    public Configure getConfigure()
+    public RuntimeConfigure getConfigure()
     {
         return this.configure;
     }

@@ -1,6 +1,5 @@
 package org.devlive.metaforge.service.service.impl;
 
-import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -16,13 +15,11 @@ import org.devlive.metaforge.fs.FsRequest;
 import org.devlive.metaforge.fs.FsResponse;
 import org.devlive.metaforge.fs.FsService;
 import org.devlive.metaforge.plugin.PluginManager;
-import org.devlive.metaforge.service.adapter.PageRequestAdapter;
 import org.devlive.metaforge.service.audit.AuditUserLog;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.UploadBody;
 import org.devlive.metaforge.service.body.UserNameBody;
 import org.devlive.metaforge.service.body.UserPasswordBody;
-import org.devlive.metaforge.service.entity.MenuEntity;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.RoleEntity;
 import org.devlive.metaforge.service.entity.SourceEntity;
@@ -36,12 +33,12 @@ import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.repository.RoleRepository;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.repository.UserRepository;
-import org.devlive.metaforge.service.repository.admin.MenuRepository;
+import org.devlive.metaforge.service.repository.jdbc.MenuAccessRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.JwtService;
 import org.devlive.metaforge.service.service.UserService;
 import org.springframework.core.env.Environment;
-import org.springframework.data.domain.Pageable;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -61,16 +58,11 @@ import org.springframework.web.multipart.MultipartFile;
 import javax.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", "EI_EXPOSE_REP2"})
 @Service
@@ -81,7 +73,7 @@ public class UserServiceImpl
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final SourceRepository sourceRepository;
-    private final MenuRepository menuRepository;
+    private final MenuAccessRepository menuRepository;
     private final PasswordEncoder encoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -91,7 +83,7 @@ public class UserServiceImpl
     private final PluginManager pluginManager;
     private final HttpServletRequest request;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuRepository menuRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request)
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request)
     {
         this.userRepository = userRepository;
         this.roleRepository = roleRepository;
@@ -286,61 +278,20 @@ public class UserServiceImpl
     @Override
     public CommonResponse<List<TreeRecord>> getMenus()
     {
-        Map<Long, TreeRecord> treeMap = new ConcurrentHashMap<>();
-        Optional<UserEntity> optionalUser = userRepository.findByCode(UserDetailsService.getUser().getCode());
-        UserEntity user = optionalUser.get();
-        List<TreeRecord> tree = new ArrayList<>();
-        user.getRoles().forEach(role -> {
-            List<MenuEntity> menuList = StreamSupport.stream(role.getMenus().spliterator(), false)
-                    .sorted(Comparator.comparing(MenuEntity::getParent))
-                    .collect(Collectors.toList());
-            // Sets the parent menu sort
-            menuList.forEach(menu -> {
-                if (menu.getParent() == 0) {
-                    TreeRecord parent = TreeRecord.of(menu, true, true, Lists.newArrayList());
-                    parent.setNew(menu.isNew());
-                    treeMap.put(menu.getId(), parent);
-                }
-                else {
-                    TreeRecord temp = treeMap.get(menu.getParent());
-                    if (temp != null) {
-                        List<TreeRecord> childrens = temp.getChildren();
-                        if (ObjectUtils.isEmpty(childrens)) {
-                            childrens = Lists.newArrayList();
-                        }
-                        TreeRecord children = TreeRecord.of(menu, true, true, Lists.newArrayList());
-                        children.setNew(menu.isNew());
-                        children.setDescription(menu.getDescription());
-                        childrens.add(children);
-                        childrens.sort(Comparator.comparing(TreeRecord::getSorted));
-                        temp.setChildren(childrens);
-                        treeMap.put(temp.getId(), temp);
-                    }
-                    else {
-                        // Handle cases where no parent menu is selected, only child menus are selected
-                        menuRepository.findById(menu.getParent())
-                                .ifPresent(v -> {
-                                    TreeRecord parent = TreeRecord.of(v, true, true, Lists.newArrayList());
-                                    parent.setNew(v.isNew());
-                                    List<TreeRecord> children = Lists.newArrayList();
-                                    children.add(TreeRecord.of(menu, true, true, Lists.newArrayList()));
-                                    parent.setChildren(children);
-                                    treeMap.put(v.getId(), parent);
-                                });
-                    }
-                }
-            });
-            treeMap.keySet().forEach(v -> tree.add(treeMap.get(v)));
-        });
-        tree.sort(Comparator.comparing(TreeRecord::getSorted));
-        return CommonResponse.success(tree);
+        try {
+            return menuRepository.findUserMenus(UserDetailsService.getUser().getCode()).map(CommonResponse::success)
+                    .orElseGet(() -> CommonResponse.failure(ServiceState.USER_NOT_FOUND));
+        }
+        catch (DataAccessException exception) {
+            log.error("Could not load user menus", exception);
+            return CommonResponse.failure(ServiceState.USER_ROLE_MENU_READ_FAILED);
+        }
     }
 
     @Override
     public CommonResponse<PageEntity<UserEntity>> getAll(FilterBody filter)
     {
-        Pageable pageable = PageRequestAdapter.of(filter);
-        return CommonResponse.success(PageEntity.build(this.userRepository.findAll(pageable)));
+        return CommonResponse.success(PageEntity.build(this.userRepository.findFiltered(filter, UserDetailsService.getUser())));
     }
 
     @Override

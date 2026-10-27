@@ -4,6 +4,6 @@ export interface AuthResponse
     type: string
     id: number
     username: string
-    roles: []
+    roles: string[]
     avatar: string
 }

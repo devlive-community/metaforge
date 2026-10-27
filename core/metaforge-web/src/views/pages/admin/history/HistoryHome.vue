@@ -1,6 +1,6 @@
 <template>
 
-    <DataTable :title="$t('source.common.list')"
+    <DataTable filterable :filter-fields="tableFilters" :title="$t('source.common.list')"
                :columns="headers"
                :data-source="data"
                :loading="loading"
@@ -8,6 +8,8 @@
                :page-size="pageSize"
                :total="dataCount"
                @refresh="handlerInitialize"
+               @search="onSearch"
+               @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #bodyCell="{ column, record }">
@@ -49,21 +51,21 @@
                         class="rounded-full! text-danger!"
                         :disabled="record.state === 'SUCCESS'"
                         @click="handlerShowContent(true, record?.message)">
-                <WarningOutlined :style="{ fontSize: '15px' }"/>
+                <TriangleAlert :size="15" />
               </MfButton>
             </MfTooltip>
 
             <MfDropdown trigger="click" placement="bottomRight">
               <MfButton variant="ghost" size="sm" class="rounded-full!">
-                <MoreOutlined :style="{ fontSize: '15px' }"/>
+                <EllipsisVertical :size="15" />
               </MfButton>
 
               <template #overlay>
                 <MfMenu>
                   <MfMenuItem>
-                    <router-link :to="`/admin/query/history/${ record?.code }`" target="_blank">
+                    <router-link :to="`/query/history/${ record?.code }`" target="_blank">
                       <div class="flex items-center space-x-2">
-                        <SnippetsOutlined :style="{ fontSize: '15px' }"/>
+                        <FileCode2 :size="15" />
                         <span>{{ $t('query.common.quoteRecord') }}</span>
                       </div>
                     </router-link>
@@ -71,14 +73,14 @@
 
                   <MfMenuItem @click="handlerShowContent(true, record?.content)">
                     <div class="flex items-center space-x-2">
-                      <RightOutlined :style="{ fontSize: '15px' }"/>
+                      <ChevronRight :size="15" />
                       <span>{{ $t('query.common.showSql') }}</span>
                     </div>
                   </MfMenuItem>
 
                   <MfMenuItem @click="handlerShowData(true, record)">
                     <div class="flex items-center space-x-2">
-                      <TableOutlined :style="{ fontSize: '15px' }"/>
+                      <Table :size="15" />
                       <span>{{ $t('query.common.historyData') }}</span>
                     </div>
                   </MfMenuItem>
@@ -103,17 +105,19 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { FilterModel } from '@/model/filter.ts'
+import { FilterModel, type TableFilters } from '@/model/filter.ts'
 import AuditService from '@/services/audit'
 import { useHeaders } from '@/views/pages/admin/history/HistoryUtils'
 import { HistoryModel } from '@/model/history'
 import DataTable from '@/views/components/table/DataTable.vue'
+import { useTableFilters } from '@/views/components/table/tableFilters'
 import SqlInfo from '@/views/components/sql/SqlInfo.vue'
 import HistoryData from '@/views/pages/admin/history/HistoryData.vue'
-import { MoreOutlined, RightOutlined, SnippetsOutlined, TableOutlined, WarningOutlined } from '@ant-design/icons-vue'
+import { ChevronRight, EllipsisVertical, FileCode2, Table, TriangleAlert } from '@lucide/vue'
 
 defineOptions({ name: 'HistoryHome' })
 
+const tableFilters = useTableFilters('history')
 const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 
@@ -127,10 +131,19 @@ const dataInfo = ref<HistoryModel | null>(null)
 const dataVisible = ref(false)
 const content = ref<string | null>(null)
 
+const onSearch = (values: TableFilters) => {
+  Object.assign(filter, values, { page: 1 })
+  pageIndex.value = 1
+  handlerInitialize()
+}
+
+let latestRequest = 0
 const handlerInitialize = () => {
+  const request = ++latestRequest
   loading.value = true
-  AuditService.getAll(filter)
+  AuditService.getAll({ ...filter })
               .then((response) => {
+                 if (request !== latestRequest) return
                 if (response.status) {
                   data.value = response.data.content
                   dataCount.value = response.data.total
@@ -138,7 +151,7 @@ const handlerInitialize = () => {
                   pageIndex.value = response.data.page
                 }
               })
-              .finally(() => (loading.value = false))
+              .finally(() => { if (request === latestRequest) loading.value = false })
 }
 
 const fetchData = (value: number) => {

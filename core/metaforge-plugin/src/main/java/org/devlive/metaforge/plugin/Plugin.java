@@ -226,9 +226,24 @@ public abstract class Plugin
      * Declare configurable fields exposed by this plugin. Default empty for full
      * backward compatibility — subclasses (Executor / Scheduler / FS / Notify / ...) override as needed.
      */
-    public java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField> configures()
+    public java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField> runtimeConfigures()
     {
         return java.util.Collections.emptyList();
+    }
+
+    /**
+     * 声明该插件的数据源表单配置字段（字段名 / 类型 / 必填 / 默认值 / 分组 / pipelines 等）。
+     * 连接器插件默认返回通用 JDBC 字段（原 default.yaml 语义），转换等其余类型返回 null。
+     * 连接器插件应覆写本方法以提供专属配置。
+     *
+     * Declare the source form configuration of this plugin (field names / types / required /
+     * defaults / groups / pipelines). Connector plugins default to the generic JDBC fields
+     * (former default.yaml semantics); other plugin types return null. Connector plugins
+     * should override this method to provide their own configuration.
+     */
+    public org.devlive.metaforge.plugin.configure.PluginConfigure describe()
+    {
+        return getType() == PluginType.CONNECTOR ? org.devlive.metaforge.plugin.configure.DefaultJdbcConfigure.INSTANCE : null;
     }
 
     public String getVersion()

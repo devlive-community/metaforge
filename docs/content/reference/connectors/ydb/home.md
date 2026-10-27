@@ -20,7 +20,7 @@ Support Time: `2023-01-30`
 
 ---
 
-MetaForge uses configuration files by default [ydb.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/ydb.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `YdbPlugin#describe`)
 
 !!! note
 

@@ -31,7 +31,7 @@ This chapter describes the SQL syntax used in MetaForge Kafka plugin.
 
 ---
 
-MetaForge uses configuration files by default [kafka.json](https://github.com/EdurtIO/metaforge/blob/dev/server/src/main/etc/conf/plugins/native/kafka.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `KafkaPlugin#describe`)
 
 !!! note
 

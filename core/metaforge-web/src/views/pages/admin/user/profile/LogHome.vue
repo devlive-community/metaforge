@@ -1,5 +1,5 @@
 <template>
-  <DataTable :columns="headers"
+  <DataTable filterable :filter-fields="tableFilters" :columns="headers"
              :title="$t('user.common.log')"
              :description="$t('user.tip.log')"
                :data-source="data"
@@ -8,6 +8,8 @@
                :page-size="pageSize"
                :total="dataCount"
                @refresh="handlerInitialize"
+               @search="onSearch"
+               @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #bodyCell="{ column, record }">
@@ -23,13 +25,15 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { FilterModel } from '@/model/filter'
+import { FilterModel, type TableFilters } from '@/model/filter'
 import { useHeaders } from './ProfileUtils'
 import DataTable from '@/views/components/table/DataTable.vue'
+import { useTableFilters } from '@/views/components/table/tableFilters'
 import UserService from '@/services/user'
 
 defineOptions({ name: 'LogHome' })
 
+const tableFilters = useTableFilters('log')
 const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 
@@ -39,10 +43,19 @@ const pageSize = ref(10)
 const dataCount = ref(0)
 const data = ref<any[]>([])
 
+const onSearch = (values: TableFilters) => {
+  Object.assign(filter, values, { page: 1 })
+  pageIndex.value = 1
+  handlerInitialize()
+}
+
+let latestRequest = 0
 const handlerInitialize = () => {
+  const request = ++latestRequest
   loading.value = true
-  UserService.getLogs(filter)
+  UserService.getLogs({ ...filter })
              .then((response) => {
+                 if (request !== latestRequest) return
                if (response.status) {
                  data.value = response.data.content
                  dataCount.value = response.data.total
@@ -50,7 +63,7 @@ const handlerInitialize = () => {
                  pageIndex.value = response.data.page
                }
              })
-             .finally(() => (loading.value = false))
+             .finally(() => { if (request === latestRequest) loading.value = false })
 }
 
 const fetchData = (value: number) => {

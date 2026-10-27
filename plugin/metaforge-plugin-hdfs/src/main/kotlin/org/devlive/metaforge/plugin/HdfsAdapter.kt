@@ -2,7 +2,7 @@ package org.devlive.metaforge.plugin
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.adapter.NativeAdapter
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import org.devlive.metaforge.spi.model.Time
 import org.devlive.metaforge.spi.parser.SqlParser
@@ -38,7 +38,7 @@ class HdfsAdapter : NativeAdapter
         val processorTime = Time()
         processorTime.start = Date().time
         val response: Response = this.connection.response
-        val configure: Configure = this.connection.configure
+        val configure: RuntimeConfigure = this.connection.configure
         if (response.isConnected)
         {
             val headers: MutableList<String> = ArrayList()

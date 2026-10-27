@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import clsx from 'clsx'
+import { computed, ref, useSlots } from 'vue'
+import { useDismissableLayer } from '../composables/useDismissableLayer'
+import { useOverlayPosition } from '../composables/useOverlayPosition'
 
 const props = withDefaults(defineProps<{
     content?: string
@@ -10,19 +11,38 @@ const props = withDefaults(defineProps<{
     placement: 'top',
 })
 
-const classes = computed(() => clsx(
-    'pointer-events-none absolute left-1/2 z-40 -translate-x-1/2 whitespace-nowrap rounded-mf-md bg-content px-2 py-1 text-xs text-content-inverse opacity-0 shadow-mf-md',
-    'transition-opacity duration-(--mf-duration-base) ease-(--mf-easing)',
-    'group-hover:opacity-100 group-focus-within:opacity-100',
-    props.placement === 'top' ? 'bottom-full mb-1.5' : 'top-full mt-1.5',
-))
+const root = ref<HTMLElement>()
+const overlay = ref<HTMLElement>()
+const hovered = ref(false)
+const focused = ref(false)
+const dismissed = ref(false)
+const slots = useSlots()
+const open = computed(() => (hovered.value || focused.value) && !dismissed.value && !!(props.content || slots.content))
+const style = useOverlayPosition({ root, overlay, open, maxWidth: 320, placement: () => props.placement })
+useDismissableLayer(root, open, () => { dismissed.value = true }, [overlay])
+
+function focusOut(event: FocusEvent): void {
+    if (!root.value?.contains(event.relatedTarget as Node | null)) {
+        focused.value = false
+        dismissed.value = false
+    }
+}
 </script>
 
 <template>
-    <span class="group relative inline-flex">
+    <span ref="root" class="relative inline-flex"
+          @mouseenter="hovered = true; dismissed = false" @mouseleave="hovered = false"
+          @pointerdown="dismissed = true"
+          @focusin="focused = true" @focusout="focusOut">
         <slot />
-        <span role="tooltip" :class="classes">
-            <slot name="content">{{ content }}</slot>
-        </span>
+        <Teleport to="body">
+            <Transition enter-active-class="transition-opacity duration-(--mf-duration-fast)" enter-from-class="opacity-0"
+                        leave-active-class="transition-opacity duration-(--mf-duration-fast)" leave-to-class="opacity-0">
+                <span v-if="open" ref="overlay" role="tooltip" :style="style"
+                      class="pointer-events-none fixed z-60 w-max overflow-hidden whitespace-normal rounded-mf-md bg-content px-2 py-1 text-xs leading-5 text-content-inverse shadow-mf-md [overflow-wrap:anywhere]">
+                    <slot name="content">{{ content }}</slot>
+                </span>
+            </Transition>
+        </Teleport>
     </span>
 </template>

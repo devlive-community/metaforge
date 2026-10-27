@@ -244,7 +244,8 @@ CREATE TABLE IF NOT EXISTS `metaforge_role` (
   `active` tinyint(1) DEFAULT '1',
   `code` varchar(100) DEFAULT NULL,
   `update_time` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`id`),
+  CONSTRAINT `uk_metaforge_role_code` UNIQUE (`code`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 CREATE TABLE IF NOT EXISTS `metaforge_role_menu_relation` (
   `role_id` mediumtext,

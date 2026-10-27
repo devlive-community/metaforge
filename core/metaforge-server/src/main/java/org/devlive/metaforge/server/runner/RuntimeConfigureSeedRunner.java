@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginType;
-import org.devlive.metaforge.plugin.configure.PluginConfigureField;
+import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
 import org.devlive.metaforge.service.initializer.InstallationState;
 import org.devlive.metaforge.service.service.RuntimeConfigureService;
 import org.springframework.boot.CommandLineRunner;
@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 /**
- * 启动时把每个 ExecutorPlugin 声明的可配置字段（Plugin.configures()）按默认值落到 metaforge_configure。
+ * 启动时把每个 ExecutorPlugin 声明的可配置字段（Plugin.runtimeConfigures()）按默认值落到 metaforge_configure。
  * 已存在的行不动；只为缺失的 (EXECUTOR, name) 做 seed。
  *
  * On startup, iterate ExecutorPlugin instances and seed default configuration rows into
@@ -58,7 +58,7 @@ public class RuntimeConfigureSeedRunner
                             return;
                         }
                         Plugin plugin = (Plugin) instance;
-                        List<PluginConfigureField> fields = plugin.configures();
+                        List<RuntimeConfigureField> fields = plugin.runtimeConfigures();
                         if (fields == null || fields.isEmpty()) {
                             return;
                         }

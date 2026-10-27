@@ -57,7 +57,7 @@ public class DataSetController
     }
 
     @GetMapping(value = "syncFields/{code}")
-    public CommonResponse<java.util.List<org.devlive.metaforge.plugin.configure.PluginConfigureField>> syncFields(@PathVariable String code)
+    public CommonResponse<java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField>> syncFields(@PathVariable String code)
     {
         return service.getSyncFields(code);
     }

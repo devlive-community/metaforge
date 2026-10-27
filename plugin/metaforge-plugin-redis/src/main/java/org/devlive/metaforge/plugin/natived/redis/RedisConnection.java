@@ -4,8 +4,8 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.common.utils.OptionalUtils;
 import org.devlive.metaforge.spi.connection.Connection;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import redis.clients.jedis.Jedis;
 
 @Slf4j
@@ -13,11 +13,11 @@ import redis.clients.jedis.Jedis;
 public class RedisConnection
         extends Connection
 {
-    private Configure configure;
+    private RuntimeConfigure configure;
     private Response response;
     private Jedis jedis;
 
-    public RedisConnection(Configure configure, Response response)
+    public RedisConnection(RuntimeConfigure configure, Response response)
     {
         super(configure, response);
     }

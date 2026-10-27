@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.devlive.metaforge.spi.connection.Connection;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.util.Properties;
 
@@ -14,13 +14,13 @@ import java.util.Properties;
 public class KafkaConnection
         extends Connection
 {
-    private Configure configure;
+    private RuntimeConfigure configure;
     private Response response;
 
     @Getter
     private AdminClient client;
 
-    public KafkaConnection(Configure configure, Response response)
+    public KafkaConnection(RuntimeConfigure configure, Response response)
     {
         super(configure, response);
     }

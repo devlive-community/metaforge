@@ -81,7 +81,7 @@ This chapter describes the SQL syntax used in Zookeeper on MetaForge.
 
 ---
 
-MetaForge uses configuration files by default [zookeeper.json](https://github.com/EdurtIO/metaforge/blob/dev/server/src/main/etc/conf/plugins/native/zookeeper.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `ZookeeperPlugin#describe`)
 
 !!! note
 

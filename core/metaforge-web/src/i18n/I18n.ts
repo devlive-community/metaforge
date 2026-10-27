@@ -1,12 +1,13 @@
 import { createI18n } from 'vue-i18n'
 import { inject, provide, ref } from 'vue'
 import I18nService from '@/services/i18n'
+import { createLocaleLoader, normalizeLocale } from './locale-loader'
 
 // 默认语言配置
 // Default locale
-const DEFAULT_LOCALE = 'zh_cn'
+const DEFAULT_LOCALE = 'zh-cn'
 const DEFAULT_MESSAGES = {
-    zh_cn: {
+    'zh-cn': {
         // 基础的回退翻译
         // Basic fallback translation
         common: {
@@ -164,8 +165,6 @@ const DEFAULT_MESSAGES = {
     }
 }
 
-const language = (navigator.language || 'en').toLocaleLowerCase()
-
 const i18n = createI18n({
     fallbackLocale: DEFAULT_LOCALE,
     globalInjection: true,
@@ -174,9 +173,16 @@ const i18n = createI18n({
     fallbackWarn: false,
     silentTranslationWarn: true,
     missingWarn: false,
-    locale: localStorage.getItem('locale') || language.split('-')[0] || DEFAULT_LOCALE,
+    flatJson: true,
+    locale: normalizeLocale(localStorage.getItem('locale') || navigator.language || DEFAULT_LOCALE),
     messages: DEFAULT_MESSAGES
 })
+
+const ensureLocaleLoaded = createLocaleLoader(
+    locale => I18nService.getLocale(locale),
+    (locale, messages) => i18n.global.mergeLocaleMessage(locale, messages),
+)
+let localeRequest = 0
 
 export const I18N_KEY = Symbol('i18n-handler')
 
@@ -195,62 +201,29 @@ export function provideI18nHandler()
     }
 
     const loadLocale = async (locale: string) => {
-        // 如果请求的语言包已经加载过，直接使用
-        // If the requested language package has been loaded, use it directly
-        // @ts-ignore
-        if (i18n.global.availableLocales.includes(locale) &&
-            Object.keys(i18n.global.getLocaleMessage(locale)).length > 1) {
-            // @ts-ignore
-            i18n.global.locale.value = locale
-            localStorage.setItem('locale', locale)
-            return true
-        }
-
+        const request = ++localeRequest
         resetState()
         loadingState.value = true
         loadingText.value = i18n.global.t('common.loading')
 
         try {
-            const response = await I18nService.getLocale(locale)
-            if (response.status && response.data && Object.keys(response.data).length > 0) {
-                i18n.global.setLocaleMessage(locale, {
-                    ...DEFAULT_MESSAGES[DEFAULT_LOCALE],
-                    ...response.data
-                })
-                // @ts-ignore
-                i18n.global.locale.value = locale
-                localStorage.setItem('locale', locale)
-                resetState()
-                return true
-            }
-            else {
-                throw new Error('Invalid locale data received')
-            }
+            const normalized = await ensureLocaleLoaded(locale)
+            if (request !== localeRequest) return false
+            i18n.global.locale.value = normalized
+            localStorage.setItem('locale', normalized)
+            resetState()
+            return true
         }
         catch (error) {
+            if (request !== localeRequest) return false
             errorState.value = true
             errorMessage.value = error instanceof Error ? error.message : i18n.global.t('common.loadingFailed')
-
-            // 如果加载失败，确保至少有基础翻译可用
-            // Ensure that at least the basic translation is available
-            // @ts-ignore
-            if (!i18n.global.availableLocales.includes(locale)) {
-                i18n.global.setLocaleMessage(locale, DEFAULT_MESSAGES[DEFAULT_LOCALE])
-            }
-
-            // 如果当前语言加载失败，尝试回退到默认语言
-            // If the current language fails to load, try to fall back to the default language
-            if (locale !== DEFAULT_LOCALE &&
-                !i18n.global.availableLocales.includes(i18n.global.locale.value)) {
-                i18n.global.locale.value = DEFAULT_LOCALE
-                localStorage.setItem('locale', DEFAULT_LOCALE)
-            }
 
             console.error('Failed to load locale:', error)
             return false
         }
         finally {
-            loadingState.value = false
+            if (request === localeRequest) loadingState.value = false
         }
     }
 

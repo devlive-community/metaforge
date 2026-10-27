@@ -5,8 +5,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.column.Column;
 import org.devlive.metaforge.spi.column.JdbcColumn;
 import org.devlive.metaforge.spi.connection.JdbcConnection;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.spi.model.Time;
 
 import java.sql.Connection;
@@ -39,7 +39,7 @@ public class JdbcAdapter
         processorTime.setStart(new Date().getTime());
         Response response = jdbcConnection.getResponse();
         Connection connection = (Connection) jdbcConnection.getConnection();
-        Configure configure = jdbcConnection.getConfigure();
+        RuntimeConfigure configure = jdbcConnection.getConfigure();
         log.debug("Execute sql \n{}", content);
         if (response.getIsConnected()) {
             try (Statement statement = connection.createStatement()) {

@@ -7,8 +7,8 @@ import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.generator.column.CreateColumn;
 import org.devlive.metaforge.spi.generator.definition.ColumnDefinition;
 import org.devlive.metaforge.spi.generator.definition.TableDefinition;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.util.Optional;
 
@@ -56,7 +56,7 @@ public class ClickHouseService
     }
 
     @Override
-    public Response getTables(Configure configure, String database)
+    public Response getTables(RuntimeConfigure configure, String database)
     {
         String sql = "SELECT\n" +
                 "    type_name,\n" +
@@ -106,7 +106,7 @@ public class ClickHouseService
     }
 
     @Override
-    public Response getColumns(Configure configure, String database, String table)
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
     {
         String sql = "SELECT * FROM (\n" +
                 "    SELECT \n" +
@@ -160,7 +160,7 @@ public class ClickHouseService
     }
 
     @Override
-    public Response getPrimaryKeys(Configure configure, String database, String table)
+    public Response getPrimaryKeys(RuntimeConfigure configure, String database, String table)
     {
         String sql = "SELECT\n" +
                 "    name as object_name,\n" +
@@ -183,7 +183,7 @@ public class ClickHouseService
     }
 
     @Override
-    public Response getTable(Configure configure, String database, String table)
+    public Response getTable(RuntimeConfigure configure, String database, String table)
     {
         String sql = "SELECT \n" +
                 "    t.engine as object_type,\n" +
@@ -215,7 +215,7 @@ public class ClickHouseService
     }
 
     @Override
-    public Response getTableStatement(Configure configure, TableDefinition definition)
+    public Response getTableStatement(RuntimeConfigure configure, TableDefinition definition)
     {
         String sql = "SELECT formatQuery(create_table_query) AS create_table_sql " +
                 "FROM system.tables " +
@@ -230,7 +230,7 @@ public class ClickHouseService
     }
 
     @Override
-    public Response getSuggests(Configure configure, String keyword)
+    public Response getSuggests(RuntimeConfigure configure, String keyword)
     {
         String sql = "SELECT * FROM (\n" +
                 "    -- 数据库\n" +
@@ -301,7 +301,7 @@ public class ClickHouseService
     }
 
     @Override
-    public Response getColumn(Configure configure, TableDefinition definition)
+    public Response getColumn(RuntimeConfigure configure, TableDefinition definition)
     {
         Optional<ColumnDefinition> column = definition.getColumns().stream().findAny();
 

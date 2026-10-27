@@ -8,8 +8,8 @@ import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.service.MetadataService;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.generator.definition.TableDefinition;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -228,7 +228,7 @@ public class MetadataServiceImpl
                 .map(entity -> pluginManager.getPlugin(entity.getType())
                         .map(plugin -> {
                             PluginService service = plugin.getService(PluginService.class);
-                            Configure conf = entity.toConfigure(pluginManager, plugin);
+                            RuntimeConfigure conf = entity.toConfigure(pluginManager, plugin);
                             conf.setFormat(configure.getFormat());
                             configure.setDatabase(database);
                             configure.setName(table);

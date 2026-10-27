@@ -9,7 +9,7 @@ import org.devlive.metaforge.executor.configure.ExecutorProgressListener
 import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.OriginColumn
 import org.devlive.metaforge.executor.local.LocalExecutorService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import org.devlive.metaforge.test.local.support.FakePluginService
 import org.junit.Assert.assertEquals
@@ -335,7 +335,7 @@ class LocalExecutorCharacterizationTest
             query = "SELECT * FROM source"
             database = "target_db"
             table = "target_tbl"
-            originConfigure = Configure()
+            originConfigure = RuntimeConfigure()
             this.originColumns = originColumns
         }
         val output = ExecutorConfigure(
@@ -344,7 +344,7 @@ class LocalExecutorCharacterizationTest
             supportOptions = emptySet()
         ).apply {
             plugin = sink
-            originConfigure = Configure()
+            originConfigure = RuntimeConfigure()
         }
         // workHome=null -> 不落任务日志文件；taskName 非空才可被 stop() 定位
         return ExecutorRequest(null, input, output).apply {

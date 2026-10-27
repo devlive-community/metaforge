@@ -5,7 +5,7 @@
         <MfCard :title="$t('common.chat')">
           <template #extra>
             <MfButton variant="ghost" size="sm" class="rounded-full!" @click="visibleInfo(true)">
-              <PlusOutlined :style="{ fontSize: '15px' }"/>
+              <Plus :size="15" />
             </MfButton>
           </template>
 
@@ -95,7 +95,7 @@
                 <MfTextarea v-model="inputValue" placeholder="Type a message ..."/>
 
                 <MfButton variant="primary" :loading="submitting" :disabled="!inputValue || submitting" @click="onSubmit">
-                  <SendOutlined :style="{ fontSize: '18px' }"/>
+                  <Send :size="18" />
                 </MfButton>
               </div>
             </template>
@@ -119,7 +119,7 @@ import { toNumber } from 'lodash'
 import { cn } from '@/lib/utils.ts'
 import { MessageModel } from '@/model/message.ts'
 import MessageService from '@/services/message.ts'
-import { PlusOutlined, SendOutlined } from '@ant-design/icons-vue'
+import { Plus, Send } from '@lucide/vue'
 
 defineOptions({ name: 'ChatHome' })
 

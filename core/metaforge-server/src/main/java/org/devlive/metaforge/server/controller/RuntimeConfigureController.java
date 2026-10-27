@@ -6,7 +6,7 @@ import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginType;
-import org.devlive.metaforge.plugin.configure.PluginConfigureField;
+import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
 import org.devlive.metaforge.service.configure.DatasetTargetSchema;
 import org.devlive.metaforge.service.entity.ConfigureEntity;
 import org.devlive.metaforge.service.initializer.DataSetConfigure;
@@ -56,7 +56,7 @@ public class RuntimeConfigureController
     @GetMapping(value = "detail/{category}/{name}")
     public CommonResponse<DetailView> detail(@PathVariable String category, @PathVariable String name)
     {
-        List<PluginConfigureField> schema = resolveSchema(category, name);
+        List<RuntimeConfigureField> schema = resolveSchema(category, name);
         if (schema == null) {
             return CommonResponse.failure("No schema for " + category + "/" + name);
         }
@@ -71,10 +71,10 @@ public class RuntimeConfigureController
             @RequestBody Map<String, String> configMap)
     {
         // 校验：只保留 schema 中存在的 key（防止脏字段写入）
-        List<PluginConfigureField> schema = resolveSchema(category, name);
+        List<RuntimeConfigureField> schema = resolveSchema(category, name);
         Map<String, String> sanitized = new LinkedHashMap<>();
         if (schema != null) {
-            for (PluginConfigureField field : schema) {
+            for (RuntimeConfigureField field : schema) {
                 if (configMap != null && configMap.containsKey(field.getName())) {
                     sanitized.put(field.getName(), configMap.get(field.getName()));
                 }
@@ -95,7 +95,7 @@ public class RuntimeConfigureController
         return response;
     }
 
-    private List<PluginConfigureField> resolveSchema(String category, String name)
+    private List<RuntimeConfigureField> resolveSchema(String category, String name)
     {
         if (RuntimeConfigureService.CATEGORY_EXECUTOR.equals(category)) {
             return pluginManager.getPluginInfos().stream()
@@ -105,7 +105,7 @@ public class RuntimeConfigureController
                     .map(i -> (Plugin) i)
                     .filter(p -> name.equals(p.getName()))
                     .findFirst()
-                    .map(Plugin::configures)
+                    .map(Plugin::runtimeConfigures)
                     .orElse(null);
         }
         if (RuntimeConfigureService.CATEGORY_DATASET.equals(category) && DatasetTargetSchema.NAME.equals(name)) {
@@ -119,10 +119,10 @@ public class RuntimeConfigureController
     {
         public String category;
         public String name;
-        public List<PluginConfigureField> schema;
+        public List<RuntimeConfigureField> schema;
         public Map<String, String> values;
 
-        public DetailView(String category, String name, List<PluginConfigureField> schema, Map<String, String> values)
+        public DetailView(String category, String name, List<RuntimeConfigureField> schema, Map<String, String> values)
         {
             this.category = category;
             this.name = name;

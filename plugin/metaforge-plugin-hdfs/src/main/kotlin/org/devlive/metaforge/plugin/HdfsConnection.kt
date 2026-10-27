@@ -2,7 +2,7 @@ package org.devlive.metaforge.plugin
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.connection.Connection
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import org.apache.commons.lang3.StringUtils
 import org.apache.hadoop.conf.Configuration
@@ -14,7 +14,7 @@ class HdfsConnection : Connection
 {
     var hdfsConfigure: Configuration? = null
 
-    constructor(configure: Configure, response: Response) : super(configure, response)
+    constructor(configure: RuntimeConfigure, response: Response) : super(configure, response)
 
     override fun openConnection(): java.sql.Connection?
     {

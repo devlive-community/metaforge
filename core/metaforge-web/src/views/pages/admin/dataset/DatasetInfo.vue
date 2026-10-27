@@ -41,7 +41,7 @@
             <MfAlert :title="i18n.t('dataset.common.onlyPreviewCreate')"/>
 
             <MfButton>
-              <router-link to="/admin/query">
+              <router-link to="/query">
                 {{ i18n.t('dataset.common.returnQuery') }}
               </router-link>
             </MfButton>
@@ -59,7 +59,7 @@
             placement="bottom"
             :style="{ height: '70%' }"
             :title="$t('common.configure')">
-    <template #extra>
+    <template #footer>
       <div class="flex items-center justify-end space-x-2">
         <MfButton variant="primary" @click="onSubmit">
           {{ code ? $t('dataset.common.modify') : $t('dataset.common.create') }}
@@ -154,7 +154,7 @@
                 </template>
 
                 <MfButton variant="ghost" size="sm">
-                  <EditOutlined :style="{ fontSize: '10px' }"/>
+                  <Pencil :size="10" />
                 </MfButton>
               </MfPopover>
 
@@ -163,11 +163,11 @@
                         class="text-danger"
                         :disabled="!item.customColumn"
                         @click="onRemoveColumn(index)">
-                <DeleteOutlined :style="{ fontSize: '10px' }"/>
+                <Trash2 :size="10" />
               </MfButton>
 
               <MfButton variant="ghost" size="sm" @click="onAddColumn(index)">
-                <PlusOutlined :style="{ fontSize: '10px' }"/>
+                <Plus :size="10" />
               </MfButton>
             </div>
           </div>
@@ -271,7 +271,7 @@ import ExecuteService from '@/services/execute'
 import { ExecuteModel } from '@/model/execute.ts'
 import { ArrayUtils } from '@/utils/array.ts'
 import { join } from 'lodash'
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons-vue'
+import { Pencil, Plus, Trash2 } from '@lucide/vue'
 
 defineOptions({ name: 'DatasetInfo' })
 
@@ -462,7 +462,7 @@ const onSubmit = () => {
                   .then((response) => {
                     if (response.status) {
                       MfMessage.success(i18n.t('dataset.tip.publishSuccess').replace('$VALUE', formState.value.name as string))
-                      router.push('/admin/dataset')
+                      router.push('/dataset')
                     }
                   })
                   .finally(() => (saving.value = false))

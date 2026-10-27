@@ -1,7 +1,7 @@
 package org.devlive.metaforge.plugin.influxdb
 
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 
 class InfluxdbService : PluginService
 {
@@ -20,7 +20,7 @@ class InfluxdbService : PluginService
         return "influxdb"
     }
 
-    override fun url(configure: Configure): String
+    override fun url(configure: RuntimeConfigure): String
     {
         // 如果已经有自定义 URL，直接使用
         // If there is a custom URL, use it

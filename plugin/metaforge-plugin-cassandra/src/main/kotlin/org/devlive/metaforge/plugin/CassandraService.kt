@@ -2,7 +2,7 @@ package org.devlive.metaforge.plugin
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import org.apache.commons.beanutils.BeanUtils.copyProperties
 import org.apache.commons.lang3.ObjectUtils.isNotEmpty
@@ -13,7 +13,7 @@ class CassandraService : PluginService
 {
     private val log = getLogger(CassandraService::class.java)
 
-    private var configure: Configure? = null
+    private var configure: RuntimeConfigure? = null
     private var connection: CassandraConnection? = null
     private var response: Response? = null
     override fun validator(): String
@@ -21,13 +21,13 @@ class CassandraService : PluginService
         return "SELECT release_version AS version FROM system.local"
     }
 
-    override fun connect(configure: Configure?)
+    override fun connect(configure: RuntimeConfigure?)
     {
         try
         {
             log.info("Connecting to apache cassandra")
             response = Response()
-            this.configure = Configure()
+            this.configure = RuntimeConfigure()
             copyProperties(this.configure, configure)
             connection = CassandraConnection(this.configure !!, response !!)
         }
@@ -52,7 +52,7 @@ class CassandraService : PluginService
         return response !!
     }
 
-    override fun execute(configure: Configure?, content: String?): Response
+    override fun execute(configure: RuntimeConfigure?, content: String?): Response
     {
         connect(configure)
         return execute(content)

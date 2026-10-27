@@ -13,7 +13,7 @@
     <div class="dc-notify__card">
       <div class="dc-notify__section-head">
         <div class="dc-notify__section-icon">
-          <MailOutlined :style="{ fontSize: '16px' }"/>
+          <Mail :size="16" />
         </div>
         <div>
           <div class="dc-notify__section-title">{{ $t('notify.common.channels') }}</div>
@@ -28,7 +28,7 @@
                class="dc-notify__channel">
             <div class="flex items-start gap-3">
               <div class="dc-notify__channel-icon">
-                <component :is="channelIcon(channel.type)" :style="{ fontSize: '18px' }"/>
+                <component :size="18" :is="channelIcon(channel.type)" />
               </div>
               <div class="min-w-0">
                 <div class="dc-notify__channel-name">{{ channelName(channel.type) }}</div>
@@ -38,8 +38,8 @@
             <div class="flex items-center justify-between mt-3">
               <span class="dc-notify__channel-state"
                     :class="channel.enabled ? 'dc-notify__channel-state--on' : 'dc-notify__channel-state--off'">
-                <CheckCircleFilled v-if="channel.enabled"/>
-                <MinusCircleFilled v-else/>
+                <CircleCheck :size="12" v-if="channel.enabled"/>
+                <CircleMinus :size="12" v-else/>
                 {{ channel.enabled ? $t('notify.state.enabled') : $t('notify.state.disabled') }}
               </span>
               <MfButton v-if="!channel.enabled"
@@ -57,7 +57,7 @@
     <div class="dc-notify__card">
       <div class="dc-notify__section-head">
         <div class="dc-notify__section-icon">
-          <NotificationOutlined :style="{ fontSize: '16px' }"/>
+          <BellRing :size="16" />
         </div>
         <div class="min-w-0">
           <div class="dc-notify__section-title">{{ $t('notify.common.scenarios') }}</div>
@@ -66,7 +66,7 @@
         <MfButton variant="primary"
                   style="margin-left: auto"
                   @click="openBatch">
-          <SettingOutlined/>
+          <Settings :size="14"/>
           {{ $t('notify.common.batch') }}
         </MfButton>
       </div>
@@ -76,7 +76,7 @@
              :key="scenario.key"
              class="dc-notify__row">
           <div class="dc-notify__row-icon">
-            <component :is="scenario.icon" :style="{ fontSize: '16px' }"/>
+            <component :size="16" :is="scenario.icon" />
           </div>
           <div class="flex-1 min-w-0">
             <div class="dc-notify__row-name">{{ $t(scenario.nameKey) }}</div>
@@ -86,7 +86,7 @@
                     :disabled="saving"
                     @update:model-value="checked => toggleScenario(scenario.key, checked)"/>
           <MfButton variant="ghost" size="sm" @click="openScenarioChannels(scenario.key)">
-            <SettingOutlined :style="{ fontSize: '15px', color: 'var(--dc-text-secondary)' }"/>
+            <Settings :size="15" :style="{ color: 'var(--dc-text-secondary)' }"/>
           </MfButton>
         </div>
       </div>
@@ -141,19 +141,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import {
-  ApiOutlined,
-  CheckCircleFilled,
-  DeleteOutlined,
-  DingtalkOutlined,
-  EditOutlined,
-  MailOutlined,
-  MinusCircleFilled,
-  NotificationOutlined,
-  PlusCircleOutlined,
-  SettingOutlined,
-  SyncOutlined
-} from '@ant-design/icons-vue'
+import { BellRing, CircleCheck, CircleMinus, CirclePlus, Mail, MessageCircle, Pencil, Plug, RefreshCw, Settings, Trash2 } from '@lucide/vue'
 import UserService from '@/services/user.ts'
 import PluginService from '@/services/plugin.ts'
 import { HttpUtils } from '@/utils/http.ts'
@@ -168,11 +156,11 @@ const formState = reactive<{ notifyConfigure: any[] }>({ notifyConfigure: [] })
 
 /** 触发场景（服务端枚举：CREATED/UPDATED/DELETED/DYNAMIC/SYNCDATA） */
 const scenarios = [
-  { key: 'CREATED', icon: PlusCircleOutlined, nameKey: 'notify.text.created', tipKey: 'notify.tip.created' },
-  { key: 'UPDATED', icon: EditOutlined, nameKey: 'notify.text.updated', tipKey: 'notify.tip.updated' },
-  { key: 'DELETED', icon: DeleteOutlined, nameKey: 'notify.text.deleted', tipKey: 'notify.tip.deleted' },
-  { key: 'DYNAMIC', icon: NotificationOutlined, nameKey: 'notify.text.dynamic', tipKey: 'notify.tip.dynamic' },
-  { key: 'SYNCDATA', icon: SyncOutlined, nameKey: 'notify.text.syncData', tipKey: 'notify.tip.syncData' }
+  { key: 'CREATED', icon: CirclePlus, nameKey: 'notify.text.created', tipKey: 'notify.tip.created' },
+  { key: 'UPDATED', icon: Pencil, nameKey: 'notify.text.updated', tipKey: 'notify.tip.updated' },
+  { key: 'DELETED', icon: Trash2, nameKey: 'notify.text.deleted', tipKey: 'notify.tip.deleted' },
+  { key: 'DYNAMIC', icon: BellRing, nameKey: 'notify.text.dynamic', tipKey: 'notify.tip.dynamic' },
+  { key: 'SYNCDATA', icon: RefreshCw, nameKey: 'notify.text.syncData', tipKey: 'notify.tip.syncData' }
 ]
 
 const channels = computed(() => formState.notifyConfigure)
@@ -186,12 +174,12 @@ const scenarioChannels = ref<string[]>([])
 
 const channelIcon = (type: string): any => {
   if (type === 'Internal') {
-    return MailOutlined
+    return Mail
   }
   if (type === 'DingTalk') {
-    return DingtalkOutlined
+    return MessageCircle
   }
-  return ApiOutlined
+  return Plug
 }
 
 const channelName = (type: string): string => {

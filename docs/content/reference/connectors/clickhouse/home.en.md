@@ -20,7 +20,7 @@ Support Time: `2022-09-22`
 
 ---
 
-MetaForge uses configuration files by default [clickhouse.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/clickhouse.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `ClickhousePlugin#describe`)
 
 !!! note
 

@@ -40,7 +40,7 @@
         <div class="px-2 pt-1.5 pb-1.5">
           <div class="flex items-center justify-between border-b">
             <div class="flex items-center gap-1.5 py-1.5 min-w-0">
-              <component :is="nodeIcon(node)" class="text-gray-500 shrink-0" :style="{ fontSize: '13px' }"/>
+              <component :size="13" :is="nodeIcon(node)" class="text-gray-500 shrink-0" />
               <span class="text-xs text-gray-700 truncate">{{ node.label }}</span>
             </div>
             <span v-if="selectedNodeId === node.id"
@@ -80,7 +80,7 @@
 import { defineComponent, ref, watch, nextTick, onMounted, onBeforeUnmount, PropType } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import { NodeInstance, PortItem, WorkflowConnection } from './types'
-import { CloudServerOutlined, DatabaseOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { Database, Server, Settings } from '@lucide/vue'
 
 interface PendingConnection
 {
@@ -143,12 +143,12 @@ export default defineComponent({
 
     const nodeIcon = (node: NodeInstance): any => {
       if (node.category === 'source') {
-        return DatabaseOutlined
+        return Database
       }
       if (node.category === 'sink') {
-        return CloudServerOutlined
+        return Server
       }
-      return SettingOutlined
+      return Settings
     }
 
     const portCenter = (portId: string): { x: number; y: number } | null => {

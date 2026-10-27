@@ -1,7 +1,7 @@
 package org.devlive.metaforge.service.configure;
 
-import org.devlive.metaforge.plugin.configure.PluginConfigureField;
-import org.devlive.metaforge.plugin.configure.PluginFieldType;
+import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
+import org.devlive.metaforge.plugin.configure.RuntimeConfigureFieldType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -19,24 +19,24 @@ public final class DatasetTargetSchema
 
     public static final String NAME = "Default";
 
-    public static List<PluginConfigureField> fields()
+    public static List<RuntimeConfigureField> fields()
     {
         return Arrays.asList(
-                new PluginConfigureField("type", PluginFieldType.STRING, "ClickHouse",
+                new RuntimeConfigureField("type", RuntimeConfigureFieldType.STRING, "ClickHouse",
                         "Target storage plugin type", false),
-                new PluginConfigureField("host", PluginFieldType.STRING, "app-clickhouse",
+                new RuntimeConfigureField("host", RuntimeConfigureFieldType.STRING, "app-clickhouse",
                         "Target host", false),
-                new PluginConfigureField("port", PluginFieldType.STRING, "8123",
+                new RuntimeConfigureField("port", RuntimeConfigureFieldType.STRING, "8123",
                         "Target port", false),
-                new PluginConfigureField("username", PluginFieldType.STRING, "default",
+                new RuntimeConfigureField("username", RuntimeConfigureFieldType.STRING, "default",
                         "Target username", false),
-                new PluginConfigureField("password", PluginFieldType.PASSWORD, "",
+                new RuntimeConfigureField("password", RuntimeConfigureFieldType.PASSWORD, "",
                         "Target password", false),
-                new PluginConfigureField("database", PluginFieldType.STRING, "metaforge",
+                new RuntimeConfigureField("database", RuntimeConfigureFieldType.STRING, "metaforge",
                         "Target database", false),
-                new PluginConfigureField("tableDefaultEngine", PluginFieldType.STRING, "MergeTree",
+                new RuntimeConfigureField("tableDefaultEngine", RuntimeConfigureFieldType.STRING, "MergeTree",
                         "Default table engine when materializing", false),
-                new PluginConfigureField("tablePrefix", PluginFieldType.STRING, "metaforge_",
+                new RuntimeConfigureField("tablePrefix", RuntimeConfigureFieldType.STRING, "metaforge_",
                         "Table name prefix", false)
         );
     }

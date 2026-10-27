@@ -2,7 +2,7 @@ package org.devlive.metaforge.plugin
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.Configure
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
 import org.apache.commons.beanutils.BeanUtils.copyProperties
 import org.apache.commons.lang3.ObjectUtils.isNotEmpty
@@ -13,7 +13,7 @@ class ScyllaDBService : PluginService
 {
     private val log = getLogger(this.javaClass)
 
-    private var configure: Configure? = null
+    private var configure: RuntimeConfigure? = null
     private var connection: ScyllaDBConnection? = null
     private var response: Response? = null
 
@@ -22,13 +22,13 @@ class ScyllaDBService : PluginService
         return "SELECT release_version AS version FROM system.local"
     }
 
-    override fun connect(configure: Configure?)
+    override fun connect(configure: RuntimeConfigure?)
     {
         try
         {
             log.info("Connecting to ScyllaDB")
             response = Response()
-            this.configure = Configure()
+            this.configure = RuntimeConfigure()
             copyProperties(this.configure, configure)
             connection = ScyllaDBConnection(this.configure !!, response !!)
         }
@@ -53,7 +53,7 @@ class ScyllaDBService : PluginService
         return response !!
     }
 
-    override fun execute(configure: Configure?, content: String?): Response
+    override fun execute(configure: RuntimeConfigure?, content: String?): Response
     {
         connect(configure)
         return execute(content)

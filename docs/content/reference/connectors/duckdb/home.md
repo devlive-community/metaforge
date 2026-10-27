@@ -20,7 +20,7 @@ Support Time: `2023-02-20`
 
 ---
 
-MetaForge uses configuration files by default [duckdb.json](https://github.com/EdurtIO/metaforge/blob/develop/server/src/main/etc/conf/plugins/jdbc/duckdb.json)
+MetaForge declares the configuration fields inside the plugin class by default (see `DuckdbPlugin#describe`)
 
 !!! note
 

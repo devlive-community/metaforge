@@ -25,7 +25,7 @@
         </template>
 
         <MfButton variant="ghost" size="sm" class="rounded-full!">
-          <SettingOutlined :style="{ fontSize: '15px' }"/>
+          <Settings :size="15" />
         </MfButton>
       </MfPopover>
     </div>
@@ -121,7 +121,7 @@
                   <MfButton :variant="plugin.installed ? 'danger' : 'primary'"
                             :loading="plugin.loading"
                             @click="plugin.installed ? onUninstall(plugin) : onInstall(plugin)">
-                    <component :is="plugin.installed ? DeleteOutlined : PlusOutlined" :style="{ fontSize: '15px' }"/>
+                    <component :size="15" :is="plugin.installed ? Trash2 : Plus" />
                     {{ plugin.installed ? $t('common.uninstall') : $t('common.install') }}
                   </MfButton>
                 </div>
@@ -148,7 +148,7 @@ import { useI18nHandler } from '@/i18n/I18n'
 import { PackageUtils } from '@/utils/package.ts'
 import PluginService from '@/services/plugin.ts'
 import PluginInfo from '@/views/pages/store/components/PluginInfo.vue'
-import { DeleteOutlined, PlusOutlined, SettingOutlined } from '@ant-design/icons-vue'
+import { Plus, Settings, Trash2 } from '@lucide/vue'
 
 interface MetadataItem
 {

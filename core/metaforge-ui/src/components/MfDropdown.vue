@@ -1,54 +1,65 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import clsx from 'clsx'
+import { computed, onBeforeUnmount, ref } from 'vue'
+import { useDismissableLayer } from '../composables/useDismissableLayer'
+import { useOverlayPosition, type OverlayPlacement } from '../composables/useOverlayPosition'
 
 const props = withDefaults(defineProps<{
     trigger?: ('click' | 'hover' | 'contextmenu')[] | string
-    placement?: 'bottomLeft' | 'bottom' | 'bottomRight' | 'topLeft' | 'top' | 'topRight'
+    placement?: OverlayPlacement
 }>(), {
     trigger: 'hover',
     placement: 'bottomLeft',
 })
 
-const open = ref(false)
+const open = defineModel<boolean>('open', { default: false })
+const root = ref<HTMLElement>()
+const overlay = ref<HTMLElement>()
 let timer: ReturnType<typeof setTimeout> | undefined
+
+function close(): void {
+    if (timer) clearTimeout(timer)
+    timer = undefined
+    open.value = false
+}
+
+useDismissableLayer(root, open, close, [overlay])
+onBeforeUnmount(() => { if (timer) clearTimeout(timer) })
 
 const triggers = computed(() => Array.isArray(props.trigger) ? props.trigger : [props.trigger])
 const hoverable = computed(() => triggers.value.includes('hover'))
 
 function show(): void {
     if (timer) clearTimeout(timer)
+    timer = undefined
     open.value = true
 }
 
 function hide(): void {
-    timer = setTimeout(() => { open.value = false }, 120)
+    if (timer) clearTimeout(timer)
+    timer = setTimeout(close, 120)
 }
 
 function toggle(event: Event): void {
+    if (timer) clearTimeout(timer)
+    timer = undefined
     if (triggers.value.includes('contextmenu')) {
         event.preventDefault()
     }
     open.value = !open.value
 }
 
-const POS = {
-    bottomLeft: 'top-full left-0 mt-1.5',
-    bottom: 'top-full left-1/2 -translate-x-1/2 mt-1.5',
-    bottomRight: 'top-full right-0 mt-1.5',
-    topLeft: 'bottom-full left-0 mb-1.5',
-    top: 'bottom-full left-1/2 -translate-x-1/2 mb-1.5',
-    topRight: 'bottom-full right-0 mb-1.5',
-} as const
-
-const overlayClass = computed(() => clsx(
-    'absolute z-40 min-w-40 rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg',
-    POS[props.placement],
-))
+// Teleported to <body> and pinned with `position: fixed`, so the menu is no
+// longer clipped by scrolling table/card ancestors. z-50 matches MfModal/MfDrawer.
+const overlayStyle = useOverlayPosition({
+    root,
+    open,
+    placement: () => props.placement,
+})
 </script>
 
 <template>
     <div
+        ref="root"
         class="relative inline-flex"
         @mouseenter="hoverable && show()"
         @mouseleave="hoverable && hide()"
@@ -56,15 +67,24 @@ const overlayClass = computed(() => clsx(
         @contextmenu="triggers.includes('contextmenu') && toggle($event)"
     >
         <slot />
-        <Transition
-            enter-active-class="transition duration-(--mf-duration-fast) ease-(--mf-easing)"
-            enter-from-class="opacity-0 scale-95"
-            leave-active-class="transition duration-(--mf-duration-fast) ease-(--mf-easing)"
-            leave-to-class="opacity-0 scale-95"
-        >
-            <div v-if="open" :class="overlayClass" @mouseenter="show" @mouseleave="hoverable && hide()">
-                <slot name="overlay" />
-            </div>
-        </Transition>
+        <Teleport to="body">
+            <Transition
+                enter-active-class="transition duration-(--mf-duration-fast) ease-(--mf-easing)"
+                enter-from-class="opacity-0 scale-95"
+                leave-active-class="transition duration-(--mf-duration-fast) ease-(--mf-easing)"
+                leave-to-class="opacity-0 scale-95"
+            >
+                <div
+                    v-if="open"
+                    ref="overlay"
+                    class="fixed z-50 min-w-40 rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg"
+                    :style="overlayStyle"
+                    @mouseenter="show"
+                    @mouseleave="hoverable && hide()"
+                >
+                    <slot name="overlay" />
+                </div>
+            </Transition>
+        </Teleport>
     </div>
 </template>

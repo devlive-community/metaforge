@@ -1,147 +1,21 @@
+import type { Router } from 'vue-router'
 import LayoutContainer from '@/views/layouts/common/LayoutContainer.vue'
 import ProfileContainer from '@/views/layouts/profile/LayoutContainer.vue'
-import { TokenUtils } from '@/utils/token'
 import MetadataContainer from '@/views/layouts/metadata/MetadataContainer.vue'
+import { accountPages, businessPages, canonicalPagePath } from './navigation'
 
-/**
- * Create a default router
- *
- * @param {any} router - the router object
- * @return {void}
- */
-const createDefaultRouter = (router: any) => {
-    // Only when the token is valid, the redirection route will be built
-    if (TokenUtils.getAuthUser() !== undefined) {
-        const indexRouter = {
-            path: '/',
-            redirect: '/home',
-            component: LayoutContainer,
-            children: [
-                {
-                    name: 'home',
-                    path: 'home',
-                    component: () => import('@/views/pages/default/dashboard/DashboardHome.vue')
-                }
-            ]
-        }
-        router.addRoute(indexRouter)
-
-        const storeRouter = {
-            path: '/',
-            meta: {
-                title: 'common.store',
-                isRoot: true
-            },
-            component: LayoutContainer,
-            redirect: '/store',
-            children: [
-                {
-                    name: 'store',
-                    path: 'store',
-                    meta: {
-                        title: 'common.store',
-                        isRoot: false
-                    },
-                    component: () => import('@/views/pages/store/StoreHome.vue')
-                }
-            ]
-        }
-        router.addRoute(storeRouter)
-    }
-
-    createSystemRouter(router)
-    createAdminRouter(router)
-    createProfileRouter(router)
-}
-
-/**
- * Creates a system router and adds it to the provided router.
- *
- * @param {any} router - The router instance to which the system router will be added.
- * @return {void}
- */
-const createSystemRouter = (router: any) => {
-    const newRouter = {
-        path: '/system',
-        meta: {
-            title: 'common.system',
-            isRoot: true
-        },
+const createDefaultRouter = (router: Router) => {
+    router.addRoute({
+        name: 'app',
+        path: '/',
+        redirect: '/home',
         component: LayoutContainer,
+        meta: { requiresAuth: true },
         children: [
-            {
-                name: 'user',
-                path: 'user',
-                meta: {
-                    title: 'common.user',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/system/user/UserHome.vue')
-            },
-            {
-                name: 'role',
-                path: 'role',
-                meta: {
-                    title: 'common.role',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/system/role/RoleHome.vue')
-            },
-            {
-                name: 'schedule',
-                path: 'schedule',
-                meta: {
-                    title: 'common.schedule',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/system/schedule/ScheduleHome.vue')
-            },
-            {
-                name: 'function',
-                path: 'function',
-                meta: {
-                    title: 'common.function',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/system/function/FunctionHome.vue')
-            },
-            {
-                name: 'menu',
-                path: 'menu',
-                meta: {
-                    title: 'common.menu',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/system/menu/MenuHome.vue')
-            },
-            {
-                name: 'configure',
-                path: 'configure',
-                meta: {
-                    title: 'configure.runtime.title',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/system/configure/ConfigureHome.vue')
-            }
-        ]
-    }
-    router.addRoute(newRouter)
-}
-
-/**
- * Creates an admin router and adds it to the given router.
- *
- * @param {any} router - The router to which the admin router will be added.
- */
-const createAdminRouter = (router: any) => {
-    const newRouter = {
-        path: '/admin',
-        meta: {
-            title: 'common.admin',
-            isRoot: true
-        },
-        component: LayoutContainer,
-        children: [
+            { name: 'home', path: 'home', component: () => import('@/views/pages/default/dashboard/DashboardHome.vue') },
+            { name: 'store', path: 'store', meta: { title: 'common.store' }, component: () => import('@/views/pages/store/StoreHome.vue') },
+            { name: 'workspace', path: 'workspace', redirect: '/query' },
+            { name: 'analysis', path: 'analysis', redirect: '/dashboard' },
             {
                 name: 'dashboard',
                 path: 'dashboard',
@@ -178,7 +52,7 @@ const createAdminRouter = (router: any) => {
             },
             {
                 name: 'queryHistory',
-                path: 'query/:type?/:code?',
+                path: 'query/:type/:code?',
                 meta: {
                     title: 'common.query',
                     isRoot: false
@@ -196,7 +70,6 @@ const createAdminRouter = (router: any) => {
             },
             {
                 path: 'dataset/info/:code?',
-                layout: LayoutContainer,
                 meta: {
                     title: 'common.dataset',
                     isRoot: false
@@ -213,7 +86,6 @@ const createAdminRouter = (router: any) => {
             },
             {
                 path: 'dataset/adhoc/:code',
-                layout: LayoutContainer,
                 meta: {
                     title: 'common.dataset',
                     isRoot: false
@@ -222,7 +94,6 @@ const createAdminRouter = (router: any) => {
             },
             {
                 path: 'dataset/adhoc/:code/:id',
-                layout: LayoutContainer,
                 meta: {
                     title: 'common.dataset',
                     isRoot: false
@@ -349,19 +220,70 @@ const createAdminRouter = (router: any) => {
                 component: () => import('@/views/pages/admin/wofkflow/WorkflowInfo.vue')
             }
         ]
-    }
-    router.addRoute(newRouter)
-}
-
-const createProfileRouter = (router: any) => {
-    const newRouter = {
-        path: '/admin/user',
-        meta: {
-            title: 'user.common.setting',
-            isRoot: true
-        },
-        redirect: '/admin/user/profile',
-        component: ProfileContainer,
+    })
+    router.addRoute({
+        name: 'administration', path: '/admin', redirect: '/admin/user', component: LayoutContainer,
+        meta: { requiresAuth: true, requiresAdmin: true, title: 'navigation.systemManagement' },
+        children: [
+            {
+                name: 'user',
+                path: 'user',
+                meta: {
+                    title: 'common.user',
+                    isRoot: false
+                },
+                component: () => import('@/views/pages/system/user/UserHome.vue')
+            },
+            {
+                name: 'role',
+                path: 'role',
+                meta: {
+                    title: 'common.role',
+                    isRoot: false
+                },
+                component: () => import('@/views/pages/system/role/RoleHome.vue')
+            },
+            {
+                name: 'schedule',
+                path: 'schedule',
+                meta: {
+                    title: 'common.schedule',
+                    isRoot: false
+                },
+                component: () => import('@/views/pages/system/schedule/ScheduleHome.vue')
+            },
+            {
+                name: 'function',
+                path: 'function',
+                meta: {
+                    title: 'common.function',
+                    isRoot: false
+                },
+                component: () => import('@/views/pages/system/function/FunctionHome.vue')
+            },
+            {
+                name: 'menu',
+                path: 'menu',
+                meta: {
+                    title: 'common.menu',
+                    isRoot: false
+                },
+                component: () => import('@/views/pages/system/menu/MenuHome.vue')
+            },
+            {
+                name: 'configure',
+                path: 'configure',
+                meta: {
+                    title: 'configure.runtime.title',
+                    isRoot: false
+                },
+                component: () => import('@/views/pages/system/configure/ConfigureHome.vue')
+            }
+        ]
+    })
+    router.addRoute({
+        name: 'account', path: '/account', redirect: '/account/profile', component: ProfileContainer,
+        meta: { requiresAuth: true, title: 'navigation.accountSettings' },
         children: [
             {
                 name: 'info',
@@ -418,7 +340,7 @@ const createProfileRouter = (router: any) => {
                 component: () => import('@/views/pages/admin/user/security/UsernameHome.vue')
             },
             {
-                username: 'password',
+                name: 'password',
                 path: 'password',
                 meta: {
                     title: 'user.common.modifyPassword',
@@ -427,7 +349,7 @@ const createProfileRouter = (router: any) => {
                 component: () => import('@/views/pages/admin/user/security/PasswordHome.vue')
             },
             {
-                username: 'notify',
+                name: 'notify',
                 path: 'notify',
                 meta: {
                     title: 'user.common.notify',
@@ -436,10 +358,11 @@ const createProfileRouter = (router: any) => {
                 component: () => import('@/views/pages/admin/user/profile/NotifyHome.vue')
             }
         ]
+    })
+    const legacyPaths = ['/system/:legacyPath(.*)*', ...businessPages.map(page => `/admin/${page}/:legacyPath(.*)*`), ...accountPages.map(page => `/admin/user/${page}/:legacyPath(.*)*`)]
+    for (const path of legacyPaths) {
+        router.addRoute({ path, redirect: to => ({ path: canonicalPagePath(to.path), query: to.query, hash: to.hash, replace: true }) })
     }
-    router.addRoute(newRouter)
 }
 
-export {
-    createDefaultRouter
-}
+export { createDefaultRouter }

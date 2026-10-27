@@ -4,19 +4,19 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.I0Itec.zkclient.ZkClient;
 import org.devlive.metaforge.spi.connection.Connection;
-import org.devlive.metaforge.spi.model.Configure;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 @Slf4j
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP"})
 public class ZookeeperConnection
         extends Connection
 {
-    private Configure configure;
+    private RuntimeConfigure configure;
     private Response response;
     private ZkClient client;
 
-    public ZookeeperConnection(Configure configure, Response response)
+    public ZookeeperConnection(RuntimeConfigure configure, Response response)
     {
         super(configure, response);
     }

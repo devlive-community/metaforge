@@ -70,6 +70,8 @@ function toggle(): void {
             type="checkbox"
             class="sr-only"
             :checked="checked"
+            :indeterminate="indeterminate"
+            :aria-checked="indeterminate ? 'mixed' : checked"
             :disabled="disabled"
             @change="toggle"
         >

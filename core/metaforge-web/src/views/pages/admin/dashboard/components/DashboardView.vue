@@ -25,7 +25,7 @@
           <template #extra>
             <MfTooltip v-if="item.description" :content="item.description">
               <MfButton variant="ghost" size="sm" class="rounded-full! text-danger!">
-                <DeleteOutlined :style="{ fontSize: '15px' }"/>
+                <Trash2 :size="15" />
               </MfButton>
             </MfTooltip>
           </template>
@@ -54,7 +54,7 @@
 <script setup lang="ts">
 import { GridItem, GridLayout } from 'vue3-grid-layout-next'
 import VisualView from '@/views/components/visual/VisualView.vue'
-import { DeleteOutlined } from '@ant-design/icons-vue'
+import { Trash2 } from '@lucide/vue'
 
 defineOptions({ name: 'DashboardView' })
 
