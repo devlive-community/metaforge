@@ -16,6 +16,8 @@ import java.util.Set;
 public interface DataSetService
         extends BaseService<DataSetEntity>
 {
+    CommonResponse<Response> preview(String code);
+
     CommonResponse<DataSetEntity> rebuild(String code);
 
     CommonResponse<List<DataSetColumnEntity>> getColumnsByCode(String code);

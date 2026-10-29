@@ -1,5 +1,6 @@
 package org.devlive.metaforge.server.controller;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.body.UserQuestionBody;
 import org.devlive.metaforge.service.entity.MessageEntity;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController()
 @RequestMapping(value = "/api/v1/message")
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Collaborators are Spring-managed singletons")
 public class MessageController
         extends BaseController<MessageEntity>
 {

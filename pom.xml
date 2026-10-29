@@ -37,7 +37,6 @@
         <module>plugin/metaforge-plugin-zookeeper</module>
         <module>plugin/metaforge-plugin-kafka</module>
         <module>plugin/metaforge-plugin-redis</module>
-        <module>plugin/metaforge-plugin-redis-jdbc</module>
         <module>plugin/metaforge-plugin-h2</module>
         <module>plugin/metaforge-plugin-h2-tcp</module>
         <module>plugin/metaforge-plugin-hdfs</module>
@@ -294,7 +293,7 @@
             </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-data-jpa</artifactId>
+                <artifactId>spring-boot-starter-data-jdbc</artifactId>
                 <version>${springboot.version}</version>
             </dependency>
             <dependency>

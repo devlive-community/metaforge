@@ -7,40 +7,33 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import org.devlive.metaforge.service.persistence.Reference;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Data
 @SuperBuilder
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@EntityListeners(value = AuditingEntityListener.class)
-@Table(name = "metaforge_chat")
+@Table("metaforge_chat")
 @SuppressFBWarnings(value = {"EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC", "EI_EXPOSE_REP2", "EI_EXPOSE_REP"},
         justification = "I prefer to suppress these FindBugs warnings")
 public class ChatEntity
         extends BaseEntity
 {
-    @Column(name = "avatar")
+    @Column("avatar")
     private String avatar;
 
-    @Column(name = "description")
+    @Column("description")
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinTable(name = "metaforge_chat_user_relation",
-            joinColumns = @JoinColumn(name = "chat_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+    @Column("user_id")
+    private Long userId;
+
+    @Transient
+    @Reference("userId")
     @JsonIgnoreProperties(value = {"roles", "thirdConfigure", "sources"})
     private UserEntity user;
 }

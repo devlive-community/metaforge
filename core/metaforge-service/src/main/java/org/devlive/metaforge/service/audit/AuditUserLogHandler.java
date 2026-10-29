@@ -26,7 +26,7 @@ import java.sql.Timestamp;
 @Aspect
 @Component
 @Slf4j
-@SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE"},
+@SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", "EI_EXPOSE_REP2"},
         justification = "I prefer to suppress these FindBugs warnings")
 public class AuditUserLogHandler
 {

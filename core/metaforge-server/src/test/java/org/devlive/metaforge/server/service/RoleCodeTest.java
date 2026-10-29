@@ -35,13 +35,13 @@ public class RoleCodeTest
 {
     private final RoleRepository repository = mock(RoleRepository.class);
     private final RoleCodeConstraint constraint = mock(RoleCodeConstraint.class);
-    private final RoleServiceImpl service = new RoleServiceImpl(repository, null, constraint);
+    private final RoleServiceImpl service = new RoleServiceImpl(repository, null, constraint, null);
 
     @Test
     public void customCodeIsTrimmedAndSavedAsANewRole()
             throws Exception
     {
-        when(repository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         CommonResponse<RoleEntity> response = service.createRole(role(null, " CUSTOM_READ "));
         assertTrue(response.getStatus());
         assertEquals("CUSTOM_READ", response.getData().getCode());
@@ -52,7 +52,7 @@ public class RoleCodeTest
     @Test
     public void blankCodeStillGeneratesAnIdentifier()
     {
-        when(repository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         CommonResponse<RoleEntity> response = service.createRole(role(null, "   "));
         assertTrue(response.getStatus());
         assertTrue(response.getData().getCode().matches("[a-f0-9]{32}"));
@@ -66,7 +66,7 @@ public class RoleCodeTest
         assertEquals(ServiceState.USER_ROLE_ID_MISMATCH.getCode(), service.createRole(role(1L, "EXISTING")).getCode());
         when(repository.existsByCode("TAKEN")).thenReturn(true);
         assertEquals(ServiceState.USER_ROLE_CODE_EXISTS.getCode(), service.createRole(role(null, "TAKEN")).getCode());
-        verify(repository, never()).saveAndFlush(any());
+        verify(repository, never()).save(any());
         verifyNoInteractions(constraint);
     }
 
@@ -85,7 +85,7 @@ public class RoleCodeTest
     public void databaseUniquenessRaceReturnsADuplicateResponse()
     {
         when(repository.existsByCode("RACE")).thenReturn(false, true);
-        when(repository.saveAndFlush(any())).thenThrow(new DataIntegrityViolationException("duplicate code"));
+        when(repository.save(any())).thenThrow(new DataIntegrityViolationException("duplicate code"));
         assertEquals(ServiceState.USER_ROLE_CODE_EXISTS.getCode(), service.createRole(role(null, "RACE")).getCode());
     }
 
@@ -97,7 +97,7 @@ public class RoleCodeTest
         assertEquals(ServiceState.USER_ROLE_CODE_IMMUTABLE.getCode(), service.updateRole("ORIGINAL", role(1L, "OTHER")).getCode());
         assertEquals(ServiceState.USER_ROLE_ID_MISMATCH.getCode(), service.updateRole("ORIGINAL", role(2L, "ORIGINAL")).getCode());
         assertEquals("ORIGINAL", existing.getCode());
-        verify(repository, never()).saveAndFlush(any());
+        verify(repository, never()).save(any());
     }
 
     @Test
@@ -109,7 +109,7 @@ public class RoleCodeTest
         Set<MenuEntity> menus = Set.of(menu);
         existing.setMenus(menus);
         when(repository.findByCode("ORIGINAL")).thenReturn(Optional.of(existing));
-        when(repository.saveAndFlush(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         RoleEntity update = role(1L, "ORIGINAL");
         update.setName("Updated role");
         CommonResponse<RoleEntity> response = service.updateRole("ORIGINAL", update);

@@ -1,5 +1,6 @@
 package org.devlive.metaforge.service.repository.jdbc;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.service.common.NavigationPaths;
 import org.devlive.metaforge.service.record.TreeRecord;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -21,6 +22,7 @@ import java.util.stream.Collectors;
 
 /** Explicit menu projections and atomic relationship updates, independent of ORM sessions. */
 @Repository
+@SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "COUNT(*) never returns null")
 public class MenuAccessRepository
 {
     public enum SaveResult
@@ -42,8 +44,8 @@ public class MenuAccessRepository
         if (roleId == null || roleId <= 0 || jdbc.queryForObject("SELECT COUNT(*) FROM metaforge_role WHERE id = :id", Map.of("id", roleId), Long.class) == 0) {
             return Optional.empty();
         }
-        Set<Long> assigned = ids(jdbc.queryForList("SELECT menu_id FROM metaforge_role_menu_relation WHERE role_id = :roleId",
-                Map.of("roleId", roleId.toString()), String.class));
+        Set<Long> assigned = new HashSet<>(jdbc.queryForList("SELECT menu_id FROM metaforge_role_menu WHERE role_id = :roleId",
+                Map.of("roleId", roleId), Long.class));
         return Optional.of(tree(menus(assigned, true)));
     }
 
@@ -56,12 +58,11 @@ public class MenuAccessRepository
         if (users.size() != 1) {
             return Optional.empty();
         }
-        Set<Long> assigned = ids(jdbc.queryForList(
-                "SELECT DISTINCT rm.menu_id FROM metaforge_role_menu_relation rm "
-                        + "JOIN metaforge_role r ON rm.role_id = CONCAT('', r.id) "
-                        + "JOIN metaforge_user_role_relation ur ON ur.role_id = r.id WHERE ur.user_id = :userId",
-                Map.of("userId", users.get(0)), String.class));
-        boolean administrator = jdbc.queryForObject("SELECT COUNT(*) FROM metaforge_user_role_relation ur JOIN metaforge_role r ON r.id = ur.role_id WHERE ur.user_id = :userId AND r.code = 'ADMIN'",
+        Set<Long> assigned = new HashSet<>(jdbc.queryForList(
+                "SELECT DISTINCT rm.menu_id FROM metaforge_role_menu rm "
+                        + "JOIN metaforge_user_role ur ON ur.role_id = rm.role_id WHERE ur.user_id = :userId",
+                Map.of("userId", users.get(0)), Long.class));
+        boolean administrator = jdbc.queryForObject("SELECT COUNT(*) FROM metaforge_user_role ur JOIN metaforge_role r ON r.id = ur.role_id WHERE ur.user_id = :userId AND r.code = 'ADMIN'",
                 Map.of("userId", users.get(0)), Long.class) > 0;
         List<TreeRecord> all = menus(assigned, false).stream()
                 .filter(menu -> administrator || !NavigationPaths.administrative(menu.getUrl())).collect(Collectors.toList());
@@ -96,23 +97,24 @@ public class MenuAccessRepository
             return SaveResult.INVALID_MENUS;
         }
         return transaction.execute(status -> {
-            MapSqlParameterSource parameters = new MapSqlParameterSource("id", roleId).addValue("roleId", roleId.toString());
-            if (jdbc.queryForList("SELECT id FROM metaforge_role WHERE id = :id FOR UPDATE", parameters, Long.class).isEmpty()) {
+            MapSqlParameterSource parameters = new MapSqlParameterSource("roleId", roleId);
+            // A no-op update takes the role row lock on every database (SQL Server has no SELECT ... FOR UPDATE).
+            if (jdbc.update("UPDATE metaforge_role SET update_time = update_time WHERE id = :roleId", parameters) == 0) {
                 return SaveResult.ROLE_NOT_FOUND;
             }
             if (!menuIds.isEmpty()) {
                 parameters.addValue("menuIds", menuIds);
-                List<Long> existing = jdbc.queryForList("SELECT id FROM metaforge_menu WHERE type = 'VIEW' AND id IN (:menuIds) ORDER BY id FOR UPDATE", parameters, Long.class);
+                List<Long> existing = jdbc.queryForList("SELECT id FROM metaforge_menu WHERE type = 'VIEW' AND id IN (:menuIds)", parameters, Long.class);
                 if (existing.size() != menuIds.size()) {
                     return SaveResult.INVALID_MENUS;
                 }
             }
-            jdbc.update("DELETE FROM metaforge_role_menu_relation WHERE role_id = :roleId", parameters);
+            jdbc.update("DELETE FROM metaforge_role_menu WHERE role_id = :roleId", parameters);
             if (!menuIds.isEmpty()) {
                 MapSqlParameterSource[] batch = menuIds.stream()
-                        .map(id -> new MapSqlParameterSource("roleId", roleId.toString()).addValue("menuId", id.toString()))
+                        .map(id -> new MapSqlParameterSource("roleId", roleId).addValue("menuId", id))
                         .toArray(MapSqlParameterSource[]::new);
-                jdbc.batchUpdate("INSERT INTO metaforge_role_menu_relation (role_id, menu_id) VALUES (:roleId, :menuId)", batch);
+                jdbc.batchUpdate("INSERT INTO metaforge_role_menu (role_id, menu_id) VALUES (:roleId, :menuId)", batch);
             }
             return SaveResult.SAVED;
         });
@@ -128,23 +130,6 @@ public class MenuAccessRepository
                 .icon(row.getString("icon")).isNew(row.getBoolean("is_new")).description(row.getString("description"))
                 .parent(row.getLong("parent")).checked(assigned.contains(row.getLong("id"))).selected(assigned.contains(row.getLong("id")))
                 .build()));
-    }
-
-    private Set<Long> ids(List<String> values)
-    {
-        Set<Long> ids = new HashSet<>();
-        for (String value : values) {
-            if (value == null) {
-                continue;
-            }
-            try {
-                ids.add(Long.parseLong(value.trim()));
-            }
-            catch (NumberFormatException ignored) {
-                // Legacy text relationship columns may contain dangling non-numeric values.
-            }
-        }
-        return ids;
     }
 
     private List<TreeRecord> tree(List<TreeRecord> menus)

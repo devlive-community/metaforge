@@ -25,7 +25,9 @@ import org.devlive.metaforge.service.entity.PluginEntity;
 import org.devlive.metaforge.service.entity.ScheduledHistoryEntity;
 import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
+import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.BaseRepository;
+import org.devlive.metaforge.service.repository.PluginAuditRepository;
 import org.devlive.metaforge.service.repository.ScheduledHistoryRepository;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.repository.UserRepository;
@@ -56,6 +58,7 @@ public class SourceServiceImpl
     private final SourceRepository sourceRepository;
     private final UserRepository userRepository;
     private final ScheduledHistoryRepository scheduledHistoryRepository;
+    private final PluginAuditRepository pluginAuditRepository;
     private final PluginManager pluginManager;
     private final Environment environment;
 
@@ -63,6 +66,7 @@ public class SourceServiceImpl
             SourceRepository sourceRepository,
             UserRepository userRepository,
             ScheduledHistoryRepository scheduledHistoryRepository,
+            PluginAuditRepository pluginAuditRepository,
             PluginManager pluginManager,
             Environment environment
     )
@@ -70,6 +74,7 @@ public class SourceServiceImpl
         this.sourceRepository = sourceRepository;
         this.userRepository = userRepository;
         this.scheduledHistoryRepository = scheduledHistoryRepository;
+        this.pluginAuditRepository = pluginAuditRepository;
         this.pluginManager = pluginManager;
         this.environment = environment;
     }
@@ -78,7 +83,7 @@ public class SourceServiceImpl
     public CommonResponse<PageEntity<SourceEntity>> getAll(BaseRepository<SourceEntity, Long> repository, FilterBody filter)
     {
         UserEntity user = UserDetailsService.getUser();
-        Page<SourceEntity> page = this.sourceRepository.findFiltered(filter, user);
+        Page<SourceEntity> page = Persistence.filtered(this.sourceRepository, filter, user);
         // Populate pipeline configuration information
         page.getContent().forEach(item -> {
             pluginManager.getPlugin(item.getType())
@@ -100,7 +105,7 @@ public class SourceServiceImpl
     {
         Optional<SourceEntity> entityOptional = this.sourceRepository.findById(id);
         if (entityOptional.isPresent()) {
-            SourceEntity source = entityOptional.get();
+            SourceEntity source = Persistence.references().load(entityOptional.get());
             if (source.isUsedConfig()) {
                 String configHome = environment.getProperty("metaforge.config.data");
                 if (StringUtils.isEmpty(configHome)) {
@@ -109,6 +114,9 @@ public class SourceServiceImpl
                 String destination = String.join(File.separator, configHome, source.getUser().getUsername(), source.getType(), String.valueOf(source.getId()));
                 FileUtils.deleteDirectory(new File(destination));
             }
+            // owned rows that JPA used to cascade
+            this.pluginAuditRepository.deleteAllBySourceId(id);
+            this.scheduledHistoryRepository.deleteAllBySourceId(id);
             this.sourceRepository.deleteById(id);
         }
         return CommonResponse.success(id);
@@ -151,7 +159,7 @@ public class SourceServiceImpl
     @Override
     public CommonResponse<Long> count()
     {
-        return CommonResponse.success(this.sourceRepository.countByUserOrPublishIsTrue(UserDetailsService.getUser()));
+        return CommonResponse.success(this.sourceRepository.countVisible(UserDetailsService.getUser().getId(), true));
     }
 
     @Override
@@ -299,7 +307,7 @@ public class SourceServiceImpl
         return sourceRepository.findByCode(code)
                 .map(entity -> {
                     Pageable pageable = PageRequestAdapter.of(filter);
-                    return CommonResponse.success(PageEntity.build(this.scheduledHistoryRepository.findAllBySource(entity, pageable)));
+                    return CommonResponse.success(PageEntity.build(this.scheduledHistoryRepository.findAllBySourceId(entity.getId(), pageable)));
                 })
                 .orElse(CommonResponse.failure(String.format("Source [ %s ] not found", code)));
     }

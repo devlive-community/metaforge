@@ -28,17 +28,23 @@ import org.devlive.metaforge.service.entity.convert.AvatarEntity;
 import org.devlive.metaforge.service.entity.itransient.user.UserEditorEntity;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.model.AiModel;
+import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.record.TreeRecord;
 import org.devlive.metaforge.service.repository.BaseRepository;
+import org.devlive.metaforge.service.repository.NotificationRepository;
+import org.devlive.metaforge.service.repository.PluginAuditRepository;
 import org.devlive.metaforge.service.repository.RoleRepository;
+import org.devlive.metaforge.service.repository.ScheduledHistoryRepository;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.repository.UserRepository;
+import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.repository.jdbc.MenuAccessRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.JwtService;
 import org.devlive.metaforge.service.service.UserService;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
+import org.springframework.data.domain.Page;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -52,14 +58,18 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -74,6 +84,10 @@ public class UserServiceImpl
     private final RoleRepository roleRepository;
     private final SourceRepository sourceRepository;
     private final MenuAccessRepository menuRepository;
+    private final LinkRepository linkRepository;
+    private final NotificationRepository notificationRepository;
+    private final PluginAuditRepository pluginAuditRepository;
+    private final ScheduledHistoryRepository scheduledHistoryRepository;
     private final PasswordEncoder encoder;
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
@@ -83,9 +97,13 @@ public class UserServiceImpl
     private final PluginManager pluginManager;
     private final HttpServletRequest request;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request)
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, LinkRepository linkRepository, NotificationRepository notificationRepository, PluginAuditRepository pluginAuditRepository, ScheduledHistoryRepository scheduledHistoryRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request)
     {
         this.userRepository = userRepository;
+        this.linkRepository = linkRepository;
+        this.notificationRepository = notificationRepository;
+        this.pluginAuditRepository = pluginAuditRepository;
+        this.scheduledHistoryRepository = scheduledHistoryRepository;
         this.roleRepository = roleRepository;
         this.sourceRepository = sourceRepository;
         this.menuRepository = menuRepository;
@@ -100,8 +118,11 @@ public class UserServiceImpl
     }
 
     @Override
+    @Transactional
     public CommonResponse<UserEntity> saveOrUpdate(UserEntity configure)
     {
+        // null roles keep the current assignment; a set (even empty) replaces it
+        Set<Long> roleIds = configure.getRoles() == null ? null : resolveRoleIds(configure.getRoles());
         if (ObjectUtils.isEmpty(configure.getId())) {
             Optional<UserEntity> userOptional = this.userRepository.findByUsername(configure.getUsername());
             if (userOptional.isPresent()) {
@@ -110,16 +131,13 @@ public class UserServiceImpl
             configure.setCode(CodeUtils.generateCode(false));
             configure.setUsername(configure.getUsername());
             configure.setPassword(encoder.encode(configure.getPassword()));
-            Set<RoleEntity> userRoles = configure.getRoles();
-            Set<RoleEntity> roles = new HashSet<>();
-            if (ObjectUtils.isEmpty(userRoles)) {
-                Optional<RoleEntity> userRoleOptional = roleRepository.findByName("User");
+            if (ObjectUtils.isEmpty(roleIds)) {
+                Optional<RoleEntity> userRoleOptional = roleRepository.findByCode("USER").or(() -> roleRepository.findByName("User"));
                 if (userRoleOptional.isEmpty()) {
                     return CommonResponse.failure(ServiceState.USER_ROLE_NOT_FOUND);
                 }
-                roles.add(userRoleOptional.get());
+                roleIds = Set.of(userRoleOptional.get().getId());
             }
-            configure.setRoles(roles);
         }
         else {
             userRepository.findById(configure.getId())
@@ -129,9 +147,46 @@ public class UserServiceImpl
                             value.setCode(CodeUtils.generateCode(false));
                         }
                     });
-            configure.setRoles(configure.getRoles());
         }
-        return CommonResponse.success(userRepository.save(configure));
+        UserEntity saved = userRepository.save(configure);
+        if (roleIds != null) {
+            linkRepository.replaceUserRoles(saved.getId(), roleIds);
+        }
+        return CommonResponse.success(saved);
+    }
+
+    private Set<Long> resolveRoleIds(Set<RoleEntity> roles)
+    {
+        Set<Long> ids = new HashSet<>();
+        for (RoleEntity role : roles) {
+            if (role.getId() != null) {
+                ids.add(role.getId());
+            }
+            else if (role.getCode() != null) {
+                roleRepository.findByCode(role.getCode()).ifPresent(found -> ids.add(found.getId()));
+            }
+        }
+        return ids;
+    }
+
+    @Override
+    @Transactional
+    public CommonResponse<String> deleteByCode(BaseRepository<UserEntity, Long> repository, String code)
+    {
+        return userRepository.findByCode(code)
+                .map(user -> {
+                    // owned rows that JPA used to cascade
+                    for (SourceEntity source : sourceRepository.findAllByUserId(user.getId())) {
+                        pluginAuditRepository.deleteAllBySourceId(source.getId());
+                        scheduledHistoryRepository.deleteAllBySourceId(source.getId());
+                        sourceRepository.delete(source);
+                    }
+                    linkRepository.deleteUser(user.getId());
+                    notificationRepository.deleteAllByUserId(user.getId());
+                    userRepository.delete(user);
+                    return CommonResponse.success(code);
+                })
+                .orElseGet(() -> CommonResponse.failure(String.format("Resource [ %s ] not found", code)));
     }
 
     @Override
@@ -164,7 +219,11 @@ public class UserServiceImpl
     public CommonResponse<UserEntity> info(String code)
     {
         return userRepository.findByCode(UserDetailsService.getUser().getCode())
-                .map(CommonResponse::success)
+                .map(user -> {
+                    withRoles(Collections.singletonList(user));
+                    user.setUnreadCount(notificationRepository.countByUserIdAndIsReadFalse(user.getId()));
+                    return CommonResponse.success(user);
+                })
                 .orElseGet(() -> CommonResponse.failure(ServiceState.USER_NOT_FOUND));
     }
 
@@ -291,7 +350,22 @@ public class UserServiceImpl
     @Override
     public CommonResponse<PageEntity<UserEntity>> getAll(FilterBody filter)
     {
-        return CommonResponse.success(PageEntity.build(this.userRepository.findFiltered(filter, UserDetailsService.getUser())));
+        Page<UserEntity> page = Persistence.filtered(this.userRepository, filter, UserDetailsService.getUser());
+        withRoles(page.getContent());
+        return CommonResponse.success(PageEntity.build(page));
+    }
+
+    private void withRoles(List<UserEntity> users)
+    {
+        Map<Long, RoleEntity> roles = new HashMap<>();
+        roleRepository.findAll().forEach(role -> roles.put(role.getId(), role));
+        for (UserEntity user : users) {
+            Set<RoleEntity> assigned = new HashSet<>();
+            for (Long roleId : linkRepository.roleIdsOfUser(user.getId())) {
+                Optional.ofNullable(roles.get(roleId)).ifPresent(assigned::add);
+            }
+            user.setRoles(assigned);
+        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 package org.devlive.metaforge.service.initializer;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
@@ -16,6 +17,7 @@ import java.util.Locale;
 import java.util.Map;
 
 @Component
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Collaborators are Spring-managed singletons")
 public class RoleCodeConstraint
 {
     private final DataSource dataSource;

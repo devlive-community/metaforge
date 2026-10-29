@@ -1,23 +1,41 @@
 <template>
 
-    <DataTable filterable :filter-fields="tableFilters" :title="$t('dataset.common.list')"
-               :columns="headers"
-               :data-source="data"
-               :loading="loading"
-               :page-index="pageIndex"
-               :page-size="pageSize"
-               :total="dataCount"
-               @refresh="handleInitialize"
-               @search="onSearch"
-               @reset="onSearch"
-               @page-change="onPageChange"
-               @size-change="onSizeChange">
+  <DataTable filterable :filter-fields="tableFilters"
+             :title="$t('dataset.common.list')"
+             :columns="headers"
+             :data-source="data"
+             :loading="loading"
+             :page-index="pageIndex"
+             :page-size="pageSize"
+             :total="dataCount"
+             @refresh="handleInitialize"
+             @search="onSearch"
+             @reset="onSearch"
+             @page-change="onPageChange"
+             @size-change="onSizeChange">
+    <template #actions>
+      <MfButton variant="primary" @click="openWizard()">
+        <Plus :size="16"/>
+        {{ $t('dataset.common.create') }}
+      </MfButton>
+    </template>
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'source'">
-          <MfTooltip :content="record?.source.type">
-            <MfAvatar size="sm" :src="'/static/images/plugin/' + record?.source.type.toLowerCase() + '.svg'" :alt="record?.source.type"/>
+        <template v-if="column.key === 'name'">
+          <div class="flex min-w-0 items-center gap-2">
+            <Database :size="16" class="shrink-0 text-primary"/>
+            <router-link :to="`/dataset/detail/${record.code}`" class="min-w-0 truncate font-medium text-content hover:text-primary">{{ record.name }}</router-link>
+          </div>
+        </template>
+        <template v-else-if="column.key === 'source'">
+          <MfTooltip :content="record.source?.name">
+            <span class="flex min-w-0 items-center gap-1.5">
+              <MfAvatar size="xs" :src="`/static/images/plugin/${ String(record.source?.type ?? '').toLowerCase() }.svg`" :alt="record.source?.type"/>
+              <span class="min-w-0 truncate text-content-secondary">{{ record.source?.name }}</span>
+            </span>
           </MfTooltip>
         </template>
+        <template v-else-if="column.key === 'columnCount'"><MfLoadingIcon v-if="fieldCounts[record.code] === undefined" :size="14"/><span v-else>{{ fieldCounts[record.code] ?? '—' }}</span></template>
+        <template v-else-if="column.key === 'totalRows'"><span>{{ record.totalRows ?? '—' }}</span></template>
         <template v-else-if="column.key === 'syncMode'">
           <MfTag v-if="record?.syncMode === 'MANUAL'">{{ $t('dataset.common.syncModeManual') }}</MfTag>
           <MfTag v-else-if="record?.syncMode === 'TIMING'">{{ $t('dataset.common.syncModeTiming') }}</MfTag>
@@ -32,7 +50,9 @@
           </MfPopover>
         </template>
         <template v-else-if="column.key === 'action'">
-          <MfSpace>
+          <MfSpace size="xs">
+            <MfTooltip :content="$t('dataset.common.info')"><router-link :to="`/dataset/detail/${record.code}`"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.info')"><Eye :size="15"/></MfButton></router-link></MfTooltip>
+            <MfTooltip :content="$t('dataset.common.modify')"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.modify')" @click="openWizard(record.code)"><Pencil :size="15"/></MfButton></MfTooltip>
             <MfTooltip :content="$t('dataset.common.adhoc')">
               <router-link v-if="isSuccess(record?.state)" :to="`/dataset/adhoc/${ record?.code }`" target="_blank">
                 <MfButton variant="ghost" size="sm">
@@ -52,7 +72,7 @@
               <template #overlay>
                 <MfMenu>
                   <MfMenuItem key_="info">
-                    <router-link :to="`/dataset/info/${ record?.code }`" target="_blank" class="flex items-center">
+                    <router-link :to="`/dataset/detail/${ record?.code }`" target="_blank" class="flex items-center">
                       <Info :size="15" />
                       <span class="ml-2">{{ $t('dataset.common.info') }}</span>
                     </router-link>
@@ -106,6 +126,7 @@
         </template>
       </template>
     </DataTable>
+  <DatasetWizard v-if="wizardVisible" embedded :dataset-code="editingCode" @close="wizardVisible = false" @submitted="onSubmitted"/>
 
   <DatasetRebuild v-if="rebuildVisible"
                   :is-visible="rebuildVisible"
@@ -139,13 +160,15 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 import { FilterModel, type TableFilters } from '@/model/filter'
 import { useDatasetHeaders } from './DatasetUtils'
 import { DatasetModel } from '@/model/dataset'
 import { useUtil } from '@/utils/common'
 import DataTable from '@/views/components/table/DataTable.vue'
 import { useTableFilters } from '@/views/components/table/tableFilters'
+import DatasetWizard from './DatasetWizard.vue'
+import { useRouter } from 'vue-router'
 import DatasetService from '@/services/dataset'
 import DatasetState from '@/views/pages/admin/dataset/components/DatasetState.vue'
 import DatasetSync from '@/views/pages/admin/dataset/DatasetSync.vue'
@@ -154,10 +177,16 @@ import MarkdownPreview from '@/views/components/markdown/MarkdownView.vue'
 import DatasetRebuild from '@/views/pages/admin/dataset/DatasetRebuild.vue'
 import DatasetClear from '@/views/pages/admin/dataset/DatasetClear.vue'
 import DatasetDelete from '@/views/pages/admin/dataset/DatasetDelete.vue'
-import { ChartColumn, CirclePause, CirclePlay, History, Info, RefreshCw, Settings, SquareX, Trash2, TriangleAlert } from '@lucide/vue'
+import { ChartColumn, CirclePause, CirclePlay, History, Database, Eye, Info, Pencil, Plus, RefreshCw, Settings, SquareX, Trash2, TriangleAlert } from '@lucide/vue'
 
 defineOptions({ name: 'DatasetHome' })
 
+const router = useRouter()
+const wizardVisible = ref(false)
+const editingCode = ref('')
+const fieldCounts = ref<Record<string, number | null>>({})
+const openWizard = (code = '') => { editingCode.value = code; wizardVisible.value = true }
+const onSubmitted = (result: {code:string}) => { wizardVisible.value = false; router.push(result.code ? `/dataset/detail/${encodeURIComponent(result.code)}?submitted=1` : '/dataset') }
 const tableFilters = useTableFilters('dataset')
 const filter: FilterModel = new FilterModel()
 const { headers } = useDatasetHeaders()
@@ -191,6 +220,11 @@ const handleInitialize = () => {
                  if (request !== latestRequest) return
                   if (response.status) {
                     data.value = response.data.content
+                    fieldCounts.value = {}
+                    Promise.allSettled(data.value.map(async (record) => {
+                      try { const fields = await DatasetService.getColumnsByCode(record.code); if (request === latestRequest) { fieldCounts.value[record.code] = fields.status ? fields.data.length : null; record.columnCount = fieldCounts.value[record.code] } }
+                      catch { if (request === latestRequest) fieldCounts.value[record.code] = null }
+                    }))
                     dataCount.value = response.data.total
                     pageSize.value = response.data.size
                     pageIndex.value = response.data.page
@@ -272,5 +306,6 @@ const visibleDelete = (record: DatasetModel | null, opened: boolean) => {
   }
 }
 
+onBeforeUnmount(() => { latestRequest++ })
 onMounted(() => handleInitialize())
 </script>

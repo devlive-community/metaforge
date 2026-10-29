@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import clsx from 'clsx'
+import MfLoadingIcon from './MfLoadingIcon.vue'
 import { messageState } from '../theme/message-state'
 
 const ICONS = {
@@ -34,10 +35,7 @@ const TONES = {
                     :key="item.id"
                     class="pointer-events-auto flex max-w-md items-center gap-2.5 rounded-mf-md border border-line bg-surface px-4 py-2.5 text-sm text-content shadow-mf-lg"
                 >
-                    <svg v-if="item.type === 'loading'" class="size-4 shrink-0 animate-spin text-primary" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
-                    </svg>
+                    <MfLoadingIcon v-if="item.type === 'loading'" :size="16" class="text-primary"/>
                     <svg v-else :class="clsx('size-4 shrink-0', TONES[item.type])" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                         <circle cx="12" cy="12" r="10" />
                         <path :d="ICONS[item.type]" stroke-linecap="round" />

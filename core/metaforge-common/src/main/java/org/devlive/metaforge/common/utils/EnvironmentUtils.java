@@ -2,6 +2,9 @@ package org.devlive.metaforge.common.utils;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.lang.management.ManagementFactory;
+import java.util.List;
+
 @Slf4j
 public class EnvironmentUtils
 {
@@ -31,9 +34,16 @@ public class EnvironmentUtils
      */
     public static boolean isIntelliJ()
     {
-        return CLASSPATH.contains("idea_rt.jar") ||
-                JAVA_AGENT.contains("jetbrains") ||
-                COMMAND_LINE.contains("com.intellij");
+        return isIntelliJEnvironment(CLASSPATH, JAVA_AGENT, COMMAND_LINE,
+                ManagementFactory.getRuntimeMXBean().getInputArguments());
+    }
+
+    static boolean isIntelliJEnvironment(String classpath, String agent, String command, List<String> arguments)
+    {
+        return classpath.contains("idea_rt.jar") ||
+                agent.contains("jetbrains") ||
+                command.contains("com.intellij") ||
+                arguments.stream().anyMatch(argument -> argument.startsWith("-javaagent:") && argument.contains("idea_rt.jar"));
     }
 
     /**

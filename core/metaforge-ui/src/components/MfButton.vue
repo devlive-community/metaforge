@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import clsx from 'clsx'
+import MfLoadingIcon from './MfLoadingIcon.vue'
 import { CONTROL_SIZES, DISABLED, FOCUS_RING, TRANSITION, type MfControlSize } from './common'
 
 type Variant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger' | 'link'
@@ -45,11 +46,10 @@ const classes = computed(() => clsx(
 </script>
 
 <template>
-    <button :type="type" :class="classes" :disabled="disabled || loading">
-        <svg v-if="loading" class="animate-spin -ml-0.5 size-4" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
-        </svg>
-        <slot />
+    <button :type="type" :class="classes" :disabled="disabled || loading" :aria-busy="loading || undefined">
+        <MfLoadingIcon v-if="loading" :size="16" class="-ml-0.5 shrink-0"/>
+        <!-- While loading the shared icon replaces any slot icon: exactly one glyph shows. -->
+        <span v-if="loading" class="inline-flex items-center [&_svg]:hidden"><slot /></span>
+        <slot v-else />
     </button>
 </template>

@@ -36,7 +36,7 @@
         </template>
 
         <template v-else-if="column.key === 'action'">
-          <MfSpace>
+          <MfSpace size="xs">
             <MfTooltip :content="$t('common.error')">
               <MfButton variant="ghost"
                         size="sm"

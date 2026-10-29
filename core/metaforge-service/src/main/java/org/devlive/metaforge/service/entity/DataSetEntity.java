@@ -1,5 +1,6 @@
 package org.devlive.metaforge.service.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -7,112 +8,125 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
+import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.common.enums.DataSetState;
 import org.devlive.metaforge.common.view.EntityView;
-import org.devlive.metaforge.service.converter.ListConverter;
 import org.devlive.metaforge.service.enums.SyncMode;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.devlive.metaforge.service.persistence.Reference;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
-import javax.persistence.Transient;
-
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "metaforge_dataset")
-@EntityListeners(AuditingEntityListener.class)
+@Table("metaforge_dataset")
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"})
 public class DataSetEntity
         extends BaseEntity
 {
-    @Column(name = "description")
+    @Column("description")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String description;
 
-    @Column(name = "query")
+    @Column("query")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String query;
 
-    @Column(name = "sync_mode")
-    @Enumerated(EnumType.STRING)
+    @Column("sync_mode")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private SyncMode syncMode = SyncMode.MANUAL;
 
-    @Column(name = "expression")
+    @Column("expression")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String expression; // only for TIMING
 
-    @Column(name = "state")
-    @Convert(converter = ListConverter.class)
-    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
-    private List<DataSetState> state;
+    // Comma separated DataSetState names; exposed as a list through getState/setState.
+    @Column("state")
+    @JsonIgnore
+    private String stateValue;
 
-    @Column(name = "message")
+    @Column("message")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String message;
 
-    @Column(name = "table_name")
+    @Column("table_name")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String tableName;
 
-    @Column(name = "scheduler")
+    @Column("scheduler")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String scheduler;
 
-    @Column(name = "executor")
+    @Column("executor")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String executor;
 
-    @Column(name = "total_rows")
+    @Column("total_rows")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
-    private String totalRows;
+    private Long totalRows;
 
-    @Column(name = "total_size")
+    @Column("total_size")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String totalSize;
 
-    @Column(name = "life_cycle")
+    @Column("life_cycle")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
-    private String lifeCycle;
+    private Long lifeCycle;
 
-    @Column(name = "life_cycle_column")
+    @Column("life_cycle_column")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String lifeCycleColumn;
 
-    @Column(name = "life_cycle_type")
+    @Column("life_cycle_type")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String lifeCycleType;
 
-    @ManyToOne
-    @JoinTable(name = "metaforge_dataset_source_relation",
-            joinColumns = @JoinColumn(name = "dataset_id"),
-            inverseJoinColumns = @JoinColumn(name = "source_id"))
+    @Column("source_id")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Long sourceId;
+
+    @Transient
+    @Reference("sourceId")
     @JsonIgnoreProperties(value = {"user"})
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private SourceEntity source;
 
-    @ManyToOne
-    @JoinTable(name = "metaforge_dataset_user_relation",
-            joinColumns = @JoinColumn(name = "dataset_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
-    @JsonIgnoreProperties(value = {"roles", "thirdConfigure", "avatarConfigure"})
+    @Column("user_id")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Long userId;
+
+    @Transient
+    @Reference("userId")
+    @JsonIgnoreProperties(value = {"roles", "thirdConfigure", "avatarConfigure", "sources"})
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private UserEntity user;
 
     @Transient
     private Set<DataSetColumnEntity> columns;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    public List<DataSetState> getState()
+    {
+        List<DataSetState> states = new ArrayList<>();
+        if (StringUtils.isNotEmpty(stateValue)) {
+            for (String value : stateValue.split(",")) {
+                states.add(DataSetState.valueOf(value.trim()));
+            }
+        }
+        return states;
+    }
+
+    public void setState(List<DataSetState> state)
+    {
+        this.stateValue = state == null || state.isEmpty() ? null
+                : state.stream().filter(Objects::nonNull).map(Enum::name).collect(Collectors.joining(","));
+    }
 }

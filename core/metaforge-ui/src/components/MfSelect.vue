@@ -1,8 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import clsx from 'clsx'
+import MfLoadingIcon from './MfLoadingIcon.vue'
+import MfEmpty from './MfEmpty.vue'
+import MfSpinner from './MfSpinner.vue'
 import { CONTROL_SIZES, TRANSITION, type MfControlSize, type MfSelectOption } from './common'
 import { useDismissableLayer } from '../composables/useDismissableLayer'
+import { useOverlayPosition } from '../composables/useOverlayPosition'
 
 const props = withDefaults(defineProps<{
     modelValue?: string | number | (string | number)[]
@@ -16,6 +20,9 @@ const props = withDefaults(defineProps<{
     disabled?: boolean
     invalid?: boolean
     loading?: boolean
+    emptyText?: string
+    noMatchText?: string
+    loadingText?: string
     /** Typing filters options by label (single select behaves like a combobox). */
     searchable?: boolean
     /** Override the default label-includes filter. */
@@ -30,6 +37,9 @@ const props = withDefaults(defineProps<{
     disabled: false,
     invalid: false,
     loading: false,
+    emptyText: 'No data',
+    noMatchText: 'No match',
+    loadingText: 'Loading…',
     searchable: false,
 })
 
@@ -41,8 +51,19 @@ const emit = defineEmits<{
 
 const open = ref(false)
 const root = ref<HTMLElement>()
+const overlay = ref<HTMLElement>()
 const query = ref('')
 const searchInput = ref<HTMLInputElement>()
+
+/** The popup teleports to body with fixed positioning, so scroll and
+ *  overflow containers cannot clip it; the composable flips it above
+ *  the trigger when the viewport has no room below. */
+const popupStyle = useOverlayPosition({ root, open, placement: () => 'bottomLeft', overlay, gap: 6 })
+const triggerWidth = ref(0)
+
+watch(open, value => {
+    if (value) triggerWidth.value = root.value?.offsetWidth ?? 0
+})
 
 function toggle(): void {
     if (!props.disabled) {
@@ -58,7 +79,7 @@ function close(): void {
     query.value = ''
 }
 
-useDismissableLayer(root, open, close)
+useDismissableLayer(root, open, close, [overlay])
 
 const isMultiple = computed(() => props.multiple || props.tags)
 
@@ -199,10 +220,7 @@ watch(open, value => {
             >
                 <svg class="size-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
             </span>
-            <svg v-if="loading" class="size-3.5 shrink-0 animate-spin text-primary" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
-            </svg>
+            <MfLoadingIcon v-if="loading" :size="14" class="text-primary"/>
             <svg
                 v-else
                 class="size-3.5 shrink-0 text-content-tertiary transition-transform duration-(--mf-duration-base) ease-(--mf-easing)"
@@ -213,16 +231,21 @@ watch(open, value => {
             </svg>
         </div>
 
+        <Teleport to="body">
+        <!-- Fade only: a scale transition changes the measured box during the
+             enter animation and the fixed position would overlap the trigger. -->
         <Transition
-            enter-active-class="transition duration-(--mf-duration-fast) ease-(--mf-easing)"
-            enter-from-class="opacity-0 scale-95"
-            leave-active-class="transition duration-(--mf-duration-fast) ease-(--mf-easing)"
-            leave-to-class="opacity-0 scale-95"
+            enter-active-class="transition-opacity duration-(--mf-duration-fast) ease-(--mf-easing)"
+            enter-from-class="opacity-0"
+            leave-active-class="transition-opacity duration-(--mf-duration-fast) ease-(--mf-easing)"
+            leave-to-class="opacity-0"
         >
             <ul
                 v-if="open"
+                ref="overlay"
                 role="listbox"
-                class="absolute left-0 top-full z-40 mt-1.5 flex max-h-64 w-full min-w-32 origin-top flex-col gap-1 overflow-y-auto rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg"
+                class="fixed z-50 flex max-h-64 flex-col gap-1 overflow-y-auto rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg"
+                :style="[{ ...popupStyle, maxHeight: '16rem' }, { width: triggerWidth + 'px' }]"
             >
                 <template v-for="[group, groupOptions] in grouped" :key="group || 'default'">
                     <li v-if="group" class="px-2.5 pt-1.5 pb-1 text-xs font-semibold text-content-tertiary">
@@ -256,10 +279,14 @@ watch(open, value => {
                 >
                     Create "{{ query.trim() }}"
                 </li>
-                <li v-if="loading && options.length === 0" class="px-2.5 py-2 text-sm text-content-tertiary">Loading…</li>
-                <li v-else-if="options.length === 0" class="px-2.5 py-2 text-sm text-content-tertiary">No data</li>
-                <li v-else-if="filteredOptions.length === 0 && !(tags && query.trim())" class="px-2.5 py-2 text-sm text-content-tertiary">No match</li>
+                <li v-if="loading && filteredOptions.length === 0" class="flex justify-center px-2.5 py-4" role="presentation">
+                    <MfSpinner size="sm" :label="loadingText"/>
+                </li>
+                <li v-else-if="!loading && filteredOptions.length === 0 && !(tags && query.trim())" role="presentation">
+                    <MfEmpty size="sm" :variant="query.trim() ? 'search' : 'data'" :title="query.trim() ? noMatchText : emptyText"/>
+                </li>
             </ul>
         </Transition>
+        </Teleport>
     </div>
 </template>

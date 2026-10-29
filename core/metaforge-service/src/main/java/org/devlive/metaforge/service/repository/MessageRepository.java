@@ -1,20 +1,21 @@
 package org.devlive.metaforge.service.repository;
 
-import org.devlive.metaforge.service.entity.ChatEntity;
 import org.devlive.metaforge.service.entity.MessageEntity;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jdbc.repository.query.Modifying;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
 public interface MessageRepository
         extends BaseRepository<MessageEntity, Long>
 {
-    List<MessageEntity> findAllByChatOrderByCreateTimeAsc(ChatEntity chat);
+    List<MessageEntity> findAllByChatIdOrderByCreateTimeAsc(Long chatId);
 
-    @Query(value = "SELECT m " +
-            "FROM MessageEntity AS m " +
-            "WHERE m.chat = ?1 AND m.id < ?2 " +
-            "ORDER BY m.createTime DESC")
-    List<MessageEntity> findTopByChatOrderByCreateTimeDesc(ChatEntity chat, long id, Pageable pageable);
+    List<MessageEntity> findAllByChatIdAndIdLessThanOrderByCreateTimeDesc(Long chatId, Long id, Pageable pageable);
+
+    @Modifying
+    @Query("DELETE FROM metaforge_message WHERE chat_id = :chatId")
+    void deleteAllByChatId(@Param("chatId") Long chatId);
 }

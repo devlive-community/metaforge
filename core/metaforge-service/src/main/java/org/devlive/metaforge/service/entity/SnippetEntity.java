@@ -8,37 +8,35 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import org.devlive.metaforge.common.view.EntityView;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import org.devlive.metaforge.service.persistence.Reference;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Data
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@Table(name = "metaforge_snippet")
+@Table("metaforge_snippet")
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"},
         justification = "I prefer to suppress these FindBugs warnings")
-@EntityListeners(AuditingEntityListener.class)
 public class SnippetEntity
         extends BaseEntity
 {
-    @Column(name = "description")
+    @Column("description")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String description;
 
-    @Column(name = "context")
+    @Column("context")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String context;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @Column("user_id")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Long userId;
+
+    @Transient
+    @Reference("userId")
     @JsonIncludeProperties(value = {"id", "username", "avatarConfigure"})
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private UserEntity user;

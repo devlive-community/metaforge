@@ -32,5 +32,7 @@ export enum StructureEnum
     CATALOG,
     DATABASE,
     TABLE,
-    COLUMN
+    COLUMN,
+    /** Grouping node (e.g. the tables folder under a database), never sent to metadata APIs. */
+    GROUP
 }

@@ -1,21 +1,23 @@
 package org.devlive.metaforge.service.service.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.common.response.CommonResponse;
-import org.devlive.metaforge.service.adapter.FilterSpecification;
-import org.devlive.metaforge.service.adapter.PageRequestAdapter;
 import org.devlive.metaforge.service.body.FilterBody;
+import org.devlive.metaforge.service.body.OrderBody;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.entity.UserLogEntity;
+import org.devlive.metaforge.service.persistence.Persistence;
+import org.devlive.metaforge.service.persistence.Visibility;
 import org.devlive.metaforge.service.repository.UserLogRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.UserLogService;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+
 @Service
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Collaborators are Spring-managed singletons")
 public class UserLogServiceImpl
         implements UserLogService
 {
@@ -29,12 +31,14 @@ public class UserLogServiceImpl
     @Override
     public CommonResponse<PageEntity<UserLogEntity>> getAllByFilter(FilterBody filter)
     {
-        Pageable pageable = PageRequestAdapter.of(filter);
-        if (pageable.getSort().isUnsorted()) {
-            pageable = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), Sort.by(Sort.Direction.DESC, "createTime"));
+        if (filter.getOrders() == null || filter.getOrders().isEmpty()) {
+            OrderBody newest = new OrderBody();
+            newest.setColumn("createTime");
+            newest.setOrder("desc");
+            filter.setOrders(Collections.singletonList(newest));
         }
         UserEntity user = UserDetailsService.getUser();
-        return CommonResponse.success(PageEntity.build(this.userLogRepository.findAll(
-                FilterSpecification.<UserLogEntity>of(filter).and((root, query, builder) -> builder.equal(root.get("user"), user)), pageable)));
+        return CommonResponse.success(PageEntity.build(Persistence.filterQuery()
+                .page(UserLogEntity.class, filter, Visibility.where("userId", user.getId()))));
     }
 }

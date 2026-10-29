@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  MetaForge metadata schema, applied automatically on boot and by the setup wizard.
+
+  Rules:
+  - A changeset that has been released is immutable; every schema change is a new changeset.
+  - Changeset ids follow <module>-<4 digits>-<slug>.
+  - Column types go through the portable placeholders below, never vendor types.
+  - No foreign key relation tables: one-to-many links are plain id columns,
+    many-to-many links are explicit link tables with a composite primary key.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- SQL Server keeps Unicode only in N-types; the other databases store UTF-8 in plain types. -->
+    <property name="string" value="NVARCHAR" dbms="mssql"/>
+    <property name="string" value="VARCHAR"/>
+    <property name="text" value="NVARCHAR(MAX)" dbms="mssql"/>
+    <property name="text" value="CLOB"/>
+    <property name="flag" value="BOOLEAN"/>
+    <property name="instant" value="DATETIME"/>
+
+    <!-- Upgrades installations created before the changelog existed (MySQL / H2 only). -->
+    <include file="legacy/legacy-upgrade.xml" relativeToChangelogFile="true"/>
+
+    <include file="core/core-0001-baseline.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0002-seed.xml" relativeToChangelogFile="true"/>
+</databaseChangeLog>

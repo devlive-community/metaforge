@@ -1,15 +1,20 @@
 package org.devlive.metaforge.server.controller;
 
+import org.devlive.metaforge.common.enums.FunctionType;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.adhoc.Adhoc;
+import org.devlive.metaforge.service.dataset.DatasetVirtualColumns;
 import org.devlive.metaforge.service.entity.DataSetColumnEntity;
 import org.devlive.metaforge.service.entity.DataSetEntity;
 import org.devlive.metaforge.service.entity.DatasetHistoryEntity;
+import org.devlive.metaforge.service.entity.FunctionEntity;
 import org.devlive.metaforge.service.entity.PageEntity;
+import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.repository.DataSetRepository;
 import org.devlive.metaforge.service.service.DataSetService;
+import org.devlive.metaforge.service.service.FunctionService;
 import org.devlive.metaforge.spi.model.Response;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,7 +25,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController()
 @RequestMapping(value = "/api/v1/dataset")
@@ -30,11 +37,55 @@ public class DataSetController
     private final DataSetRepository repository;
     private final DataSetService service;
 
-    protected DataSetController(DataSetRepository repository, DataSetService service)
+    private final FunctionService functions;
+    private final InitializerConfigure initializer;
+
+    protected DataSetController(DataSetRepository repository, DataSetService service, FunctionService functions, InitializerConfigure initializer)
     {
         super(repository, service);
         this.repository = repository;
         this.service = service;
+        this.functions = functions;
+        this.initializer = initializer;
+    }
+
+    @PostMapping(value = "validateColumns")
+    public CommonResponse<Boolean> validateColumns(@RequestBody List<DataSetColumnEntity> columns)
+    {
+        try {
+            DatasetVirtualColumns.validate(columns);
+            return CommonResponse.success(true);
+        }
+        catch (IllegalArgumentException exception) {
+            return CommonResponse.failure(exception.getMessage());
+        }
+    }
+
+    @GetMapping(value = "columnFunctions")
+    public CommonResponse<Map<String, Object>> columnFunctions()
+    {
+        String engine = initializer.getDataSetConfigure().getType();
+        if (engine == null || engine.isBlank()) {
+            return CommonResponse.failure("Dataset storage engine is not configured");
+        }
+        CommonResponse<PageEntity<FunctionEntity>> response = functions.getAllByPlugin(engine);
+        if (!response.getStatus()) {
+            return CommonResponse.failure(String.valueOf(response.getMessage()));
+        }
+        List<Map<String, String>> available = response.getData().getContent().stream()
+                .filter(function -> function.getType() == FunctionType.FUNCTION && function.getName() != null
+                        && function.getName().matches("[a-zA-Z_][a-zA-Z0-9_]*") && !DatasetVirtualColumns.isAggregateFunction(function.getName()))
+                .map(function -> Map.of("name", function.getName(),
+                        "example", function.getExample() == null ? "" : function.getExample(),
+                        "description", function.getDescription() == null ? "" : function.getDescription()))
+                .collect(Collectors.toList());
+        return CommonResponse.success(Map.of("engine", engine, "functions", available));
+    }
+
+    @GetMapping(value = "preview/{code}")
+    public CommonResponse<Response> preview(@PathVariable String code)
+    {
+        return service.preview(code);
     }
 
     @PutMapping(value = "rebuild/{code}")

@@ -1158,9 +1158,15 @@ public interface PluginService
      */
     default Response queryTable(RuntimeConfigure configure, TableDefinition definition)
     {
-        SelectTable tableDefinition = SelectTable.create(definition.getDatabase(), definition.getName())
-                .limit(definition.getPagination().getSize())
-                .offset((long) (definition.getPagination().getPage() - 1) * definition.getPagination().getSize());
+        SelectTable tableDefinition = SelectTable.create(definition.getDatabase(), definition.getName());
+        // An unpaginated preview generates the full dataset SQL without executing it.
+        if (definition.getPagination() != null) {
+            tableDefinition.limit(definition.getPagination().getSize())
+                    .offset((long) (definition.getPagination().getPage() - 1) * definition.getPagination().getSize());
+        }
+        else if (!definition.isPreview()) {
+            throw new IllegalArgumentException("Pagination is required when querying table data");
+        }
 
         // 添加查询列
         definition.getColumns().forEach(col -> tableDefinition.addColumn(SelectColumn.create(col.getName(), DataType.VARCHAR)));
@@ -1171,6 +1177,9 @@ public interface PluginService
         // 添加筛选
         definition.getFilters().forEach(filter -> tableDefinition.addFilter(Filter.create(filter.getName(), filter.getOperator(), filter.getValue())));
 
+        if (definition.isPreview()) {
+            return this.getResponse(tableDefinition.build(), configure, definition);
+        }
         return this.getResponse(
                 tableDefinition.build(),
                 configure,

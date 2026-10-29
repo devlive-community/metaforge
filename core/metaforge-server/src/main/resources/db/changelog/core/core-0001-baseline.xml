@@ -1,0 +1,504 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Fresh-install schema. Skipped when an installation already holds the metadata tables. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0001-baseline" author="metaforge">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="metaforge_user"/>
+            </not>
+        </preConditions>
+        <createTable tableName="metaforge_user">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_user" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(100)"/>
+            <column name="code" type="${string}(200)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="username" type="${string}(255)"/>
+            <column name="password_hash" type="${string}(255)"/>
+            <column name="chat_configure" type="${text}"/>
+            <column name="is_system" type="${flag}" defaultValueBoolean="false"/>
+            <column name="editor_configure" type="${text}"/>
+            <column name="avatar_configure" type="${text}"/>
+            <column name="notify_configure" type="${text}"/>
+        </createTable>
+        <createTable tableName="metaforge_role">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_role" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="description" type="${string}(1000)"/>
+        </createTable>
+        <addUniqueConstraint tableName="metaforge_role" columnNames="code" constraintName="uk_metaforge_role_code"/>
+        <createTable tableName="metaforge_menu">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_menu" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="${string}(255)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="description" type="${string}(255)"/>
+            <column name="url" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="group_name" type="${string}(255)"/>
+            <column name="sorted" type="INT" defaultValueNumeric="0"/>
+            <column name="type" type="${string}(10)" defaultValue="VIEW"/>
+            <column name="parent" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="i18n_key" type="${string}(255)"/>
+            <column name="icon" type="${string}(255)"/>
+            <column name="redirect" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="is_new" type="${flag}" defaultValueBoolean="false"/>
+        </createTable>
+        <createTable tableName="metaforge_configure">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_configure" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(128)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="${string}(64)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="category" type="${string}(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="configure" type="${text}"/>
+            <column name="description" type="${string}(512)"/>
+        </createTable>
+        <addUniqueConstraint tableName="metaforge_configure" columnNames="category, name" constraintName="uk_configure_category_name"/>
+        <createTable tableName="metaforge_chat">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_chat" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="avatar" type="${string}(255)"/>
+            <column name="description" type="${string}(255)"/>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_chat" indexName="idx_chat_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_message">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_message" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="content" type="${text}"/>
+            <column name="model" type="${string}(255)"/>
+            <column name="type" type="${string}(100)"/>
+            <column name="prompt_tokens" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="completion_tokens" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="total_tokens" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="chat_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_message" indexName="idx_message_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="metaforge_message" indexName="idx_message_chat_id">
+            <column name="chat_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_dashboard">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_dashboard" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="configure" type="${text}"/>
+            <column name="description" type="${string}(1000)"/>
+            <column name="avatar" type="${text}"/>
+            <column name="version" type="${string}(100)" defaultValue="2.0"/>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_dashboard" indexName="idx_dashboard_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_report">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_report" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="configure" type="${text}"/>
+            <column name="type" type="${string}(255)"/>
+            <column name="realtime" type="${flag}" defaultValueBoolean="false"/>
+            <column name="query" type="${text}"/>
+            <column name="description" type="${string}(2000)"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="source_id" type="BIGINT"/>
+            <column name="dataset_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_report" indexName="idx_report_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="metaforge_report" indexName="idx_report_source_id">
+            <column name="source_id"/>
+        </createIndex>
+        <createIndex tableName="metaforge_report" indexName="idx_report_dataset_id">
+            <column name="dataset_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_dataset">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_dataset" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="description" type="${text}"/>
+            <column name="query" type="${text}"/>
+            <column name="sync_mode" type="${string}(100)"/>
+            <column name="expression" type="${string}(100)"/>
+            <column name="state" type="${string}(100)"/>
+            <column name="message" type="${text}"/>
+            <column name="table_name" type="${string}(255)"/>
+            <column name="scheduler" type="${string}(100)" defaultValue="LocalScheduler"/>
+            <column name="executor" type="${string}(100)" defaultValue="Local"/>
+            <column name="total_rows" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="total_size" type="${string}(100)"/>
+            <column name="life_cycle" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="life_cycle_column" type="${string}(100)"/>
+            <column name="life_cycle_type" type="${string}(100)"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="source_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_dataset" indexName="idx_dataset_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="metaforge_dataset" indexName="idx_dataset_source_id">
+            <column name="source_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_dataset_column">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_dataset_column" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="description" type="${text}"/>
+            <column name="type" type="${string}(100)"/>
+            <column name="column_comment" type="${string}(255)"/>
+            <column name="original" type="${string}(255)"/>
+            <column name="default_value" type="${string}(255)"/>
+            <column name="expression" type="${text}"/>
+            <column name="position" type="INT"/>
+            <column name="is_nullable" type="${flag}" defaultValueBoolean="false"/>
+            <column name="length" type="INT"/>
+            <column name="dataset_id" type="BIGINT"/>
+            <column name="is_order_by_key" type="${flag}" defaultValueBoolean="false"/>
+            <column name="column_mode" type="${string}(100)" defaultValue="DIMENSION"/>
+            <column name="is_partition_key" type="${flag}" defaultValueBoolean="false"/>
+            <column name="alias_name" type="${string}(200)"/>
+            <column name="is_primary_key" type="${flag}" defaultValueBoolean="false"/>
+            <column name="is_sampling_key" type="${flag}" defaultValueBoolean="false"/>
+            <column name="is_custom_column" type="${flag}" defaultValueBoolean="false"/>
+            <column name="is_virtual_column" type="${flag}" defaultValueBoolean="false"/>
+        </createTable>
+        <createIndex tableName="metaforge_dataset_column" indexName="idx_dscol_dataset_id">
+            <column name="dataset_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_dataset_history">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_dataset_history" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="query" type="${text}"/>
+            <column name="message" type="${text}"/>
+            <column name="elapsed" type="BIGINT"/>
+            <column name="count" type="INT"/>
+            <column name="total_count" type="BIGINT"/>
+            <column name="processed_count" type="BIGINT"/>
+            <column name="progress" type="DECIMAL(5,2)"/>
+            <column name="task_name" type="${string}(64)"/>
+            <column name="work_home" type="${string}(512)"/>
+            <column name="executor_configure" type="${text}"/>
+            <column name="query_mode" type="${string}(255)"/>
+            <column name="state" type="${string}(255)"/>
+            <column name="dataset_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_dataset_history" indexName="idx_dshist_dataset_id">
+            <column name="dataset_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_function">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_function" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="content" type="${string}(255)"/>
+            <column name="description" type="${text}"/>
+            <column name="plugin" type="${string}(255)"/>
+            <column name="example" type="${text}"/>
+            <column name="type" type="${string}(20)" defaultValue="KEYWORD"/>
+        </createTable>
+        <createTable tableName="metaforge_notification">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_notification" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="content" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="${string}(255)"/>
+            <column name="is_read" type="${flag}" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+            <column name="entity_type" type="${string}(255)"/>
+            <column name="entity_code" type="${string}(255)"/>
+            <column name="entity_name" type="${string}(255)"/>
+            <column name="entity_exists" type="${flag}" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="metaforge_notification" indexName="idx_notify_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_scheduled">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_scheduled" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="description" type="${text}"/>
+            <column name="expression" type="${string}(100)"/>
+            <column name="is_system" type="${flag}" defaultValueBoolean="true"/>
+            <column name="type" type="${string}(255)"/>
+        </createTable>
+        <createTable tableName="metaforge_scheduled_history">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_scheduled_history" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="info" type="${text}"/>
+            <column name="state" type="${string}(100)"/>
+            <column name="message" type="${text}"/>
+            <column name="scheduled_id" type="BIGINT"/>
+            <column name="source_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_scheduled_history" indexName="idx_schhist_scheduled_id">
+            <column name="scheduled_id"/>
+        </createIndex>
+        <createIndex tableName="metaforge_scheduled_history" indexName="idx_schhist_source_id">
+            <column name="source_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_snippet">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_snippet" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="description" type="${string}(255)"/>
+            <column name="context" type="${text}"/>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_snippet" indexName="idx_snippet_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_source">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_source" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="description" type="${string}(255)"/>
+            <column name="source_type" type="${string}(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="protocol" type="${string}(255)"/>
+            <column name="host" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="port" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="username" type="${string}(255)"/>
+            <column name="connection_password" type="${string}(255)"/>
+            <column name="catalog_name" type="${string}(255)"/>
+            <column name="database_name" type="${string}(255)"/>
+            <column name="use_ssl" type="${flag}" defaultValueBoolean="false"/>
+            <column name="is_public" type="${flag}" defaultValueBoolean="false"/>
+            <column name="configure" type="${text}"/>
+            <column name="used_config" type="${flag}" defaultValueBoolean="false"/>
+            <column name="version" type="${string}(255)"/>
+            <column name="available" type="${flag}" defaultValueBoolean="true"/>
+            <column name="message" type="${text}"/>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_source" indexName="idx_source_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_source_query">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_source_query" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="state" type="${string}(255)"/>
+            <column name="content" type="${text}"/>
+            <column name="message" type="${text}"/>
+            <column name="elapsed" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="count" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="query_mode" type="${string}(100)" defaultValue="ADHOC"/>
+            <column name="home" type="${string}(500)"/>
+            <column name="format" type="${string}(100)" defaultValue="Json"/>
+            <column name="source_id" type="BIGINT"/>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_source_query" indexName="idx_srcquery_source_id">
+            <column name="source_id"/>
+        </createIndex>
+        <createIndex tableName="metaforge_source_query" indexName="idx_srcquery_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_user_log">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_user_log" nullable="false"/>
+            </column>
+            <column name="device" type="${string}(255)"/>
+            <column name="client" type="${string}(255)"/>
+            <column name="ip" type="${string}(100)"/>
+            <column name="message" type="${string}(255)"/>
+            <column name="state" type="${string}(20)"/>
+            <column name="ua" type="${string}(255)"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="create_time" type="${instant}"/>
+        </createTable>
+        <createIndex tableName="metaforge_user_log" indexName="idx_userlog_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_workflow">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_workflow" nullable="false"/>
+            </column>
+            <column name="name" type="${string}(255)"/>
+            <column name="code" type="${string}(100)"/>
+            <column name="active" type="${flag}" defaultValueBoolean="true"/>
+            <column name="create_time" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+            <column name="state" type="${string}(255)"/>
+            <column name="message" type="${string}(255)"/>
+            <column name="work" type="${string}(255)"/>
+            <column name="elapsed" type="BIGINT"/>
+            <column name="executor" type="${string}(255)"/>
+            <column name="configure" type="${text}"/>
+            <column name="from_source_id" type="BIGINT"/>
+            <column name="to_source_id" type="BIGINT"/>
+            <column name="user_id" type="BIGINT"/>
+        </createTable>
+        <createIndex tableName="metaforge_workflow" indexName="idx_workflow_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="metaforge_workflow" indexName="idx_workflow_from_source_id">
+            <column name="from_source_id"/>
+        </createIndex>
+        <createIndex tableName="metaforge_workflow" indexName="idx_workflow_to_source_id">
+            <column name="to_source_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_user_role">
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="metaforge_user_role" columnNames="user_id, role_id" constraintName="pk_user_role"/>
+        <createIndex tableName="metaforge_user_role" indexName="idx_user_role_role_id">
+            <column name="role_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_role_menu">
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="menu_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="metaforge_role_menu" columnNames="role_id, menu_id" constraintName="pk_role_menu"/>
+        <createIndex tableName="metaforge_role_menu" indexName="idx_role_menu_menu_id">
+            <column name="menu_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_dashboard_report">
+            <column name="dashboard_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="report_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="metaforge_dashboard_report" columnNames="dashboard_id, report_id" constraintName="pk_dashboard_report"/>
+        <createIndex tableName="metaforge_dashboard_report" indexName="idx_dashboard_report_report_id">
+            <column name="report_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

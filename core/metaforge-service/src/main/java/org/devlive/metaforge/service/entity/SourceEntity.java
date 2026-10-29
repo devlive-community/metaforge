@@ -1,6 +1,5 @@
 package org.devlive.metaforge.service.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonView;
@@ -16,19 +15,12 @@ import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.configure.PluginConfigure;
 import org.devlive.metaforge.plugin.configure.PluginConfigureExecutor;
+import org.devlive.metaforge.service.persistence.Reference;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
-import javax.persistence.Transient;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 
@@ -40,84 +32,78 @@ import java.util.Optional;
 @Setter
 @NoArgsConstructor
 @SuperBuilder
-@Entity
-@Table(name = "metaforge_source")
-@EntityListeners(AuditingEntityListener.class)
+@Table("metaforge_source")
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC", "EQ_DOESNT_OVERRIDE_EQUALS"},
         justification = "I prefer to suppress these FindBugs warnings")
 public class SourceEntity
         extends BaseEntity
 {
-    @Column(name = "description")
+    @Column("description")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String description;
 
-    @Column(name = "_type", nullable = false)
+    @Column("source_type")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String type;
 
-    @Column(name = "protocol", unique = true, nullable = false, columnDefinition = "varchar default 'HTTP'")
+    @Column("protocol")
     @NotNull(message = "The passed protocol cannot by empty")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String protocol;
 
-    @Column(name = "host", unique = true, nullable = false)
+    @Column("host")
     @NotEmpty(message = "The passed host cannot by empty")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String host;
 
-    @Column(name = "port", unique = true, nullable = false)
+    @Column("port")
     @NotNull(message = "The passed port cannot by empty")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Integer port = 0;
 
-    @Column(name = "username")
+    @Column("username")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String username;
 
-    @Column(name = "password")
+    @Column("connection_password")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String password;
 
-    @Column(name = "_catalog")
+    @Column("catalog_name")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String catalog;
 
-    @Column(name = "_database")
+    @Column("database_name")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String database;
 
     // Add from 1.1.0.20221115
-    @Column(name = "_ssl", columnDefinition = "boolean default false")
+    @Column("use_ssl")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Boolean ssl;
 
-    @OneToMany(mappedBy = "source", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    @JsonIgnore
-    private List<PluginAuditEntity> pluginAudits;
-
     // Add from 1.1.0.20221115
-    @Column(name = "public", columnDefinition = "boolean default false")
+    @Column("is_public")
     @JsonProperty(value = "public")
     private Boolean publish; // Public use or not
 
-    @Column(name = "configure")
+    @Column("configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String originalConfigure;
 
-    @Column(name = "used_config")
+    @Column("used_config")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private boolean usedConfig;
 
-    @Column(name = "version")
+    @Column("version")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String version;
 
-    @Column(name = "available")
+    @Column("available")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Boolean available;
 
-    @Column(name = "message")
+    @Column("message")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String message;
 
@@ -137,18 +123,15 @@ public class SourceEntity
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String home;
 
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @Column("user_id")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Long userId;
+
+    @Transient
+    @Reference("userId")
     @JsonIncludeProperties(value = {"id", "username", "code"})
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private UserEntity user;
-
-    @OneToMany(mappedBy = "source", cascade = CascadeType.REMOVE)
-    @JsonIgnore
-    private List<ScheduledHistoryEntity> historys;
-
-    @Transient
-    private String name;
 
     @Transient
     @JsonProperty(value = "configure")

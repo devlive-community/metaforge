@@ -10,19 +10,11 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.devlive.metaforge.common.view.EntityView;
-import org.devlive.metaforge.service.converter.AvatarConverter;
 import org.devlive.metaforge.service.entity.convert.AvatarEntity;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import org.devlive.metaforge.service.persistence.Reference;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.util.Set;
 
@@ -32,42 +24,38 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "metaforge_dashboard")
-@EntityListeners(AuditingEntityListener.class)
+@Table("metaforge_dashboard")
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"})
 public class DashboardEntity
         extends BaseEntity
 {
-    @Column(name = "configure")
+    @Column("configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String configure;
 
-    @Column(name = "description")
+    @Column("description")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String description;
 
-    @Column(name = "avatar")
-    @Convert(converter = AvatarConverter.class)
+    @Column("avatar")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private AvatarEntity avatar;
 
-    @Column(name = "version")
+    @Column("version")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String version;
 
-    @ManyToOne
-    @JoinTable(name = "metaforge_dashboard_user_relation",
-            joinColumns = @JoinColumn(name = "dashboard_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @Column("user_id")
+    @JsonView(value = {EntityView.AdminView.class})
+    private Long userId;
+
+    @Transient
+    @Reference("userId")
     @JsonIncludeProperties(value = {"name", "username", "code"})
     @JsonView(value = {EntityView.AdminView.class})
     private UserEntity user;
 
-    @ManyToMany
-    @JoinTable(name = "metaforge_dashboard_report_relation",
-            joinColumns = @JoinColumn(name = "dashboard_id"),
-            inverseJoinColumns = @JoinColumn(name = "report_id"))
+    @Transient
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Set<ReportEntity> reports;
 }

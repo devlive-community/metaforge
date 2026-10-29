@@ -18,7 +18,9 @@ import {
     MfConfigProvider,
     MfDivider,
     MfDatePicker,
+    MfEmpty,
     MfInput,
+    MfLoadingIcon,
     MfMenu,
     MfMenuItem,
     MfModal,
@@ -47,6 +49,7 @@ const navigation = [
     { key: '/query', label: '查询' },
 ]
 const primary = ref('#2563eb')
+const brandLoading = ref(true)
 const toolbarKeyword = ref('')
 const toolbarCode = ref('')
 const toolbarDate = ref('')
@@ -266,6 +269,33 @@ function simulateLoading(): void {
                                 <MfButton variant="ghost">Hover me</MfButton>
                             </MfTooltip>
                         </MfSpace>
+                    </div>
+                </MfCard>
+
+                <MfCard title="品牌加载动画">
+                    <div class="flex flex-col items-center gap-5 py-6 text-primary">
+                        <MfLoadingIcon :size="96" :loading="brandLoading"/>
+                        <span class="text-sm text-content-secondary" role="status">{{ brandLoading ? '正在加载' : '加载完成' }}</span>
+                        <MfSpace wrap>
+                            <MfSpinner size="xs" :loading="brandLoading"/>
+                            <MfSpinner size="sm" :loading="brandLoading"/>
+                            <MfSpinner :label="brandLoading ? '加载中' : '已完成'" :loading="brandLoading"/>
+                            <MfSpinner size="lg" :loading="brandLoading"/>
+                        </MfSpace>
+                        <MfSpace wrap>
+                            <MfButton variant="primary" :loading="brandLoading">{{ brandLoading ? '保存中' : '保存' }}</MfButton>
+                            <MfButton @click="brandLoading = !brandLoading">{{ brandLoading ? '模拟完成' : '重新加载' }}</MfButton>
+                        </MfSpace>
+                    </div>
+                </MfCard>
+
+                <MfCard title="空状态提示">
+                    <div class="grid gap-4 md:grid-cols-3">
+                        <MfEmpty title="暂无数据" description="创建第一条数据后，就能在这里查看。">
+                            <template #extra><MfButton variant="primary" @click="modalOpen = true">创建数据源</MfButton></template>
+                        </MfEmpty>
+                        <MfEmpty variant="search" title="未找到匹配结果" description="试试调整筛选条件或清空关键字。"/>
+                        <MfEmpty variant="initial" title="等待执行查询" description="选择数据源并执行 SQL，查询结果将显示在这里。"/>
                     </div>
                 </MfCard>
 

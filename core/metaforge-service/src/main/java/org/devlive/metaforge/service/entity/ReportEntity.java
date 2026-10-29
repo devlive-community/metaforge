@@ -10,17 +10,10 @@ import lombok.ToString;
 import lombok.experimental.SuperBuilder;
 import org.devlive.metaforge.common.view.EntityView;
 import org.devlive.metaforge.service.enums.ReportType;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import org.devlive.metaforge.service.persistence.Reference;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Data
 @SuperBuilder
@@ -28,52 +21,55 @@ import javax.persistence.Table;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "metaforge_report")
-@EntityListeners(AuditingEntityListener.class)
+@Table("metaforge_report")
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"})
 public class ReportEntity
         extends BaseEntity
 {
-    @Column(name = "configure")
+    @Column("configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String configure;
 
-    @Column(name = "realtime")
+    @Column("realtime")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private boolean realtime;
 
-    @Column(name = "type")
-    @Enumerated(EnumType.STRING)
+    @Column("type")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private ReportType type;
 
-    @Column(name = "query")
+    @Column("query")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String query;
 
-    @Column(name = "description")
+    @Column("description")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String description;
 
-    @ManyToOne
-    @JoinTable(name = "metaforge_report_user_relation",
-            joinColumns = @JoinColumn(name = "report_id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id"))
+    @Column("user_id")
+    @JsonView(value = {EntityView.AdminView.class})
+    private Long userId;
+
+    @Transient
+    @Reference("userId")
     @JsonView(value = {EntityView.AdminView.class})
     private UserEntity user;
 
-    @ManyToOne
-    @JoinTable(name = "metaforge_report_source_relation",
-            joinColumns = @JoinColumn(name = "report_id"),
-            inverseJoinColumns = @JoinColumn(name = "source_id"))
+    @Column("source_id")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Long sourceId;
+
+    @Transient
+    @Reference("sourceId")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private SourceEntity source;
 
-    @ManyToOne
-    @JoinTable(name = "metaforge_report_dataset_relation",
-            joinColumns = @JoinColumn(name = "report_id"),
-            inverseJoinColumns = @JoinColumn(name = "dataset_id"))
+    @Column("dataset_id")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Long datasetId;
+
+    @Transient
+    @Reference("datasetId")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private DataSetEntity dataset;
 }

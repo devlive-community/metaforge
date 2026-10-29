@@ -27,6 +27,12 @@ public class ExecuteController
         return this.executeService.execute(configure);
     }
 
+    @PostMapping(value = {"plan"}, produces = {MediaType.APPLICATION_JSON_VALUE})
+    public CommonResponse<Object> plan(@RequestBody ExecuteEntity configure)
+    {
+        return this.executeService.plan(configure);
+    }
+
     @PostMapping(value = {"dsl"})
     public CommonResponse<Object> executeDsl(@RequestBody ExecuteDslBody configure)
     {

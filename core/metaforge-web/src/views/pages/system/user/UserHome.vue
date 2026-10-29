@@ -24,7 +24,7 @@
           <MfTag v-for="role in record.roles" :key="role.id">{{ role.name }}</MfTag>
         </template>
         <template v-else-if="column.key === 'action'">
-          <MfSpace>
+          <MfSpace size="xs">
             <MfTooltip :content="$t('user.common.assignRole')">
               <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerChangeRole(true, record)">
                 <ArrowUp :size="15" />

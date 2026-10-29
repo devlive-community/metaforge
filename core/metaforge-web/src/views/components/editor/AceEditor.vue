@@ -2,7 +2,7 @@
   <VAceEditor lang="mysql"
               :value="internalValue as string"
               :theme="configure?.theme || 'chrome'"
-              :style="{ height: height, fontSize: configure?.fontSize || 12 + 'px' }"
+              :style="{ height: height, width: '100%', fontSize: configure?.fontSize || 12 + 'px' }"
               :key="key"
               :options="{ enableSnippets: true, enableLiveAutocompletion: true, readOnly: readOnly }"
               @init="handlerEditorDidMount($event, 'mysql')"
@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref } from 'vue'
+import { defineComponent, ref, watch } from 'vue'
 import { VAceEditor } from 'vue3-ace-editor'
 import { Ace } from 'ace-builds'
 import '@/ace-editor-theme'
@@ -57,7 +57,7 @@ export default defineComponent({
       default: undefined
     }
   },
-  emits: ['update:value'],
+  emits: ['update:value', 'created'],
   setup(props, { emit })
   {
     const key = Date.now().toString()
@@ -68,7 +68,16 @@ export default defineComponent({
 
     const internalValue = ref(props.value)
 
+    // Keep the ace buffer in sync when the parent changes the bound value
+    // (e.g. loading a snippet/history query into the editor).
+    watch(() => props.value, (value) => {
+      if (internalValue.value !== value) {
+        internalValue.value = value
+      }
+    })
+
     const handlerUpdateValue = (value: string) => {
+      internalValue.value = value
       emit('update:value', value)
     }
 
@@ -88,6 +97,12 @@ export default defineComponent({
   methods: {
     handlerEditorDidMount(editor: Editor, _language: string)
     {
+      this.$emit('created', editor);
+      // ace.edit() measures its container once; hosts that mount inside
+      // drawer/modal transitions can hand it a zero-width container, so
+      // re-measure after the browser has painted the final geometry.
+      requestAnimationFrame(() => editor.resize());
+      setTimeout(() => editor.resize(), 200);
       try {
         langTools.addCompleter({
           // @ts-ignore

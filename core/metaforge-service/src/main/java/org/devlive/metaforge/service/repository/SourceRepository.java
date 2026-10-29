@@ -2,9 +2,9 @@ package org.devlive.metaforge.service.repository;
 
 import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
+import org.devlive.metaforge.service.persistence.Visibility;
+import org.springframework.data.jdbc.repository.query.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -13,18 +13,18 @@ public interface SourceRepository
         extends BaseRepository<SourceEntity, Long>
 {
     @Override
-    default Specification<SourceEntity> visibleTo(UserEntity user)
+    default Visibility visibleTo(UserEntity user)
     {
-        return (root, query, builder) -> builder.or(builder.equal(root.get("user"), user), builder.isTrue(root.get("publish")));
+        return Visibility.where("userId", user.getId()).or("publish", true);
     }
 
+    @Override
     List<SourceEntity> findAll();
 
-    SourceEntity findByName(String name);
+    Optional<SourceEntity> findFirstByName(String name);
 
-    Optional<SourceEntity> findByCode(String code);
+    List<SourceEntity> findAllByUserId(Long userId);
 
-    Page<SourceEntity> findAllByUserOrPublishIsTrue(UserEntity user, Pageable pageable);
-
-    Long countByUserOrPublishIsTrue(UserEntity user);
+    @Query("SELECT COUNT(*) FROM metaforge_source WHERE user_id = :userId OR is_public = :published")
+    Long countVisible(@Param("userId") Long userId, @Param("published") boolean published);
 }

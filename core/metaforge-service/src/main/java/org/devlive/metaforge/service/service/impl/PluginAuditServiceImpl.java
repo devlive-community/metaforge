@@ -16,18 +16,26 @@ import org.devlive.metaforge.service.entity.PluginAuditEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.itransient.ContributionRadar;
+import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.PluginAuditRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.PluginAuditService;
 import org.devlive.metaforge.spi.model.Response;
+import org.springframework.jdbc.core.RowCallbackHandler;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.Timestamp;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -39,9 +47,12 @@ public class PluginAuditServiceImpl
     private final PluginAuditRepository pluginAuditRepository;
     private final InitializerConfigure initializer;
     private final PluginManager pluginManager;
+    private final NamedParameterJdbcOperations jdbc;
 
-    public PluginAuditServiceImpl(PluginAuditRepository pluginAuditRepository, InitializerConfigure initializer, PluginManager pluginManager)
+    public PluginAuditServiceImpl(PluginAuditRepository pluginAuditRepository, InitializerConfigure initializer, PluginManager pluginManager,
+            NamedParameterJdbcOperations jdbc)
     {
+        this.jdbc = jdbc;
         this.pluginAuditRepository = pluginAuditRepository;
         this.initializer = initializer;
         this.pluginManager = pluginManager;
@@ -50,14 +61,21 @@ public class PluginAuditServiceImpl
     @Override
     public CommonResponse<Long> count()
     {
-        return CommonResponse.success(this.pluginAuditRepository.countByUser(UserDetailsService.getUser()));
+        return CommonResponse.success(this.pluginAuditRepository.countByUserId(UserDetailsService.getUser().getId()));
     }
 
     @Override
     public CommonResponse<List<HeatmapActivity>> getAllContribution()
     {
         UserEntity user = UserDetailsService.getUser();
-        return CommonResponse.success(this.pluginAuditRepository.countByCreateTimeAndFindByUser(user));
+        // Grouped per calendar day in Java: date truncation differs on every database.
+        Map<LocalDate, Long> days = new TreeMap<>();
+        jdbc.query("SELECT create_time FROM metaforge_source_query WHERE user_id = :userId AND create_time IS NOT NULL",
+                Collections.singletonMap("userId", user.getId()),
+                (RowCallbackHandler) row -> days.merge(row.getTimestamp(1).toLocalDateTime().toLocalDate(), 1L, Long::sum));
+        List<HeatmapActivity> activities = new ArrayList<>();
+        days.forEach((day, total) -> activities.add(new HeatmapActivity(total, java.sql.Date.valueOf(day))));
+        return CommonResponse.success(activities);
     }
 
     @Override
@@ -65,7 +83,18 @@ public class PluginAuditServiceImpl
     {
         UserEntity user = UserDetailsService.getUser();
         List<ContributionRadar> contributionRadars = new ArrayList<>();
-        List<Map<String, Object>> list = this.pluginAuditRepository.selectRadarByUserId(user.getId());
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("userId", user.getId());
+        parameters.put("from", Timestamp.valueOf(LocalDate.now().minusDays(7).atStartOfDay()));
+        List<Map<String, Object>> list = jdbc.query("SELECT s.name, COUNT(*) FROM metaforge_source_query q "
+                        + "JOIN metaforge_source s ON q.source_id = s.id "
+                        + "WHERE q.create_time >= :from AND s.user_id = :userId GROUP BY s.name",
+                parameters, (row, index) -> {
+                    Map<String, Object> value = new HashMap<>();
+                    value.put("dataOfLabel", row.getString(1));
+                    value.put("dataOfCount", row.getLong(2));
+                    return value;
+                });
         Long count = list.stream().mapToLong(v -> Long.valueOf(String.valueOf(v.get("dataOfCount")))).sum();
         list.forEach(v -> {
             ContributionRadar radar = new ContributionRadar();
@@ -92,6 +121,7 @@ public class PluginAuditServiceImpl
     public CommonResponse<Response> getData(String code)
     {
         return this.pluginAuditRepository.findByCode(code)
+                .map(Persistence.references()::load)
                 .map(value -> {
                     Response response = new Response();
                     FsRequest fsRequest = FsRequest.builder()

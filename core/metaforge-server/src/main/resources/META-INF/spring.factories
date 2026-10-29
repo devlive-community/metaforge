@@ -1,2 +1,4 @@
 org.springframework.boot.env.EnvironmentPostProcessor=\
   org.devlive.metaforge.server.configure.SetupDatasourceGuardEnvironmentPostProcessor
+org.springframework.boot.sql.init.dependency.DatabaseInitializerDetector=\
+  org.devlive.metaforge.server.migration.MigrationInitializerDetector

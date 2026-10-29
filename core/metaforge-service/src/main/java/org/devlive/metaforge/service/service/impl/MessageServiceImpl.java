@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
-@SuppressFBWarnings(value = {"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"},
+@SuppressFBWarnings(value = {"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE", "EI_EXPOSE_REP2"},
         justification = "I prefer to suppress these FindBugs warnings")
 public class MessageServiceImpl
         implements MessageService
@@ -105,7 +105,7 @@ public class MessageServiceImpl
             List<org.devlive.sdk.openai.entity.MessageEntity> messages = new ArrayList<>();
             // Get the context in the conversation * 2
             if (getContent) {
-                this.repository.findTopByChatOrderByCreateTimeDesc(configure.getChat(), questionMessage.getId(), Pageable.ofSize(contentCount * 2))
+                this.repository.findAllByChatIdAndIdLessThanOrderByCreateTimeDesc(configure.getChat().getId(), questionMessage.getId(), Pageable.ofSize(contentCount * 2))
                         .stream()
                         .sorted(Comparator.comparing(MessageEntity::getId))
                         .forEach(message -> {
@@ -158,7 +158,7 @@ public class MessageServiceImpl
         ChatEntity chat = ChatEntity.builder()
                 .id(chatId)
                 .build();
-        return CommonResponse.success(this.repository.findAllByChatOrderByCreateTimeAsc(chat));
+        return CommonResponse.success(this.repository.findAllByChatIdOrderByCreateTimeAsc(chat.getId()));
     }
 
     @Override

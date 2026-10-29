@@ -26,7 +26,7 @@
           <MfSwitch v-model="record.active" :disabled="record.active"/>
         </template>
         <template v-else-if="column.key === 'action'">
-          <MfSpace>
+          <MfSpace size="xs">
             <MfTooltip :content="$t('common.editData')">
               <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerChangeInfo(true, record)">
                 <Pencil :size="15" />

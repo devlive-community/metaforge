@@ -1,6 +1,6 @@
 <template>
   <div v-if="!originalDatabase">
-    <MfAlert variant="warning" :title="$t('source.tip.notSelectedNode')"/>
+    <MfEmpty variant="initial" :title="$t('source.tip.notSelectedNode')"/>
   </div>
 
   <MfTabs v-else v-model:active-key="selectTab" @change="onChange">

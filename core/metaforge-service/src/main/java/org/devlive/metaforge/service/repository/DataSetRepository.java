@@ -3,29 +3,22 @@ package org.devlive.metaforge.service.repository;
 import org.devlive.metaforge.service.entity.DataSetEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.enums.SyncMode;
+import org.devlive.metaforge.service.persistence.Visibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
-import org.springframework.data.jpa.repository.Query;
 
-import java.util.Optional;
-import java.util.Set;
+import java.util.List;
 
 public interface DataSetRepository
         extends BaseRepository<DataSetEntity, Long>
 {
     @Override
-    default Specification<DataSetEntity> visibleTo(UserEntity user)
+    default Visibility visibleTo(UserEntity user)
     {
-        return (root, query, builder) -> builder.equal(root.get("user"), user);
+        return Visibility.where("userId", user.getId());
     }
 
-    Page<DataSetEntity> findAllByUser(UserEntity user, Pageable pageable);
+    Page<DataSetEntity> findAllByUserId(Long userId, Pageable pageable);
 
-    Optional<DataSetEntity> findByCode(String code);
-
-    @Query("SELECT d " +
-            "FROM DataSetEntity d " +
-            "WHERE d.syncMode = ?1")
-    Set<DataSetEntity> findAllBySyncMode(SyncMode mode);
+    List<DataSetEntity> findAllBySyncMode(SyncMode mode);
 }

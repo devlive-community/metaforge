@@ -21,6 +21,14 @@ const open = computed(() => (hovered.value || focused.value) && !dismissed.value
 const style = useOverlayPosition({ root, overlay, open, maxWidth: 320, placement: () => props.placement })
 useDismissableLayer(root, open, () => { dismissed.value = true }, [overlay])
 
+function focusIn(event: FocusEvent | undefined): void {
+    const target = event?.target as HTMLElement | null
+    // Buttons focused by mouse clicks also fire focusin; only keyboard
+    // focus (:focus-visible) reveals the tooltip, otherwise closing a
+    // modal restores focus and the tooltip pops back up on its own.
+    focused.value = target?.matches?.(':focus-visible') ?? true
+}
+
 function focusOut(event: FocusEvent): void {
     if (!root.value?.contains(event.relatedTarget as Node | null)) {
         focused.value = false
@@ -33,7 +41,7 @@ function focusOut(event: FocusEvent): void {
     <span ref="root" class="relative inline-flex"
           @mouseenter="hovered = true; dismissed = false" @mouseleave="hovered = false"
           @pointerdown="dismissed = true"
-          @focusin="focused = true" @focusout="focusOut">
+          @focusin="focusIn" @focusout="focusOut">
         <slot />
         <Teleport to="body">
             <Transition enter-active-class="transition-opacity duration-(--mf-duration-fast)" enter-from-class="opacity-0"

@@ -5,7 +5,7 @@
         <MfCard class="w-full" padding="none">
           <template #header>
             <div class="flex items-center justify-center gap-3">
-              <MfAvatar src="/static/images/logo.png" alt="MetaForge"/>
+              <img src="/static/images/logo.png" alt="MetaForge" width="48" height="48" class="dc-brand-logo"/>
               <div>
                 <div class="text-base font-semibold">{{ $t('setup.title') }}</div>
                 <div class="text-xs text-content-tertiary">{{ $t('setup.subtitle') }}</div>
@@ -101,20 +101,24 @@
                     <div class="mt-1 text-xs text-content-tertiary">{{ $t('setup.database.embeddedTip') }}</div>
                   </div>
                 </label>
-                <label class="flex cursor-pointer items-start gap-3 rounded-mf-md border p-4 transition-colors duration-(--mf-duration-fast)"
-                       :class="databaseType === 'mysql' ? 'border-primary bg-surface-active' : 'border-line hover:border-line-strong'">
-                  <MfRadio value="mysql"/>
-                  <div class="flex-1">
-                    <div class="text-sm font-medium text-content">{{ $t('setup.database.mysql') }}</div>
-                    <div class="mt-1 text-xs text-content-tertiary">{{ $t('setup.database.mysqlTip') }}</div>
-                  </div>
-                </label>
+                <div class="pt-2">
+                  <div class="text-sm font-medium text-content">{{ $t('setup.database.external') }}</div>
+                  <div class="mt-1 text-xs text-content-tertiary">{{ $t('setup.database.externalTip') }}</div>
+                </div>
+                <div class="grid gap-3 sm:grid-cols-2">
+                  <label v-for="engine in externalEngines" :key="engine.value"
+                         class="flex cursor-pointer items-center gap-3 rounded-mf-md border p-4 transition-colors duration-(--mf-duration-fast)"
+                         :class="databaseType === engine.value ? 'border-primary bg-surface-active' : 'border-line hover:border-line-strong'">
+                    <MfRadio :value="engine.value"/>
+                    <div class="text-sm font-medium text-content">{{ $t(`setup.database.engines.${engine.value}`) }}</div>
+                  </label>
+                </div>
               </MfRadioGroup>
               <p v-if="!databaseType" class="mt-3 text-xs text-content-tertiary">{{ $t('setup.database.choose') }}</p>
 
-              <div v-if="databaseType === 'mysql'" class="mt-5 space-y-4 rounded-mf-lg border border-line bg-page/60 p-4">
+              <div v-if="selectedEngine" class="mt-5 space-y-4 rounded-mf-lg border border-line bg-page/60 p-4">
                 <div>
-                  <h2 class="text-sm font-medium text-content">{{ $t('setup.database.connectionSettings') }}</h2>
+                  <h2 class="text-sm font-medium text-content">{{ $t('setup.database.connectionSettings', { engine: $t(`setup.database.engines.${selectedEngine.value}`) }) }}</h2>
                   <p class="mt-1 text-xs leading-5 text-content-tertiary">{{ $t('setup.database.connectionSettingsTip') }}</p>
                 </div>
                 <div class="grid gap-4 sm:grid-cols-2">
@@ -122,13 +126,13 @@
                     <MfInput v-model="databaseConfigure.host" placeholder="127.0.0.1"/>
                   </MfFormItem>
                   <MfFormItem name="databasePort" :label="$t('setup.database.port')">
-                    <MfInputNumber v-model="databaseConfigure.port" :controls="false" :min="1" :max="65535" placeholder="3306"/>
+                    <MfInputNumber v-model="databaseConfigure.port" :controls="false" :min="1" :max="65535" :placeholder="String(selectedEngine.port)"/>
                   </MfFormItem>
-                  <MfFormItem name="databaseName" :label="$t('setup.database.name')">
-                    <MfInput v-model="databaseConfigure.database" placeholder="metaforge"/>
+                  <MfFormItem name="databaseName" :label="selectedEngine.value === 'oracle' ? $t('setup.database.serviceName') : $t('setup.database.name')">
+                    <MfInput v-model="databaseConfigure.database" :placeholder="selectedEngine.database"/>
                   </MfFormItem>
                   <MfFormItem name="databaseUsername" :label="$t('setup.database.username')">
-                    <MfInput v-model="databaseConfigure.username" placeholder="root"/>
+                    <MfInput v-model="databaseConfigure.username" :placeholder="selectedEngine.username"/>
                   </MfFormItem>
                   <MfFormItem name="databasePassword" :label="$t('setup.database.password')" class="sm:col-span-2">
                     <MfInput v-model="databaseConfigure.password" type="password" show-password :placeholder="$t('setup.database.passwordPlaceholder')"/>
@@ -265,13 +269,32 @@ const testing = ref(false)
 const testResult = ref<'idle' | 'ok' | 'failed'>('idle')
 const testElapsed = ref(0)
 
-const databaseType = ref<'current' | 'embedded' | 'mysql' | ''>('')
+type ExternalEngine = 'mysql' | 'postgresql' | 'sqlserver' | 'oracle'
+// Defaults follow each server's out-of-the-box port and administrator account.
+const externalEngines: { value: ExternalEngine, port: number, username: string, database: string }[] = [
+  { value: 'mysql', port: 3306, username: 'root', database: 'metaforge' },
+  { value: 'postgresql', port: 5432, username: 'postgres', database: 'metaforge' },
+  { value: 'sqlserver', port: 1433, username: 'sa', database: 'metaforge' },
+  { value: 'oracle', port: 1521, username: 'system', database: 'FREEPDB1' },
+]
+const databaseType = ref<'current' | 'embedded' | ExternalEngine | ''>('')
+const selectedEngine = computed(() => externalEngines.find(engine => engine.value === databaseType.value))
 const databaseConfigure = ref({
   host: '127.0.0.1',
   port: 3306,
   database: 'metaforge',
   username: 'root',
   password: '',
+})
+
+// Switching engines swaps the defaults, but keeps values the user already typed.
+watch(selectedEngine, (engine, previous) => {
+  if (!engine) return
+  const before = previous ?? externalEngines[0]
+  const configure = databaseConfigure.value
+  if (configure.port === before.port) configure.port = engine.port
+  if (configure.username === before.username) configure.username = engine.username
+  if (configure.database === before.database) configure.database = engine.database
 })
 const dbTesting = ref(false)
 const dbTestResult = ref<'idle' | 'ok' | 'failed'>('idle')
@@ -281,10 +304,10 @@ const canContinueDatabase = computed(() => {
   if (databaseType.value === 'current') {
     return environment.value.currentAvailable && environment.value.connected
   }
-  return databaseType.value === 'embedded' || (databaseType.value === 'mysql' && dbTestResult.value === 'ok')
+  return databaseType.value === 'embedded' || (Boolean(selectedEngine.value) && dbTestResult.value === 'ok')
 })
 
-watch(databaseConfigure, () => {
+watch([databaseConfigure, databaseType], () => {
   dbTestResult.value = 'idle'
   dbTestFailedMessage.value = ''
 }, { deep: true })
@@ -343,10 +366,10 @@ const onTestDatabase = () => {
   dbTesting.value = true
   dbTestResult.value = 'idle'
   dbTestFailedMessage.value = ''
-  const configure = { ...databaseConfigure.value }
-  SetupService.testConnection({ type: 'mysql', ...configure })
+  const configure = { type: databaseType.value, ...databaseConfigure.value }
+  SetupService.testConnection(configure)
               .then(response => {
-                if (JSON.stringify(configure) !== JSON.stringify(databaseConfigure.value)) return
+                if (JSON.stringify(configure) !== JSON.stringify({ type: databaseType.value, ...databaseConfigure.value })) return
                 if (response.status && response.data?.connected) {
                   dbTestResult.value = 'ok'
                   dbTestElapsed.value = response.data.elapsed ?? 0
@@ -371,8 +394,8 @@ const onInstall = () => {
     username: formState.value.username,
     password: formState.value.password,
     name: formState.value.name,
-    database: databaseType.value === 'mysql'
-      ? { type: 'mysql', ...databaseConfigure.value }
+    database: selectedEngine.value
+      ? { type: databaseType.value, ...databaseConfigure.value }
       : { type: databaseType.value },
   }
   SetupService.install(payload)

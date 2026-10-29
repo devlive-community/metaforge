@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, inject, type Ref } from 'vue'
 import clsx from 'clsx'
+import MfLoadingIcon from './MfLoadingIcon.vue'
 import type { MfTreeNode } from './MfTree.vue'
 
 interface TreeContext {
@@ -39,10 +40,7 @@ const rowClass = computed(() => clsx(
     <li role="treeitem" :aria-expanded="node.isLeaf ? undefined : expanded" :aria-selected="selected">
         <div :class="rowClass" @click="tree?.select(node)">
             <span class="inline-flex size-4 shrink-0 items-center justify-center" @click.stop="tree?.toggle(node)">
-                <svg v-if="loading" class="size-3.5 animate-spin text-primary" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
-                </svg>
+                <MfLoadingIcon v-if="loading" :size="14" class="text-primary"/>
                 <svg
                     v-else-if="!node.isLeaf"
                     class="size-3.5 text-content-tertiary transition-transform duration-(--mf-duration-base) ease-(--mf-easing)"
@@ -58,7 +56,7 @@ const rowClass = computed(() => clsx(
         </div>
         <div
             v-if="node.children?.length && expanded"
-            class="ml-3.5 flex flex-col gap-0.5 border-l border-line pl-1.5"
+            class="ml-3.5 mt-1 flex flex-col gap-1 pl-1.5"
         >
             <MfTreeNodeItem v-for="child in node.children" :key="child.key" :node="child">
                 <template #title="{ node: childNode }: { node: MfTreeNode }">

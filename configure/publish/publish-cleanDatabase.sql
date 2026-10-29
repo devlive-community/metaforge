@@ -1,43 +1,29 @@
-USE `metaforge`;
+-- Clears business data from a metadata database before publishing a demo snapshot.
+-- Plain SQL that runs on every supported database; the catalogue (users, roles,
+-- menus, functions, schedules) and the changelog history are kept.
 
-TRUNCATE TABLE `metaforge_source_query`;
+DELETE FROM metaforge_source_query;
 
-TRUNCATE TABLE `metaforge_chat`;
-TRUNCATE TABLE `metaforge_chat_user_relation`;
+DELETE FROM metaforge_message;
+DELETE FROM metaforge_chat;
 
-TRUNCATE TABLE `metaforge_dashboard`;
-TRUNCATE TABLE `metaforge_dashboard_report_relation`;
-TRUNCATE TABLE `metaforge_dashboard_user_relation`;
+DELETE FROM metaforge_dashboard_report;
+DELETE FROM metaforge_dashboard;
 
-TRUNCATE TABLE `metaforge_dataset`;
-TRUNCATE TABLE `metaforge_dataset_column`;
-TRUNCATE TABLE `metaforge_dataset_column_relation`;
-TRUNCATE TABLE `metaforge_dataset_source_relation`;
-TRUNCATE TABLE `metaforge_dataset_user_relation`;
-TRUNCATE TABLE `metaforge_dataset_history`;
-TRUNCATE TABLE `metaforge_dataset_history_relation`;
+DELETE FROM metaforge_report;
 
-TRUNCATE TABLE `metaforge_message`;
-TRUNCATE TABLE `metaforge_message_chat_relation`;
-TRUNCATE TABLE `metaforge_message_user_relation`;
+DELETE FROM metaforge_dataset_column;
+DELETE FROM metaforge_dataset_history;
+DELETE FROM metaforge_dataset;
 
-TRUNCATE TABLE `metaforge_report`;
-TRUNCATE TABLE `metaforge_report_source_relation`;
-TRUNCATE TABLE `metaforge_report_user_relation`;
-TRUNCATE TABLE `metaforge_report_dataset_relation`;
+DELETE FROM metaforge_scheduled_history;
 
-TRUNCATE TABLE `metaforge_scheduled_history`;
-TRUNCATE TABLE `metaforge_scheduled_history_relation`;
-TRUNCATE TABLE `metaforge_scheduled_history_source_relation`;
+DELETE FROM metaforge_user_log;
 
-TRUNCATE TABLE `metaforge_user_log`;
+DELETE FROM metaforge_source;
 
-TRUNCATE TABLE `metaforge_source`;
+DELETE FROM metaforge_snippet;
 
-TRUNCATE TABLE `metaforge_snippet`;
+DELETE FROM metaforge_workflow;
 
-TRUNCATE TABLE `metaforge_workflow`;
-
-TRUNCATE TABLE `metaforge_notification`;
-
-mysqldump -u root -p metaforge > $(pwd)/configure/schema/metaforge.sql
+DELETE FROM metaforge_notification;

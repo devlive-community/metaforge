@@ -14,6 +14,7 @@ import org.devlive.metaforge.service.audit.AuditPlugin;
 import org.devlive.metaforge.service.body.ExecuteDslBody;
 import org.devlive.metaforge.service.entity.ExecuteEntity;
 import org.devlive.metaforge.service.entity.SourceEntity;
+import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.service.ExecuteService;
 import org.devlive.metaforge.spi.PluginService;
@@ -22,6 +23,8 @@ import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
+import java.util.Locale;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -29,6 +32,19 @@ import java.io.File;
 public class ExecuteServiceImpl
         implements ExecuteService
 {
+    /**
+     * Engines accepting a plain {@code EXPLAIN} prefix, matched on the normalized
+     * (lowercase, alphanumeric only) plugin type.
+     */
+    private static final Set<String> PLAN_DIRECT_ENGINES = Set.of(
+            "mysql", "doris", "starrocks", "oceanbase", "postgresql", "timescaledb",
+            "paradedb", "trino", "presto", "clickhouse", "hive", "hive2x", "impala",
+            "duckdb", "kylin", "kyuubi", "greptimedb", "ceresdb", "matrixone",
+            "hologres", "ignite", "dremio");
+
+    /** Engines requiring the {@code EXPLAIN PLAN FOR} statement instead. */
+    private static final Set<String> PLAN_FOR_ENGINES = Set.of("h2", "h2tcp");
+
     private final SourceRepository sourceRepository;
     private final Environment environment;
     private final PluginManager pluginManager;
@@ -47,6 +63,44 @@ public class ExecuteServiceImpl
         return sourceRepository.findByCode(configure.getName())
                 .map(entity -> handleSourceEntity(entity, configure.getContent()))
                 .orElse(CommonResponse.failure(ServiceState.SOURCE_NOT_FOUND));
+    }
+
+    @AuditPlugin
+    @Override
+    public CommonResponse<Object> plan(ExecuteEntity configure)
+    {
+        return sourceRepository.findByCode(configure.getName())
+                .map(entity -> handlePlanSourceEntity(entity, configure.getContent()))
+                .orElse(CommonResponse.failure(ServiceState.SOURCE_NOT_FOUND));
+    }
+
+    /**
+     * 处理查询计划请求，把 SQL 包装成当前引擎支持的 EXPLAIN 语句
+     * Handle a query plan request by wrapping the SQL into the EXPLAIN
+     * statement of the referenced engine
+     *
+     * @param entity {@link SourceEntity} 源实体配置 / Source entity configuration
+     * @param content SQL语句 / SQL statement
+     * @return 插件执行结果 / Plugin execution result
+     */
+    private CommonResponse<Object> handlePlanSourceEntity(SourceEntity entity, String content)
+    {
+        String type = StringUtils.defaultString(entity.getType()).toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+        String prefix;
+        if (PLAN_DIRECT_ENGINES.contains(type)) {
+            prefix = "EXPLAIN ";
+        }
+        else if (PLAN_FOR_ENGINES.contains(type)) {
+            prefix = "EXPLAIN PLAN FOR ";
+        }
+        else {
+            return CommonResponse.failure(ServiceState.PLUGIN_EXECUTE_FAILED, "Engine [" + entity.getType() + "] does not support query plan");
+        }
+        String statement = StringUtils.stripEnd(StringUtils.trimToEmpty(content), "; \n\r\t");
+        if (StringUtils.isEmpty(statement)) {
+            return CommonResponse.failure(ServiceState.PLUGIN_EXECUTE_FAILED, "Query plan requires a SQL statement");
+        }
+        return handleSourceEntity(entity, prefix + statement);
     }
 
     /**
@@ -103,6 +157,9 @@ public class ExecuteServiceImpl
     private void configureEntity(SourceEntity entity)
     {
         if (entity.isUsedConfig()) {
+            if (entity.getUser() == null) {
+                Persistence.references().load(entity);
+            }
             entity.setUsername(entity.getUser().getUsername());
             String configHome = getConfigHome();
             entity.setHome(configHome);

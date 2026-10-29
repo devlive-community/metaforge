@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Upgrades installations created by the pre-changelog setup scripts (MySQL and H2 only).
+
+  Every changeset is guarded by the legacy marker table metaforge_user_role_relation, which is
+  dropped by the last changeset; fresh installs therefore mark the whole file as ran.
+  Order: pending ad-hoc migrations -> link columns -> backfill from relation tables ->
+  link tables -> portable column names -> drop relation tables.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="legacy-0001-column-expression" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <not>
+                <columnExists tableName="metaforge_dataset_column" columnName="expression"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="metaforge_dataset_column">
+            <column name="expression" type="${text}"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="legacy-0002-source-type" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+        </preConditions>
+        <comment>Redis ships as a single JDBC-backed connector named "Redis".</comment>
+        <update tableName="metaforge_source">
+            <column name="_type" value="Redis"/>
+            <where>_type = 'Redis Jdbc'</where>
+        </update>
+    </changeSet>
+
+    <changeSet id="legacy-0003-navigation" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <or>
+                <not>
+                    <tableExists tableName="metaforge_schema_migration"/>
+                </not>
+                <sqlCheck expectedResult="0">
+                    SELECT COUNT(*) FROM metaforge_schema_migration
+                    WHERE migration_key = 'navigation-user-admin-v1' AND applied_at IS NOT NULL
+                </sqlCheck>
+            </or>
+        </preConditions>
+        <sqlFile path="navigation-migration.sql" relativeToChangelogFile="true" encoding="UTF-8"/>
+    </changeSet>
+
+    <changeSet id="legacy-0004-link-columns" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <not>
+                <columnExists tableName="metaforge_dataset" columnName="source_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="metaforge_chat">
+            <column name="user_id" type="BIGINT"/>
+        </addColumn>
+        <addColumn tableName="metaforge_message">
+            <column name="user_id" type="BIGINT"/>
+            <column name="chat_id" type="BIGINT"/>
+        </addColumn>
+        <addColumn tableName="metaforge_dashboard">
+            <column name="user_id" type="BIGINT"/>
+        </addColumn>
+        <addColumn tableName="metaforge_report">
+            <column name="user_id" type="BIGINT"/>
+            <column name="source_id" type="BIGINT"/>
+            <column name="dataset_id" type="BIGINT"/>
+        </addColumn>
+        <addColumn tableName="metaforge_dataset">
+            <column name="user_id" type="BIGINT"/>
+            <column name="source_id" type="BIGINT"/>
+        </addColumn>
+        <addColumn tableName="metaforge_dataset_history">
+            <column name="dataset_id" type="BIGINT"/>
+        </addColumn>
+        <addColumn tableName="metaforge_scheduled_history">
+            <column name="scheduled_id" type="BIGINT"/>
+            <column name="source_id" type="BIGINT"/>
+        </addColumn>
+        <modifyDataType tableName="metaforge_dataset_column" columnName="dataset_id" newDataType="BIGINT"/>
+    </changeSet>
+
+    <changeSet id="legacy-0005-backfill-links" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+        </preConditions>
+        <sql>
+            UPDATE metaforge_chat SET user_id = (SELECT MAX(r.user_id) FROM metaforge_chat_user_relation r WHERE r.chat_id = metaforge_chat.id);
+            UPDATE metaforge_message SET user_id = (SELECT MAX(r.user_id) FROM metaforge_message_user_relation r WHERE r.message_id = metaforge_message.id);
+            UPDATE metaforge_message SET chat_id = (SELECT MAX(r.chat_id) FROM metaforge_message_chat_relation r WHERE r.message_id = metaforge_message.id);
+            UPDATE metaforge_dashboard SET user_id = (SELECT MAX(r.user_id) FROM metaforge_dashboard_user_relation r WHERE r.dashboard_id = metaforge_dashboard.id);
+            UPDATE metaforge_report SET user_id = (SELECT MAX(r.user_id) FROM metaforge_report_user_relation r WHERE r.report_id = metaforge_report.id);
+            UPDATE metaforge_report SET source_id = (SELECT MAX(r.source_id) FROM metaforge_report_source_relation r WHERE r.report_id = metaforge_report.id);
+            UPDATE metaforge_report SET dataset_id = (SELECT MAX(r.dataset_id) FROM metaforge_report_dataset_relation r WHERE r.report_id = metaforge_report.id);
+            UPDATE metaforge_dataset SET user_id = (SELECT MAX(r.user_id) FROM metaforge_dataset_user_relation r WHERE r.dataset_id = metaforge_dataset.id);
+            UPDATE metaforge_dataset SET source_id = (SELECT MAX(r.source_id) FROM metaforge_dataset_source_relation r WHERE r.dataset_id = metaforge_dataset.id);
+            UPDATE metaforge_dataset_column SET dataset_id = (SELECT MAX(r.dataset_id) FROM metaforge_dataset_column_relation r WHERE r.column_id = metaforge_dataset_column.id)
+                WHERE EXISTS (SELECT 1 FROM metaforge_dataset_column_relation r WHERE r.column_id = metaforge_dataset_column.id);
+            UPDATE metaforge_dataset_history SET dataset_id = (SELECT MAX(r.dataset_id) FROM metaforge_dataset_history_relation r WHERE r.dataset_history_id = metaforge_dataset_history.id);
+            UPDATE metaforge_scheduled_history SET source_id = (SELECT MAX(r.source_id) FROM metaforge_scheduled_history_source_relation r WHERE r.scheduled_history_id = metaforge_scheduled_history.id);
+        </sql>
+        <comment>The JPA mapping named this join table from the history side: scheduled_id holds the history id, history_id the schedule id.</comment>
+        <sql>
+            UPDATE metaforge_scheduled_history SET scheduled_id = (SELECT MAX(r.history_id) FROM metaforge_scheduled_history_relation r WHERE r.scheduled_id = metaforge_scheduled_history.id);
+        </sql>
+    </changeSet>
+
+    <changeSet id="legacy-0006-link-tables" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <not>
+                <tableExists tableName="metaforge_user_role"/>
+            </not>
+        </preConditions>
+        <createTable tableName="metaforge_user_role">
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="metaforge_user_role" columnNames="user_id, role_id" constraintName="pk_user_role"/>
+        <createIndex tableName="metaforge_user_role" indexName="idx_user_role_role_id">
+            <column name="role_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_role_menu">
+            <column name="role_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="menu_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="metaforge_role_menu" columnNames="role_id, menu_id" constraintName="pk_role_menu"/>
+        <createIndex tableName="metaforge_role_menu" indexName="idx_role_menu_menu_id">
+            <column name="menu_id"/>
+        </createIndex>
+        <createTable tableName="metaforge_dashboard_report">
+            <column name="dashboard_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="report_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="metaforge_dashboard_report" columnNames="dashboard_id, report_id" constraintName="pk_dashboard_report"/>
+        <createIndex tableName="metaforge_dashboard_report" indexName="idx_dashboard_report_report_id">
+            <column name="report_id"/>
+        </createIndex>
+        <sql>
+            INSERT INTO metaforge_user_role (user_id, role_id)
+            SELECT DISTINCT u.id, r.id FROM metaforge_user_role_relation x
+            JOIN metaforge_user u ON u.id = x.user_id
+            JOIN metaforge_role r ON r.id = x.role_id;
+            INSERT INTO metaforge_dashboard_report (dashboard_id, report_id)
+            SELECT DISTINCT d.id, p.id FROM metaforge_dashboard_report_relation x
+            JOIN metaforge_dashboard d ON d.id = x.dashboard_id
+            JOIN metaforge_report p ON p.id = x.report_id;
+        </sql>
+        <!-- role_menu_relation stored both ids as text -->
+        <sql dbms="mysql,mariadb">
+            INSERT INTO metaforge_role_menu (role_id, menu_id)
+            SELECT DISTINCT r.id, m.id FROM metaforge_role_menu_relation x
+            JOIN metaforge_role r ON CAST(r.id AS CHAR) = TRIM(x.role_id)
+            JOIN metaforge_menu m ON CAST(m.id AS CHAR) = TRIM(x.menu_id);
+        </sql>
+        <sql dbms="h2">
+            INSERT INTO metaforge_role_menu (role_id, menu_id)
+            SELECT DISTINCT r.id, m.id FROM metaforge_role_menu_relation x
+            JOIN metaforge_role r ON CAST(r.id AS VARCHAR(32)) = TRIM(CAST(x.role_id AS VARCHAR(32)))
+            JOIN metaforge_menu m ON CAST(m.id AS VARCHAR(32)) = TRIM(CAST(x.menu_id AS VARCHAR(32)));
+        </sql>
+    </changeSet>
+
+    <changeSet id="legacy-0007-portable-names" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <columnExists tableName="metaforge_source" columnName="_type"/>
+        </preConditions>
+        <comment>Oracle rejects reserved words (public, comment) and identifiers starting with an underscore; Liquibase quotes password there.</comment>
+        <sql dbms="mysql,mariadb">
+            ALTER TABLE metaforge_source RENAME COLUMN `_type` TO source_type;
+            ALTER TABLE metaforge_source RENAME COLUMN `_catalog` TO catalog_name;
+            ALTER TABLE metaforge_source RENAME COLUMN `_database` TO database_name;
+            ALTER TABLE metaforge_source RENAME COLUMN `_ssl` TO use_ssl;
+            ALTER TABLE metaforge_source RENAME COLUMN `public` TO is_public;
+            ALTER TABLE metaforge_source RENAME COLUMN `password` TO connection_password;
+            ALTER TABLE metaforge_user RENAME COLUMN `password` TO password_hash;
+            ALTER TABLE metaforge_dataset_column RENAME COLUMN `comment` TO column_comment;
+            ALTER TABLE metaforge_workflow RENAME COLUMN j_from_id TO from_source_id;
+            ALTER TABLE metaforge_workflow RENAME COLUMN j_to_id TO to_source_id;
+            ALTER TABLE metaforge_workflow RENAME COLUMN j_user_id TO user_id;
+            ALTER TABLE metaforge_source_query RENAME COLUMN plugin_id TO source_id;
+        </sql>
+        <sql dbms="h2">
+            ALTER TABLE metaforge_source ALTER COLUMN `_type` RENAME TO source_type;
+            ALTER TABLE metaforge_source ALTER COLUMN `_catalog` RENAME TO catalog_name;
+            ALTER TABLE metaforge_source ALTER COLUMN `_database` RENAME TO database_name;
+            ALTER TABLE metaforge_source ALTER COLUMN `_ssl` RENAME TO use_ssl;
+            ALTER TABLE metaforge_source ALTER COLUMN `public` RENAME TO is_public;
+            ALTER TABLE metaforge_source ALTER COLUMN `password` RENAME TO connection_password;
+            ALTER TABLE metaforge_user ALTER COLUMN `password` RENAME TO password_hash;
+            ALTER TABLE metaforge_dataset_column ALTER COLUMN `comment` RENAME TO column_comment;
+            ALTER TABLE metaforge_workflow ALTER COLUMN j_from_id RENAME TO from_source_id;
+            ALTER TABLE metaforge_workflow ALTER COLUMN j_to_id RENAME TO to_source_id;
+            ALTER TABLE metaforge_workflow ALTER COLUMN j_user_id RENAME TO user_id;
+            ALTER TABLE metaforge_source_query ALTER COLUMN plugin_id RENAME TO source_id;
+        </sql>
+    </changeSet>
+
+    <changeSet id="legacy-0008-column-types" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+        </preConditions>
+        <comment>is_primary_key was a varchar flag; source_query.create_time was free text.</comment>
+        <sql>
+            UPDATE metaforge_dataset_column SET is_primary_key = CASE WHEN LOWER(TRIM(is_primary_key)) IN ('1', 'true') THEN '1' ELSE '0' END;
+        </sql>
+        <sql dbms="mysql,mariadb">
+            ALTER TABLE metaforge_dataset_column MODIFY is_primary_key TINYINT(1) DEFAULT 0;
+            ALTER TABLE metaforge_source_query ADD COLUMN create_time_value DATETIME NULL;
+            UPDATE metaforge_source_query SET create_time_value = CAST(LEFT(create_time, 19) AS DATETIME)
+                WHERE create_time REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}';
+            ALTER TABLE metaforge_source_query DROP COLUMN create_time;
+            ALTER TABLE metaforge_source_query RENAME COLUMN create_time_value TO create_time;
+        </sql>
+        <sql dbms="h2">
+            ALTER TABLE metaforge_dataset_column ALTER COLUMN is_primary_key BOOLEAN;
+            ALTER TABLE metaforge_dataset_column ALTER COLUMN is_primary_key SET DEFAULT FALSE;
+            ALTER TABLE metaforge_source_query ADD COLUMN create_time_value TIMESTAMP NULL;
+            UPDATE metaforge_source_query SET create_time_value = CAST(LEFT(CAST(create_time AS VARCHAR(64)), 19) AS TIMESTAMP)
+                WHERE REGEXP_LIKE(CAST(create_time AS VARCHAR(64)), '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}');
+            ALTER TABLE metaforge_source_query DROP COLUMN create_time;
+            ALTER TABLE metaforge_source_query ALTER COLUMN create_time_value RENAME TO create_time;
+        </sql>
+    </changeSet>
+
+    <!-- Columns no entity maps any more. -->
+    <changeSet id="legacy-0009-drop-source-ssl" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <columnExists tableName="metaforge_source" columnName="ssl"/>
+        </preConditions>
+        <dropColumn tableName="metaforge_source" columnName="ssl"/>
+    </changeSet>
+
+    <changeSet id="legacy-0010-drop-source-publish" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <columnExists tableName="metaforge_source" columnName="publish"/>
+        </preConditions>
+        <dropColumn tableName="metaforge_source" columnName="publish"/>
+    </changeSet>
+
+    <changeSet id="legacy-0011-drop-menu-view" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <columnExists tableName="metaforge_menu" columnName="view"/>
+        </preConditions>
+        <dropColumn tableName="metaforge_menu" columnName="view"/>
+    </changeSet>
+
+    <changeSet id="legacy-0012-drop-dataset-column-flags" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <columnExists tableName="metaforge_dataset" columnName="column_mode"/>
+        </preConditions>
+        <dropColumn tableName="metaforge_dataset">
+            <column name="column_mode"/>
+            <column name="is_custom_column"/>
+            <column name="is_virtual_column"/>
+        </dropColumn>
+    </changeSet>
+
+    <changeSet id="legacy-0013-link-indexes" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+            <not>
+                <indexExists tableName="metaforge_dataset" indexName="idx_dataset_source_id"/>
+            </not>
+        </preConditions>
+        <createIndex tableName="metaforge_chat" indexName="idx_chat_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_message" indexName="idx_message_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_message" indexName="idx_message_chat_id"><column name="chat_id"/></createIndex>
+        <createIndex tableName="metaforge_dashboard" indexName="idx_dashboard_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_report" indexName="idx_report_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_report" indexName="idx_report_source_id"><column name="source_id"/></createIndex>
+        <createIndex tableName="metaforge_report" indexName="idx_report_dataset_id"><column name="dataset_id"/></createIndex>
+        <createIndex tableName="metaforge_dataset" indexName="idx_dataset_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_dataset" indexName="idx_dataset_source_id"><column name="source_id"/></createIndex>
+        <createIndex tableName="metaforge_dataset_column" indexName="idx_dscol_dataset_id"><column name="dataset_id"/></createIndex>
+        <createIndex tableName="metaforge_dataset_history" indexName="idx_dshist_dataset_id"><column name="dataset_id"/></createIndex>
+        <createIndex tableName="metaforge_notification" indexName="idx_notify_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_scheduled_history" indexName="idx_schhist_scheduled_id"><column name="scheduled_id"/></createIndex>
+        <createIndex tableName="metaforge_scheduled_history" indexName="idx_schhist_source_id"><column name="source_id"/></createIndex>
+        <createIndex tableName="metaforge_snippet" indexName="idx_snippet_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_source" indexName="idx_source_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_source_query" indexName="idx_srcquery_source_id"><column name="source_id"/></createIndex>
+        <createIndex tableName="metaforge_source_query" indexName="idx_srcquery_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_user_log" indexName="idx_userlog_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_workflow" indexName="idx_workflow_user_id"><column name="user_id"/></createIndex>
+        <createIndex tableName="metaforge_workflow" indexName="idx_workflow_from_source_id"><column name="from_source_id"/></createIndex>
+        <createIndex tableName="metaforge_workflow" indexName="idx_workflow_to_source_id"><column name="to_source_id"/></createIndex>
+    </changeSet>
+
+    <changeSet id="legacy-0014-drop-schema-migration" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_schema_migration"/>
+        </preConditions>
+        <comment>Replaced by the Liquibase changelog.</comment>
+        <dropTable tableName="metaforge_schema_migration"/>
+    </changeSet>
+
+    <changeSet id="legacy-0015-drop-relation-tables" author="metaforge" dbms="mysql,mariadb,h2">
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="metaforge_user_role_relation"/>
+        </preConditions>
+        <dropTable tableName="metaforge_chat_user_relation"/>
+        <dropTable tableName="metaforge_message_user_relation"/>
+        <dropTable tableName="metaforge_message_chat_relation"/>
+        <dropTable tableName="metaforge_dashboard_user_relation"/>
+        <dropTable tableName="metaforge_dashboard_report_relation"/>
+        <dropTable tableName="metaforge_report_user_relation"/>
+        <dropTable tableName="metaforge_report_source_relation"/>
+        <dropTable tableName="metaforge_report_dataset_relation"/>
+        <dropTable tableName="metaforge_dataset_user_relation"/>
+        <dropTable tableName="metaforge_dataset_source_relation"/>
+        <dropTable tableName="metaforge_dataset_column_relation"/>
+        <dropTable tableName="metaforge_dataset_history_relation"/>
+        <dropTable tableName="metaforge_scheduled_history_relation"/>
+        <dropTable tableName="metaforge_scheduled_history_source_relation"/>
+        <dropTable tableName="metaforge_role_menu_relation"/>
+        <!-- legacy marker, must stay last -->
+        <dropTable tableName="metaforge_user_role_relation"/>
+    </changeSet>
+</databaseChangeLog>

@@ -44,10 +44,19 @@ import SnippetService from '@/services/snippet'
 
 defineOptions({ name: 'SnippetInfo' })
 
-const props = withDefaults(defineProps<{ isVisible?: boolean; info?: SnippetModel | null }>(), {
+const props = withDefaults(defineProps<{ isVisible?: boolean; info?: SnippetModel | null; kind?: 'snippet' | 'template' }>(), {
   isVisible: false,
-  info: null
+  info: null,
+  kind: 'snippet'
 })
+
+/** The same drawer serves the snippet page and the query console template tab. */
+const LABELS = {
+  snippet: { create: 'snippet.common.create', modify: 'snippet.common.modify', success: 'snippet.tip.createSuccess' },
+  template: { create: 'template.common.create', modify: 'template.common.modify', success: 'template.tip.createSuccess' }
+} as const
+
+const labels = computed(() => LABELS[props.kind])
 const emit = defineEmits<{ (e: 'close', value: boolean): void }>()
 
 const { t } = useI18n()
@@ -62,11 +71,11 @@ const formState = ref<SnippetModel>(null as unknown as SnippetModel)
 const title = ref<string | null>(null)
 
 const handleInitialize = () => {
-  title.value = t('snippet.common.create')
+  title.value = t(labels.value.create)
   if (props.info) {
     formState.value = cloneDeep(props.info)
     if (props.info.id) {
-      title.value = `${ t('snippet.common.modify').replace('$VALUE', props.info.name as string) }`
+      title.value = `${ t(labels.value.modify).replace(/\$VALUE|\$NAME/g, props.info.name as string) }`
     }
   }
   else {
@@ -83,7 +92,7 @@ const onSubmit = () => {
   SnippetService.saveOrUpdate(formState.value)
                 .then((response) => {
                   if (response.status) {
-                    MfMessage.success(t('snippet.tip.createSuccess').replace('$VALUE', formState.value.name as string))
+                    MfMessage.success(t(labels.value.success).replace('$VALUE', formState.value.name as string))
                     onCancel()
                   }
                 })

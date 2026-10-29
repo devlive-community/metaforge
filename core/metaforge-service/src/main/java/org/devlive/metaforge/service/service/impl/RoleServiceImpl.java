@@ -1,5 +1,6 @@
 package org.devlive.metaforge.service.service.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.common.enums.ServiceState;
@@ -8,12 +9,15 @@ import org.devlive.metaforge.common.utils.CodeUtils;
 import org.devlive.metaforge.service.entity.RoleEntity;
 import org.devlive.metaforge.service.initializer.RoleCodeConstraint;
 import org.devlive.metaforge.service.record.TreeRecord;
+import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.repository.RoleRepository;
+import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.repository.jdbc.MenuAccessRepository;
 import org.devlive.metaforge.service.service.RoleService;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -23,6 +27,7 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Service
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Collaborators are Spring-managed singletons")
 public class RoleServiceImpl
         implements RoleService
 {
@@ -31,9 +36,11 @@ public class RoleServiceImpl
     private final RoleRepository repository;
     private final MenuAccessRepository menuRepository;
     private final RoleCodeConstraint codeConstraint;
+    private final LinkRepository linkRepository;
 
-    public RoleServiceImpl(RoleRepository repository, MenuAccessRepository menuRepository, RoleCodeConstraint codeConstraint)
+    public RoleServiceImpl(RoleRepository repository, MenuAccessRepository menuRepository, RoleCodeConstraint codeConstraint, LinkRepository linkRepository)
     {
+        this.linkRepository = linkRepository;
         this.repository = repository;
         this.menuRepository = menuRepository;
         this.codeConstraint = codeConstraint;
@@ -74,7 +81,7 @@ public class RoleServiceImpl
             entity.setCode(code);
             entity.setName(configure.getName());
             entity.setDescription(configure.getDescription());
-            return CommonResponse.success(repository.saveAndFlush(entity));
+            return CommonResponse.success(repository.save(entity));
         }
         catch (DataIntegrityViolationException exception) {
             if (repository.existsByCode(code)) {
@@ -106,7 +113,7 @@ public class RoleServiceImpl
                     if (configure.getDescription() != null) {
                         entity.setDescription(configure.getDescription());
                     }
-                    return CommonResponse.success(repository.saveAndFlush(entity));
+                    return CommonResponse.success(repository.save(entity));
                 })
                 .orElseGet(() -> CommonResponse.failure(ServiceState.USER_ROLE_NOT_FOUND));
     }
@@ -141,5 +148,13 @@ public class RoleServiceImpl
             log.error("Could not save role menus", exception);
             return CommonResponse.failure(ServiceState.USER_ROLE_MENU_SAVE_FAILED);
         }
+    }
+
+    @Override
+    @Transactional
+    public CommonResponse<String> deleteByCode(BaseRepository<RoleEntity, Long> repository, String code)
+    {
+        repository.findByCode(code).ifPresent(value -> linkRepository.deleteRole(value.getId()));
+        return RoleService.super.deleteByCode(repository, code);
     }
 }

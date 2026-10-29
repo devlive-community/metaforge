@@ -28,6 +28,13 @@ onBeforeUnmount(() => { if (timer) clearTimeout(timer) })
 const triggers = computed(() => Array.isArray(props.trigger) ? props.trigger : [props.trigger])
 const hoverable = computed(() => triggers.value.includes('hover'))
 
+/** Clicking any actionable element inside the overlay closes the menu:
+ *  menu items open targets (modals, pages) and must not linger under them. */
+function onOverlayClick(event: Event): void {
+    const target = event.target as HTMLElement | null
+    if (target?.closest?.('button, a, [role="menuitem"]')) close()
+}
+
 function show(): void {
     if (timer) clearTimeout(timer)
     timer = undefined
@@ -79,6 +86,7 @@ const overlayStyle = useOverlayPosition({
                     ref="overlay"
                     class="fixed z-50 min-w-40 rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg"
                     :style="overlayStyle"
+                    @click="onOverlayClick"
                     @mouseenter="show"
                     @mouseleave="hoverable && hide()"
                 >

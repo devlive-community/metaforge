@@ -8,13 +8,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.devlive.metaforge.common.view.EntityView;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 /**
  * 通用配置表，承载 EXECUTOR / DATASET 等不同范畴的运行时配置。
@@ -30,24 +25,20 @@ import javax.persistence.UniqueConstraint;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "metaforge_configure", uniqueConstraints = {
-        @UniqueConstraint(name = "uk_configure_category_name", columnNames = {"category", "name"})
-})
-@EntityListeners(AuditingEntityListener.class)
+@Table("metaforge_configure")
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"})
 public class ConfigureEntity
         extends BaseEntity
 {
-    @Column(name = "category", length = 32, nullable = false)
+    @Column("category")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String category;
 
-    @Column(name = "configure", columnDefinition = "TEXT")
+    @Column("configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String configure;
 
-    @Column(name = "description", length = 512)
+    @Column("description")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String description;
 }

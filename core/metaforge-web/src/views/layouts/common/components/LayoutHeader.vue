@@ -10,7 +10,7 @@
     <div class="container dc-header__layout flex min-h-16 w-full items-center justify-between gap-6 py-3">
       <div class="dc-header__navigation flex min-w-0 flex-1 items-center gap-6">
         <router-link to="/" class="flex items-center gap-2 shrink-0">
-          <MfAvatar src="/static/images/logo.png" alt="MetaForge Logo" :size="34"/>
+          <img src="/static/images/logo.png" alt="" width="40" height="40" class="dc-brand-logo"/>
           <span class="dc-header__wordmark">MetaForge</span>
         </router-link>
 

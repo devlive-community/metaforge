@@ -27,7 +27,7 @@ public class ChatServiceImpl
     public CommonResponse<PageEntity<ChatEntity>> getAllByUser(FilterBody filter)
     {
         Pageable pageable = PageRequestAdapter.of(filter);
-        return CommonResponse.success(PageEntity.build(repository.findAllByUser(UserDetailsService.getUser(), pageable)));
+        return CommonResponse.success(PageEntity.build(repository.findAllByUserId(UserDetailsService.getUser().getId(), pageable)));
     }
 
     @Override

@@ -1,0 +1,66 @@
+name: database matrix
+
+# Runs the metadata persistence suite (changelog, entity mapping, filters, setup install)
+# against every database the setup wizard offers. Databases start in Testcontainers.
+on:
+  push:
+    branches: [ main, master, 2026.0.0 ]
+    paths:
+      - 'pom.xml'
+      - 'core/metaforge-service/**'
+      - 'core/metaforge-server/pom.xml'
+      - 'core/metaforge-server/src/**'
+      - '.github/workflows/database-matrix.yml'
+  pull_request:
+    branches: [ main, master, 2026.0.0 ]
+    paths:
+      - 'pom.xml'
+      - 'core/metaforge-service/**'
+      - 'core/metaforge-server/pom.xml'
+      - 'core/metaforge-server/src/**'
+      - '.github/workflows/database-matrix.yml'
+
+concurrency:
+  group: database-matrix-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    name: ${{ matrix.database }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [ 'h2', 'mysql:8.0', 'postgres:16', 'sqlserver:2022', 'oracle:23' ]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build the server and its modules
+        run: >
+          ./mvnw -B -q install -pl core/metaforge-server -am
+          -DskipTests -Dcheckstyle.skip -Dspotbugs.skip -Dmaven.javadoc.skip=true -Dgpg.skip
+          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+
+      - name: Run the persistence suite on ${{ matrix.database }}
+        run: >
+          ./mvnw -B -pl core/metaforge-server
+          org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
+          -Dtest='DatabaseMigratorTest,EntityMappingTest,TableFilterTest,SetupInstallTest'
+          -Dsurefire.failIfNoSpecifiedTests=true
+          -Dmetaforge.it.database=${{ matrix.database }}
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-${{ strategy.job-index }}
+          path: core/metaforge-server/target/surefire-reports

@@ -13,6 +13,21 @@ export class DatasetService
         super(DEFAULT_PATH)
     }
 
+    preview(code: string): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${DEFAULT_PATH}/preview/${encodeURIComponent(code)}`)
+    }
+
+    getColumnFunctions(): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${DEFAULT_PATH}/columnFunctions`)
+    }
+
+    validateColumns(columns: unknown[]): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${DEFAULT_PATH}/validateColumns`, columns)
+    }
+
     /**
      * Adhoc function for executing custom code.
      *

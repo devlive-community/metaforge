@@ -10,6 +10,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
+import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Set;
 
@@ -32,10 +34,9 @@ public class PluginConfiguration
     {
         EnvironmentUtils.printEnvironmentInfo();
 
-        String root = environment.getProperty("spring.config.location");
         Path projectRoot = PluginPathUtils.findProjectRoot();
         PluginConfigure config = PluginConfigure.builder()
-                .pluginsDir(PluginPathUtils.appendPath("plugins"))
+                .pluginsDir(pluginsDirectory(projectRoot, EnvironmentUtils.isIdeEnvironment()))
                 .autoCleanup(true)
                 .build();
 
@@ -44,17 +45,45 @@ public class PluginConfiguration
             config.addParentClassLoaderPackage(extendPackages);
         }
 
-        // 开发模式下生效，如果涉及到插件的安装卸载，请注释掉这部分代码
-        // In development mode, it is effective, if there is a plugin installation and uninstallation, please comment out this code
-        if (EnvironmentUtils.isIdeEnvironment()) {
-            log.info("Development mode is development mode");
-            config.setPluginsDir(projectRoot.resolve(Path.of(String.join("/", root, "plugins.properties"))));
-        }
-
         log.info("Plugins directory: {}", config.getPluginsDir());
         PluginManager pluginManager = new PluginManager(config);
         pluginManager.start();
 
         return pluginManager;
+    }
+
+    Path pluginsDirectory(Path projectRoot, boolean development)
+    {
+        if (development) {
+            for (String property : new String[] {"spring.config.additional-location", "spring.config.location"}) {
+                String locations = environment.getProperty(property, "");
+                String[] entries = locations.split(",");
+                for (int index = entries.length - 1; index >= 0; index--) {
+                    String location = entries[index].trim().replaceFirst("^optional:", "").replaceFirst("^file:", "");
+                    if (location.isEmpty() || location.startsWith("classpath:")) {
+                        continue;
+                    }
+                    try {
+                        Path path = projectRoot.resolve(location).normalize();
+                        Path directory = Files.isRegularFile(path) ? path.getParent() : path;
+                        Path properties = directory.resolve("plugins.properties");
+                        if (Files.isRegularFile(properties)) {
+                            return properties;
+                        }
+                    }
+                    catch (InvalidPathException e) {
+                        log.debug("Invalid development plugin configuration location: {}", location, e);
+                    }
+                }
+            }
+            for (String location : new String[] {"config/plugins.properties", "configure/etc/conf/plugins.properties"}) {
+                Path properties = projectRoot.resolve(location);
+                if (Files.isRegularFile(properties)) {
+                    return properties;
+                }
+            }
+            log.warn("Development plugin manifest not found; using the installed plugins directory");
+        }
+        return projectRoot.resolve("plugins");
     }
 }

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Baseline catalogue (roles, menus, functions, system schedules) for fresh installs only. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0002-seed" author="metaforge">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">SELECT COUNT(*) FROM metaforge_menu</sqlCheck>
+        </preConditions>
+        <customChange class="org.devlive.metaforge.server.migration.SeedDataChange">
+            <param name="resource" value="db/seed/baseline.json"/>
+        </customChange>
+    </changeSet>
+</databaseChangeLog>

@@ -10,6 +10,18 @@
     width: 100vw;
 }
 
+/* Preserve the folded mark instead of cropping it as a user avatar. */
+.dc-brand-logo {
+    display: block;
+    flex-shrink: 0;
+    object-fit: contain;
+}
+
+html.dark .dc-brand-logo,
+[data-theme='dark'] .dc-brand-logo {
+    filter: brightness(0) invert(1);
+}
+
 /* ant-design-vue 定制：下拉选项（Select / 分页每页条数等）之间留间距 + 圆角，
    避免 hover 态与已选态紧贴在一起 */
 .ant-select-dropdown .ant-select-item {

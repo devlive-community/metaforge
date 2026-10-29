@@ -8,17 +8,10 @@ import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.devlive.metaforge.executor.common.RunState;
 import org.devlive.metaforge.service.enums.QueryMode;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import org.devlive.metaforge.service.persistence.Reference;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 import java.math.BigDecimal;
 
@@ -27,55 +20,52 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "metaforge_dataset_history")
-@EntityListeners(AuditingEntityListener.class)
+@Table("metaforge_dataset_history")
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"})
 public class DatasetHistoryEntity
         extends BaseEntity
 {
-    @Column(name = "query")
+    @Column("query")
     private String query;
 
-    @Column(name = "message", unique = true)
+    @Column("message")
     private String message;
 
-    @Column(name = "elapsed")
+    @Column("elapsed")
     private Long elapsed;
 
-    @Column(name = "count")
+    @Column("count")
     private int count;
 
-    @Column(name = "total_count")
+    @Column("total_count")
     private Long totalCount;
 
-    @Column(name = "processed_count")
+    @Column("processed_count")
     private Long processedCount;
 
-    @Column(name = "progress")
+    @Column("progress")
     private BigDecimal progress;
 
-    @Column(name = "task_name")
+    @Column("task_name")
     private String taskName;
 
-    @Column(name = "work_home")
+    @Column("work_home")
     private String workHome;
 
     /** 本次同步实际生效的 executor 配置 JSON（DB 默认 + 本次临时覆盖后的合并结果） */
-    @Column(name = "executor_configure", columnDefinition = "TEXT")
+    @Column("executor_configure")
     private String executorConfigure;
 
-    @Column(name = "query_mode")
-    @Enumerated(EnumType.STRING)
+    @Column("query_mode")
     private QueryMode mode;
 
-    @Column(name = "state", unique = true)
-    @Enumerated(EnumType.STRING)
+    @Column("state")
     private RunState state;
 
-    @ManyToOne
-    @JoinTable(name = "metaforge_dataset_history_relation",
-            joinColumns = @JoinColumn(name = "dataset_history_id"),
-            inverseJoinColumns = @JoinColumn(name = "dataset_id"))
+    @Column("dataset_id")
+    private Long datasetId;
+
+    @Transient
+    @Reference("datasetId")
     private DataSetEntity dataset;
 }

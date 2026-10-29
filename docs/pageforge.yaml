@@ -4,7 +4,7 @@ site:
   description: MetaForge is integrated software for data transformation, integration, and visualization. Support a variety of data sources, file types, big data related database, relational database, NoSQL database, etc. Through the software can realize the management of multiple data sources, the data under the source of various operations conversion ...
   keywords: metaforge,database,mysql,postgresql,clickhouse,oracle,sqlserver,sqlserver2008,sqlserver2012,sqlserver2014,sqlserver2016,sqlserver2017,sqlserver2019,sqlserver2022,hive,spark,mysql,postgresql,clickhouse,oracle,sqlserver,sqlserver2008,sqlserver2012,sqlserver2014,sqlserver2016,sqlserver2017,sqlserver2019,sqlserver2022,hive,spark
   logo: /assets/logo.png
-  favicon: assets/logo.png
+  favicon: /assets/metaforge-icon.png
   baseUrl: https://metaforge.devlive.org
 
 repo:

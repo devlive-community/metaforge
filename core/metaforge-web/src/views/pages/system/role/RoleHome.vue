@@ -21,7 +21,7 @@
 
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'action'">
-          <MfSpace>
+          <MfSpace size="xs">
             <MfTooltip :content="$t('common.editData')">
               <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerChangeInfo(true, record)">
                 <Pencil :size="15" />

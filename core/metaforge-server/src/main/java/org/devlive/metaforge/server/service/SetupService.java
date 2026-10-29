@@ -1,18 +1,18 @@
 package org.devlive.metaforge.server.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.server.configure.SetupDatasourceGuardEnvironmentPostProcessor;
+import org.devlive.metaforge.server.migration.DatabaseMigrator;
 import org.devlive.metaforge.service.initializer.DataSetConfigure;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.initializer.InstallationState;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.core.env.Environment;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -24,8 +24,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -38,19 +39,17 @@ import java.util.UUID;
  * idempotent so a partially installed instance can safely re-run.
  *
  * The wizard can install into the datasource this instance already runs on,
- * or into a chosen target (embedded H2 file store or an external MySQL);
+ * or into a chosen target (embedded H2 file store, or external MySQL, PostgreSQL,
+ * SQL Server or Oracle); the schema comes from the Liquibase changelog and
  * the chosen datasource is persisted to ./config/application.properties
  * which Spring Boot picks up on the next boot without extra launch flags.
  */
 @Slf4j
 @Service
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Collaborators are Spring-managed singletons")
 public class SetupService
 {
     private static final String CONFIG_OVERRIDE = "config/application.properties";
-    private static final String MYSQL_URL_TEMPLATE =
-            "jdbc:mysql://%s:%d/%s?useUnicode=true&characterEncoding=UTF-8"
-                    + "&zeroDateTimeBehavior=convertToNull&useMultiQueries=true"
-                    + "&useSSL=false&allowPublicKeyRetrieval=true";
 
     private final JdbcTemplate jdbcTemplate;
     private final DataSource dataSource;
@@ -210,14 +209,8 @@ public class SetupService
     private void installOnActiveDatasource(SetupInstallBody body)
             throws Exception
     {
-        boolean h2;
         try (Connection connection = dataSource.getConnection()) {
-            h2 = connection.getMetaData().getDatabaseProductName().contains("H2");
-        }
-        try (Connection connection = dataSource.getConnection()) {
-            executeScript(connection, h2 ? "schema/setup-schema-h2.sql" : "schema/setup-schema.sql");
-            executeScript(connection, "schema/setup-data.sql");
-            NavigationMigration.apply(connection);
+            DatabaseMigrator.migrate(connection);
             createAdministrator(connection, body);
         }
         reloadRuntimeConfigures();
@@ -228,9 +221,7 @@ public class SetupService
     {
         TargetDatabase target = resolveTarget(body.getDatabase());
         try (Connection connection = openTarget(target)) {
-            executeScript(connection, target.embedded ? "schema/setup-schema-h2.sql" : "schema/setup-schema.sql");
-            executeScript(connection, "schema/setup-data.sql");
-            NavigationMigration.apply(connection);
+            DatabaseMigrator.migrate(connection);
             createAdministrator(connection, body);
         }
         persistDatasourceOverride(target);
@@ -260,15 +251,13 @@ public class SetupService
                     new File(dir, "metaforge").getAbsolutePath().replace('\\', '/'));
             return new TargetDatabase(url, "sa", "", true);
         }
-        if ("mysql".equalsIgnoreCase(configure.getType())) {
-            if (StringUtils.isAnyBlank(configure.getHost(), configure.getDatabase(), configure.getUsername())) {
-                throw new IllegalArgumentException("Host, database and username are required for MySQL");
-            }
-            int port = configure.getPort() == null ? 3306 : configure.getPort();
-            String url = String.format(MYSQL_URL_TEMPLATE, configure.getHost(), port, configure.getDatabase());
-            return new TargetDatabase(url, configure.getUsername(), configure.getPassword() == null ? "" : configure.getPassword(), false);
+        ExternalDatabase external = ExternalDatabase.of(configure.getType())
+                .orElseThrow(() -> new IllegalArgumentException("Unknown database type: " + configure.getType()));
+        if (StringUtils.isAnyBlank(configure.getHost(), configure.getDatabase(), configure.getUsername())) {
+            throw new IllegalArgumentException(String.format("Host, database and username are required for %s", external.getLabel()));
         }
-        throw new IllegalArgumentException("Unknown database type: " + configure.getType());
+        String url = external.url(configure.getHost(), configure.getPort(), configure.getDatabase());
+        return new TargetDatabase(url, configure.getUsername(), configure.getPassword() == null ? "" : configure.getPassword(), false);
     }
 
     private Connection openTarget(TargetDatabase target)
@@ -301,7 +290,6 @@ public class SetupService
         lines.put("spring.datasource.url", target.url);
         lines.put("spring.datasource.username", target.username);
         lines.put("spring.datasource.password", target.password);
-        lines.put("spring.jpa.hibernate.ddl-auto", "none");
         StringBuilder content = new StringBuilder("# Written by the MetaForge setup wizard\n");
         for (Map.Entry<String, String> entry : lines.entrySet()) {
             content.append(entry.getKey()).append('=').append(entry.getValue()).append('\n');
@@ -343,33 +331,44 @@ public class SetupService
         return new File(CONFIG_OVERRIDE);
     }
 
-    private void executeScript(Connection connection, String path)
-            throws SQLException
-    {
-        ScriptUtils.executeSqlScript(connection, new ClassPathResource(path));
-    }
-
     private void createAdministrator(Connection connection, SetupInstallBody body)
             throws SQLException
     {
         String username = body.getUsername();
-        try (Statement statement = connection.createStatement()) {
-            statement.executeUpdate(String.format(
-                    "INSERT INTO metaforge_user (username, password, name, is_system, active, code) VALUES ('%s', '%s', '%s', 1, 1, '%s')",
-                    escape(username),
-                    escape(passwordEncoder.encode(body.getPassword())),
-                    escape(StringUtils.defaultIfBlank(body.getName(), username)),
-                    UUID.randomUUID().toString().replace("-", "")));
-            // role id 1 is the seeded system ADMIN role
-            statement.executeUpdate(String.format(
-                    "INSERT INTO metaforge_user_role_relation (user_id, role_id) SELECT id, 1 FROM metaforge_user WHERE username = '%s'",
-                    escape(username)));
+        Timestamp now = new Timestamp(System.currentTimeMillis());
+        boolean autoCommit = connection.getAutoCommit();
+        connection.setAutoCommit(false);
+        try {
+            try (PreparedStatement insert = connection.prepareStatement(
+                    "INSERT INTO metaforge_user (username, password_hash, name, is_system, active, code, create_time, update_time) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+                insert.setString(1, username);
+                insert.setString(2, passwordEncoder.encode(body.getPassword()));
+                insert.setString(3, StringUtils.defaultIfBlank(body.getName(), username));
+                insert.setBoolean(4, true);
+                insert.setBoolean(5, true);
+                insert.setString(6, UUID.randomUUID().toString().replace("-", ""));
+                insert.setTimestamp(7, now);
+                insert.setTimestamp(8, now);
+                insert.executeUpdate();
+            }
+            // the seeded system role with code ADMIN
+            try (PreparedStatement link = connection.prepareStatement(
+                    "INSERT INTO metaforge_user_role (user_id, role_id) "
+                            + "SELECT u.id, r.id FROM metaforge_user u, metaforge_role r WHERE u.username = ? AND r.code = 'ADMIN'")) {
+                link.setString(1, username);
+                if (link.executeUpdate() != 1) {
+                    throw new SQLException("The ADMIN role is missing from the metadata database");
+                }
+            }
+            connection.commit();
         }
-    }
-
-    private String escape(String value)
-    {
-        return value == null ? "" : value.replace("'", "''");
+        catch (SQLException e) {
+            connection.rollback();
+            throw e;
+        }
+        finally {
+            connection.setAutoCommit(autoCommit);
+        }
     }
 
     private static class TargetDatabase

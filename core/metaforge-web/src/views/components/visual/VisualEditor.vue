@@ -6,7 +6,7 @@
           <MfSpinner size="lg"/>
         </div>
 
-        <MfAlert v-if="configuration?.headers.length === 0 && !configuration?.message" class="mt-20" :title="$t('dataset.tip.adhocDnd')"/>
+        <MfEmpty v-if="!loading && configuration?.headers.length === 0 && !configuration?.message" variant="initial" :title="$t('dataset.tip.adhocDnd')"/>
 
         <MfAlert v-else-if="configuration?.message" class="mt-20" :title="configuration.message" variant="danger"/>
 
@@ -215,9 +215,9 @@
             <MfSpinner/>
           </div>
           <div v-if="configuration" class="flex items-center justify-center">
-            <MfAlert v-if="configuration.type === Type.TABLE" :title="$t('dataset.common.visualConfigureNotSpecified')"/>
+            <MfEmpty v-if="configuration.type === Type.TABLE && !localLoading" size="sm" :title="$t('dataset.common.visualConfigureNotSpecified')"/>
 
-            <MfButton v-else @click="configureVisible = true">{{ $t('common.configure') }}</MfButton>
+            <MfButton v-else-if="configuration.type !== Type.TABLE" @click="configureVisible = true">{{ $t('common.configure') }}</MfButton>
           </div>
         </div>
       </MfCard>

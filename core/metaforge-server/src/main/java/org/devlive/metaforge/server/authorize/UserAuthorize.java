@@ -39,7 +39,7 @@ public class UserAuthorize
     {
         try {
             UserEntity loginUser = UserDetailsService.getUser();
-            if (Objects.equals(loginUser.getId(), this.sourceRepository.findById(id).get().getUser().getId())) {
+            if (Objects.equals(loginUser.getId(), this.sourceRepository.findById(id).get().getUserId())) {
                 return true;
             }
             throw new UserNotEqualsException(ServiceState.USER_UNAUTHORIZED.getValue());

@@ -22,12 +22,7 @@
         </dependency>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
-            <artifactId>metaforge-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>${redis.version}</version>
+            <artifactId>metaforge-driver-redis</artifactId>
         </dependency>
     </dependencies>
 

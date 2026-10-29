@@ -11,6 +11,7 @@ import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.entity.BaseEntity;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
+import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 
@@ -19,7 +20,7 @@ public interface BaseService<T extends BaseEntity>
     default CommonResponse<PageEntity<T>> getAll(BaseRepository<T, Long> repository, FilterBody filter)
     {
         try {
-            return CommonResponse.success(PageEntity.build(repository.findFiltered(filter, UserDetailsService.getUser())));
+            return CommonResponse.success(PageEntity.build(Persistence.filtered(repository, filter, UserDetailsService.getUser())));
         }
         catch (Exception e) {
             return CommonResponse.failure("Failed to fetch data: " + e.getMessage());
@@ -29,6 +30,7 @@ public interface BaseService<T extends BaseEntity>
     default CommonResponse<T> getById(BaseRepository<T, Long> repository, Long id)
     {
         return repository.findById(id)
+                .map(Persistence.references()::load)
                 .map(CommonResponse::success)
                 .orElse(CommonResponse.failure(String.format("Resource [ %s ] not found", id)));
     }
@@ -67,30 +69,36 @@ public interface BaseService<T extends BaseEntity>
     default CommonResponse<T> getByCode(BaseRepository<T, Long> repository, String code)
     {
         return repository.findByCode(code)
+                .map(Persistence.references()::load)
                 .map(this::validatorUser)
                 .orElseGet(() -> CommonResponse.failure(String.format("Resource [ %s ] not found", code)));
     }
 
     default <R> CommonResponse<R> validatorUser(R value)
     {
-        if (ReflectionUtils.hasField(value, "user")) {
-            UserEntity originalUser = (UserEntity) ReflectionUtils.getFieldValue(value, "user");
-            UserEntity loginUser = UserDetailsService.getUser();
-            if (originalUser != null && !originalUser.getId().equals(loginUser.getId())) {
-                return CommonResponse.failure(ServiceState.USER_UNAUTHORIZED);
-            }
+        if (!ownedBySelf(value)) {
+            return CommonResponse.failure(ServiceState.USER_UNAUTHORIZED);
         }
         return CommonResponse.success(value);
     }
 
     default void isSelf(Object value)
     {
-        if (ReflectionUtils.hasField(value, "user")) {
-            UserEntity originalUser = (UserEntity) ReflectionUtils.getFieldValue(value, "user");
-            UserEntity loginUser = UserDetailsService.getUser();
-            if (originalUser != null && !originalUser.getId().equals(loginUser.getId())) {
-                throw new SelfException(String.format("Resource [ %s ] not found", value.getClass().getName()));
-            }
+        if (!ownedBySelf(value)) {
+            throw new SelfException(String.format("Resource [ %s ] not found", value.getClass().getName()));
         }
+    }
+
+    /**
+     * Rows with an owner column belong to the signed-in user; rows without one are shared.
+     */
+    static boolean ownedBySelf(Object value)
+    {
+        if (!ReflectionUtils.hasField(value, "userId")) {
+            return true;
+        }
+        Object owner = ReflectionUtils.getFieldValue(value, "userId");
+        UserEntity loginUser = UserDetailsService.getUser();
+        return owner == null || owner.equals(loginUser.getId());
     }
 }

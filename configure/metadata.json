@@ -126,21 +126,6 @@
       "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kafka/2026.0.0/metaforge-plugin-kafka-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "metaforge-plugin-redis",
-      "label": "Redis",
-      "description": "Redis is an in-memory data store used by millions of developers as a cache, vector database, document database, streaming engine, and message broker. Redis has built-in replication and different levels of on-disk persistence. It supports complex data types (for example, strings, hashes, lists, sets, sorted sets, and JSON), with atomic operations defined on those data types.",
-      "i18nFormat": true,
-      "type": "Connector",
-      "version": "2026.0.0",
-      "author": "metaforge-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/redis.svg",
-      "released": "2026-01-28 16:48:33",
-      "supportVersion": [
-        "ALL"
-      ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.0.0/metaforge-plugin-redis-2026.0.0-bin.tar.gz"
-    },
-    {
       "key": "metaforge-plugin-h2",
       "label": "H2",
       "description": "H2 is a small, fast, and easy-to-use in-memory database.",
@@ -741,19 +726,19 @@
       "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ceresdb/2026.0.0/metaforge-plugin-ceresdb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "metaforge-plugin-redis-jdbc",
-      "label": "Redis JDBC",
-      "description": "Use JDBC to access Redis",
+      "key": "metaforge-plugin-redis",
+      "label": "Redis",
+      "description": "Redis is an in-memory data store used by millions of developers as a cache, vector database, document database, streaming engine, and message broker. Redis has built-in replication and different levels of on-disk persistence. It supports complex data types (for example, strings, hashes, lists, sets, sorted sets, and JSON), with atomic operations defined on those data types.",
       "i18nFormat": true,
       "type": "Connector",
       "version": "2026.0.0",
       "author": "metaforge-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/redisjdbc.svg",
+      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/redis.svg",
       "released": "2026-01-28 16:48:33",
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis-jdbc/2026.0.0/metaforge-plugin-redis-jdbc-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.0.0/metaforge-plugin-redis-2026.0.0-bin.tar.gz"
     },
     {
       "key": "metaforge-plugin-elasticsearch-8x",

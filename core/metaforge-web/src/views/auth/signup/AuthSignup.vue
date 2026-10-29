@@ -5,7 +5,7 @@
         <MfCard class="w-full">
           <template #header>
             <div class='flex items-center justify-center'>
-              <MfAvatar src="/static/images/logo.png" alt="MetaForge"/>
+              <img src="/static/images/logo.png" alt="MetaForge" width="56" height="56" class="dc-brand-logo"/>
             </div>
           </template>
 

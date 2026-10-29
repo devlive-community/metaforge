@@ -24,7 +24,11 @@ core/metaforge-ui
 
 布局：MfCard、MfSpace、MfDivider、MfTabs/MfTabPane（自定义标签/禁用）、MfBreadcrumb(Item)
 
-反馈：MfAlert、MfMessage（命令式 toast）、MfModal、MfDrawer、MfTooltip、MfPopover、MfSpinner、MfSkeleton、MfTag（语义色/自定义色）、MfBadge、MfAvatar、MfResult
+反馈：MfAlert、MfMessage（命令式 toast）、MfModal、MfDrawer、MfTooltip、MfPopover、MfSpinner、MfLoadingIcon、MfEmpty、MfSkeleton、MfTag（语义色/自定义色）、MfBadge、MfAvatar、MfResult
+
+`MfSpinner` 使用 MetaForge 结构拼合动画，保留 `xs/sm/md/lg` 尺寸和 `label`，也支持像素数字尺寸。`MfLoadingIcon` 是继承文字颜色的装饰图标，供按钮、选择框等控件复用；两者设 `loading=false` 时显示完整标记，减少动态效果模式下停止动画。可用 `--mf-loading-cycle` 调整循环时长（默认 `2.6s`）。
+
+`MfEmpty` 使用静态、淡化的 MetaForge Logo 提示空状态：`variant=data/search/initial` 区分暂无数据、无匹配结果和等待开始，`title/description` 由调用方传入本地化文案，`size=sm/md` 适应紧凑区域和页面。支持 `icon/title/description/extra` 插槽，操作入口由业务调用方提供。`MfTable` 默认使用该组件，兼容原 `emptyText` 属性和同名插槽，并支持 `emptyDescription/emptyVariant`。`MfSelect` 的空选项和搜索无匹配共用该样式，文案可通过 `emptyText/noMatchText/loadingText` 设置。加载中和请求失败应分别使用加载指示与错误提示，不使用空状态替代。
 
 数据：MfForm/MfFormItem（rules 校验：required/min/max/pattern/validator/type）、MfTable（bodyCell/列插槽）、MfPagination、MfTree（异步加载）、MfDropdown、MfMenu/MfMenuItem/MfSubMenu、MfUpload
 

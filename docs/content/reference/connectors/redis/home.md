@@ -23,7 +23,7 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 !!! note
 
-    If your Redis service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
+    Queries are executed through the JDBC driver (`metaforge-driver-redis`), supporting the `SELECT` and `SHOW` keywords.
 
 !!!
 
@@ -37,7 +37,12 @@ MetaForge declares the configuration fields inside the plugin class by default (
     === "Authorization"
         |   Field    |        Required         | Default Value |
         |:----------:|:-----------------------:|:-------------:|
+        | `Username` | :x{20,#ff0000}: |       \-       |
         | `Password` | :x{20,#ff0000}: |       \-       |
+    === "Advanced"
+        |   Field    |        Required         | Default Value |
+        |:----------:|:-----------------------:|:-------------:|
+        | `Database` | :x{20,#ff0000}: |       `0`       |
 :::
 
 #### Version (Validation)

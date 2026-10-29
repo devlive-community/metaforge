@@ -1,33 +1,29 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import clsx from 'clsx'
+import MfLoadingIcon from './MfLoadingIcon.vue'
 
 const props = withDefaults(defineProps<{
-    size?: 'xs' | 'sm' | 'md' | 'lg'
+    size?: 'xs' | 'sm' | 'md' | 'lg' | number
     label?: string
+    loading?: boolean
 }>(), {
     size: 'md',
+    loading: true,
 })
 
 const SIZES = {
-    xs: 'size-3',
-    sm: 'size-4',
-    md: 'size-6',
-    lg: 'size-8',
+    xs: 12,
+    sm: 16,
+    md: 24,
+    lg: 32,
 } as const
 
-const classes = computed(() => clsx(
-    'inline-block animate-spin text-primary',
-    SIZES[props.size],
-))
+const iconSize = computed(() => typeof props.size === 'number' ? props.size : SIZES[props.size])
 </script>
 
 <template>
-    <span class="inline-flex items-center gap-2" role="status" :aria-label="label">
-        <svg :class="classes" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-            <path class="opacity-90" fill="currentColor" d="M4 12a8 8 0 0 1 8-8v4a4 4 0 0 0-4 4H4z" />
-        </svg>
+    <span class="inline-flex items-center gap-2 text-primary" role="status" :aria-busy="loading" :aria-label="label || (loading ? 'Loading' : 'MetaForge')">
+        <MfLoadingIcon :size="iconSize" :loading="loading"/>
         <span v-if="label" class="text-sm text-content-secondary">{{ label }}</span>
     </span>
 </template>

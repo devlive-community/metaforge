@@ -31,8 +31,15 @@ const DEFAULT_MESSAGES = {
                 choose: '请选择用于安装的数据库',
                 embedded: '使用内置存储（推荐）',
                 embeddedTip: '无需外部数据库，数据保存在本地文件中，开箱即用，重启不丢失',
-                mysql: '连接 MySQL',
-                mysqlTip: '安装到外部 MySQL，请先创建空数据库；配置将写入 config/application.properties，安装后需重启服务',
+                external: '连接外部数据库',
+                externalTip: '请先在目标服务器上创建空数据库；配置将写入 config/application.properties，安装后需重启服务',
+                engines: {
+                    mysql: 'MySQL',
+                    postgresql: 'PostgreSQL',
+                    sqlserver: 'SQL Server',
+                    oracle: 'Oracle'
+                },
+                serviceName: '服务名',
                 degradedTitle: '配置的数据库当前不可用',
                 degradedTip: '服务已在内置降级模式下运行，原数据源：',
                 host: '主机',
@@ -41,7 +48,7 @@ const DEFAULT_MESSAGES = {
                 username: '用户名',
                 password: '密码',
                 passwordPlaceholder: '请输入数据库密码',
-                connectionSettings: 'MySQL 连接信息',
+                connectionSettings: '{engine} 连接信息',
                 connectionSettingsTip: '填写数据库凭据，测试连接通过后即可继续',
                 connectionFailedHint: '请检查数据库地址、用户名和密码，确认数据库已启动并允许访问后重试。',
                 errorDetails: '查看错误详情'
@@ -108,8 +115,15 @@ const DEFAULT_MESSAGES = {
                 choose: 'Choose the database to use for installation',
                 embedded: 'Use embedded storage (recommended)',
                 embeddedTip: 'No external database needed, data is kept in a local file and survives restarts',
-                mysql: 'Connect MySQL',
-                mysqlTip: 'Install into an external MySQL (create an empty database first); the datasource is persisted to config/application.properties and a restart is required',
+                external: 'Connect an external database',
+                externalTip: 'Create an empty database on the target server first; the datasource is persisted to config/application.properties and a restart is required',
+                engines: {
+                    mysql: 'MySQL',
+                    postgresql: 'PostgreSQL',
+                    sqlserver: 'SQL Server',
+                    oracle: 'Oracle'
+                },
+                serviceName: 'Service name',
                 degradedTitle: 'The configured database is unavailable',
                 degradedTip: 'The server is running on the embedded fallback store, original datasource:',
                 host: 'Host',
@@ -118,7 +132,7 @@ const DEFAULT_MESSAGES = {
                 username: 'Username',
                 password: 'Password',
                 passwordPlaceholder: 'Enter the database password',
-                connectionSettings: 'MySQL connection',
+                connectionSettings: '{engine} connection',
                 connectionSettingsTip: 'Enter your database credentials and test the connection to continue',
                 connectionFailedHint: 'Check the host, username and password, and make sure the database is running and allows connections.',
                 errorDetails: 'View error details'

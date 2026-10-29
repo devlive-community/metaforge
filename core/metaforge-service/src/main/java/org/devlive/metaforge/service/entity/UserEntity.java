@@ -1,9 +1,10 @@
 package org.devlive.metaforge.service.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 import com.fasterxml.jackson.annotation.JsonView;
-import com.google.common.collect.Lists;
+import com.fasterxml.jackson.core.type.TypeReference;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,32 +12,21 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.SuperBuilder;
+import org.apache.commons.lang3.StringUtils;
+import org.devlive.metaforge.common.utils.JsonUtils;
 import org.devlive.metaforge.common.view.EntityView;
-import org.devlive.metaforge.service.converter.AvatarConverter;
-import org.devlive.metaforge.service.converter.NotificationTypeConverter;
-import org.devlive.metaforge.service.converter.UserEditorConverter;
 import org.devlive.metaforge.service.entity.convert.AvatarEntity;
 import org.devlive.metaforge.service.entity.itransient.user.UserEditorEntity;
 import org.devlive.metaforge.service.itransient.NotificationTypeEntity;
 import org.devlive.metaforge.service.validation.ValidationGroup;
-import org.hibernate.annotations.Formula;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Convert;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToMany;
-import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -46,10 +36,11 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-@Entity
-@Table(name = "metaforge_user")
-@EntityListeners(AuditingEntityListener.class)
+@Table("metaforge_user")
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"})
+// The sources collection is a lazy relation; serializing it outside a session
+// blows up responses, and no client consumes it through this entity.
+@JsonIgnoreProperties(value = {"sources"})
 public class UserEntity
         extends BaseEntity
 {
@@ -59,7 +50,7 @@ public class UserEntity
             ValidationGroup.Crud.Auth.class
     })
     @Size(max = 20)
-    @Column(name = "username")
+    @Column("username")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String username;
 
@@ -69,47 +60,58 @@ public class UserEntity
             ValidationGroup.Crud.Auth.class
     })
     @Size(max = 120)
-    @Column(name = "password")
+    @Column("password_hash")
     @JsonView(value = {EntityView.NoneView.class})
     private String password;
 
-    @Column(name = "chat_configure")
+    @Column("chat_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String chatConfigure;
 
-    @Column(name = "is_system")
+    @Column("is_system")
     @JsonView(value = {EntityView.AdminView.class})
     private boolean system;
 
-    @Column(name = "editor_configure")
-    @Convert(converter = UserEditorConverter.class)
+    @Column("editor_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private UserEditorEntity editorConfigure;
 
-    @Column(name = "avatar_configure")
-    @Convert(converter = AvatarConverter.class)
+    @Column("avatar_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private AvatarEntity avatarConfigure;
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(name = "metaforge_user_role_relation",
-            joinColumns = @JoinColumn(name = "user_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"))
+    // Loaded explicitly from metaforge_user_role by the services that need it.
+    @Transient
     @JsonIncludeProperties(value = {"name", "code", "description"})
     @JsonView(value = {EntityView.AdminView.class})
-    private Set<RoleEntity> roles = new HashSet<>();
+    private Set<RoleEntity> roles;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
-    @JsonView(value = {EntityView.NoneView.class})
+    // JSON array of NotificationTypeEntity; exposed as a list through getNotifyConfigure/setNotifyConfigure.
+    @Column("notify_configure")
     @JsonIgnore
-    private List<SourceEntity> sources;
+    private String notifyConfigureValue;
 
-    @Column(name = "notify_configure")
-    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
-    @Convert(converter = NotificationTypeConverter.class)
-    private List<NotificationTypeEntity> notifyConfigure = Lists.newArrayList();
-
-    @Formula("(SELECT COUNT(n.id) FROM metaforge_notification n WHERE n.user_id = id AND n.is_read = false)")
+    // Filled explicitly where the client shows unread notifications.
+    @Transient
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Long unreadCount;
+
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    public List<NotificationTypeEntity> getNotifyConfigure()
+    {
+        if (StringUtils.isEmpty(notifyConfigureValue)) {
+            return new ArrayList<>();
+        }
+        try {
+            return JsonUtils.objectmapper.readValue(notifyConfigureValue, new TypeReference<List<NotificationTypeEntity>>() {});
+        }
+        catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    public void setNotifyConfigure(List<NotificationTypeEntity> notifyConfigure)
+    {
+        this.notifyConfigureValue = JsonUtils.toJSON(notifyConfigure == null ? new ArrayList<>() : notifyConfigure);
+    }
 }

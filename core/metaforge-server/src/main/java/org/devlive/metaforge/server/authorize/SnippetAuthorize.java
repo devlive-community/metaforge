@@ -23,7 +23,7 @@ public class SnippetAuthorize
     {
         try {
             UserEntity loginUser = UserDetailsService.getUser();
-            if (Objects.equals(loginUser.getId(), this.snippetRepository.findById(id).get().getUser().getId())) {
+            if (Objects.equals(loginUser.getId(), this.snippetRepository.findById(id).get().getUserId())) {
                 return true;
             }
             throw new UserNotEqualsException(ServiceState.USER_UNAUTHORIZED.getValue());

@@ -16,7 +16,8 @@ public class SetupInstallBody
     private String name;
     /**
      * Explicitly selected database. `current` uses a configured datasource.
-     * `embedded` installs into the local H2 file store, `mysql` into an
+     * `embedded` installs into the local H2 file store, `mysql`, `postgresql`,
+     * `sqlserver` or `oracle` into an
      * external server; the chosen datasource is persisted to
      * ./config/application.properties so the next boot uses it.
      */

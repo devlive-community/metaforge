@@ -6,7 +6,7 @@ import org.devlive.metaforge.common.enums.ServiceState;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.server.authorize.UserNotEqualsException;
 import org.devlive.metaforge.service.SelfException;
-import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindingResult;
@@ -41,12 +41,12 @@ public class HandlerRestful
         return CommonResponse.failure(ServiceState.REQUEST_VALID_ARGUMENT, list);
     }
 
-    @ExceptionHandler({ConstraintViolationException.class})
+    @ExceptionHandler({DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.OK)
     @ResponseBody
-    public CommonResponse<String> handlerConstraintViolationException(ConstraintViolationException ex)
+    public CommonResponse<String> handlerConstraintViolationException(DataIntegrityViolationException ex)
     {
-        return CommonResponse.failure(ex.getMessage());
+        return CommonResponse.failure(ex.getMostSpecificCause().getMessage());
     }
 
     @ExceptionHandler({HttpMessageNotReadableException.class})

@@ -24,7 +24,7 @@
                   <template #suffix>
                     <CircleCheck :size="14" v-if="checkState === 'success'" class="dc-rename__check--success"/>
                     <CircleX :size="14" v-else-if="checkState === 'error'" class="dc-rename__check--error"/>
-                    <LoaderCircle :size="14" v-else-if="checkState === 'loading'" class="dc-rename__check--loading"/>
+                    <MfLoadingIcon v-else-if="checkState === 'loading'" :size="14" class="dc-rename__check--loading"/>
                   </template>
                 </MfInput>
                 <div v-if="checkState === 'error'" class="dc-rename__field-error">{{ checkMessage }}</div>
@@ -81,7 +81,7 @@ import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
-import { CircleCheck, CircleX, LoaderCircle, ShieldCheck } from '@lucide/vue'
+import { CircleCheck, CircleX, ShieldCheck } from '@lucide/vue'
 import UserService from '@/services/user'
 import { UsernameModel } from '@/model/user'
 import Common from '@/utils/common'

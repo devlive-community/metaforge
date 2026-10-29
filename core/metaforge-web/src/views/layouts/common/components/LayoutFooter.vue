@@ -2,7 +2,7 @@
   <div class="dc-footer">
     <div class="dc-footer__inner">
       <div class="dc-footer__brand">
-        <MfAvatar src="/static/images/logo.png" alt="MetaForge Logo"/>
+        <img src="/static/images/logo.png" alt="" width="48" height="48" class="dc-brand-logo"/>
         <div class="dc-footer__company">MetaForge</div>
         <p class="dc-footer__desc">
           MetaForge is integrated software for data transformation, integration, and visualization.

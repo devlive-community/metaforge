@@ -24,6 +24,17 @@ export class ExecuteService
     {
         return new HttpUtils().post(`${DEFAULT_PATH}`, JSON.stringify(configure), cancelToken)
     }
+
+    /**
+     * Requests the query plan (EXPLAIN) of the given configuration.
+     *
+     * @param {ExecuteModel} configure - the configuration carrying the source code and SQL
+     * @return {Promise<ResponseModel>} a Promise that resolves to the plan response
+     */
+    plan(configure: ExecuteModel): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${DEFAULT_PATH}/plan`, JSON.stringify(configure))
+    }
 }
 
 export default new ExecuteService()

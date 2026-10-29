@@ -7,61 +7,52 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.SuperBuilder;
 import org.devlive.metaforge.service.enums.MessageType;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.EntityListeners;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
-import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
-import javax.persistence.JoinTable;
-import javax.persistence.ManyToOne;
-import javax.persistence.Table;
+import org.devlive.metaforge.service.persistence.Reference;
+import org.springframework.data.annotation.Transient;
+import org.springframework.data.relational.core.mapping.Column;
+import org.springframework.data.relational.core.mapping.Table;
 
 @Data
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
-@Entity
-@EntityListeners(value = AuditingEntityListener.class)
-@Table(name = "metaforge_message")
+@Table("metaforge_message")
 @SuppressFBWarnings(value = {"EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC", "EI_EXPOSE_REP", "EI_EXPOSE_REP2"},
         justification = "I prefer to suppress these FindBugs warnings")
 public class MessageEntity
         extends BaseEntity
 {
-    @Column(name = "content")
+    @Column("content")
     private String content;
 
-    @Column(name = "model")
+    @Column("model")
     private String model;
 
-    @Column(name = "type")
-    @Enumerated(EnumType.STRING)
+    @Column("type")
     private MessageType type;
 
-    @Column(name = "prompt_tokens")
+    @Column("prompt_tokens")
     private long promptTokens;
 
-    @Column(name = "completion_tokens")
+    @Column("completion_tokens")
     private long completionTokens;
 
-    @Column(name = "total_tokens")
+    @Column("total_tokens")
     private long totalTokens;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinTable(name = "metaforge_message_user_relation",
-            joinColumns = @JoinColumn(name = "message_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "user_id", referencedColumnName = "id"))
+    @Column("user_id")
+    private Long userId;
+
+    @Transient
+    @Reference("userId")
     @JsonIgnoreProperties(value = {"roles", "thirdConfigure"})
     private UserEntity user;
 
-    @ManyToOne(fetch = FetchType.EAGER)
-    @JoinTable(name = "metaforge_message_chat_relation",
-            joinColumns = @JoinColumn(name = "message_id", referencedColumnName = "id"),
-            inverseJoinColumns = @JoinColumn(name = "chat_id", referencedColumnName = "id"))
+    @Column("chat_id")
+    private Long chatId;
+
+    @Transient
+    @Reference("chatId")
     @JsonIgnoreProperties(value = {"user"})
     private ChatEntity chat;
 }

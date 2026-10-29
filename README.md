@@ -1,6 +1,6 @@
 <div align="center">
 
-<img width=68 height=65 src="core/metaforge-web/public/static/images/logo.png" />
+<img width="68" height="68" alt="MetaForge" src="core/metaforge-web/public/static/images/logo.png" />
 
 # MetaForge
 

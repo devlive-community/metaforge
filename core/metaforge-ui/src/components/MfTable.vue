@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import clsx from 'clsx'
 import MfSpinner from './MfSpinner.vue'
+import MfEmpty from './MfEmpty.vue'
 
 export interface MfTableColumn {
     title: string
@@ -23,6 +24,8 @@ const props = withDefaults(defineProps<{
     hoverable?: boolean
   /** Empty-state text. */
     emptyText?: string
+    emptyDescription?: string
+    emptyVariant?: 'data' | 'search' | 'initial'
 }>(), {
     columns: () => [],
     dataSource: () => [],
@@ -32,6 +35,8 @@ const props = withDefaults(defineProps<{
     striped: false,
     hoverable: true,
     emptyText: 'No data',
+    emptyDescription: '',
+    emptyVariant: 'data',
 })
 
 defineEmits<{
@@ -98,8 +103,10 @@ function display(record: T, column: MfTableColumn): unknown {
                     </td>
                 </tr>
                 <tr v-if="rows.length === 0">
-                    <td :colspan="columns.length" class="px-3 py-8 text-center text-sm text-content-tertiary">
-                        <slot name="emptyText">{{ emptyText }}</slot>
+                    <td :colspan="Math.max(columns.length, 1)" class="px-3 py-3 text-center text-sm text-content-tertiary">
+                        <slot name="emptyText">
+                            <MfEmpty :title="emptyText" :description="emptyDescription" :variant="emptyVariant" size="sm"/>
+                        </slot>
                     </td>
                 </tr>
             </tbody>

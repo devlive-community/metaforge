@@ -3,11 +3,11 @@ package org.devlive.metaforge.plugin.loader;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.SpiType;
+import org.devlive.metaforge.plugin.utils.VersionUtils;
 
 import java.io.File;
 import java.lang.reflect.Modifier;
 import java.net.URL;
-import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public class CompiledPomPluginLoader
 
             // 创建类加载器
             // Create class loader
-            URLClassLoader classLoader = createProjectClassLoader(targetClasses, targetDependencies);
+            PluginClassLoader classLoader = createProjectClassLoader(targetClasses, targetDependencies, path, parentClassLoaderPackages);
 
             // 查找并加载插件类
             // Find and load plugin classes
@@ -73,7 +73,7 @@ public class CompiledPomPluginLoader
 
     // 创建项目类加载器
     // Create project class loader
-    private URLClassLoader createProjectClassLoader(Path targetClasses, Path targetDependencies)
+    private PluginClassLoader createProjectClassLoader(Path targetClasses, Path targetDependencies, Path module, Set<String> parentClassLoaderPackages)
             throws Exception
     {
         List<URL> urls = new ArrayList<>();
@@ -104,15 +104,19 @@ public class CompiledPomPluginLoader
             log.debug("Dependencies directory not found: {}", targetDependencies);
         }
 
-        return new URLClassLoader(
+        return new PluginClassLoader(
                 urls.toArray(new URL[0]),
-                getClass().getClassLoader()
+                getClass().getClassLoader(),
+                module.getFileName().toString(),
+                VersionUtils.determinePluginVersion(module),
+                true,
+                parentClassLoaderPackages
         );
     }
 
     // 查找并加载插件类
     // Find and load plugin classes
-    private List<Plugin> findAndLoadPlugins(URLClassLoader classLoader, Path targetClasses)
+    private List<Plugin> findAndLoadPlugins(PluginClassLoader classLoader, Path targetClasses)
     {
         List<Plugin> plugins = new ArrayList<>();
         try {
@@ -132,6 +136,7 @@ public class CompiledPomPluginLoader
                                         !cls.isInterface() &&
                                         !Modifier.isAbstract(cls.getModifiers())) {
                                     Plugin plugin = (Plugin) cls.getDeclaredConstructor().newInstance();
+                                    plugin.setPluginClassLoader(classLoader);
                                     plugins.add(plugin);
                                     log.info("Loaded plugin class: {}", className);
                                 }

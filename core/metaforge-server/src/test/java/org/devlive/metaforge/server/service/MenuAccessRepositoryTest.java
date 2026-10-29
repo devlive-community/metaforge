@@ -1,5 +1,6 @@
 package org.devlive.metaforge.server.service;
 
+import org.devlive.metaforge.server.migration.DatabaseMigrator;
 import org.devlive.metaforge.service.initializer.RoleCodeConstraint;
 import org.devlive.metaforge.service.record.TreeRecord;
 import org.devlive.metaforge.service.repository.RoleRepository;
@@ -11,11 +12,9 @@ import org.devlive.metaforge.service.service.impl.UserServiceImpl;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DriverManagerDataSource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -55,13 +54,17 @@ public class MenuAccessRepositoryTest
         DriverManagerDataSource dataSource = new DriverManagerDataSource(
                 "jdbc:h2:mem:" + UUID.randomUUID() + ";MODE=MySQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1", "sa", "");
         try (Connection connection = dataSource.getConnection()) {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema/setup-schema-h2.sql"));
+            DatabaseMigrator.migrate(connection);
         }
         jdbc = new JdbcTemplate(dataSource);
+        // start from an empty catalogue instead of the seeded one
+        jdbc.update("DELETE FROM metaforge_role_menu");
+        jdbc.update("DELETE FROM metaforge_menu");
+        jdbc.update("DELETE FROM metaforge_role");
         menus = new MenuAccessRepository(dataSource);
         jdbc.update("INSERT INTO metaforge_role (id, name, code) VALUES (1, 'First', 'FIRST'), (2, 'Second', 'SECOND'), (3, 'Other', 'OTHER')");
         jdbc.update("INSERT INTO metaforge_user (id, username, code) VALUES (10, 'owner', 'OWNER'), (20, 'other', 'OTHER')");
-        jdbc.update("INSERT INTO metaforge_user_role_relation (user_id, role_id) VALUES (10, 1), (10, 2), (20, 3)");
+        jdbc.update("INSERT INTO metaforge_user_role (user_id, role_id) VALUES (10, 1), (10, 2), (20, 3)");
         menu(100, "Admin", 0, 10, "VIEW");
         menu(200, "Home", 0, 0, "VIEW");
         menu(110, "Chosen", 100, 2, "VIEW");
@@ -71,7 +74,7 @@ public class MenuAccessRepositoryTest
         menu(400, "Cycle one", 401, 40, "VIEW");
         menu(401, "Cycle two", 400, 41, "VIEW");
         menu(500, "Unsupported", 0, 50, null);
-        jdbc.update("INSERT INTO metaforge_role_menu_relation (role_id, menu_id) VALUES ('1', '100'), ('1', '110'), ('2', '110'), ('2', '200'), ('3', '120')");
+        jdbc.update("INSERT INTO metaforge_role_menu (role_id, menu_id) VALUES (1, 100), (1, 110), (2, 110), (2, 200), (3, 120)");
     }
 
     @AfterEach
@@ -88,7 +91,7 @@ public class MenuAccessRepositoryTest
     {
         RoleRepository roles = mock(RoleRepository.class);
         RoleCodeConstraint constraint = mock(RoleCodeConstraint.class);
-        RoleServiceImpl service = new RoleServiceImpl(roles, menus, constraint);
+        RoleServiceImpl service = new RoleServiceImpl(roles, menus, constraint, null);
         List<TreeRecord> tree = service.getMenusByRoleId(1L).getData();
         assertEquals(200L, tree.get(0).getId());
         TreeRecord admin = find(tree, 100);
@@ -108,7 +111,7 @@ public class MenuAccessRepositoryTest
     {
         UserRepository users = mock(UserRepository.class);
         RoleRepository roles = mock(RoleRepository.class);
-        UserServiceImpl service = new UserServiceImpl(users, roles, null, menus, null, null, null, null, null, null, null, null);
+        UserServiceImpl service = new UserServiceImpl(users, roles, null, menus, null, null, null, null, null, null, null, null, null, null, null, null);
         UserDetailsService principal = new UserDetailsService(10L, "OWNER", "owner", "", List.of(), null);
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(principal, "", principal.getAuthorities()));
         List<TreeRecord> tree = service.getMenus().getData();
@@ -145,7 +148,7 @@ public class MenuAccessRepositoryTest
     @Test
     public void failedInsertsRollBackBothDeletesAndPartialInserts()
     {
-        jdbc.execute("ALTER TABLE metaforge_role_menu_relation ADD CONSTRAINT reject_nested CHECK (menu_id <> '111')");
+        jdbc.execute("ALTER TABLE metaforge_role_menu ADD CONSTRAINT reject_nested CHECK (menu_id <> 111)");
         assertThrows(DataIntegrityViolationException.class, () -> menus.replaceRoleMenus(1L, new LinkedHashSet<>(List.of(120L, 111L))));
         assertEquals(Set.of(100L, 110L), assigned(1));
         assertEquals(Set.of(110L, 200L), assigned(2));
@@ -185,7 +188,7 @@ public class MenuAccessRepositoryTest
 
     private Set<Long> assigned(long role)
     {
-        return new HashSet<>(jdbc.queryForList("SELECT menu_id FROM metaforge_role_menu_relation WHERE role_id = ?", Long.class, Long.toString(role)));
+        return new HashSet<>(jdbc.queryForList("SELECT menu_id FROM metaforge_role_menu WHERE role_id = ?", Long.class, role));
     }
 
     private List<TreeRecord> flatten(List<TreeRecord> tree)
