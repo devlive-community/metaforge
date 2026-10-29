@@ -1,1382 +1,1382 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/install.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/install.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/installContainers.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/installContainers.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/installFromDockerCompose.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/installFromDockerCompose.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/installRainbond.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/installRainbond.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/query/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/query/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/dashboard/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/dashboard/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/dataset/create/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/dataset/create/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/dataset/adhoc/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/dataset/adhoc/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/dataset/sync/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/dataset/sync/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/dataset/history/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/dataset/history/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/dataset/clear/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/dataset/clear/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/workflow/create/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/workflow/create/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/workflow/error/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/workflow/error/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/workflow/stop/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/workflow/stop/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/workflow/restart/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/workflow/restart/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/workflow/logger/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/workflow/logger/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/workflow/delete/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/workflow/delete/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/get-started/workflow/dag/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/workflow/dag/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/clients/cli.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/clients/cli.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/manager/profile/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/manager/profile/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/manager/datasource/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/manager/datasource/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/manager/snippet/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/manager/snippet/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/manager/history/query/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/manager/history/query/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/manager/report/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/manager/report/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/system/functions/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/system/functions/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/system/sql/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/system/sql/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/system/menu/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/system/menu/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/dolphindb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/dolphindb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/influxdb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/influxdb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/solr/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/solr/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/timescale/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/timescale/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/paradedb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/paradedb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/scylladb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/scylladb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/matrixone/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/matrixone/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/clickhouse/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/clickhouse/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/mysql/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/mysql/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/redis/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/redis/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/h2/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/h2/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/snowflake/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/snowflake/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/ydb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/ydb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/zookeeper/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/zookeeper/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/duckdb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/duckdb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/alioss/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/alioss/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/kafka/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/kafka/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/sql-syntax/connectors/kafka/show_topics.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/sql-syntax/connectors/kafka/show_topics.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/sql-syntax/connectors/kafka/show_consumers.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/sql-syntax/connectors/kafka/show_consumers.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/sql-syntax/connectors/kafka/show_databases.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/sql-syntax/connectors/kafka/show_databases.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/sql-syntax/connectors/kafka/show_tables.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/sql-syntax/connectors/kafka/show_tables.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/ceresdb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/ceresdb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/greptimedb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/greptimedb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/questdb/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/questdb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/doris/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/doris/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/starrocks/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/starrocks/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/hologres/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/hologres/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/hdfs/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/hdfs/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/pinot/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/pinot/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/connectors/cassandra/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/cassandra/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/filesystem/local/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/filesystem/local/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/filesystem/aliyun/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/filesystem/aliyun/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/filesystem/qiniu/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/filesystem/qiniu/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/filesystem/cos/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/filesystem/cos/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/filesystem/s3/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/filesystem/s3/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/reference/filesystem/minio/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/reference/filesystem/minio/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2025.1.1.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2025.1.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2025.1.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2025.1.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.4.1.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.4.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.4.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.4.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.3.11.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.3.11.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.3.10.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.3.10.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.9.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.9.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.8.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.8.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.7.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.7.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.6.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.6.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.5.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.5.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.4.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.4.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.3.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.3.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.2.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.2.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.03.1.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.03.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.02.1.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.02.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/2024.01.1.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/2024.01.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.18.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.18.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.17.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.17.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.16.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.16.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.15.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.15.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.14.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.14.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.13.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.13.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.12.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.12.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.11.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.11.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.10.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.10.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.9.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.9.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.8.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.8.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.7.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.7.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.6.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.6.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.5.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.5.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.4.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.4.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.3.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.3.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.2.0.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.2.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.1.0.20221115.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.1.0.20221115.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/release/1.0.0.20221015.html</loc>
+        <loc>https://metaforge.devlive.org/en/release/1.0.0.20221015.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/specification/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/specification/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/server/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/server/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/web/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/web/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/doc/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/doc/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/sdk/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/sdk/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/feature/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/feature/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/plugin/java/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/plugin/java/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/plugin/kotlin/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/plugin/kotlin/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/filesystem/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/filesystem/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/file/kotlin/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/file/kotlin/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/developer/notify/kotlin/home.html</loc>
+        <loc>https://metaforge.devlive.org/en/developer/notify/kotlin/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/common/response.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/common/response.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/common/page.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/common/page.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/user/register.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/user/register.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/user/login.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/user/login.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/user/info.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/user/info.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/user/menu.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/user/menu.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/user/list.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/user/list.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/plugin/plugin.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/plugin/plugin.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/plugin/install.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/plugin/install.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/plugin/uninstall.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/plugin/uninstall.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/dashboard/list.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/dashboard/list.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/dashboard/save.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/dashboard/save.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/dashboard/edit.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/dashboard/edit.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/dashboard/get.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/dashboard/get.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/dashboard/delete.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/dashboard/delete.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/menu/list.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/menu/list.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/menu/save.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/menu/save.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/menu/edit.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/menu/edit.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/workflow/list.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/workflow/list.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/workflow/save.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/workflow/save.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/workflow/edit.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/workflow/edit.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/workflow/get.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/workflow/get.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/workflow/delete.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/workflow/delete.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/workflow/log.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/workflow/log.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/api/workflow/restart.html</loc>
+        <loc>https://metaforge.devlive.org/en/api/workflow/restart.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/driver/mongodb.html</loc>
+        <loc>https://metaforge.devlive.org/en/driver/mongodb.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/useCases.html</loc>
+        <loc>https://metaforge.devlive.org/en/useCases.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/en/partners.html</loc>
+        <loc>https://metaforge.devlive.org/en/partners.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/install.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/install.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/installContainers.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/installContainers.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/installFromDockerCompose.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/installFromDockerCompose.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/installRainbond.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/installRainbond.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/query/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/query/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/dashboard/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/dashboard/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/dataset/create/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/dataset/create/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/dataset/adhoc/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/dataset/adhoc/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/dataset/sync/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/dataset/sync/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/dataset/history/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/dataset/history/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/dataset/clear/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/dataset/clear/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/workflow/create/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/workflow/create/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/workflow/error/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/workflow/error/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/workflow/stop/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/workflow/stop/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/workflow/restart/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/workflow/restart/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/workflow/logger/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/workflow/logger/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/workflow/delete/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/workflow/delete/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/get-started/workflow/dag/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/workflow/dag/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/clients/cli.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/clients/cli.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/manager/profile/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/manager/profile/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/manager/datasource/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/manager/datasource/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/manager/snippet/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/manager/snippet/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/manager/history/query/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/manager/history/query/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/manager/report/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/manager/report/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/system/functions/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/system/functions/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/system/sql/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/system/sql/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/system/menu/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/system/menu/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/dolphindb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/dolphindb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/influxdb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/influxdb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/solr/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/solr/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/timescale/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/timescale/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/paradedb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/paradedb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/scylladb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/scylladb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/matrixone/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/matrixone/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/clickhouse/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/clickhouse/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/mysql/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/mysql/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/redis/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/redis/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/h2/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/h2/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/snowflake/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/snowflake/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/ydb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/ydb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/zookeeper/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/zookeeper/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/duckdb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/duckdb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/alioss/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/alioss/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/kafka/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/kafka/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/sql-syntax/connectors/kafka/show_topics.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/sql-syntax/connectors/kafka/show_topics.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/sql-syntax/connectors/kafka/show_consumers.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/sql-syntax/connectors/kafka/show_consumers.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/sql-syntax/connectors/kafka/show_databases.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/sql-syntax/connectors/kafka/show_databases.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/sql-syntax/connectors/kafka/show_tables.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/sql-syntax/connectors/kafka/show_tables.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/ceresdb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/ceresdb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/greptimedb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/greptimedb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/questdb/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/questdb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/doris/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/doris/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/starrocks/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/starrocks/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/hologres/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/hologres/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/hdfs/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/hdfs/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/pinot/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/pinot/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/connectors/cassandra/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/cassandra/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/filesystem/local/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/filesystem/local/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/filesystem/aliyun/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/filesystem/aliyun/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/filesystem/qiniu/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/filesystem/qiniu/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/filesystem/cos/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/filesystem/cos/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/filesystem/s3/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/filesystem/s3/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/reference/filesystem/minio/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/filesystem/minio/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2025.1.1.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2025.1.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2025.1.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2025.1.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.4.1.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.4.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.4.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.4.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.3.11.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.3.11.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.3.10.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.3.10.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.9.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.9.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.8.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.8.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.7.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.7.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.6.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.6.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.5.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.5.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.4.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.4.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.3.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.3.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.2.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.2.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.03.1.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.03.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.02.1.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.02.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/2024.01.1.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/2024.01.1.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.18.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.18.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.17.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.17.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.16.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.16.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.15.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.15.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.14.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.14.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.13.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.13.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.12.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.12.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.11.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.11.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.10.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.10.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.9.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.9.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.8.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.8.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.7.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.7.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.6.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.6.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.5.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.5.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.4.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.4.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.3.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.3.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.2.0.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.2.0.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.1.0.20221115.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.1.0.20221115.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/release/1.0.0.20221015.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/release/1.0.0.20221015.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/specification/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/specification/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/server/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/server/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/web/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/web/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/doc/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/doc/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/sdk/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/sdk/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/feature/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/feature/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/plugin/java/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/plugin/java/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/plugin/kotlin/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/plugin/kotlin/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/filesystem/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/filesystem/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/file/kotlin/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/file/kotlin/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/developer/notify/kotlin/home.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/developer/notify/kotlin/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/common/response.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/common/response.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/common/page.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/common/page.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/user/register.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/user/register.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/user/login.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/user/login.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/user/info.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/user/info.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/user/menu.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/user/menu.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/user/list.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/user/list.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/plugin/plugin.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/plugin/plugin.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/plugin/install.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/plugin/install.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/plugin/uninstall.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/plugin/uninstall.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/dashboard/list.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/dashboard/list.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/dashboard/save.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/dashboard/save.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/dashboard/edit.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/dashboard/edit.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/dashboard/get.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/dashboard/get.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/dashboard/delete.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/dashboard/delete.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/menu/list.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/menu/list.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/menu/save.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/menu/save.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/menu/edit.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/menu/edit.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/workflow/list.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/workflow/list.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/workflow/save.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/workflow/save.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/workflow/edit.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/workflow/edit.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/workflow/get.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/workflow/get.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/workflow/delete.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/workflow/delete.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/workflow/log.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/workflow/log.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/api/workflow/restart.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/api/workflow/restart.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/driver/mongodb.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/driver/mongodb.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/useCases.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/useCases.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
-        <loc>https://datacap.devlive.org/zh-CN/partners.html</loc>
+        <loc>https://metaforge.devlive.org/zh-CN/partners.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
