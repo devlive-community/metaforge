@@ -25,6 +25,7 @@
         <module>driver/metaforge-driver-sql</module>
         <module>driver/metaforge-driver-zookeeper</module>
         <module>driver/metaforge-driver-kafka</module>
+        <module>driver/metaforge-driver-hdfs</module>
         <module>driver/metaforge-driver-alioss</module>
         <module>driver/metaforge-driver-redis</module>
         <module>driver/metaforge-driver-mongodb</module>

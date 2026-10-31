@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.devlive.metaforge</groupId>
+        <artifactId>metaforge</artifactId>
+        <version>2026.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <name>metaforge-driver-hdfs</name>
+    <artifactId>metaforge-driver-hdfs</artifactId>
+    <description>MetaForge - Driver - HDFS: directories as databases and tables over JDBC</description>
+
+    <properties>
+        <hadoop-client.version>3.4.1</hadoop-client.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-driver-sql</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client-api</artifactId>
+            <version>${hadoop-client.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-client-runtime</artifactId>
+            <version>${hadoop-client.version}</version>
+        </dependency>
+    </dependencies>
+</project>
