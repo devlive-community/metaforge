@@ -18,7 +18,6 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @SuppressFBWarnings(value = {"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"})
@@ -47,55 +46,40 @@ public class JdbcAdapter
                 List<String> headers = new ArrayList<>();
                 List<String> types = new ArrayList<>();
                 List<Object> columns = new ArrayList<>();
-                try (ResultSet resultSet = statement.executeQuery(content)) {
-                    Column jdbcColumn = new JdbcColumn(resultSet);
-                    ResultSetMetaData metaData = resultSet.getMetaData();
-                    int columnCount = metaData.getColumnCount();
-                    for (int i = 1; i <= columnCount; i++) {
-                        headers.add(metaData.getColumnName(i));
-                        types.add(jdbcColumn.mappingColumnType(metaData.getColumnTypeName(i)));
-                    }
-                    while (resultSet.next()) {
-                        List<Object> _columns = new ArrayList<>();
-                        for (int i = 1; i <= columnCount; i++) {
-                            _columns.add(jdbcColumn.mappingColumnData(metaData.getColumnTypeName(i), i));
+                try {
+                    // A single statement runs as written, so the driver decides whether it returns rows;
+                    // a script runs statement by statement. Detecting non-queries through executeQuery's
+                    // error only works with MySQL's driver.
+                    List<String> parts = new ArrayList<>();
+                    for (String part : SqlStatements.split(content)) {
+                        if (!part.trim().isEmpty()) {
+                            parts.add(part);
                         }
-                        columns.add(_columns);
                     }
-                }
-                catch (SQLException tryUpdateEx) {
-                    if (Objects.equals(tryUpdateEx.getSQLState(), "S1009")) {
-                        try {
-                            headers.add("result");
-                            types.add(Integer.class.getSimpleName());
-                            List<Object> _columns = new ArrayList<>();
-                            connection.setAutoCommit(false);
-                            // Split at the semicolons that end statements, keeping compound bodies (triggers,
-                            // procedures), quoted text and comments intact and the line breaks as written.
-                            List<String> parts = SqlStatements.split(content);
-                            int count = 0;
-                            for (String part : parts) {
-                                if (!part.trim().isEmpty()) {
-                                    count += statement.executeUpdate(part);
+                    if (parts.size() <= 1 && statement.execute(content)) {
+                        try (ResultSet resultSet = statement.getResultSet()) {
+                            Column jdbcColumn = new JdbcColumn(resultSet);
+                            ResultSetMetaData metaData = resultSet.getMetaData();
+                            int columnCount = metaData.getColumnCount();
+                            for (int i = 1; i <= columnCount; i++) {
+                                headers.add(metaData.getColumnLabel(i));
+                                types.add(jdbcColumn.mappingColumnType(metaData.getColumnTypeName(i)));
+                            }
+                            while (resultSet.next()) {
+                                List<Object> _columns = new ArrayList<>();
+                                for (int i = 1; i <= columnCount; i++) {
+                                    _columns.add(jdbcColumn.mappingColumnData(metaData.getColumnTypeName(i), i));
                                 }
+                                columns.add(_columns);
                             }
-                            _columns.add(count);
-                            connection.commit();
-                            columns.add(_columns);
-                        }
-                        catch (SQLException updateEx) {
-                            try {
-                                connection.rollback();
-                            }
-                            catch (SQLException rollbackEx) {
-                                log.error("Rollback failed ", rollbackEx);
-                                throw new SQLException(rollbackEx);
-                            }
-                            throw new SQLException(updateEx);
                         }
                     }
                     else {
-                        throw new SQLException(tryUpdateEx);
+                        headers.add("result");
+                        types.add(Integer.class.getSimpleName());
+                        List<Object> _columns = new ArrayList<>();
+                        _columns.add(parts.size() <= 1 ? Math.max(statement.getUpdateCount(), 0) : runScript(connection, statement, parts));
+                        columns.add(_columns);
                     }
                 }
                 finally {
@@ -116,5 +100,48 @@ public class JdbcAdapter
         // It will be destroyed after the mission is closed
         jdbcConnection.destroy();
         return response;
+    }
+
+    /**
+     * Runs a script's statements in order, as one transaction where the driver supports
+     * transactions (ClickHouse, for one, does not), and returns the rows they changed.
+     */
+    private static int runScript(Connection connection, Statement statement, List<String> parts)
+            throws SQLException
+    {
+        boolean transactional = connection.getMetaData().supportsTransactions();
+        boolean autoCommit = connection.getAutoCommit();
+        if (transactional) {
+            connection.setAutoCommit(false);
+        }
+        try {
+            int count = 0;
+            for (String part : parts) {
+                if (!statement.execute(part)) {
+                    count += Math.max(statement.getUpdateCount(), 0);
+                }
+            }
+            if (transactional) {
+                connection.commit();
+            }
+            return count;
+        }
+        catch (SQLException updateEx) {
+            if (transactional) {
+                try {
+                    connection.rollback();
+                }
+                catch (SQLException rollbackEx) {
+                    log.error("Rollback failed ", rollbackEx);
+                    updateEx.addSuppressed(rollbackEx);
+                }
+            }
+            throw updateEx;
+        }
+        finally {
+            if (transactional) {
+                connection.setAutoCommit(autoCommit);
+            }
+        }
     }
 }

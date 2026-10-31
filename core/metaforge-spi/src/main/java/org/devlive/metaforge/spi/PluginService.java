@@ -7,6 +7,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
+import org.devlive.metaforge.convert.ConvertFilter;
+import org.devlive.metaforge.convert.model.ConvertRequest;
 import org.devlive.metaforge.plugin.Service;
 import org.devlive.metaforge.spi.adapter.Adapter;
 import org.devlive.metaforge.spi.adapter.BatchWriter;
@@ -55,6 +57,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -360,6 +363,7 @@ public interface PluginService
                     }
                 }
             }
+            response.setColumns(formatRows(configure, response, rows));
             response.setIsConnected(true);
             response.setIsSuccessful(true);
         }
@@ -373,6 +377,25 @@ public interface PluginService
             destroy();
         }
         return response;
+    }
+
+    /**
+     * Rows read from JDBC metadata, in the format the source's queries return (JSON objects by
+     * default), so callers read both alike.
+     */
+    private List<Object> formatRows(RuntimeConfigure configure, Response response, List<Object> rows)
+    {
+        if (configure.getPluginManager() == null) {
+            return rows;
+        }
+        return ConvertFilter.filter(configure.getPluginManager(), configure.getFormat())
+                .map(service -> {
+                    ConvertRequest request = new ConvertRequest();
+                    request.setHeaders(new ArrayList<Object>(response.getHeaders()));
+                    request.setColumns(rows);
+                    return service.format(request).getColumns();
+                })
+                .orElse(rows);
     }
 
     /**
@@ -490,6 +513,7 @@ public interface PluginService
                     rows.add(Lists.newArrayList(typeName, resultSet.getString("TABLE_NAME"), comment == null ? "" : comment));
                 }
             }
+            response.setColumns(formatRows(configure, response, rows));
             response.setIsConnected(true);
             response.setIsSuccessful(true);
         }
@@ -709,6 +733,7 @@ public interface PluginService
                             0, "NO", 0));
                 }
             }
+            response.setColumns(formatRows(configure, response, rows));
             response.setIsConnected(true);
             response.setIsSuccessful(true);
         }
@@ -761,7 +786,12 @@ public interface PluginService
         catch (Exception ignored) {
             // drivers without index metadata simply report an empty list
         }
-        response.setColumns(rows);
+        finally {
+            destroy();
+        }
+        response.setColumns(formatRows(configure, response, rows));
+        response.setIsConnected(true);
+        response.setIsSuccessful(true);
         return response;
     }
 
@@ -798,7 +828,12 @@ public interface PluginService
         catch (Exception ignored) {
             // drivers without foreign key metadata simply report an empty list
         }
-        response.setColumns(rows);
+        finally {
+            destroy();
+        }
+        response.setColumns(formatRows(configure, response, rows));
+        response.setIsConnected(true);
+        response.setIsSuccessful(true);
         return response;
     }
 
