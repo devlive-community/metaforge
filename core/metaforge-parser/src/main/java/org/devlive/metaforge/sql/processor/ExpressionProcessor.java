@@ -56,6 +56,42 @@ public class ExpressionProcessor
     }
 
     @Override
+    public Expression visitLikeExpression(SqlBaseParser.LikeExpressionContext ctx)
+    {
+        return operation(Expression.ExpressionType.BINARY_OP, ctx.NOT() != null ? "NOT LIKE" : "LIKE", ctx.expression());
+    }
+
+    @Override
+    public Expression visitInExpression(SqlBaseParser.InExpressionContext ctx)
+    {
+        return operation(Expression.ExpressionType.BINARY_OP, ctx.NOT() != null ? "NOT IN" : "IN", ctx.expression());
+    }
+
+    @Override
+    public Expression visitIsNullExpression(SqlBaseParser.IsNullExpressionContext ctx)
+    {
+        return operation(Expression.ExpressionType.UNARY_OP, ctx.NOT() != null ? "IS NOT NULL" : "IS NULL", List.of(ctx.expression()));
+    }
+
+    @Override
+    public Expression visitNotExpression(SqlBaseParser.NotExpressionContext ctx)
+    {
+        return operation(Expression.ExpressionType.UNARY_OP, "NOT", List.of(ctx.expression()));
+    }
+
+    /** An operator over its operands, in the order written; IN lists its left side first. */
+    private Expression operation(Expression.ExpressionType type, String operator, List<SqlBaseParser.ExpressionContext> operands)
+    {
+        Expression expr = new Expression();
+        expr.setType(type);
+        expr.setValue(operator);
+        List<Expression> children = new ArrayList<>();
+        operands.forEach(operand -> children.add(visit(operand)));
+        expr.setChildren(children);
+        return expr;
+    }
+
+    @Override
     public Expression visitColumnReferencePrimary(SqlBaseParser.ColumnReferencePrimaryContext ctx)
     {
         Expression expr = new Expression();

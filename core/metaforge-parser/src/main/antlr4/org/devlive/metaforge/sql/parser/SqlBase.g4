@@ -619,26 +619,27 @@ joinCondition
 
 // Expressions
 expression
+     // Alternatives listed first bind tighter: arithmetic, comparisons and predicates, NOT, AND, OR.
      : '(' expression ')'                                    #ParenExpression
      | primary                                              #PrimaryExpression
+     | '-' expression                                       #UnaryMinusExpression
+     | '+' expression                                       #UnaryPlusExpression
+     | expression '*' expression                            #MultiplyExpression
+     | expression '/' expression                            #DivideExpression
+     /* add Flink specific expressions */
+     | expression '%' expression                            #ModuloExpression
+     | expression '+' expression                            #AddExpression
+     | expression '-' expression                            #SubtractExpression
+     | expression '||' expression                           #ConcatExpression
      | expression comparisonOperator expression             #ComparisonExpression
-     | expression AND expression                            #AndExpression
-     | expression OR expression                             #OrExpression
      | expression NOT? BETWEEN expression AND expression    #BetweenExpression
      | expression NOT? IN ('(' expression (',' expression)* ')')  #InExpression
      | expression NOT? LIKE expression                      #LikeExpression
      | expression IS NOT? NULL                              #IsNullExpression
      | expression IS NOT? (TRUE | FALSE)                    #IsBooleanExpression
      | NOT expression                                       #NotExpression
-     | expression '+' expression                            #AddExpression
-     | expression '-' expression                            #SubtractExpression
-     | expression '*' expression                            #MultiplyExpression
-     | expression '/' expression                            #DivideExpression
-     /* add Flink specific expressions */
-     | expression '%' expression                            #ModuloExpression
-     | '-' expression                                       #UnaryMinusExpression
-     | '+' expression                                       #UnaryPlusExpression
-     | expression '||' expression                           #ConcatExpression
+     | expression AND expression                            #AndExpression
+     | expression OR expression                             #OrExpression
      ;
 
  primary

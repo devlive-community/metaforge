@@ -832,15 +832,17 @@ public class SQLVisitor
     {
         LimitClause limit = new LimitClause();
 
-        if (ctx.INTEGER_VALUE().size() > 1) {
+        // LIMIT count OFFSET offset, or MySQL's LIMIT offset, count
+        if (ctx.OFFSET() != null) {
+            limit.setLimit(Long.parseLong(ctx.INTEGER_VALUE(0).getText()));
+            limit.setOffset(Long.parseLong(ctx.INTEGER_VALUE(1).getText()));
+        }
+        else if (ctx.INTEGER_VALUE().size() > 1) {
             limit.setOffset(Long.parseLong(ctx.INTEGER_VALUE(0).getText()));
             limit.setLimit(Long.parseLong(ctx.INTEGER_VALUE(1).getText()));
         }
         else {
             limit.setLimit(Long.parseLong(ctx.INTEGER_VALUE(0).getText()));
-            if (ctx.OFFSET() != null) {
-                limit.setOffset(Long.parseLong(ctx.INTEGER_VALUE(1).getText()));
-            }
         }
 
         return limit;
