@@ -1,65 +1,64 @@
 package org.devlive.metaforge.plugin.natived.kafka;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.adapter.Adapter;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
-@Slf4j
-@SuppressFBWarnings(value = {"EI_EXPOSE_REP"})
+import java.util.stream.Collectors;
+
+/**
+ * Kafka through MetaForge's Kafka JDBC driver: the cluster is the database {@code kafka}, topics
+ * are tables and records rows with the columns partition, offset, timestamp, key and value.
+ * Databases, tables and columns come from the driver's JDBC metadata.
+ */
 public class KafkaService
         implements PluginService
 {
-    private KafkaConnection connection;
-    private Response response;
-
     @Override
-    public String validator()
+    public String driver()
     {
-        return "SHOW TOPICS";
+        return "org.devlive.metaforge.KafkaDriver";
     }
 
     @Override
-    public void connect(RuntimeConfigure configure)
+    public String connectType()
     {
-        try {
-            this.response = new Response();
-            this.connection = new KafkaConnection(configure, this.response);
+        return "kafka";
+    }
+
+    /** The host lists the bootstrap servers (b1:9092,b2:9092), so the URL takes it as written. */
+    @Override
+    public String url(RuntimeConfigure configure)
+    {
+        if (configure.getUrl().isPresent()) {
+            return configure.getUrl().get();
         }
-        catch (Exception ex) {
-            this.response.setIsConnected(Boolean.FALSE);
-            this.response.setMessage(ex.getMessage());
+        String host = configure.getHost();
+        StringBuilder url = new StringBuilder("jdbc:kafka://").append(host);
+        if (configure.getPort() != null && !host.contains(":")) {
+            url.append(":").append(configure.getPort());
         }
+        configure.getEnv().filter(env -> !env.isEmpty()).ifPresent(env -> url.append("?").append(env.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("&"))));
+        return url.toString();
     }
 
     @Override
-    public Response execute(String content)
+    public Response getDatabases(RuntimeConfigure configure)
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            log.info("Execute kafka plugin logic started");
-            this.response = this.connection.getResponse();
-            Adapter processor = new KafkaAdapter(this.connection, new KafkaParser(content));
-            this.response = processor.handlerExecute(content);
-            log.info("Execute kafka plugin logic end");
-        }
-        return this.response;
+        return metadataDatabases(configure);
     }
 
     @Override
-    public Response execute(RuntimeConfigure configure, String content)
+    public Response getTables(RuntimeConfigure configure, String database)
     {
-        connect(configure);
-        return execute(content);
+        return metadataTables(configure, database);
     }
 
     @Override
-    public void destroy()
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            this.connection.destroy();
-        }
+        return metadataColumns(configure, database, table);
     }
 }
