@@ -1,65 +1,64 @@
 package org.devlive.metaforge.plugin;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.connection.HttpConfigure;
-import org.devlive.metaforge.spi.connection.HttpConnection;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
-@Slf4j
-@SuppressFBWarnings(value = {"EI_EXPOSE_REP"})
+/**
+ * QuestDB through the PostgreSQL JDBC driver on its PostgreSQL wire port. A QuestDB server holds
+ * one database, so the plugin's database is that one and its tables come from {@code tables()}.
+ */
 public class QuestDBService
         implements PluginService
 {
-    private HttpConfigure configure;
-    private HttpConnection connection;
-    private Response response;
-
     @Override
-    public void connect(RuntimeConfigure configure)
+    public String driver()
     {
-        try {
-            this.response = new Response();
-            this.configure = new HttpConfigure();
-            BeanUtils.copyProperties(this.configure, configure);
-            this.connection = new HttpConnection(this.configure, this.response);
-        }
-        catch (Exception ex) {
-            this.response.setIsConnected(Boolean.FALSE);
-            this.response.setMessage(ex.getMessage());
-        }
+        return "org.postgresql.Driver";
     }
 
     @Override
-    public Response execute(String content)
+    public String connectType()
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            log.info("Execute questdb plugin logic started");
-            this.response = this.connection.getResponse();
-            QuestDBAdapter processor = new QuestDBAdapter(this.connection);
-            this.response = processor.handlerExecute(content);
-            log.info("Execute questdb plugin logic end");
-        }
-        this.destroy();
-        return this.response;
+        return "postgresql";
     }
 
     @Override
-    public Response execute(RuntimeConfigure configure, String content)
+    public String validator()
     {
-        connect(configure);
-        return execute(content);
+        return "SELECT build() AS version";
+    }
+
+    /** The PostgreSQL driver needs a database in the URL; QuestDB answers to its own, qdb. */
+    @Override
+    public String url(RuntimeConfigure configure)
+    {
+        String url = PluginService.super.url(configure);
+        if (configure.getUrl().isPresent() || configure.getDatabase().isPresent()) {
+            return url;
+        }
+        return url.replaceFirst("^(jdbc:postgresql://[^/?]+)(\\?|$)", "$1/qdb$2");
     }
 
     @Override
-    public void destroy()
+    public Response getDatabases(RuntimeConfigure configure)
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            this.connection.destroy();
-        }
+        return this.execute(configure, "SELECT current_database() AS object_name, 'DATABASE' AS object_type, '' AS object_comment");
+    }
+
+    @Override
+    public Response getTables(RuntimeConfigure configure, String database)
+    {
+        return this.execute(configure, "SELECT 'table' AS type_name, table_name AS object_name, '' AS object_comment FROM tables() ORDER BY table_name");
+    }
+
+    @Override
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
+    {
+        String sql = "SELECT 'column' AS type_name, \"column\" AS object_name, type AS object_data_type, 'YES' AS object_nullable,\n" +
+                "    '' AS object_default_value, '' AS object_comment, 0 AS object_position,\n" +
+                "    CASE WHEN designated THEN 'DESIGNATED TIMESTAMP' ELSE '' END AS object_definition\n" +
+                "FROM table_columns('{0}')";
+        return this.execute(configure, sql.replace("{0}", table.replace("'", "''")));
     }
 }
