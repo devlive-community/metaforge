@@ -37,12 +37,25 @@ class ScyllaDBPlugin : Plugin()
                                 .message("port is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.username)
+                                .type(PluginConfigureFieldType.String)
+                                .group(PluginConfigureFieldGroup.authorization)
+                                .build(),
+                        PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.password)
+                                .type(PluginConfigureFieldType.String)
+                                .group(PluginConfigureFieldGroup.authorization)
+                                .build(),
+                        PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.database)
                                 .type(PluginConfigureFieldType.String)
-                                .required(true)
-                                .value("datacenter")
-                                .message("database is a required field, please be sure to enter")
                                 .group(PluginConfigureFieldGroup.advanced)
+                                .build(),
+                        PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.configures)
+                                .type(PluginConfigureFieldType.Array)
+                                .value(java.util.Collections.emptyList<Any>())
+                                .group(PluginConfigureFieldGroup.custom)
                                 .build()),
                 null)
 
