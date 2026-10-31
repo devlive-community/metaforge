@@ -43,6 +43,13 @@ public interface SqlSource
         throw unsupported("CREATE TABLE");
     }
 
+    /** CREATE TABLE with its options, such as WITH ('partitions' = '3'); sources without options ignore them. */
+    default void createTable(String database, String table, List<SourceColumn> columns, Map<String, String> options)
+            throws SQLException
+    {
+        createTable(database, table, columns);
+    }
+
     default void dropTable(String database, String table)
             throws SQLException
     {

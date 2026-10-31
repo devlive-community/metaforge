@@ -357,7 +357,11 @@ public final class SqlEngine
                 columns.add(column((ColumnElement) element, keys));
             }
         }
-        source.createTable(table[0], table[1], columns);
+        Map<String, String> options = new LinkedHashMap<>();
+        if (create.getOptions() != null) {
+            create.getOptions().forEach(option -> options.put(option.getName(), option.getValue()));
+        }
+        source.createTable(table[0], table[1], columns, options);
         return Rows.updated(0);
     }
 

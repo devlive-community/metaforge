@@ -79,7 +79,8 @@ public class SqlSourceDriverTest
         update("CREATE DATABASE app");
         update("CREATE DATABASE IF NOT EXISTS app");
         Assert.assertEquals(List.of(List.of("Database"), List.of("app")), query("SHOW DATABASES"));
-        update("CREATE TABLE app.users (id BIGINT NOT NULL, name VARCHAR(32), PRIMARY KEY (id))");
+        update("CREATE TABLE app.users (id BIGINT NOT NULL, name VARCHAR(32), PRIMARY KEY (id)) WITH ('ttl' = '7d')");
+        Assert.assertEquals("7d", source.options.get("ttl"));
         Assert.assertEquals(List.of("Table"), query("SHOW TABLES FROM app").get(0));
         Assert.assertEquals(Arrays.asList("id", "BIGINT", "NO", "PRI", null, ""), query("SHOW COLUMNS FROM users FROM app").get(1));
         update("ALTER TABLE `app`.`users` ADD COLUMN age INT, RENAME COLUMN name TO title");

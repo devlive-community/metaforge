@@ -13,6 +13,7 @@ class MemorySource
 {
     final Map<String, Map<String, List<SourceColumn>>> columns = new LinkedHashMap<>();
     final Map<String, List<Map<String, Object>>> rows = new LinkedHashMap<>();
+    final Map<String, String> options = new LinkedHashMap<>();
 
     @Override
     public String productName()
@@ -59,6 +60,13 @@ class MemorySource
     {
         columns.get(database).put(table, new ArrayList<>(definition));
         rows.put(database + "." + table, new ArrayList<>());
+    }
+
+    @Override
+    public void createTable(String database, String table, List<SourceColumn> definition, Map<String, String> with)
+    {
+        options.putAll(with);
+        createTable(database, table, definition);
     }
 
     @Override
