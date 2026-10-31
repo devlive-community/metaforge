@@ -23,6 +23,7 @@
         <module>lib/metaforge-shell</module>
         <module>lib/metaforge-schedule</module>
         <module>driver/metaforge-driver-sql</module>
+        <module>driver/metaforge-driver-zookeeper</module>
         <module>driver/metaforge-driver-redis</module>
         <module>driver/metaforge-driver-mongodb</module>
         <module>shaded/metaforge-shaded-ydb</module>
