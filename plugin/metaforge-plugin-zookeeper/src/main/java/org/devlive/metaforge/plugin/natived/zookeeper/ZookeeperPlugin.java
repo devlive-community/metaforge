@@ -4,10 +4,12 @@ import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.configure.PluginConfigure;
 import org.devlive.metaforge.plugin.configure.PluginConfigureCategory;
 import org.devlive.metaforge.plugin.configure.PluginConfigureField;
+import org.devlive.metaforge.plugin.configure.PluginConfigureFieldGroup;
 import org.devlive.metaforge.plugin.configure.PluginConfigureFieldName;
 import org.devlive.metaforge.plugin.configure.PluginConfigureFieldType;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +33,27 @@ public class ZookeeperPlugin
                                 .required(true)
                                 .value("127.0.0.1:2181")
                                 .message("host is a required field, please be sure to enter")
+                                .build(),
+                        PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.username)
+                                .type(PluginConfigureFieldType.String)
+                                .group(PluginConfigureFieldGroup.authorization)
+                                .build(),
+                        PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.password)
+                                .type(PluginConfigureFieldType.String)
+                                .group(PluginConfigureFieldGroup.authorization)
+                                .build(),
+                        PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.database)
+                                .type(PluginConfigureFieldType.String)
+                                .group(PluginConfigureFieldGroup.advanced)
+                                .build(),
+                        PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.configures)
+                                .type(PluginConfigureFieldType.Array)
+                                .value(Collections.emptyList())
+                                .group(PluginConfigureFieldGroup.custom)
                                 .build()),
                 null);
 

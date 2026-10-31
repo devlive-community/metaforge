@@ -1,65 +1,65 @@
 package org.devlive.metaforge.plugin.natived.zookeeper;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.adapter.Adapter;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
-@Slf4j
-@SuppressFBWarnings(value = {"EI_EXPOSE_REP", "IL_INFINITE_RECURSIVE_LOOP"})
+import java.util.stream.Collectors;
+
+/**
+ * ZooKeeper through MetaForge's ZooKeeper JDBC driver: a database is a znode under the root, a
+ * table its child and a column the table's child, whose data is the value. Databases, tables and
+ * columns come from the driver's JDBC metadata.
+ */
 public class ZookeeperService
         implements PluginService
 {
-    private ZookeeperConnection connection;
-    private Response response;
-
     @Override
-    public String validator()
+    public String driver()
     {
-        return "SHOW PATHS FROM controller";
+        return "org.devlive.metaforge.ZookeeperDriver";
     }
 
     @Override
-    public void connect(RuntimeConfigure configure)
+    public String connectType()
     {
-        try {
-            this.response = new Response();
-            this.connection = new ZookeeperConnection(configure, this.response);
+        return "zookeeper";
+    }
+
+    /** The host may list an ensemble (h1:2181,h2:2181), so the URL takes it as written. */
+    @Override
+    public String url(RuntimeConfigure configure)
+    {
+        if (configure.getUrl().isPresent()) {
+            return configure.getUrl().get();
         }
-        catch (Exception ex) {
-            this.response.setIsConnected(Boolean.FALSE);
-            this.response.setMessage(ex.getMessage());
+        String host = configure.getHost();
+        StringBuilder url = new StringBuilder("jdbc:zookeeper://").append(host);
+        if (configure.getPort() != null && !host.contains(":")) {
+            url.append(":").append(configure.getPort());
         }
+        configure.getDatabase().filter(database -> !database.isEmpty()).ifPresent(database -> url.append("/").append(database));
+        configure.getEnv().filter(env -> !env.isEmpty()).ifPresent(env -> url.append("?").append(env.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("&"))));
+        return url.toString();
     }
 
     @Override
-    public Response execute(String content)
+    public Response getDatabases(RuntimeConfigure configure)
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            log.info("Execute zookeeper plugin logic started");
-            this.response = this.connection.getResponse();
-            Adapter processor = new ZookeeperAdapter(this.connection, new ZookeeperParser(content));
-            this.response = processor.handlerExecute(content);
-            log.info("Execute zookeeper plugin logic end");
-        }
-        return this.response;
+        return metadataDatabases(configure);
     }
 
     @Override
-    public Response execute(RuntimeConfigure configure, String content)
+    public Response getTables(RuntimeConfigure configure, String database)
     {
-        this.connect(configure);
-        return execute(configure, content);
+        return metadataTables(configure, database);
     }
 
     @Override
-    public void destroy()
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            this.connection.destroy();
-        }
+        return metadataColumns(configure, database, table);
     }
 }
