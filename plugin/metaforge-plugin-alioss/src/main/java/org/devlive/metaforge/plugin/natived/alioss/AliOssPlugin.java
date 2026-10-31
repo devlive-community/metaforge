@@ -9,6 +9,7 @@ import org.devlive.metaforge.plugin.configure.PluginConfigureFieldName;
 import org.devlive.metaforge.plugin.configure.PluginConfigureFieldType;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public class AliOssPlugin
                                 .field(PluginConfigureFieldName.host)
                                 .type(PluginConfigureFieldType.String)
                                 .required(true)
-                                .value("https://oss-cn-regison.aliyuncs.com")
+                                .value("https://oss-cn-hangzhou.aliyuncs.com")
                                 .message("host is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()
@@ -48,10 +49,13 @@ public class AliOssPlugin
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.database)
                                 .type(PluginConfigureFieldType.String)
-                                .required(true)
-                                .value("default")
-                                .message("database is a required field, please be sure to enter")
                                 .group(PluginConfigureFieldGroup.advanced)
+                                .build(),
+                        PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.configures)
+                                .type(PluginConfigureFieldType.Array)
+                                .value(Collections.emptyList())
+                                .group(PluginConfigureFieldGroup.custom)
                                 .build()),
                 null);
 

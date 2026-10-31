@@ -1,93 +1,65 @@
 package org.devlive.metaforge.plugin.natived.alioss;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.adapter.Adapter;
-import org.devlive.metaforge.spi.model.ManagementDetail;
-import org.devlive.metaforge.spi.model.ManagementDownload;
-import org.devlive.metaforge.spi.model.ManagementPage;
-import org.devlive.metaforge.spi.model.ManagementRequest;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
-@Slf4j
-@SuppressFBWarnings(value = {"EI_EXPOSE_REP"})
+import java.util.stream.Collectors;
+
+/**
+ * Aliyun OSS through MetaForge's OSS JDBC driver: a bucket is a database, a top-level prefix a
+ * table and the objects under it rows. Buckets, prefixes and their columns come from the
+ * driver's JDBC metadata; the AccessKey ID and secret are the username and password.
+ */
 public class AliOssService
         implements PluginService
 {
-    private AliossConnection connection;
-    private Response response;
-
     @Override
-    public ManagementPage managementNamespaces(RuntimeConfigure configure, ManagementRequest request)
+    public String driver()
     {
-        return new OssManagement().namespaces(configure, request);
+        return "org.devlive.metaforge.AliOssDriver";
     }
 
     @Override
-    public ManagementPage managementList(RuntimeConfigure configure, ManagementRequest request)
+    public String connectType()
     {
-        return new OssManagement().list(configure, request);
+        return "alioss";
     }
 
+    /** The host is the endpoint, with or without its scheme; http:// turns TLS off. */
     @Override
-    public ManagementDetail managementDetail(RuntimeConfigure configure, ManagementRequest request)
+    public String url(RuntimeConfigure configure)
     {
-        return new OssManagement().detail(configure, request);
-    }
-
-    @Override
-    public ManagementDownload managementDownload(RuntimeConfigure configure, ManagementRequest request)
-    {
-        return new OssManagement().download(configure, request);
-    }
-
-    @Override
-    public String validator()
-    {
-        return "SELECT * FROM default";
-    }
-
-    @Override
-    public void connect(RuntimeConfigure configure)
-    {
-        try {
-            this.response = new Response();
-            this.connection = new AliossConnection(configure, this.response);
+        if (configure.getUrl().isPresent()) {
+            return configure.getUrl().get();
         }
-        catch (Exception ex) {
-            this.response.setIsConnected(Boolean.FALSE);
-            this.response.setMessage(ex.getMessage());
-        }
+        String host = configure.getHost().trim();
+        boolean ssl = !host.startsWith("http://");
+        host = host.replaceFirst("^https?://", "").replaceAll("/+$", "");
+        StringBuilder url = new StringBuilder("jdbc:alioss://").append(host);
+        configure.getDatabase().filter(bucket -> !bucket.isEmpty()).ifPresent(bucket -> url.append("/").append(bucket));
+        url.append("?ssl=").append(ssl);
+        configure.getEnv().filter(env -> !env.isEmpty()).ifPresent(env -> url.append("&").append(env.entrySet().stream()
+                .map(entry -> entry.getKey() + "=" + entry.getValue())
+                .collect(Collectors.joining("&"))));
+        return url.toString();
     }
 
     @Override
-    public Response execute(String content)
+    public Response getDatabases(RuntimeConfigure configure)
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            log.info("Execute alioss plugin logic started");
-            this.response = this.connection.getResponse();
-            Adapter processor = new AliossAdapter(this.connection, new AliossParser(content));
-            this.response = processor.handlerExecute(content);
-            log.info("Execute alioss plugin logic end");
-        }
-        return this.response;
+        return metadataDatabases(configure);
     }
 
     @Override
-    public Response execute(RuntimeConfigure configure, String content)
+    public Response getTables(RuntimeConfigure configure, String database)
     {
-        connect(configure);
-        return execute(content);
+        return metadataTables(configure, database);
     }
 
     @Override
-    public void destroy()
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            this.connection.destroy();
-        }
+        return metadataColumns(configure, database, table);
     }
 }
