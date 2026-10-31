@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { MfMessage } from 'metaforge-ui'
-import { compareLocation, erLocation, sourceManageLocation } from '@/model/source-manage'
+import { compareLocation, erLocation, importLocation, sourceManageLocation } from '@/model/source-manage'
 import { useSourceCapabilities } from './useSourceCapabilities'
 import { useUserStore } from '@/stores/user'
 import { useI18n } from 'vue-i18n'
@@ -28,7 +28,7 @@ export function useWorkbenchHeader() {
   const navItems = computed(() => [
     { path: '/home', label: t('common.home'), icon: Home },
     { path: '/manage', label: t('navigation.console'), icon: SquareTerminal, to: routeSource.value ? sourceManageLocation(context()) : '/source' },
-    { path: '/import', label: t('navigation.dataImport'), icon: Upload },
+    { path: '/import', label: t('navigation.dataImport'), icon: Upload, to: routeSource.value ? importLocation(context()) : '/import' },
     { path: '/export', label: t('navigation.dataExport'), icon: Download },
     { path: '/compare', label: t('navigation.dataCompare'), icon: GitCompare, to: routeSource.value ? compareLocation(context()) : '/compare' },
     { path: '/er', label: t('navigation.erDiagram'), icon: Network, to: routeSource.value ? erLocation(context()) : '/er' },
@@ -62,7 +62,8 @@ export function useWorkbenchHeader() {
         // The compare and ER pages stay where they are, in the chosen database.
         router.push(route.path === '/compare'
             ? compareLocation({ source: routeSource.value, database: value, mode: route.query.mode === 'data' ? 'data' : 'structure' })
-            : route.path === '/er' ? erLocation({ source: routeSource.value, database: value }) : sourceManageLocation({ source: routeSource.value, database: value }))
+            : route.path === '/er' ? erLocation({ source: routeSource.value, database: value })
+                : route.path === '/import' ? importLocation({ source: routeSource.value, database: value }) : sourceManageLocation({ source: routeSource.value, database: value }))
       }
     }
   })
