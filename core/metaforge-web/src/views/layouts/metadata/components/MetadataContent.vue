@@ -18,7 +18,7 @@
             <MfButton size="sm" :loading="refreshing" @click="onRefresh"><RefreshCw :size="14"/>{{ $t('common.refresh') }}</MfButton>
             <MfButton v-if="!originalTable && originalDatabase && can('database:alter') && can('database:info')" size="sm" @click="onEditDatabase"><Pencil :size="14"/>{{ $t('source.database.edit') }}</MfButton>
             <MfButton v-if="originalTable && can('table:alter') && can('tab:info')" size="sm" @click="onEditProperties"><Pencil :size="14"/>{{ $t('source.props.edit') }}</MfButton>
-            <MfButton v-if="originalTable && can('column:read')" size="sm" @click="onStructureCompare"><GitCompare :size="14"/>{{ $t('source.common.structureCompare') }}</MfButton>
+            <MfButton v-if="originalTable && canCompare" size="sm" @click="onStructureCompare"><GitCompare :size="14"/>{{ $t('source.common.structureCompare') }}</MfButton>
             <!-- Database level keeps only what applies to it (new table); table actions show once a table is open. -->
             <MfDropdown v-if="can('table:create') || (originalTable && (can('table:export') || can('table:drop') || can('table:truncate')))" trigger="click" placement="bottomRight">
               <MfButton size="sm">{{ $t('source.common.moreActions') }}<ChevronDown :size="12"/></MfButton>
@@ -75,7 +75,7 @@ import { useMetadataContent } from '@/composables/useMetadataContent'
 
 defineOptions({ name: 'MetadataContent' })
 const tabIcons: Record<string, unknown> = { keys: KeyRound, objects: FolderOpen, structure: LayoutGrid, data: Table2, sql: SquarePlay, indexes: Layers, foreignkeys: GitBranch, triggers: Zap, info: Settings, statement: Code, erDiagram: Waypoints }
-const { can, profile, capabilityLoading, capabilityError, paneComponent, paneKey, databaseLocation, tableInfo, tableName, selectTab, tabs, metadataError,
+const { can, canCompare, profile, capabilityLoading, capabilityError, paneComponent, paneKey, databaseLocation, tableInfo, tableName, selectTab, tabs, metadataError,
   originalDatabase, originalTable, onChange, onRefresh, refreshing, onStructureCompare, onCopyName, onEditProperties, onEditDatabase,
   tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible } = useMetadataContent()
 </script>

@@ -61,12 +61,12 @@ import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import type { ImportWizard } from '@/composables/useImportWizard'
 
 const props = defineProps<{ wizard: ImportWizard }>()
-const { settings, selectedPlans } = props.wizard
+const { settings, selectedPlans, writeModes } = props.wizard
 const { t } = useI18n()
-const CHOICES = [
-  { key: 'writeMode', values: ['append', 'truncate', 'structure'] },
+const CHOICES = computed(() => [
+  { key: 'writeMode', values: writeModes.value },
   { key: 'conflict', values: ['skip', 'upsert', 'error'] },
-] as const
+] as const)
 const POLICIES = ['checkBefore', 'transactional', 'logSkipped', 'continueOnError'] as const
 const TIME_FORMATS = ['yyyy-MM-dd HH:mm:ss', 'yyyy/MM/dd HH:mm:ss', 'yyyy-MM-dd\'T\'HH:mm:ss', 'dd/MM/yyyy HH:mm:ss', 'MM/dd/yyyy HH:mm:ss']
 const columns = computed(() => [
@@ -77,7 +77,7 @@ const columns = computed(() => [
 // An empty choice follows the settings above; a new table is always created first.
 const modeOptions = (action: string) => [
   { label: t(action === 'create' ? 'import.settings.inheritCreate' : 'import.settings.inherit'), value: '' },
-  ...(['append', 'truncate', 'structure'] as const).map(value => ({ label: t(`import.settings.writeModeOption.${value}`), value })),
+  ...writeModes.value.map(value => ({ label: t(`import.settings.writeModeOption.${value}`), value })),
 ]
 const conflictOptions = computed(() => [
   { label: t('import.settings.inherit'), value: '' },

@@ -47,3 +47,26 @@ export function isSourceWorkbenchRoute(route: { path: string; query: Record<stri
 export function isSourceManagementRoute(route: { path: string; query: Record<string, unknown> }): boolean {
   return route.path === '/manage' && route.query.type === 'source' && typeof route.query.id === 'string' && !!route.query.id
 }
+
+/**
+ * Capabilities a workbench page needs before it opens for a source, matching what its server
+ * calls require. The console opens for any source whose plugin declares a capability; a source
+ * declaring none has no management at all.
+ */
+export const WORKBENCH_PAGE_CAPABILITIES: Record<string, readonly string[]> = {
+  '/manage': [],
+  '/import': ['data:insert', 'table:list', 'column:read'],
+  '/export': ['table:export'],
+  '/compare': ['table:list', 'column:read'],
+  '/er': ['database:info', 'tab:er-diagram'],
+}
+export const canManageSource = (capabilities: Iterable<string>) => new Set(capabilities).size > 0
+export function canOpenWorkbenchPage(path: string, capabilities: Iterable<string>): boolean {
+  const owned = new Set(capabilities)
+  return owned.size > 0 && (WORKBENCH_PAGE_CAPABILITIES[path] || []).every(capability => owned.has(capability))
+}
+/** Inside a managed source's workspace: whether `can` grants what a workbench page needs. */
+export const pageCapabilitiesMet = (path: string, can: (capability: string) => boolean) => (WORKBENCH_PAGE_CAPABILITIES[path] || []).every(can)
+/** Compare modes and export formats a source can use: data needs its rows, sync SQL its statements. */
+export const compareModeCapabilities = (mode: CompareMode) => mode === 'data' ? ['table:read'] : []
+export const compareExportCapabilities = (kind: CompareMode, format: 'sql' | 'csv') => kind === 'data' ? ['table:read'] : format === 'sql' ? ['table:statement'] : []

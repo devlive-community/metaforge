@@ -38,6 +38,12 @@ class MetadataService
         return new HttpUtils().get(`/api/v1/source-management/${ encodeURIComponent(code) }/capabilities`)
     }
 
+    /** Capabilities of several sources in one request, keyed by source code. */
+    getCapabilitiesOf(codes: string[]): Promise<ResponseModel>
+    {
+        return new HttpUtils().post('/api/v1/source-management/capabilities', codes)
+    }
+
     getEngines(code: string): Promise<ResponseModel>
     {
         return new HttpUtils().get(`${ DEFAULT_PATH }/${ code }/engines`)

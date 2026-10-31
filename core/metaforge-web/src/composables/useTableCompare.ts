@@ -3,7 +3,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import MetadataService from '@/services/metadata'
-import { compareLocation, sourceManageContext, sourceManageLocation, type CompareMode } from '@/model/source-manage'
+import { compareExportCapabilities, compareLocation, compareModeCapabilities, sourceManageContext, sourceManageLocation, type CompareMode } from '@/model/source-manage'
+import { useSourceCapabilities } from './useSourceCapabilities'
 import { dataBody, emptyCounts, emptyDataForm, structureSides, type CompareTables, type DataForm, type DataResult, type DataRow, type StructureCounts,
   type StructureRow } from '@/model/table-compare'
 
@@ -24,6 +25,10 @@ export function useTableCompare() {
   const database = computed(() => context.value.database)
   const mode = computed<CompareMode>(() => route.query.mode === 'data' ? 'data' : 'structure')
   const sourceTable = computed(() => context.value.table)
+  // Modes and export formats follow the source plugin's declared capabilities; the router keeps the page itself out of reach otherwise.
+  const { can } = useSourceCapabilities(source)
+  const modes = computed(() => (['structure', 'data'] as const).filter(item => compareModeCapabilities(item).every(can)))
+  const exportFormats = (kind: CompareMode) => (['sql', 'csv'] as const).filter(format => compareExportCapabilities(kind, format).every(can))
 
   const databases = ref<Option[]>([])
   const sourceTables = ref<Option[]>([])
@@ -120,7 +125,7 @@ export function useTableCompare() {
     dataError.value = ''
   }
 
-  const setMode = (value: string | number) => router.replace({ ...compareLocation({ source: source.value, database: database.value, table: sourceTable.value, mode: value === 'data' ? 'data' : 'structure' }) })
+  const setMode = (value: string | number) => modes.value.includes(value as CompareMode) && router.replace({ ...compareLocation({ source: source.value, database: database.value, table: sourceTable.value, mode: value === 'data' ? 'data' : 'structure' }) })
   const setSourceTable = (value: string) => router.replace(compareLocation({ source: source.value, database: database.value, table: value, mode: mode.value }))
   /** The target becomes the source (moving the header to its database) and the source the target. */
   let swapping: { database: string; table: string } | null = null
@@ -134,7 +139,7 @@ export function useTableCompare() {
   }
 
   async function exportResult(kind: 'structure' | 'data', format: 'sql' | 'csv') {
-    if (!ready.value || exporting.value) return
+    if (!ready.value || exporting.value || !exportFormats(kind).includes(format)) return
     exporting.value = true
     try {
       const body = { ...(kind === 'data' ? dataBody(tables.value, dataForm.value) : tables.value), kind, format }
@@ -181,7 +186,7 @@ export function useTableCompare() {
   onScopeDispose(() => { alive = false; structureRevision++; dataRevision++ })
 
   return {
-    source, database, mode, sourceTable, databases, sourceTables, targetTables, targetDatabase, targetTable, ready,
+    source, database, mode, modes, exportFormats, sourceTable, databases, sourceTables, targetTables, targetDatabase, targetTable, ready,
     structureLoading, structureRows, structureCounts, structureError, onlyDifferent, sides,
     dataForm, dataLoading, dataResult, dataError, columnNames, primaryKeys, detail, exporting,
     setMode, setSourceTable, setTargetDatabase, swap, back, compareStructure, compareData, resetData, exportResult,

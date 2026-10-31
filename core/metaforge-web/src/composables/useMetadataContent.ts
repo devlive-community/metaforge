@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import { ObjectUtils } from '@/utils/object'
 import { usePanelState } from './usePanelState'
-import { compareLocation, sourceManageLocation, sourceTabCapability } from '@/model/source-manage'
+import { compareLocation, pageCapabilitiesMet, sourceManageLocation, sourceTabCapability } from '@/model/source-manage'
 import type { useSourceCapabilities } from './useSourceCapabilities'
 import type { useSourceWorkspaceLayout } from './useSourceWorkspaceLayout'
 
@@ -88,6 +88,7 @@ export function useMetadataContent() {
     refreshKey.value++
     manualRefresh.value++
   }
+  const canCompare = computed(() => pageCapabilitiesMet('/compare', can))
   const onStructureCompare = () => router.push(compareLocation({ source: originalSource.value, database: originalDatabase.value, table: originalTable.value, mode: 'structure' }))
   const onCopyName = () => {
     if (tableName.value) {
@@ -95,7 +96,7 @@ export function useMetadataContent() {
       MfMessage.success(t('query.tip.copySuccess'))
     }
   }
-  return { can, profile, capabilityLoading, capabilityError, paneComponent, paneKey, databaseLocation, tableInfo, tableName, selectTab, tabs, fieldPanelOpen, fieldPanelHost, metadataError, ...layout,
+  return { can, canCompare, profile, capabilityLoading, capabilityError, paneComponent, paneKey, databaseLocation, tableInfo, tableName, selectTab, tabs, fieldPanelOpen, fieldPanelHost, metadataError, ...layout,
     originalSource, originalDatabase, originalTable, onChange, onRefresh, refreshing, onStructureCompare, onCopyName, onEditProperties, onEditDatabase,
     tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible }
 }

@@ -14,6 +14,11 @@ test('source tables match existing names, prefixed copies, or become new tables'
   assert.deepEqual(matchTables([table('x', [])], ['x_import', 'y']).map(plan => [plan.action, plan.target]), [['create', 'x']])
 })
 
+test('a source that can not create tables skips the tables without a target', () => {
+  const plans = matchTables([table('dataset', []), table('logs', [])], ['dataset'], false)
+  assert.deepEqual(plans.map(plan => [plan.action, plan.target, plan.selected]), [['existing', 'dataset', true], ['skip', '', false]])
+})
+
 test('fields map by name, parse text into time columns and leave the rest out', () => {
   const mappings = mapFields(table('t', [['ID', 'BIGINT'], ['created', 'VARCHAR(32)'], ['extra', 'JSON']]), [{ name: 'id', type: 'bigint' }, { name: 'created', type: 'datetime' }])
   assert.deepEqual(mappings, [{ source: 'ID', target: 'id', handling: 'direct' }, { source: 'created', target: 'created', handling: 'date' }, { source: 'extra', target: '', handling: 'ignore' }])

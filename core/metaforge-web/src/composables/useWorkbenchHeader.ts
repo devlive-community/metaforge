@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { MfMessage } from 'metaforge-ui'
-import { compareLocation, erLocation, importLocation, sourceManageLocation } from '@/model/source-manage'
+import { canOpenWorkbenchPage, compareLocation, erLocation, importLocation, sourceManageLocation } from '@/model/source-manage'
 import { useSourceCapabilities } from './useSourceCapabilities'
 import { useUserStore } from '@/stores/user'
 import { useI18n } from 'vue-i18n'
@@ -23,7 +23,7 @@ export function useWorkbenchHeader() {
 
   const filter: FilterModel = new FilterModel()
 
-  // Source workbench navigation: home, then only what manages the current source and database.
+  // Source workbench navigation: home, then only the pages the source's plugin declares what they need for.
   const context = () => ({ source: routeSource.value, database: String(route.params.database || '') })
   const navItems = computed(() => [
     { path: '/home', label: t('common.home'), icon: Home },
@@ -32,7 +32,7 @@ export function useWorkbenchHeader() {
     { path: '/export', label: t('navigation.dataExport'), icon: Download },
     { path: '/compare', label: t('navigation.dataCompare'), icon: GitCompare, to: routeSource.value ? compareLocation(context()) : '/compare' },
     { path: '/er', label: t('navigation.erDiagram'), icon: Network, to: routeSource.value ? erLocation(context()) : '/er' },
-  ])
+  ].filter(item => item.path === '/home' || canOpenWorkbenchPage(item.path, profile.value?.capabilities || [])))
 
   const isNavActive = (path: string) => {
     if (path === '/home') return route.path === '/home' || route.path === '/'
@@ -43,7 +43,7 @@ export function useWorkbenchHeader() {
   // 工作台头部跟随当前路由的数据源上下文
   const routeSource = computed(() => String(route.params.source || ''))
 
-  const { can, ensureCapabilities } = useSourceCapabilities(routeSource)
+  const { can, profile, ensureCapabilities } = useSourceCapabilities(routeSource)
   const sourceInfo = ref<any | null>(null)
 
   const sourceName = computed(() => String(sourceInfo.value?.name || routeSource.value || 'MetaForge'))

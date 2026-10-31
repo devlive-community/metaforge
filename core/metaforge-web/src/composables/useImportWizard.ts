@@ -6,6 +6,7 @@ import ImportService from '@/services/import'
 import MetadataService from '@/services/metadata'
 import SourceService from '@/services/source'
 import { sourceManageContext, sourceManageLocation } from '@/model/source-manage'
+import { useSourceCapabilities } from './useSourceCapabilities'
 import { defaultImportSettings, importPlan, mapFields, mappingCounts, matchTables, type ImportAnalysis, type ImportSettings, type TablePlan,
   type TargetColumn } from '@/model/table-import'
 
@@ -21,6 +22,11 @@ export function useImportWizard() {
   const route = useRoute()
   const router = useRouter()
   const context = computed(() => sourceManageContext(route))
+  // New tables, emptying tables and structure-only imports exist only when the plugin declares them.
+  const { can } = useSourceCapabilities(computed(() => context.value.source))
+  const canCreate = computed(() => can('table:create'))
+  const writeModes = computed(() => (['append', 'truncate', 'structure'] as const).filter(mode => mode === 'append' || can(mode === 'truncate' ? 'table:truncate' : 'table:create')))
+  const actions = computed(() => (['existing', 'create', 'skip'] as const).filter(action => action !== 'create' || canCreate.value))
 
   const step = ref(0)
   const parsers = ref<{ name: string; extension: string }[]>([])
@@ -130,8 +136,8 @@ export function useImportWizard() {
   async function autoMatch() {
     if (!analysis.value) return
     const selected = new Map(plans.value.map(plan => [plan.source, plan.selected]))
-    const matched = matchTables(analysis.value.tables, targetTables.value)
-    matched.forEach(plan => { plan.selected = selected.get(plan.source) ?? true })
+    const matched = matchTables(analysis.value.tables, targetTables.value, canCreate.value)
+    matched.forEach(plan => { plan.selected = plan.action !== 'skip' && (selected.get(plan.source) ?? true) })
     await Promise.all(matched.map(remap))
     plans.value = matched
     current.value = 0
@@ -141,6 +147,7 @@ export function useImportWizard() {
     await autoMatch()
   }
   async function setAction(plan: TablePlan, action: TablePlan['action']) {
+    if (!actions.value.includes(action)) return
     plan.action = action
     if (action === 'create') plan.target = targetTables.value.includes(plan.source) ? `${ plan.source }_import` : plan.source
     else if (action === 'existing' && !targetTables.value.includes(plan.target)) plan.target = ''
@@ -203,7 +210,7 @@ export function useImportWizard() {
   onScopeDispose(() => { alive = false; previewRevision++; clearTimeout(previewTimer); clearTimeout(pollTimer) })
 
   return {
-    context, step, parsers, file, analysis, analyzing, analyzeError, sourceType, targetTables, plans, selectedPlans, current, currentPlan, currentCounts,
+    context, canCreate, writeModes, actions, step, parsers, file, analysis, analyzing, analyzeError, sourceType, targetTables, plans, selectedPlans, current, currentPlan, currentCounts,
     flagged, totals, settings, preview, previewLoading, previewError, confirmed, job, starting, running, canNext, canStart, targetOptions,
     analyze, reparse, removeFile, autoMatch, resetSelection, setAction, setTarget, remap, next, previous, goTo, back, start,
   }

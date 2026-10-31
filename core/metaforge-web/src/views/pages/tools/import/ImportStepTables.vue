@@ -60,7 +60,7 @@ import type { TablePlan } from '@/model/table-import'
 import type { ImportWizard } from '@/composables/useImportWizard'
 
 const props = defineProps<{ wizard: ImportWizard }>()
-const { context, analysis, totals, plans, selectedPlans, targetTables, autoMatch, resetSelection, setAction, setTarget } = props.wizard
+const { context, analysis, totals, plans, selectedPlans, targetTables, actions, autoMatch, resetSelection, setAction, setTarget } = props.wizard
 const { t } = useI18n()
 const columns = computed(() => [
   { title: t('import.tables.select'), dataIndex: 'selected', width: 64 },
@@ -70,7 +70,7 @@ const columns = computed(() => [
   { title: t('import.tables.targetColumn', { database: context.value.database }), dataIndex: 'target' },
   { title: t('import.tables.statusColumn'), dataIndex: 'status' },
 ])
-const actionOptions = computed(() => (['existing', 'create', 'skip'] as const).map(value => ({ label: t(`import.tables.action.${value}`), value })))
+const actionOptions = computed(() => actions.value.map(value => ({ label: t(`import.tables.action.${value}`), value })))
 const targetOptions = computed(() => targetTables.value.map(name => ({ label: name, value: name })))
 const counts = computed(() => ({
   existing: selectedPlans.value.filter(plan => plan.action === 'existing' && plan.target).length,

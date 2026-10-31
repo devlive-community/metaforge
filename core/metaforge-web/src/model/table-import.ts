@@ -33,9 +33,10 @@ export const defaultImportSettings = (): ImportSettings => ({
 
 /**
  * The target each source table goes to: an existing table of the same name (or one ending in
- * `_<name>`, as prefixed copies do), otherwise a new table named after the source.
+ * `_<name>`, as prefixed copies do), otherwise a new table named after the source, or none when
+ * the source can not create tables.
  */
-export function matchTables(sources: ImportSourceTable[], targets: string[]): TablePlan[] {
+export function matchTables(sources: ImportSourceTable[], targets: string[], canCreate = true): TablePlan[] {
   const lower = targets.map(name => name.toLowerCase())
   return sources.map(source => {
     const name = source.name.toLowerCase()
@@ -43,9 +44,14 @@ export function matchTables(sources: ImportSourceTable[], targets: string[]): Ta
     const prefixed = exact >= 0 ? exact : lower.findIndex(target => target.endsWith('_' + name))
     const plan: TablePlan = { source: source.name, selected: true, action: 'existing', target: '', mappings: [], writeMode: '', conflict: '' }
     if (prefixed >= 0) plan.target = targets[prefixed]
-    else {
+    else if (canCreate) {
       plan.action = 'create'
       plan.target = source.name
+    }
+    // A source that can not create tables skips what has no target.
+    else {
+      plan.action = 'skip'
+      plan.selected = false
     }
     return plan
   })

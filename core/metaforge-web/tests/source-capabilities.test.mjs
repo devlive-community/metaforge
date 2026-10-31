@@ -4,7 +4,7 @@ import test from 'node:test'
 import {createPinia,setActivePinia} from 'pinia'
 import ts from 'typescript'
 const url=source=>`data:text/javascript;base64,${Buffer.from(source).toString('base64')}`
-const service=url('export const state={calls:[],request:()=>Promise.resolve({status:true,data:{kind:"key-value",capabilities:["tab:sql","query:execute"]}})};export default {getCapabilities(id){state.calls.push(id);return state.request(id)}}')
+const service=url('export const state={calls:[],batches:[],request:()=>Promise.resolve({status:true,data:{kind:"key-value",capabilities:["tab:sql","query:execute"]}}),batch:()=>Promise.resolve({status:true,data:{}})};export default {getCapabilities(id){state.calls.push(id);return state.request(id)},getCapabilitiesOf(codes){state.batches.push(codes);return state.batch(codes)}}')
 const source=await readFile(new URL('../src/stores/source-capabilities.ts',import.meta.url),'utf8')
 let {outputText}=ts.transpileModule(source,{compilerOptions:{target:ts.ScriptTarget.ES2020,module:ts.ModuleKind.ESNext}})
 outputText=outputText.replace(/from (['"])([^'"]+)\1/g,(_m,_q,name)=>`from ${JSON.stringify(name==='@/services/metadata'?service:import.meta.resolve(name))}`)
@@ -40,4 +40,18 @@ test('a successful legacy metadata response cannot become a red Query successful
   assert.equal(store.entries.legacy.contractError,true)
   assert.notEqual(store.entries.legacy.error,'Query successful')
   assert.equal(store.entries.legacy.profile,null)
+})
+
+test('a source list asks once for the sources it does not know and missing sources manage nothing',async()=>{
+  setActivePinia(createPinia());const store=useSourceCapabilitiesStore();state.batches=[]
+  state.request=async()=>({status:true,data:{kind:'relational',capabilities:['query:execute']}})
+  await store.load('known')
+  state.batch=async codes=>({status:true,data:{mysql:{kind:'relational',capabilities:['query:execute','table:list']},zk:{kind:'unknown',capabilities:[]}}})
+  await store.loadMany(['known','mysql','zk','mysql','gone'])
+  assert.deepEqual(state.batches,[['mysql','zk','gone']])
+  assert.deepEqual(store.capabilitiesOf('mysql'),['query:execute','table:list'])
+  assert.deepEqual(store.capabilitiesOf('zk'),[])
+  assert.deepEqual(store.capabilitiesOf('gone'),[])
+  assert.ok(store.entries.gone.error)
+  await store.loadMany(['mysql','zk']);assert.equal(state.batches.length,1)
 })

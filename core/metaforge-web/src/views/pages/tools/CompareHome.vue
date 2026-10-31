@@ -8,8 +8,7 @@
       <header class="shrink-0 rounded-mf-lg bg-surface/95 px-6 pt-4">
         <h1 class="m-0 mb-1 text-xl font-semibold text-content">{{ sourceTable ? $t('compare.title', { table: sourceTable }) : $t('navigation.dataCompare') }}</h1>
         <MfTabs :active-key="mode" class="compare-tabs" @change="setMode">
-          <MfTabPane item-key="structure" :tab="$t('compare.structure')"/>
-          <MfTabPane item-key="data" :tab="$t('compare.data')"/>
+          <MfTabPane v-for="item in modes" :key="item" :item-key="item" :tab="$t(`compare.${ item }`)"/>
         </MfTabs>
       </header>
 
@@ -84,7 +83,7 @@
           </MfSelect>
           <div class="flex shrink-0 gap-2">
             <MfButton @click="back">{{ $t('common.cancel') }}</MfButton>
-            <ExportMenu :disabled="!ready" :loading="exporting" :label="$t('compare.exportStructure')" @export="format => exportResult('structure', format)"/>
+            <ExportMenu :disabled="!ready" :loading="exporting" :formats="exportFormats('structure')" :label="$t('compare.exportStructure')" @export="format => exportResult('structure', format)"/>
           </div>
         </footer>
       </div>
@@ -168,7 +167,7 @@
           </template>
           <footer class="mt-auto flex shrink-0 justify-end gap-2 pt-1">
             <MfButton @click="back">{{ $t('common.cancel') }}</MfButton>
-            <ExportMenu :disabled="!ready || (dataForm.mode === 'fields' && !dataForm.keys.length)" :loading="exporting" :label="$t('compare.exportData')"
+            <ExportMenu :disabled="!ready || (dataForm.mode === 'fields' && !dataForm.keys.length)" :loading="exporting" :formats="exportFormats('data')" :label="$t('compare.exportData')"
                         @export="format => exportResult('data', format)"/>
           </footer>
         </div>
@@ -205,7 +204,7 @@ defineOptions({ name: 'CompareHome' })
 const { t } = useI18n()
 const router = useRouter()
 const {
-  source, database, mode, sourceTable, databases, sourceTables, targetTables, targetDatabase, targetTable, ready,
+  source, database, mode, modes, exportFormats, sourceTable, databases, sourceTables, targetTables, targetDatabase, targetTable, ready,
   structureLoading, structureRows, structureCounts, structureError, onlyDifferent, sides,
   dataForm, dataLoading, dataResult, dataError, columnNames, primaryKeys, detail, exporting,
   setMode, setSourceTable, setTargetDatabase, swap, back, compareStructure, compareData, resetData, exportResult,
