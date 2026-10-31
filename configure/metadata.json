@@ -81,21 +81,6 @@
       "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb/2026.0.0/metaforge-plugin-cratedb-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "metaforge-plugin-cratedb-http",
-      "label": "CrateDB HTTP",
-      "description": "Use HTTP to access the remote CrateDB database",
-      "i18nFormat": true,
-      "type": "Connector",
-      "version": "2026.0.0",
-      "author": "metaforge-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/cratedbhttp.svg",
-      "released": "2026-01-28 16:48:33",
-      "supportVersion": [
-        "ALL"
-      ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb-http/2026.0.0/metaforge-plugin-cratedb-http-2026.0.0-bin.tar.gz"
-    },
-    {
       "key": "metaforge-plugin-zookeeper",
       "label": "Apache Zookeeper",
       "description": "Zookeeper is a distributed, distributed configuration service. It is a distributed database with a focus on performance, scalability, and ease of use.",
@@ -694,21 +679,6 @@
         "ALL"
       ],
       "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2-tcp/2026.0.0/metaforge-plugin-h2-tcp-2026.0.0-bin.tar.gz"
-    },
-    {
-      "key": "metaforge-plugin-clickhouse-http",
-      "label": "ClickHouse HTTP",
-      "description": "Use HTTP to access the remote ClickHouse database",
-      "i18nFormat": true,
-      "type": "Connector",
-      "version": "2026.0.0",
-      "author": "metaforge-community",
-      "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/clickhousehttp.svg",
-      "released": "2026-01-28 16:48:33",
-      "supportVersion": [
-        "ALL"
-      ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse-http/2026.0.0/metaforge-plugin-clickhouse-http-2026.0.0-bin.tar.gz"
     },
     {
       "key": "metaforge-plugin-ceresdb",

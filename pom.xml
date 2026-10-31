@@ -29,10 +29,8 @@
         <module>shaded/metaforge-shaded-neo4j</module>
         <module>plugin/metaforge-plugin-mysql</module>
         <module>plugin/metaforge-plugin-clickhouse</module>
-        <module>plugin/metaforge-plugin-clickhouse-http</module>
         <module>plugin/metaforge-plugin-solr</module>
         <module>plugin/metaforge-plugin-cratedb</module>
-        <module>plugin/metaforge-plugin-cratedb-http</module>
         <module>plugin/metaforge-plugin-alioss</module>
         <module>plugin/metaforge-plugin-zookeeper</module>
         <module>plugin/metaforge-plugin-kafka</module>

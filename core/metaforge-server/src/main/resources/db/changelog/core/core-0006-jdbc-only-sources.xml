@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MetaForge reaches every source through JDBC: sources of the removed HTTP plugins move to the JDBC plugin of the same database. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0006-jdbc-only-sources" author="metaforge">
+        <update tableName="metaforge_source">
+            <column name="source_type" value="ClickHouse"/>
+            <where>source_type = 'ClickHouseHTTP'</where>
+        </update>
+        <!-- CrateDB's JDBC driver speaks the PostgreSQL protocol (port 5432) instead of HTTP (port 4200); the source keeps its settings and may need its port changed. -->
+        <update tableName="metaforge_source">
+            <column name="source_type" value="CrateDB"/>
+            <where>source_type = 'CrateDBHTTP'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>
