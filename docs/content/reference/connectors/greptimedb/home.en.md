@@ -25,20 +25,45 @@ Support Time: `2023-04-14`
 
     If your GreptimeDB service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
-=== "Configure"
+::: tabs
+    === "Configure"
+        | Field  |      Required       | Default Value |
+        |:------:|:-------------------:|:-------------:|
+        | `Name` | :check{20,#3CA34F}: |      \-       |
+        | `Host` | :check{20,#3CA34F}: |  `127.0.0.1`  |
+        | `Port` | :check{20,#3CA34F}: |    `4002`     |
+    === "Authorization"
+        |   Field    |    Required     | Default Value |
+        |:----------:|:---------------:|:-------------:|
+        | `Username` | :x{20,#ff0000}: |      \-       |
+        | `Password` | :x{20,#ff0000}: |      \-       |
+    === "Advanced"
+        |   Field    |    Required     | Default Value |
+        |:----------:|:---------------:|:-------------:|
+        | `Database` | :x{20,#ff0000}: |   `public`    |
+:::
 
-    | Field  |             Required              | Default Value |
-    |:------:|:---------------------------------:|:-------------:|
-    | `Name` | :check{20,#3CA34F}:  |       -       |
-    | `Host` | :check{20,#3CA34F}: |  `127.0.0.1`  |
-    | `Port` | :check{20,#3CA34F}: |    `4000`     |
+- Connects with the MySQL JDBC driver to GreptimeDB's MySQL protocol port (default `4002`) instead of HTTP (port `4000`); existing sources need port `4002`.
 
 #### Version (Validation)
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `GreptimeDBE2ETest` verifies each version below in a container: the version check, then databases, tables and columns created, read, changed and dropped with SQL.
 
-- [x] 0.x
+    - [x] v0.15
+    - [x] v0.17
+
+!!!
+
+#### SQL and concepts
+
+---
+
+| MetaForge | GreptimeDB | SQL |
+|:--|:--|:--|
+| Database | Database | `CREATE DATABASE` / `DROP DATABASE` |
+| Table | Table (needs one `TIME INDEX` column) | `CREATE TABLE ... (host STRING PRIMARY KEY, ts TIMESTAMP TIME INDEX, ...)` / `DROP TABLE` |
+| Column | Column (tag, field or timestamp) | `ALTER TABLE ... ADD / MODIFY / DROP COLUMN` |
