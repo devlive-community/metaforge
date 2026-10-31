@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, useAttrs } from 'vue'
 import clsx from 'clsx'
-import { CONTROL_SIZES, FIELD_FOCUS_RING, TRANSITION, type MfControlSize } from './common'
+import { CONTROL_SIZES, FIELD_FOCUS_RING, TRANSITION, hasWidthClass, type MfControlSize } from './common'
 
 const inputRef = ref<HTMLInputElement>()
+
+const attrs = useAttrs()
 
 const props = withDefaults(defineProps<{
     modelValue?: string | number
@@ -39,7 +41,9 @@ const actualType = computed(() => props.showPassword || props.type === 'password
     : props.type)
 
 const wrapperClass = computed(() => clsx(
-    'mf-invalidable inline-flex items-center w-full rounded-mf-md border bg-surface',
+    // Fills its container unless the caller gives it a width.
+    !hasWidthClass(attrs.class) && 'w-full',
+    'mf-invalidable inline-flex items-center rounded-mf-md border bg-surface',
     CONTROL_SIZES[props.size],
     'px-0! gap-0!',
     TRANSITION,

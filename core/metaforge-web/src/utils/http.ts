@@ -135,6 +135,29 @@ export class HttpUtils
         })
     }
 
+    /**
+     * Posts and receives a file. A JSON body is the server's usual failure response; anything else
+     * is the file, named by its Content-Disposition header.
+     */
+    download(url: string, data = {}): Promise<{ status: boolean; message?: string; blob?: Blob; fileName?: string }>
+    {
+        return axios.post(url, data, { ...this.configure, responseType: 'blob' })
+                    .then(async result => {
+                        const blob: Blob = result.data
+                        if (String(result.headers['content-type'] || '').includes('application/json')) {
+                            const body = JSON.parse(await blob.text())
+                            return { status: false, message: String(body?.message || '') }
+                        }
+                        const disposition = String(result.headers['content-disposition'] || '')
+                        const encoded = disposition.match(/filename\*=UTF-8''([^;]+)/i)?.[1]
+                        const plain = disposition.match(/filename="?([^";]+)"?/i)?.[1]
+                        return { status: true, blob, fileName: encoded ? decodeURIComponent(encoded) : plain || 'export' }
+                    }, error => {
+                        this.handlerMessage(error.message)
+                        return { status: false, message: String(error.message || '') }
+                    })
+    }
+
     put(url: string, data = {}): Promise<ResponseModel>
     {
         return new Promise((resolve) => {

@@ -7,6 +7,7 @@ class ConvertRequest
     private var _headers: List<Any> = listOf()
     private var _columns: List<Any> = listOf()
     private var _stream: InputStream? = null
+    private var _types: List<Any> = listOf()
 
     var name: String? = null
     var path: String? = null
@@ -18,7 +19,12 @@ class ConvertRequest
     var format: String? = null
 
     // Column types in header order, written as field definitions when includeStructure is set (writer only)
-    var types: List<Any> = listOf()
+    var types: List<Any>
+        get() = _types.toList()
+        set(value)
+        {
+            _types = value.toMutableList()
+        }
 
     // Write the column names and types ahead of the rows, in the way the format allows (writer only)
     var includeStructure: Boolean = false

@@ -4,7 +4,7 @@
       <MfSpinner size="lg" :label="loadingText"/>
     </div>
 
-    <div v-show="!loadingState" :class="(workspaceMode || sourceWorkspace) && 'flex h-dvh flex-col overflow-hidden'">
+    <div v-show="!loadingState" :class="(workspaceMode || workbenchMode) && 'flex h-dvh flex-col overflow-hidden'">
       <div class="relative z-30 flex w-full shrink-0 flex-col">
         <!-- 数据源管理工作台使用独立头部（原型设计，通栏），其余页面使用默认头部 -->
         <WorkbenchHeader v-if="workbenchMode"/>
@@ -18,7 +18,8 @@
       </main>
 
       <!-- 数据源管理工作台：通栏全宽、无页脚、无默认内边距（严格按原型） -->
-      <main v-else-if="workbenchMode" class="isolate min-h-0" :class="sourceWorkspace ? 'flex-1 overflow-hidden p-2' : 'h-[calc(100dvh-3.5rem)] overflow-auto'">
+      <!-- Workbench pages (source workspace, compare) fit the viewport and scroll inside their panels. -->
+      <main v-else-if="workbenchMode" class="isolate min-h-0 flex-1 overflow-hidden p-2">
         <RouterView/>
       </main>
 
@@ -32,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import { isSourceManagementRoute } from '@/model/source-manage'
+import { isSourceWorkbenchRoute } from '@/model/source-manage'
 import { computed, onBeforeMount } from 'vue'
 import { useRoute } from 'vue-router'
 import LayoutHeader from '@/views/layouts/common/components/LayoutHeader.vue'
@@ -44,8 +45,7 @@ const { loadLocale, loadingState, loadingText } = provideI18nHandler()
 
 const route = useRoute()
 const workspaceMode = computed(() => route.meta.workspace === true)
-const sourceWorkspace = computed(() => isSourceManagementRoute(route))
-const workbenchMode = sourceWorkspace
+const workbenchMode = computed(() => isSourceWorkbenchRoute(route))
 
 onBeforeMount(async () => {
   try {

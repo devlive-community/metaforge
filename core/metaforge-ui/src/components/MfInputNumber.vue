@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, useAttrs } from 'vue'
 import clsx from 'clsx'
-import { CONTROL_SIZES, FIELD_FOCUS_RING, TRANSITION, type MfControlSize } from './common'
+import { CONTROL_SIZES, FIELD_FOCUS_RING, TRANSITION, hasWidthClass, type MfControlSize } from './common'
+
+const attrs = useAttrs()
 
 const props = withDefaults(defineProps<{
     modelValue?: number | string
@@ -69,7 +71,9 @@ function stepBy(delta: number): void {
 const display = computed(() => (props.modelValue === undefined || props.modelValue === '' ? '' : String(props.modelValue)))
 
 const wrapperClass = computed(() => clsx(
-    'mf-invalidable inline-flex items-center w-full rounded-mf-md border bg-surface overflow-hidden',
+    // Fills its container unless the caller gives it a width.
+    !hasWidthClass(attrs.class) && 'w-full',
+    'mf-invalidable inline-flex items-center rounded-mf-md border bg-surface overflow-hidden',
     props.invalid ? 'border-danger' : 'border-line',
     !props.disabled && (props.invalid ? 'focus-within:ring-2 focus-within:ring-danger/15' : FIELD_FOCUS_RING),
     CONTROL_SIZES[props.size].split(' ').filter(c => !c.startsWith('px-') && !c.startsWith('gap-')).join(' '),

@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import { ObjectUtils } from '@/utils/object'
 import { usePanelState } from './usePanelState'
-import { sourceManageLocation, sourceTabCapability } from '@/model/source-manage'
+import { compareLocation, sourceManageLocation, sourceTabCapability } from '@/model/source-manage'
 import type { useSourceCapabilities } from './useSourceCapabilities'
 import type { useSourceWorkspaceLayout } from './useSourceWorkspaceLayout'
 
@@ -88,7 +88,7 @@ export function useMetadataContent() {
     refreshKey.value++
     manualRefresh.value++
   }
-  const onStructureCompare = () => router.push({ path: '/compare', query: { source: originalSource.value, database: originalDatabase.value, table: originalTable.value } })
+  const onStructureCompare = () => router.push(compareLocation({ source: originalSource.value, database: originalDatabase.value, table: originalTable.value, mode: 'structure' }))
   const onCopyName = () => {
     if (tableName.value) {
       ObjectUtils.copy(tableName.value)

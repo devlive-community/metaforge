@@ -148,6 +148,7 @@ import { useI18nHandler } from '@/i18n/I18n'
 import { PackageUtils } from '@/utils/package.ts'
 import PluginService from '@/services/plugin.ts'
 import PluginInfo from '@/views/pages/store/components/PluginInfo.vue'
+import { DEFAULT_METADATA_URL, isValidUrl, storedMetadataUrl } from '@/model/store-metadata'
 import { Plus, Settings, Trash2 } from '@lucide/vue'
 
 interface MetadataItem
@@ -179,19 +180,6 @@ interface Metadata
 }
 
 defineOptions({ name: 'StoreHome' })
-
-const DEFAULT_METADATA_URL = 'https://cdn.north.devlive.org/applications/metaforge/metadata/metadata.json'
-
-// URL validation helper
-const isValidUrl = (urlString: string): boolean => {
-  try {
-    new URL(urlString)
-    return true
-  }
-  catch {
-    return false
-  }
-}
 
 const { t } = useI18n()
 // @ts-ignore
@@ -237,8 +225,7 @@ const typeDescription = (type: string) => {
 
 const metadataUrl = computed({
   get: () => {
-    const savedUrl = localStorage.getItem('metadataUrl')
-    return savedUrl && isValidUrl(savedUrl) ? savedUrl : DEFAULT_METADATA_URL
+    return storedMetadataUrl()
   },
   set: (value: string) => {
     const trimmedUrl = value?.trim()

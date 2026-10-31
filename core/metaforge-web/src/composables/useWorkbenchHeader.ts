@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { MfMessage, useDismissableLayer } from 'metaforge-ui'
-import { sourceManageLocation } from '@/model/source-manage'
+import { compareLocation, sourceManageLocation } from '@/model/source-manage'
 import { useSourceCapabilities } from './useSourceCapabilities'
 import { useUserStore } from '@/stores/user'
 import { useI18n } from 'vue-i18n'
@@ -30,7 +30,9 @@ export function useWorkbenchHeader() {
     { path: '/query', label: 'SQL', icon: SquarePlay },
     { path: '/import', label: t('navigation.dataImport'), icon: Upload },
     { path: '/export', label: t('navigation.dataExport'), icon: Download },
-    { path: '/compare', label: t('navigation.dataCompare'), icon: GitCompare }
+    // Comparing starts from the source and database the header shows.
+    { path: '/compare', label: t('navigation.dataCompare'), icon: GitCompare,
+      to: routeSource.value ? compareLocation({ source: routeSource.value, database: String(route.params.database || '') }) : '/compare' }
   ])
 
   const moreNavItems = computed(() => [
@@ -48,7 +50,7 @@ export function useWorkbenchHeader() {
 
   const isNavActive = (path: string) => {
     if (path === '/home') return route.path === '/home' || route.path === '/'
-    if (path === '/source') return route.path.startsWith('/source') || route.path === '/manage' || route.path.startsWith('/compare')
+    if (path === '/source') return route.path.startsWith('/source') || route.path === '/manage'
     if (path === '/query') return route.path.startsWith('/query')
     return route.path.startsWith(path)
   }
@@ -80,7 +82,10 @@ export function useWorkbenchHeader() {
     get: () => String(route.params.database || ''),
     set: (value: string) => {
       if (value && value !== route.params.database) {
-        router.push(sourceManageLocation({ source: routeSource.value, database: value }))
+        // The compare page keeps its mode and starts over in the chosen database.
+        router.push(route.path === '/compare'
+            ? compareLocation({ source: routeSource.value, database: value, mode: route.query.mode === 'data' ? 'data' : 'structure' })
+            : sourceManageLocation({ source: routeSource.value, database: value }))
       }
     }
   })

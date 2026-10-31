@@ -2,8 +2,10 @@ package org.devlive.metaforge.spi.sql;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -102,6 +104,19 @@ public final class TableDdl
             specs.add(tail);
         }
         return specs.isEmpty() ? "" : "ALTER TABLE " + target + "\n  " + String.join(",\n  ", specs) + ";";
+    }
+
+    /** Every column definition as printed, keyed by column name in table order. */
+    public Map<String, String> columnDefinitions()
+    {
+        Map<String, String> definitions = new LinkedHashMap<>();
+        for (String column : columns) {
+            Matcher matcher = COLUMN_NAME.matcher(column);
+            if (matcher.find()) {
+                definitions.put(matcher.group(1).replace("``", "`"), column);
+            }
+        }
+        return definitions;
     }
 
     /** Column names in order, leaving out generated columns, which take no inserted values. */

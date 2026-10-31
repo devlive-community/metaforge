@@ -34,7 +34,8 @@ const VARIANTS: Record<Variant, string> = {
 }
 
 const classes = computed(() => clsx(
-    'inline-flex items-center justify-center font-medium rounded-mf-md select-none cursor-pointer',
+    // A button label never wraps: squeezed buttons keep one line instead of breaking text.
+    'inline-flex items-center justify-center whitespace-nowrap font-medium rounded-mf-md select-none cursor-pointer',
     CONTROL_SIZES[props.size],
     VARIANTS[props.variant],
     FOCUS_RING,

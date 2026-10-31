@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, useAttrs, watch } from 'vue'
 import clsx from 'clsx'
 import MfLoadingIcon from './MfLoadingIcon.vue'
 import MfEmpty from './MfEmpty.vue'
 import MfSpinner from './MfSpinner.vue'
-import { CONTROL_SIZES, TRANSITION, type MfControlSize, type MfSelectOption } from './common'
+import { CONTROL_SIZES, TRANSITION, hasWidthClass, type MfControlSize, type MfSelectOption } from './common'
 import { useDismissableLayer } from '../composables/useDismissableLayer'
 import { useOverlayPosition } from '../composables/useOverlayPosition'
+
+// The root fills its container unless the caller gives it a width.
+const attrs = useAttrs()
 
 const props = withDefaults(defineProps<{
     modelValue?: string | number | (string | number)[]
@@ -185,7 +188,7 @@ watch(open, value => {
 </script>
 
 <template>
-    <div ref="root" class="relative inline-flex min-w-0 w-full max-w-full">
+    <div ref="root" class="relative inline-flex min-w-0 max-w-full" :class="!hasWidthClass(attrs.class) && 'w-full'">
         <div :class="triggerClass" @click="toggle">
             <span v-if="$slots.prefix" class="inline-flex shrink-0 items-center text-content-secondary"><slot name="prefix" /></span>
             <span

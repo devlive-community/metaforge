@@ -6,6 +6,7 @@ import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.common.view.EntityView;
 import org.devlive.metaforge.service.converter.DynamicJsonViewHttpMessageConverter;
 import org.devlive.metaforge.service.service.MetadataService;
+import org.devlive.metaforge.service.service.TableExportService;
 import org.devlive.metaforge.spi.model.ManagementCapabilities;
 import org.devlive.metaforge.spi.model.ManagementEntry;
 import org.devlive.metaforge.spi.model.ManagementPage;
@@ -33,7 +34,7 @@ public class SourceManagementControllerTest
 {
     private final MetadataService service = mock(MetadataService.class);
     private final ObjectMapper mapper = new ObjectMapper().disable(MapperFeature.DEFAULT_VIEW_INCLUSION);
-    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SourceManagementController(service), new MetadataController(service))
+    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SourceManagementController(service), new MetadataController(service, mock(TableExportService.class)))
             .setControllerAdvice(new DynamicJsonViewHttpMessageConverter(mapper))
             .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper)).build();
 

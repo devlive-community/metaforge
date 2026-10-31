@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, useAttrs } from 'vue'
 import { useDismissableLayer } from '../composables/useDismissableLayer'
 import { useOverlayPosition } from '../composables/useOverlayPosition'
 import { dateKey, monthDays, moveMonth, parseDate } from './calendar'
-import { DISABLED, FOCUS_RING, TRANSITION } from './common'
+import { DISABLED, FOCUS_RING, TRANSITION, hasWidthClass } from './common'
+
+// The root fills its container unless the caller gives it a width.
+const attrs = useAttrs()
 
 const props = withDefaults(defineProps<{
     modelValue?: string
@@ -99,7 +102,7 @@ function keydown(event: KeyboardEvent, date: Date): void {
 </script>
 
 <template>
-    <div ref="root" class="relative inline-flex w-full min-w-0">
+    <div ref="root" class="relative inline-flex min-w-0" :class="!hasWidthClass(attrs.class) && 'w-full'">
         <button ref="trigger" type="button" :disabled="disabled" :aria-label="label" aria-haspopup="dialog" :aria-expanded="open"
                 class="inline-flex h-9 w-full min-w-0 items-center justify-between gap-2 rounded-mf-md border bg-surface px-3 text-left text-sm text-content"
                 :class="[FOCUS_RING, TRANSITION, DISABLED, open ? 'border-primary ring-2 ring-primary/15' : 'border-line hover:border-line-strong']" @click="toggle">

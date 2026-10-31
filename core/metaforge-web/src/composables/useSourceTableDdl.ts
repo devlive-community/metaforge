@@ -8,6 +8,7 @@ import { ObjectUtils } from '@/utils/object'
 import { DDL_CARDS, DEFAULT_DDL_CARDS, ddlFileName, joinDdl, mapDdlHistory,
   type DdlAction, type DdlHistoryEntry, type DdlKind } from '@/model/source-table-ddl'
 import { emptyTableFilters } from '@/model/filter'
+import { compareLocation } from '@/model/source-manage'
 import { useWorkspaceLoading } from './useWorkspaceLoading'
 import { useSourceManageRoute as useRoute } from './useSourceManageRoute'
 import { usePagedList } from './usePagedList'
@@ -105,7 +106,7 @@ export function useSourceTableDdl() {
     if (!actionEnabled(action)) return
     if (action === 'compare') {
       const [source, database, name] = location()
-      router.push({ path: '/compare', query: { source, database, table: name } })
+      router.push(compareLocation({ source, database, table: name, mode: 'structure' }))
       return
     }
     active.value = action

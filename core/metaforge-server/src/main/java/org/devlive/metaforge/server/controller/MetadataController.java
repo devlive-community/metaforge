@@ -2,12 +2,18 @@ package org.devlive.metaforge.server.controller;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.common.response.CommonResponse;
+import org.devlive.metaforge.service.body.TableExportBody;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.SourceDdlHistoryEntity;
 import org.devlive.metaforge.service.service.MetadataService;
+import org.devlive.metaforge.service.service.TableExportService;
 import org.devlive.metaforge.spi.generator.definition.TableDefinition;
 import org.devlive.metaforge.spi.model.ManagementCapabilities;
 import org.devlive.metaforge.spi.model.Response;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 @RestController()
@@ -26,10 +33,12 @@ import java.util.Map;
 public class MetadataController
 {
     private final MetadataService service;
+    private final TableExportService exportService;
 
-    public MetadataController(MetadataService service)
+    public MetadataController(MetadataService service, TableExportService exportService)
     {
         this.service = service;
+        this.exportService = exportService;
     }
 
     @GetMapping(value = "{code}/capabilities")
@@ -243,6 +252,31 @@ public class MetadataController
     public CommonResponse<Map<String, String>> previewCreateTableBatch(@PathVariable String code, @RequestBody TableDefinition configure)
     {
         return this.service.previewCreateTableBatch(code, configure);
+    }
+
+    /** The first rows of an export as the file would hold them, and the table's row count. */
+    @PostMapping(value = "{code}/{database}/{table}/export-preview")
+    public CommonResponse<Map<String, Object>> previewExport(@PathVariable String code, @PathVariable String database, @PathVariable String table,
+            @RequestBody TableExportBody configure)
+    {
+        return this.exportService.preview(code, database, table, configure);
+    }
+
+    /** The export file itself, or the failure as the usual JSON response. */
+    @PostMapping(value = "{code}/{database}/{table}/export-file")
+    public ResponseEntity<?> exportFile(@PathVariable String code, @PathVariable String database, @PathVariable String table,
+            @RequestBody TableExportBody configure)
+    {
+        CommonResponse<TableExportService.ExportFile> response = this.exportService.export(code, database, table, configure);
+        if (!Boolean.TRUE.equals(response.getStatus()) || response.getData() == null) {
+            return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(response);
+        }
+        TableExportService.ExportFile file = response.getData();
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .header(HttpHeaders.CONTENT_DISPOSITION, ContentDisposition.attachment().filename(file.getName(), StandardCharsets.UTF_8).build().toString())
+                .header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, HttpHeaders.CONTENT_DISPOSITION)
+                .body(file.getContent());
     }
 
     @GetMapping(value = "{code}/{database}/{table}/indexes")

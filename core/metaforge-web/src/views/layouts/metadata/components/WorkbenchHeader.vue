@@ -17,7 +17,7 @@
                   :options="databaseOptions" :placeholder="$t('source.common.database')"/>
 
         <nav class="dc-workbench-nav flex min-w-0 items-center gap-1">
-          <router-link v-for="item in navItems" :key="item.path" :to="item.path"
+          <router-link v-for="item in navItems" :key="item.path" :to="item.to || item.path"
                        class="dc-header__nav-link inline-flex items-center gap-1.5 whitespace-nowrap h-14 border-b-2 px-2.5 text-sm font-medium transition-colors"
                        :class="isNavActive(item.path) ? 'border-primary text-primary' : 'border-transparent text-content-secondary hover:text-content'">
             <component :size="15" :is="item.icon"/>
