@@ -1,4 +1,4 @@
-package org.devlive.metaforge.plugin.jdbc.clickhouse;
+package org.devlive.metaforge.plugin;
 
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
@@ -399,7 +399,7 @@ public class ClickHouseService
     @Override
     public CreateColumn getCreateColumn(ColumnDefinition col)
     {
-        CreateColumn column = org.devlive.metaforge.plugin.jdbc.clickhouse.generator.CreateColumn.create(col.getName(), col.getType());
+        CreateColumn column = org.devlive.metaforge.plugin.generator.CreateColumn.create(col.getName(), col.getType());
 
         column.comment(col.getComment())
                 .length(col.getLength())

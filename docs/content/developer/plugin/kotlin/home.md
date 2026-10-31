@@ -165,7 +165,7 @@ class StarRocksPlugin : Plugin {
 创建 `org.devlive.metaforge.spi.PluginModule` 文件，内容如下
 
 ```java
-org.devlive.metaforge.plugin.jdbc.starrocks.StarRocksPluginModule
+org.devlive.metaforge.plugin.StarRocksPluginModule
 ```
 
 该文件的内容是我们定义好的插件加载模块。

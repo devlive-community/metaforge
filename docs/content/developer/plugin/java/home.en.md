@@ -252,7 +252,7 @@ Add `META-INF` and `services` directory under `resources` source directory
 Create the `org.devlive.metaforge.spi.PluginModule` file, as follows
 
 ```java
-org.devlive.metaforge.plugin.http.questdb.QuestDBPluginModule
+org.devlive.metaforge.plugin.QuestDBPluginModule
 ```
 
 The content of this file is the plugin loading module we defined.

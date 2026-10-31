@@ -1,4 +1,4 @@
-package org.devlive.metaforge.plugin.jdbc.cratedb;
+package org.devlive.metaforge.plugin;
 
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.PluginService;

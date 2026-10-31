@@ -1,4 +1,4 @@
-package org.devlive.metaforge.plugin.jdbc.cratedb;
+package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;

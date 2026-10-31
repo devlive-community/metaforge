@@ -1,6 +1,5 @@
-package org.devlive.metaforge.plugin.natived.alioss;
+package org.devlive.metaforge.plugin;
 
-import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.configure.PluginConfigure;
 import org.devlive.metaforge.plugin.configure.PluginConfigureCategory;
 import org.devlive.metaforge.plugin.configure.PluginConfigureField;
@@ -13,14 +12,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class AliOssPlugin
+public class CrateDBPlugin
         extends Plugin
 {
     @Override
     public PluginConfigure describe()
     {
-        PluginConfigure configure = PluginConfigure.of("Alioss",
-                Arrays.asList(
+        return PluginConfigure.builder()
+                .name("CrateDB")
+                .configures(Arrays.asList(
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.name)
                                 .type(PluginConfigureFieldType.String)
@@ -31,24 +31,32 @@ public class AliOssPlugin
                                 .field(PluginConfigureFieldName.host)
                                 .type(PluginConfigureFieldType.String)
                                 .required(true)
-                                .value("https://oss-cn-hangzhou.aliyuncs.com")
+                                .value("127.0.0.1")
                                 .message("host is a required field, please be sure to enter")
+                                .build(),
+                        PluginConfigureField.builder()
+                                .field(PluginConfigureFieldName.port)
+                                .type(PluginConfigureFieldType.Number)
+                                .required(true)
+                                .min(1L)
+                                .max(65535L)
+                                .value(5432)
+                                .message("port is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.username)
                                 .type(PluginConfigureFieldType.String)
-                                .required(true)
                                 .group(PluginConfigureFieldGroup.authorization)
                                 .build(),
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.password)
                                 .type(PluginConfigureFieldType.String)
-                                .required(true)
                                 .group(PluginConfigureFieldGroup.authorization)
                                 .build(),
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.database)
                                 .type(PluginConfigureFieldType.String)
+                                .message("database is a required field, please be sure to enter")
                                 .group(PluginConfigureFieldGroup.advanced)
                                 .build(),
                         PluginConfigureField.builder()
@@ -56,21 +64,14 @@ public class AliOssPlugin
                                 .type(PluginConfigureFieldType.Array)
                                 .value(Collections.emptyList())
                                 .group(PluginConfigureFieldGroup.custom)
-                                .build()),
-                null);
-
-        configure.setDescriptions(Map.of(
-                "zh", "阿里云 OSS 是海量、安全、低成本的云对象存储服务，提供 99.9999999999% 的数据可靠性。",
-                "en", "Alibaba Cloud OSS is a mass-scale, secure and cost-effective cloud object storage with 12 nines of durability."));
-        configure.setFeatures(Map.of(
-                "zh", List.of("高持久性", "无限容量", "丰富的生态", "生命周期管理"),
-                "en", List.of("High durability", "Unlimited capacity", "Rich ecosystem", "Lifecycle management")));
-        configure.setScenes(Map.of(
-                "zh", List.of("数据湖", "备份归档", "静态资源"),
-                "en", List.of("Data lake", "Backup and archive", "Static assets")));
-
-        configure.setCategory(PluginConfigureCategory.CLOUD);
-
-        return configure;
+                                .build()))
+                .descriptions(Map.of("zh", "CrateDB 是基于 Elasticsearch 构建的分布式 SQL 数据库，擅长海量机器数据的实时分析。",
+                        "en", "CrateDB is a distributed SQL database built on Elasticsearch, ideal for real-time analytics on massive machine data."))
+                .features(Map.of("zh", List.of("分布式 SQL 引擎", "实时分析查询", "水平扩展", "支持 JSON 与全文检索"),
+                        "en", List.of("Distributed SQL engine", "Real-time analytics", "Horizontal scaling", "JSON and full-text search")))
+                .scenes(Map.of("zh", List.of("物联网数据", "日志分析", "实时监控"),
+                        "en", List.of("IoT data", "Log analytics", "Real-time monitoring")))
+                .category(PluginConfigureCategory.RDB)
+                .build();
     }
 }

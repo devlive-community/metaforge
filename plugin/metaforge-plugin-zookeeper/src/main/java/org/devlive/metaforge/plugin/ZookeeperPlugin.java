@@ -1,6 +1,5 @@
-package org.devlive.metaforge.plugin.jdbc.cratedb;
+package org.devlive.metaforge.plugin;
 
-import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.configure.PluginConfigure;
 import org.devlive.metaforge.plugin.configure.PluginConfigureCategory;
 import org.devlive.metaforge.plugin.configure.PluginConfigureField;
@@ -13,15 +12,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class CrateDBPlugin
+public class ZookeeperPlugin
         extends Plugin
 {
     @Override
     public PluginConfigure describe()
     {
-        return PluginConfigure.builder()
-                .name("CrateDB")
-                .configures(Arrays.asList(
+        PluginConfigure configure = PluginConfigure.of("Zookeeper",
+                Arrays.asList(
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.name)
                                 .type(PluginConfigureFieldType.String)
@@ -32,17 +30,8 @@ public class CrateDBPlugin
                                 .field(PluginConfigureFieldName.host)
                                 .type(PluginConfigureFieldType.String)
                                 .required(true)
-                                .value("127.0.0.1")
+                                .value("127.0.0.1:2181")
                                 .message("host is a required field, please be sure to enter")
-                                .build(),
-                        PluginConfigureField.builder()
-                                .field(PluginConfigureFieldName.port)
-                                .type(PluginConfigureFieldType.Number)
-                                .required(true)
-                                .min(1L)
-                                .max(65535L)
-                                .value(5432)
-                                .message("port is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.username)
@@ -57,7 +46,6 @@ public class CrateDBPlugin
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.database)
                                 .type(PluginConfigureFieldType.String)
-                                .message("database is a required field, please be sure to enter")
                                 .group(PluginConfigureFieldGroup.advanced)
                                 .build(),
                         PluginConfigureField.builder()
@@ -65,14 +53,21 @@ public class CrateDBPlugin
                                 .type(PluginConfigureFieldType.Array)
                                 .value(Collections.emptyList())
                                 .group(PluginConfigureFieldGroup.custom)
-                                .build()))
-                .descriptions(Map.of("zh", "CrateDB 是基于 Elasticsearch 构建的分布式 SQL 数据库，擅长海量机器数据的实时分析。",
-                        "en", "CrateDB is a distributed SQL database built on Elasticsearch, ideal for real-time analytics on massive machine data."))
-                .features(Map.of("zh", List.of("分布式 SQL 引擎", "实时分析查询", "水平扩展", "支持 JSON 与全文检索"),
-                        "en", List.of("Distributed SQL engine", "Real-time analytics", "Horizontal scaling", "JSON and full-text search")))
-                .scenes(Map.of("zh", List.of("物联网数据", "日志分析", "实时监控"),
-                        "en", List.of("IoT data", "Log analytics", "Real-time monitoring")))
-                .category(PluginConfigureCategory.RDB)
-                .build();
+                                .build()),
+                null);
+
+        configure.setDescriptions(Map.of(
+                "zh", "Zookeeper 是分布式协调服务，广泛用于配置管理、服务注册与分布式锁。",
+                "en", "Zookeeper is a distributed coordination service for configuration management, service registry and distributed locks."));
+        configure.setFeatures(Map.of(
+                "zh", List.of("分布式协调", "高可用集群", "顺序一致性", "Watch 通知机制"),
+                "en", List.of("Distributed coordination", "High-availability ensemble", "Sequential consistency", "Watch notifications")));
+        configure.setScenes(Map.of(
+                "zh", List.of("配置中心", "服务注册与发现", "分布式锁"),
+                "en", List.of("Configuration center", "Service registry and discovery", "Distributed locks")));
+
+        configure.setCategory(PluginConfigureCategory.OTHER);
+
+        return configure;
     }
 }

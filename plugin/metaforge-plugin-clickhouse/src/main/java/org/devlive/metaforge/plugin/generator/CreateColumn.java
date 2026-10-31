@@ -1,4 +1,4 @@
-package org.devlive.metaforge.plugin.jdbc.clickhouse.generator;
+package org.devlive.metaforge.plugin.generator;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.spi.generator.DataType;

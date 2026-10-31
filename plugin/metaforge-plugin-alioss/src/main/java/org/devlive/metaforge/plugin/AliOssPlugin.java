@@ -1,6 +1,5 @@
-package org.devlive.metaforge.plugin.natived.zookeeper;
+package org.devlive.metaforge.plugin;
 
-import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.configure.PluginConfigure;
 import org.devlive.metaforge.plugin.configure.PluginConfigureCategory;
 import org.devlive.metaforge.plugin.configure.PluginConfigureField;
@@ -13,13 +12,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class ZookeeperPlugin
+public class AliOssPlugin
         extends Plugin
 {
     @Override
     public PluginConfigure describe()
     {
-        PluginConfigure configure = PluginConfigure.of("Zookeeper",
+        PluginConfigure configure = PluginConfigure.of("Alioss",
                 Arrays.asList(
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.name)
@@ -31,17 +30,19 @@ public class ZookeeperPlugin
                                 .field(PluginConfigureFieldName.host)
                                 .type(PluginConfigureFieldType.String)
                                 .required(true)
-                                .value("127.0.0.1:2181")
+                                .value("https://oss-cn-hangzhou.aliyuncs.com")
                                 .message("host is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.username)
                                 .type(PluginConfigureFieldType.String)
+                                .required(true)
                                 .group(PluginConfigureFieldGroup.authorization)
                                 .build(),
                         PluginConfigureField.builder()
                                 .field(PluginConfigureFieldName.password)
                                 .type(PluginConfigureFieldType.String)
+                                .required(true)
                                 .group(PluginConfigureFieldGroup.authorization)
                                 .build(),
                         PluginConfigureField.builder()
@@ -58,16 +59,16 @@ public class ZookeeperPlugin
                 null);
 
         configure.setDescriptions(Map.of(
-                "zh", "Zookeeper 是分布式协调服务，广泛用于配置管理、服务注册与分布式锁。",
-                "en", "Zookeeper is a distributed coordination service for configuration management, service registry and distributed locks."));
+                "zh", "阿里云 OSS 是海量、安全、低成本的云对象存储服务，提供 99.9999999999% 的数据可靠性。",
+                "en", "Alibaba Cloud OSS is a mass-scale, secure and cost-effective cloud object storage with 12 nines of durability."));
         configure.setFeatures(Map.of(
-                "zh", List.of("分布式协调", "高可用集群", "顺序一致性", "Watch 通知机制"),
-                "en", List.of("Distributed coordination", "High-availability ensemble", "Sequential consistency", "Watch notifications")));
+                "zh", List.of("高持久性", "无限容量", "丰富的生态", "生命周期管理"),
+                "en", List.of("High durability", "Unlimited capacity", "Rich ecosystem", "Lifecycle management")));
         configure.setScenes(Map.of(
-                "zh", List.of("配置中心", "服务注册与发现", "分布式锁"),
-                "en", List.of("Configuration center", "Service registry and discovery", "Distributed locks")));
+                "zh", List.of("数据湖", "备份归档", "静态资源"),
+                "en", List.of("Data lake", "Backup and archive", "Static assets")));
 
-        configure.setCategory(PluginConfigureCategory.OTHER);
+        configure.setCategory(PluginConfigureCategory.CLOUD);
 
         return configure;
     }

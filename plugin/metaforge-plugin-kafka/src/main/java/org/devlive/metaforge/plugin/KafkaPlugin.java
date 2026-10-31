@@ -1,6 +1,5 @@
-package org.devlive.metaforge.plugin.natived.kafka;
+package org.devlive.metaforge.plugin;
 
-import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.configure.FieldType;
 import org.devlive.metaforge.plugin.configure.PluginConfigure;
 import org.devlive.metaforge.plugin.configure.PluginConfigureCategory;

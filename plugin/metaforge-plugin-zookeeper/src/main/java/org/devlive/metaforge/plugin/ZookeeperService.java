@@ -1,4 +1,4 @@
-package org.devlive.metaforge.plugin.natived.alioss;
+package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.Response;
@@ -7,39 +7,39 @@ import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import java.util.stream.Collectors;
 
 /**
- * Aliyun OSS through MetaForge's OSS JDBC driver: a bucket is a database, a top-level prefix a
- * table and the objects under it rows. Buckets, prefixes and their columns come from the
- * driver's JDBC metadata; the AccessKey ID and secret are the username and password.
+ * ZooKeeper through MetaForge's ZooKeeper JDBC driver: a database is a znode under the root, a
+ * table its child and a column the table's child, whose data is the value. Databases, tables and
+ * columns come from the driver's JDBC metadata.
  */
-public class AliOssService
+public class ZookeeperService
         implements PluginService
 {
     @Override
     public String driver()
     {
-        return "org.devlive.metaforge.AliOssDriver";
+        return "org.devlive.metaforge.ZookeeperDriver";
     }
 
     @Override
     public String connectType()
     {
-        return "alioss";
+        return "zookeeper";
     }
 
-    /** The host is the endpoint, with or without its scheme; http:// turns TLS off. */
+    /** The host may list an ensemble (h1:2181,h2:2181), so the URL takes it as written. */
     @Override
     public String url(RuntimeConfigure configure)
     {
         if (configure.getUrl().isPresent()) {
             return configure.getUrl().get();
         }
-        String host = configure.getHost().trim();
-        boolean ssl = !host.startsWith("http://");
-        host = host.replaceFirst("^https?://", "").replaceAll("/+$", "");
-        StringBuilder url = new StringBuilder("jdbc:alioss://").append(host);
-        configure.getDatabase().filter(bucket -> !bucket.isEmpty()).ifPresent(bucket -> url.append("/").append(bucket));
-        url.append("?ssl=").append(ssl);
-        configure.getEnv().filter(env -> !env.isEmpty()).ifPresent(env -> url.append("&").append(env.entrySet().stream()
+        String host = configure.getHost();
+        StringBuilder url = new StringBuilder("jdbc:zookeeper://").append(host);
+        if (configure.getPort() != null && !host.contains(":")) {
+            url.append(":").append(configure.getPort());
+        }
+        configure.getDatabase().filter(database -> !database.isEmpty()).ifPresent(database -> url.append("/").append(database));
+        configure.getEnv().filter(env -> !env.isEmpty()).ifPresent(env -> url.append("?").append(env.entrySet().stream()
                 .map(entry -> entry.getKey() + "=" + entry.getValue())
                 .collect(Collectors.joining("&"))));
         return url.toString();

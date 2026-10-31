@@ -1,4 +1,4 @@
-package org.devlive.metaforge.plugin.natived.zookeeper;
+package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.Response;

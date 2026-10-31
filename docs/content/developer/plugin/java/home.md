@@ -253,7 +253,7 @@ public class QuestDBAdapter
 创建 `org.devlive.metaforge.spi.PluginModule` 文件，内容如下
 
 ```java
-org.devlive.metaforge.plugin.http.questdb.QuestDBPluginModule
+org.devlive.metaforge.plugin.QuestDBPluginModule
 ```
 
 该文件的内容是我们定义好的插件加载模块。

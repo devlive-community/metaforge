@@ -6,9 +6,6 @@
 -->
 <FindBugsFilter>
     <Match>
-        <Package name="org.devlive.metaforge.plugin.natived.zookeeper.sql" />
-    </Match>
-    <Match>
         <Package name="org.devlive.metaforge.sql.parser" />
     </Match>
 </FindBugsFilter>
