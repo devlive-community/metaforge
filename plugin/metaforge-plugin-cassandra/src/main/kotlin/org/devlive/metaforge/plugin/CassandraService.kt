@@ -1,70 +1,56 @@
 package org.devlive.metaforge.plugin
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
-import org.apache.commons.beanutils.BeanUtils.copyProperties
-import org.apache.commons.lang3.ObjectUtils.isNotEmpty
-import org.slf4j.LoggerFactory.getLogger
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 
-@SuppressFBWarnings(value = ["EI_EXPOSE_REP"])
+/**
+ * Cassandra through the cassandra-jdbc-wrapper JDBC driver, speaking CQL: a keyspace is a database.
+ * Keyspaces, tables and columns come from the driver's JDBC metadata.
+ */
 class CassandraService : PluginService
 {
-    private val log = getLogger(CassandraService::class.java)
+    override fun driver(): String
+    {
+        return "com.ing.data.cassandra.jdbc.CassandraDriver"
+    }
 
-    private var configure: RuntimeConfigure? = null
-    private var connection: CassandraConnection? = null
-    private var response: Response? = null
+    override fun connectType(): String
+    {
+        return "cassandra"
+    }
+
     override fun validator(): String
     {
         return "SELECT release_version AS version FROM system.local"
     }
 
-    override fun connect(configure: RuntimeConfigure?)
+    /** The driver needs the local data center; datacenter1 unless the custom options name another. */
+    override fun url(configure: RuntimeConfigure): String
     {
-        try
+        if (configure.url.isPresent)
         {
-            log.info("Connecting to apache cassandra")
-            response = Response()
-            this.configure = RuntimeConfigure()
-            copyProperties(this.configure, configure)
-            connection = CassandraConnection(this.configure !!, response !!)
+            return configure.url.get()
         }
-        catch (ex: Exception)
-        {
-            response !!.isConnected = false
-            response !!.message = ex.message
-        }
+        val options = LinkedHashMap<String, Any>()
+        options["localdatacenter"] = "datacenter1"
+        configure.env.ifPresent { options.putAll(it) }
+        val keyspace = configure.database.filter { it.isNotEmpty() }.map { "/$it" }.orElse("")
+        return "jdbc:cassandra://${configure.host}:${configure.port}$keyspace?" + options.entries.joinToString("&") { "${it.key}=${it.value}" }
     }
 
-    override fun execute(content: String?): Response
+    override fun getDatabases(configure: RuntimeConfigure): Response
     {
-        if (isNotEmpty(connection))
-        {
-            log.info("Apache cassandra connection established")
-            response = connection?.response
-            val processor = CassandraAdapter(connection)
-            response = processor.handlerExecute(content)
-            log.info("Apache cassandra execution completed")
-        }
-        destroy()
-        return response !!
+        return metadataDatabases(configure)
     }
 
-    override fun execute(configure: RuntimeConfigure?, content: String?): Response
+    override fun getTables(configure: RuntimeConfigure, database: String): Response
     {
-        connect(configure)
-        return execute(content)
+        return metadataTables(configure, database)
     }
 
-    override fun destroy()
+    override fun getColumns(configure: RuntimeConfigure, database: String, table: String): Response
     {
-        if (isNotEmpty(connection))
-        {
-            log.info("Apache cassandra driver destroyed")
-            connection?.destroy()
-            configure = null
-        }
+        return metadataColumns(configure, database, table)
     }
 }

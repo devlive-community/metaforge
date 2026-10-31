@@ -15,7 +15,7 @@
     <description>MetaForge - Plugin - Apache Cassandra</description>
 
     <properties>
-        <cassandra.driver.version>4.17.0</cassandra.driver.version>
+        <cassandra-jdbc.version>5.0.4</cassandra-jdbc.version>
     </properties>
 
     <dependencies>
@@ -30,9 +30,15 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.datastax.oss</groupId>
-            <artifactId>java-driver-core</artifactId>
-            <version>${cassandra.driver.version}</version>
+            <groupId>com.ing.data</groupId>
+            <artifactId>cassandra-jdbc-wrapper</artifactId>
+            <version>${cassandra-jdbc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-test-e2e</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
