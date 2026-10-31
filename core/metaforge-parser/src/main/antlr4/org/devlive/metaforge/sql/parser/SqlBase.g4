@@ -816,9 +816,10 @@ DECIMAL_VALUE
     | '.' DIGIT+
     ;
 
+// A quote inside a string is doubled ('it''s') or escaped with a backslash.
 STRING
-    : '\'' ( ~('\''|'\\') | ('\\' .) )* '\''
-    | '"' ( ~('"'|'\\') | ('\\' .) )* '"'
+    : '\'' ( ~('\''|'\\') | ('\\' .) | '\'\'' )* '\''
+    | '"' ( ~('"'|'\\') | ('\\' .) | '""' )* '"'
     ;
 
 PATTERN_IDENTIFIER
