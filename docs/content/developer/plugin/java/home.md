@@ -293,8 +293,8 @@ org.devlive.metaforge.plugin.http.questdb.QuestDBPluginModule
 | `database:list` | Database selector of the workbench header and the database list of the side tree |
 | `database:info` | Database overview page |
 | `database:alter` | Edit database properties button and drawer |
-| `engine:list` | Engine choices of the create table dialog and the table properties drawer |
-| `datatype:list` | Type choices of the column editor |
+| `engine:list` | Engine select of the create table dialog and engine choices of the table properties drawer |
+| `datatype:list` | Type selects of the create table dialog and the column editors (free text otherwise) |
 | `table:list` | Table tree of the side panel and its search |
 | `table:info` | Table header facts and the table properties tab |
 | `table:read` | Data preview tab, data compare and the sample data DDL |
@@ -304,17 +304,18 @@ org.devlive.metaforge.plugin.http.questdb.QuestDBPluginModule
 | `table:drop` | Drop table entries and dialog |
 | `table:truncate` | Truncate table entries and dialog, and empty-then-import |
 | `table:export` | Export data entries, dialog and the data export page |
-| `table:auto-increment` | Auto increment setting |
+| `table:auto-increment` | Auto increment start of the create table dialog and the auto increment switches of the column editors |
+| `table:options` | Charset, collation and row format of the create table dialog |
 | `column:read` | Column structure, structure compare and the data compare entry |
 | `column:create` | Add and insert column buttons and the column drawer |
 | `column:modify` | Edit column button and drawer |
 | `column:drop` | Drop column button and dialog |
 | `column:reorder` | Column drag sorting and the order dialog |
 | `index:read` | Index list |
-| `index:create` | New index button and drawer |
+| `index:create` | New index button and drawer, and the index step of the create table dialog |
 | `index:drop` | Drop index button and dialog |
 | `foreign-key:read` | Foreign key list |
-| `foreign-key:create` | New foreign key button and drawer |
+| `foreign-key:create` | New foreign key button and drawer, and the foreign key tab of the create table dialog |
 | `foreign-key:drop` | Drop foreign key button and dialog |
 | `trigger:read` | Trigger list |
 | `trigger:create` | New and copy trigger buttons and the trigger drawer |

@@ -23,6 +23,7 @@
     "table:truncate",
     "table:export",
     "table:auto-increment",
+    "table:options",
     "column:create",
     "column:modify",
     "column:drop",
