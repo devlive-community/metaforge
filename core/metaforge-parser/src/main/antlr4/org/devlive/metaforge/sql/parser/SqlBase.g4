@@ -497,6 +497,7 @@ alterSpecification
     | ADD WATERMARK FOR columnName AS expression
     | DROP WATERMARK
     | RENAME TO tableName
+    | RENAME COLUMN columnName TO columnName
     ;
 
 // DROP statement
