@@ -75,7 +75,7 @@ function upload(event: Event): void {
 
 <template>
     <div class="inline-flex flex-col gap-2">
-        <label class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-mf-md border border-dashed border-line-strong px-4 py-2 text-sm text-content-secondary transition-[color,border-color] duration-(--mf-duration-base) hover:border-primary hover:text-primary">
+        <label class="relative inline-flex cursor-pointer items-center justify-center gap-2 rounded-mf-md border border-dashed border-line-strong px-4 py-2 text-sm text-content-secondary transition-[color,border-color] duration-(--mf-duration-base) hover:border-primary hover:text-primary">
             <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M12 16V4m0 0L8 8m4-4l4 4" stroke-linecap="round" />
                 <path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-linecap="round" />

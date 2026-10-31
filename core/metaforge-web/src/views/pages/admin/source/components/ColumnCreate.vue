@@ -84,7 +84,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import MetadataService from '@/services/metadata'

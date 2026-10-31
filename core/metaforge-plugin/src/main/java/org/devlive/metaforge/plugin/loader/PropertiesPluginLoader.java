@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", "OBL_UNSATISFIED_OBLIGATION"})
@@ -30,6 +31,21 @@ public class PropertiesPluginLoader
     public List<Plugin> load(Path path, Set<String> parentClassLoaderPackages)
     {
         List<Plugin> plugins = new ArrayList<>();
+        for (Path resolvedPath : resolvePaths(path)) {
+            List<Plugin> loadedPlugins = new SpiPluginLoader().load(resolvedPath, parentClassLoaderPackages);
+            if (loadedPlugins.isEmpty()) {
+                loadedPlugins = PluginLoaderFactory.loadPlugins(resolvedPath, parentClassLoaderPackages);
+            }
+            plugins.addAll(loadedPlugins);
+        }
+        return plugins;
+    }
+
+    // 只解析清单，让 PluginManager 把每个条目交给同一个有界线程池
+    // Resolve manifests without loading so the manager can use one bounded worker pool
+    public List<Path> resolvePaths(Path path)
+    {
+        List<Path> paths = new ArrayList<>();
         try {
             Path propertiesPath;
             if (path.toString().endsWith("pom.xml")) {
@@ -41,50 +57,40 @@ public class PropertiesPluginLoader
 
             if (!propertiesPath.toFile().exists() || propertiesPath.toFile().isDirectory()) {
                 log.debug("Properties file not found: {}", propertiesPath);
-                return plugins;
+                return paths;
             }
 
             try (FileInputStream inputStream = new FileInputStream(propertiesPath.toFile())) {
                 Properties props = new Properties();
                 props.load(inputStream);
-                Path baseDir = propertiesPath.getParent();
+                Path baseDir = propertiesPath.toAbsolutePath().getParent();
 
-                for (String value : props.stringPropertyNames()) {
+                for (String value : props.stringPropertyNames().stream().sorted().collect(Collectors.toList())) {
                     String pluginPath = props.getProperty(value);
                     if (pluginPath == null || pluginPath.trim().isEmpty()) {
                         continue;
                     }
 
-                    Path other = Paths.get(pluginPath);
-                    Path resolvedPath = baseDir.resolve(other);
-                    log.info("Loading plugin from [ {} ]", resolvedPath);
-
-                    if (!resolvedPath.toFile().exists()) {
-                        log.info("Plugin file [ {} ] does not exist", resolvedPath);
-                        log.info("Retrying with module root as base directory");
-                        resolvedPath = PluginPathUtils.findProjectRoot()
-                                .resolve(other)
-                                .getParent();
-                        log.info("Retrying module root as base directory [ {} ]", resolvedPath);
+                    try {
+                        Path other = Paths.get(pluginPath.trim());
+                        Path resolvedPath = baseDir.resolve(other).normalize();
+                        if (!resolvedPath.toFile().exists()) {
+                            resolvedPath = PluginPathUtils.findProjectRoot().resolve(other).normalize();
+                            if (resolvedPath.endsWith("pom.xml")) {
+                                resolvedPath = resolvedPath.getParent();
+                            }
+                        }
+                        paths.add(resolvedPath);
                     }
-
-                    // 使用 SpiPluginLoader 加载
-                    // Use SpiPluginLoader to load
-                    SpiPluginLoader compiledLoader = new SpiPluginLoader();
-                    List<Plugin> loadedPlugins = compiledLoader.load(resolvedPath, parentClassLoaderPackages);
-                    if (!loadedPlugins.isEmpty()) {
-                        plugins.addAll(loadedPlugins);
-                    }
-                    else {
-                        loadedPlugins = PluginLoaderFactory.loadPlugins(resolvedPath, parentClassLoaderPackages);
-                        plugins.addAll(loadedPlugins);
+                    catch (IllegalArgumentException e) {
+                        log.warn("Invalid plugin path for manifest entry: {}", value, e);
                     }
                 }
             }
         }
-        catch (IOException e) {
+        catch (IOException | IllegalArgumentException e) {
             log.error("Failed to load plugins from properties file: {}", path, e);
         }
-        return plugins;
+        return paths;
     }
 }

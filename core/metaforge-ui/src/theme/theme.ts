@@ -21,7 +21,17 @@ export type MfThemeTokenName =
     | 'color-danger'
     | 'color-danger-subtle'
     | 'color-info'
+    | 'color-data-complex'
     | 'color-info-subtle'
+    | 'color-code-bg'
+    | 'color-code-header'
+    | 'color-code-fg'
+    | 'color-code-muted'
+    | 'color-code-keyword'
+    | 'color-code-type'
+    | 'color-code-string'
+    | 'color-code-identifier'
+    | 'color-code-number'
     | 'color-page'
     | 'color-surface'
     | 'color-surface-hover'
@@ -65,7 +75,17 @@ export const mfLightPreset: MfThemeTokens = {
     'color-danger': '#DC5656',
     'color-danger-subtle': '#FFF1F1',
     'color-info': '#3B82F6',
+    'color-data-complex': '#7955DF',
     'color-info-subtle': '#EFF6FF',
+    'color-code-bg': '#1F2733',
+    'color-code-header': '#2A3340',
+    'color-code-fg': '#E2E8F0',
+    'color-code-muted': '#94A3B8',
+    'color-code-keyword': '#5EB4F6',
+    'color-code-type': '#D58CF5',
+    'color-code-string': '#9BD86F',
+    'color-code-identifier': '#F3D274',
+    'color-code-number': '#F5A962',
     'color-page': '#F6FAF9',
     'color-surface': '#ffffff',
     'color-surface-hover': '#F0F7F4',
@@ -108,7 +128,17 @@ export const mfDarkPreset: MfThemeTokens = {
     'color-danger': '#E57272',
     'color-danger-subtle': 'rgb(229 114 114 / 0.14)',
     'color-info': '#6CA5F8',
+    'color-data-complex': '#B39AFA',
     'color-info-subtle': 'rgb(108 165 248 / 0.14)',
+    'color-code-bg': '#0F1720',
+    'color-code-header': '#18212C',
+    'color-code-fg': '#E2E8F0',
+    'color-code-muted': '#94A3B8',
+    'color-code-keyword': '#5EB4F6',
+    'color-code-type': '#D58CF5',
+    'color-code-string': '#9BD86F',
+    'color-code-identifier': '#F3D274',
+    'color-code-number': '#F5A962',
     'color-page': '#0C1412',
     'color-surface': '#111B18',
     'color-surface-hover': '#1A2823',

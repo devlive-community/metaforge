@@ -81,6 +81,17 @@ class XmlConvertService : ConvertService
                     generator.codec = XmlMapper()
                     val staxWriter = generator.staxWriter
                     staxWriter.writeStartElement(root)
+                    if (request.includeStructure)
+                    {
+                        staxWriter.writeStartElement("Columns")
+                        request.headers.forEachIndexed { index, header ->
+                            staxWriter.writeStartElement("Column")
+                            staxWriter.writeAttribute("name", header.toString())
+                            staxWriter.writeAttribute("type", request.types.getOrNull(index)?.toString() ?: "")
+                            staxWriter.writeEndElement()
+                        }
+                        staxWriter.writeEndElement()
+                    }
                     request.columns
                         .forEach { column ->
                             staxWriter.writeStartElement(node)
@@ -88,7 +99,14 @@ class XmlConvertService : ConvertService
                             {
                                 when (column)
                                 {
-                                    is List<*> -> staxWriter.writeAttribute(request.headers[headerIndex].toString(), column[headerIndex].toString())
+                                    is List<*> ->
+                                    {
+                                        val value = column[headerIndex]
+                                        if (value != null || !request.excludeNull)
+                                        {
+                                            staxWriter.writeAttribute(request.headers[headerIndex].toString(), value.toString())
+                                        }
+                                    }
                                     else -> throw UnsupportedOperationException("Unsupported column type")
                                 }
                             }

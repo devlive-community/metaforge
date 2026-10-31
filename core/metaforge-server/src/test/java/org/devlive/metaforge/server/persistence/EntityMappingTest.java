@@ -96,7 +96,7 @@ public class EntityMappingTest
                 }
             });
         }
-        assertEquals(20, entities);
+        assertEquals(21, entities);
         assertEquals(List.of(), problems);
     }
 

@@ -10,8 +10,10 @@ import org.devlive.metaforge.service.repository.ScheduledRepository;
 import org.devlive.metaforge.service.service.ScheduledService;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -35,6 +37,26 @@ public class ScheduleController
     public CommonResponse<PageEntity<ScheduledEntity>> getAllByFilter(@RequestBody FilterBody filter)
     {
         return scheduledService.getAll(scheduledRepository, filter);
+    }
+
+    @PutMapping(value = "{code}/active")
+    public CommonResponse<ScheduledEntity> changeActive(@PathVariable(value = "code") String code, @RequestParam(value = "active") boolean active)
+    {
+        CommonResponse<ScheduledEntity> response = scheduledService.changeActive(scheduledRepository, code, active);
+        if (response.getStatus() && response.getData() != null) {
+            this.scheduleRunner.refresh(response.getData());
+        }
+        return response;
+    }
+
+    @PutMapping(value = "{code}/system")
+    public CommonResponse<ScheduledEntity> changeSystem(@PathVariable(value = "code") String code, @RequestParam(value = "system") boolean system)
+    {
+        CommonResponse<ScheduledEntity> response = scheduledService.changeSystem(code, system);
+        if (response.getStatus() && response.getData() != null) {
+            this.scheduleRunner.refresh(response.getData());
+        }
+        return response;
     }
 
     @PostMapping(value = "{id}/history")

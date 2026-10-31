@@ -38,6 +38,7 @@ public class DataSetController
     private final DataSetService service;
 
     private final FunctionService functions;
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "SE_BAD_FIELD", justification = "Spring-managed singleton; the controller is never serialized")
     private final InitializerConfigure initializer;
 
     protected DataSetController(DataSetRepository repository, DataSetService service, FunctionService functions, InitializerConfigure initializer)

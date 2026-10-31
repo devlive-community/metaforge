@@ -1,5 +1,6 @@
 package org.devlive.metaforge.service.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
@@ -27,6 +28,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
@@ -79,6 +81,16 @@ public class UserEntity
     @Column("avatar_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private AvatarEntity avatarConfigure;
+
+    // Updated by the sign-in audit handler; null until the first successful sign-in.
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
+    @Column("last_login_time")
+    @JsonView(value = {EntityView.AdminView.class})
+    private Date lastLoginTime;
+
+    @Column("last_login_ip")
+    @JsonView(value = {EntityView.AdminView.class})
+    private String lastLoginIp;
 
     // Loaded explicitly from metaforge_user_role by the services that need it.
     @Transient

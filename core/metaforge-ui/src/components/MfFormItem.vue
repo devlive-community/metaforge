@@ -1,16 +1,20 @@
 <script setup lang="ts">
 import { computed, inject, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { MfFormRule } from './MfForm.vue'
+import MfTooltip from './MfTooltip.vue'
 
 const props = withDefaults(defineProps<{
     name: string
     label?: string
     rules?: MfFormRule[]
     requiredMark?: boolean
+    /** Hover hint rendered as a help icon on the right of the label. */
+    tip?: string
 }>(), {
     label: '',
     rules: () => [],
     requiredMark: undefined,
+    tip: '',
 })
 
 interface FormContext {
@@ -107,8 +111,18 @@ const labelClasses = computed(() => [
 
 <template>
     <div class="flex w-full" :class="horizontal ? 'flex-row items-start gap-3' : 'flex-col gap-1.5'">
-        <label v-if="label" :class="labelClasses">
-            {{ label }}
+        <label v-if="label || tip" :class="labelClasses">
+            <span>{{ label }}</span>
+            <MfTooltip v-if="tip" :content="tip">
+                <span class="ml-1 inline-flex cursor-help items-center align-middle text-content-tertiary transition-colors hover:text-content"
+                      role="note" :aria-label="tip">
+                    <svg class="size-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true">
+                        <circle cx="12" cy="12" r="9"/>
+                        <path d="M9.6 9.2a2.5 2.5 0 0 1 4.7 1.1c0 1.6-2.3 2-2.3 3.2"/>
+                        <circle cx="12" cy="16.8" r="0.4" fill="currentColor"/>
+                    </svg>
+                </span>
+            </MfTooltip>
         </label>
         <div class="min-w-0 flex-1">
             <div class="flex w-full" :class="error ? ' [&_.mf-invalidable]:border-danger' : ''">

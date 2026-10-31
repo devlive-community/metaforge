@@ -7,7 +7,7 @@
                :page-index="pageIndex"
                :page-size="pageSize"
                :total="dataCount"
-               @refresh="handleInitialize"
+               @refresh="initialize"
                @search="onSearch"
                @reset="onSearch"
                @page-change="onPageChange"
@@ -23,7 +23,10 @@
       </template>
 
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'executor'">
+        <template v-if="column.key === 'name'">
+          <EllipsisCell :text="record.name"/>
+        </template>
+        <template v-else-if="column.key === 'executor'">
           <MfTooltip :content="record.executor">
             <MfAvatar size="sm" :src="`/static/images/executor/${record.executor.replace('Executor', '').toLowerCase()}.svg`"/>
           </MfTooltip>
@@ -36,19 +39,19 @@
         </template>
 
         <template v-else-if="column.key === 'action'">
-          <MfSpace size="xs">
+          <MfSpace :wrap="false" :size="2">
             <MfTooltip :content="$t('common.error')">
               <MfButton variant="ghost"
                         size="sm"
                         class="text-danger"
                         :disabled="record.state !== 'FAILURE' && !(record.state == 'STOPPED' && record.message)"
-                        @click="visibleShowMessage(true, record)">
+                        @click="visibleShowMessage(true, record)" shape="circle">
                 <TriangleAlert :size="15" />
               </MfButton>
             </MfTooltip>
 
             <MfDropdown trigger="click" placement="bottomRight">
-              <MfButton variant="ghost" size="sm">
+              <MfButton variant="ghost" size="sm" shape="circle">
                 <Settings :size="15" />
               </MfButton>
 
@@ -142,14 +145,15 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { FilterModel, type TableFilters } from '@/model/filter'
 import { useHeaders } from './Utils'
 import WorkflowService from '@/services/workflow'
 import Common, { useUtil } from '@/utils/common.ts'
 import MarkdownPreview from '@/views/components/markdown/MarkdownView.vue'
 import { WorkflowModel } from '@/model/workflow.ts'
 import DataTable from '@/views/components/table/DataTable.vue'
+import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import { useTableFilters } from '@/views/components/table/tableFilters'
+import { usePagedList } from '@/composables/usePagedList'
 import WorkflowFlow from '@/views/pages/admin/wofkflow/WorkflowFlow.vue'
 import WorkflowDelete from '@/views/pages/admin/wofkflow/WorkflowDelete.vue'
 import WorkflowStop from '@/views/pages/admin/wofkflow/WorkflowStop.vue'
@@ -160,15 +164,9 @@ import { Boxes, CirclePause, CirclePlay, Info, Network, Plus, Settings, Trash2, 
 defineOptions({ name: 'PipelineHome' })
 
 const tableFilters = useTableFilters('workflow')
-const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 const { getText } = useUtil()
 
-const loading = ref(false)
-const data = ref<any[]>([])
-const pageIndex = ref(1)
-const pageSize = ref(10)
-const dataCount = ref(0)
 const dataInfo = ref<WorkflowModel | null>(null)
 const dataMessageVisible = ref(false)
 const dataLoggerVisible = ref(false)
@@ -177,47 +175,23 @@ const dataStopVisible = ref(false)
 const dataFlowVisible = ref(false)
 const dataRestartVisible = ref(false)
 
-const onSearch = (values: TableFilters) => {
-  Object.assign(filter, values, { page: 1 })
-  pageIndex.value = 1
-  handleInitialize()
-}
-
-let latestRequest = 0
-const handleInitialize = () => {
-  const request = ++latestRequest
-  loading.value = true
-  WorkflowService.getAll({ ...filter })
-                 .then((response) => {
-                 if (request !== latestRequest) return
-                   if (response.status) {
-                     data.value = response.data.content
-                     dataCount.value = response.data.total
-                     pageSize.value = response.data.size
-                     pageIndex.value = response.data.page
-                   }
-                 })
-                 .finally(() => { if (request === latestRequest) loading.value = false })
-}
-
-const fetchData = (value: number) => {
-  filter.page = value
-  filter.size = pageSize.value
-  handleInitialize()
-}
-
-const onPageChange = (value: number) => fetchData(value)
-
-const onSizeChange = (_current: number, size: number) => {
-  pageSize.value = size
-  fetchData(pageIndex.value)
-}
+const {
+    loading,
+    data,
+    pageIndex,
+    pageSize,
+    dataCount,
+    initialize,
+    onSearch,
+    onPageChange,
+    onSizeChange
+  } = usePagedList<any>(filter => WorkflowService.getAll(filter))
 
 const visibleStop = (opened: boolean, value: null | WorkflowModel) => {
   dataStopVisible.value = opened
   dataInfo.value = value
   if (!opened) {
-    handleInitialize()
+    initialize()
   }
 }
 
@@ -235,7 +209,7 @@ const visibleDelete = (opened: boolean, value: null | WorkflowModel) => {
   dataDeleteVisible.value = opened
   dataInfo.value = value
   if (!opened) {
-    handleInitialize()
+    initialize()
   }
 }
 
@@ -248,9 +222,9 @@ const visibleRestart = (opened: boolean, value: null | WorkflowModel) => {
   dataRestartVisible.value = opened
   dataInfo.value = value
   if (!opened) {
-    handleInitialize()
+    initialize()
   }
 }
 
-handleInitialize()
+initialize()
 </script>

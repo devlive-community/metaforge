@@ -1,6 +1,7 @@
 export interface HistoryModel
 {
     id?: number
+    name?: string
     state?: string
     content?: string
     message?: string

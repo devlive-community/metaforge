@@ -7,7 +7,10 @@
             {{ $t('user.common.sourceCount') }}
           </div>
         </template>
-        <MfSkeleton :loading="loading">
+        <template v-if="loading">
+          <div class="flex items-center justify-center py-10"><MfSpinner/></div>
+        </template>
+        <template v-else>
           <div class="flex flex-col items-center justify-center py-8">
             <div class="text-2xl font-bold">
               {{ summary.sourceCount }}
@@ -16,7 +19,7 @@
               {{ $t('user.tip.sourceCountTip') }}
             </div>
           </div>
-        </MfSkeleton>
+        </template>
       </MfCard>
     </div>
 
@@ -27,7 +30,10 @@
             {{ $t('user.common.queryCount') }}
           </div>
         </template>
-        <MfSkeleton :loading="loading">
+        <template v-if="loading">
+          <div class="flex items-center justify-center py-10"><MfSpinner/></div>
+        </template>
+        <template v-else>
           <div class="flex flex-col items-center justify-center py-8">
             <div class="text-2xl font-bold">
               {{ summary.queryCount }}
@@ -36,7 +42,7 @@
               {{ $t('user.tip.queryCountTip') }}
             </div>
           </div>
-        </MfSkeleton>
+        </template>
       </MfCard>
     </div>
   </div>

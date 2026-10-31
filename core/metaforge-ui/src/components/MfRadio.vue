@@ -36,7 +36,7 @@ const SIZE_PAD = {
 const labelClass = computed(() => {
     if (isButton.value) {
         return clsx(
-            'inline-flex cursor-pointer items-center gap-1.5 rounded-mf-sm font-medium',
+            'relative inline-flex cursor-pointer items-center gap-1.5 rounded-mf-sm font-medium',
             SIZE_PAD[group?.size.value ?? 'md'],
             TRANSITION,
             isDisabled.value && 'cursor-not-allowed opacity-40',
@@ -46,7 +46,7 @@ const labelClass = computed(() => {
         )
     }
     return clsx(
-        'inline-flex cursor-pointer items-center gap-2 text-sm text-content',
+        'relative inline-flex cursor-pointer items-center gap-2 text-sm text-content',
         isDisabled.value && 'cursor-not-allowed opacity-60',
     )
 })

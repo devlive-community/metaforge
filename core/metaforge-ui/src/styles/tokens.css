@@ -31,7 +31,18 @@
     --mf-color-danger: #DC5656;
     --mf-color-danger-subtle: #FFF1F1;
     --mf-color-info: #3B82F6;
+    --mf-color-data-complex: #7955DF;
     --mf-color-info-subtle: #EFF6FF;
+    /* code blocks stay dark in both themes */
+    --mf-color-code-bg: #1F2733;
+    --mf-color-code-header: #2A3340;
+    --mf-color-code-fg: #E2E8F0;
+    --mf-color-code-muted: #94A3B8;
+    --mf-color-code-keyword: #5EB4F6;
+    --mf-color-code-type: #D58CF5;
+    --mf-color-code-string: #9BD86F;
+    --mf-color-code-identifier: #F3D274;
+    --mf-color-code-number: #F5A962;
 
     /* surfaces & content */
     --mf-color-page: #F6FAF9;
@@ -89,7 +100,17 @@
     --mf-color-danger: #E57272;
     --mf-color-danger-subtle: rgb(229 114 114 / 0.14);
     --mf-color-info: #6CA5F8;
+    --mf-color-data-complex: #B39AFA;
     --mf-color-info-subtle: rgb(108 165 248 / 0.14);
+    --mf-color-code-bg: #0F1720;
+    --mf-color-code-header: #18212C;
+    --mf-color-code-fg: #E2E8F0;
+    --mf-color-code-muted: #94A3B8;
+    --mf-color-code-keyword: #5EB4F6;
+    --mf-color-code-type: #D58CF5;
+    --mf-color-code-string: #9BD86F;
+    --mf-color-code-identifier: #F3D274;
+    --mf-color-code-number: #F5A962;
 
     --mf-color-page: #0C1412;
     --mf-color-surface: #111B18;

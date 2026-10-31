@@ -1,7 +1,7 @@
 <template>
   <MfModal v-model:open="visible" width="40%" :title="title">
     <div class="px-4 py-4">
-      <MfSkeleton v-if="loading"/>
+      <div v-if="loading" class="flex h-40 items-center justify-center"><MfSpinner/></div>
 
       <MfForm v-else-if="!loading && formState" :model="formState" layout="vertical" @finish="onSubmit">
         <MfFormItem name="format" :label="$t('source.common.exportDataFormat')">
@@ -39,7 +39,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import PluginService from '@/services/plugin'

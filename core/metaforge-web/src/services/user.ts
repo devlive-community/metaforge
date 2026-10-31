@@ -136,6 +136,14 @@ class UserService
         return new HttpUtils().put(`${ DEFAULT_PATH_USER }/changePassword`, configure)
     }
 
+    /**
+     * Administrator shortcut: replace a user's password without the old one.
+     */
+    resetPassword(code: string, password: string): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ DEFAULT_PATH_USER }/${ code }/resetPassword`, { password })
+    }
+
     uploadAvatar(configure: any): Promise<ResponseModel>
     {
         return new HttpUtils().upload(`${ DEFAULT_PATH_USER }/uploadAvatar`, configure)

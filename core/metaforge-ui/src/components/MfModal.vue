@@ -114,7 +114,7 @@ onBeforeUnmount(releaseFocus)
                     >
                         <header v-if="title || $slots.title" class="flex shrink-0 items-center justify-between border-b border-line px-5 py-4">
                             <div class="min-w-0">
-                                <h3 class="text-base font-semibold text-content"><slot name="title">{{ title }}</slot></h3>
+                                <h3 class="truncate text-base font-semibold text-content" :title="title"><slot name="title">{{ title }}</slot></h3>
                                 <p v-if="subtitle" class="mt-1 text-xs text-content-tertiary">{{ subtitle }}</p>
                             </div>
                             <button

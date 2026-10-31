@@ -12,6 +12,8 @@ interface OverlayPositionOptions {
     /** Opt in to measured viewport clamping and vertical flipping. */
     overlay?: Ref<HTMLElement | undefined>
     maxWidth?: number
+    /** Keep a Select popup as wide as its trigger when the layout changes. */
+    matchTriggerWidth?: boolean
 }
 
 /**
@@ -35,6 +37,7 @@ export function useOverlayPosition(options: OverlayPositionOptions): Ref<Record<
             const viewportWidth = document.documentElement?.clientWidth || window.innerWidth
             const viewportHeight = document.documentElement?.clientHeight || window.innerHeight
             const limits = {
+                ...(options.matchTriggerWidth ? { width: `${Math.max(0, Math.min(rect.width, viewportWidth - margin * 2))}px` } : {}),
                 maxWidth: `${Math.max(0, Math.min(options.maxWidth ?? viewportWidth, viewportWidth - margin * 2))}px`,
                 maxHeight: `${Math.max(0, viewportHeight - margin * 2)}px`,
             }

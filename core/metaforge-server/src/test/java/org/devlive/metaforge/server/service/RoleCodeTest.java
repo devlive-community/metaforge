@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -151,7 +152,8 @@ public class RoleCodeTest
     public void constructingTheGuardDoesNotQueryAnUninstalledDatabase()
     {
         DataSource dataSource = mock(DataSource.class);
-        new RoleCodeConstraint(dataSource);
+        RoleCodeConstraint constraint = new RoleCodeConstraint(dataSource);
+        assertNotNull(constraint);
         verifyNoInteractions(dataSource);
     }
 

@@ -104,10 +104,15 @@ public class CompiledPomPluginLoader
             log.debug("Dependencies directory not found: {}", targetDependencies);
         }
 
+        // Path.getFileName() may return null for empty paths, fall back to
+        // the whole path to keep the module name stable for the class loader.
+        Path fileName = module.getFileName();
+        String moduleName = fileName == null ? module.toString() : fileName.toString();
+
         return new PluginClassLoader(
                 urls.toArray(new URL[0]),
                 getClass().getClassLoader(),
-                module.getFileName().toString(),
+                moduleName,
                 VersionUtils.determinePluginVersion(module),
                 true,
                 parentClassLoaderPackages

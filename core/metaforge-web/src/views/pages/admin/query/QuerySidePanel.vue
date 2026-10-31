@@ -159,11 +159,14 @@
                @click="emit('load-sql', item.content ?? '')">
             <div class="flex items-center gap-2">
               <span class="size-1.5 shrink-0 rounded-full" :class="item.state === 'SUCCESS' ? 'bg-success' : 'bg-danger'"></span>
-              <span class="min-w-0 flex-1 truncate font-mono text-xs text-content">{{ item.content }}</span>
+              <span class="min-w-0 flex-1 truncate text-xs font-medium text-content" :title="item.name || item.content">
+                {{ item.name || $t('query.side.untitledHistory') }}
+              </span>
+              <span class="shrink-0 text-xs text-content-tertiary">{{ item.createTime }}</span>
             </div>
             <div class="mt-1 flex items-center gap-2 pl-3.5 text-xs text-content-tertiary">
-              <span>{{ item.createTime }}</span>
-              <span v-if="item.elapsed !== null && item.elapsed !== undefined">{{ item.elapsed }} ms</span>
+              <span v-if="item.content" class="min-w-0 flex-1 truncate font-mono" :title="item.content">{{ item.content }}</span>
+              <span v-if="item.elapsed !== null && item.elapsed !== undefined" class="shrink-0">{{ item.elapsed }} ms</span>
             </div>
           </div>
 
@@ -247,11 +250,13 @@ const snippetKeyword = ref('')
 const historyKeyword = ref('')
 
 const historyFilter: FilterModel = new FilterModel()
+// 只取最近 50 条，按创建时间倒序
 historyFilter.size = 50
+historyFilter.orders = [{ column: 'createTime', order: 'DESC' }]
 
 const filteredDatasets = computed(() => filterList(datasets.value, datasetKeyword.value, ['name', 'query']))
 const filteredSnippets = computed(() => filterList(snippets.value, snippetKeyword.value, ['name', 'context']))
-const filteredHistories = computed(() => filterList(histories.value, historyKeyword.value, ['content']))
+const filteredHistories = computed(() => filterList(histories.value, historyKeyword.value, ['name', 'content']))
 
 const filterList = <T extends Record<string, any>>(list: T[], keyword: string, fields: string[]): T[] => {
   const kw = keyword.trim().toLowerCase()

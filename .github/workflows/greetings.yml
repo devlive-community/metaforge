@@ -11,6 +11,13 @@ jobs:
     steps:
       - uses: actions/first-interaction@v1
         with:
-          repo-token: ${{ secrets.TOKEN }}
-          issue-message: "Message that will be displayed on users' first issue"
-          pr-message: "Message that will be displayed on users' first pull request"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            Thanks for opening your first issue on MetaForge!
+            Please make sure the issue contains a clear description, the
+            MetaForge version and the steps to reproduce it. A maintainer
+            will take a look as soon as possible.
+          pr-message: |
+            Thanks for opening your first pull request on MetaForge!
+            Please make sure the change is covered by tests and follows the
+            contribution guidelines. A maintainer will review it shortly.

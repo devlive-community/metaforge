@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SQL function knowledge base: structured usage docs instead of a single content blob. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0004-function-knowledge" author="metaforge">
+        <addColumn tableName="metaforge_function">
+            <column name="category" type="${string}(100)"/>
+            <column name="syntax" type="${text}"/>
+            <column name="examples" type="${text}"/>
+            <column name="parameters" type="${text}"/>
+            <column name="return_type" type="${string}(200)"/>
+            <column name="notes" type="${text}"/>
+            <column name="version" type="${string}(100)"/>
+            <!-- JSON bag for plugin-specific properties that the generic columns do not cover. -->
+            <column name="attributes" type="${text}"/>
+        </addColumn>
+        <!-- carry the legacy single-content rows into the new knowledge fields -->
+        <update tableName="metaforge_function">
+            <column name="syntax" valueComputed="content"/>
+            <where>syntax IS NULL AND content IS NOT NULL</where>
+        </update>
+        <update tableName="metaforge_function">
+            <column name="examples" valueComputed="example"/>
+            <where>examples IS NULL AND example IS NOT NULL</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

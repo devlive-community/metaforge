@@ -16,6 +16,7 @@ public enum DataType
     VARCHAR("VARCHAR"),
     TEXT("TEXT"),
     LONGTEXT("LONGTEXT"),
+    JSON("JSON"),
 
     // 日期时间类型
     DATE("DATE"),

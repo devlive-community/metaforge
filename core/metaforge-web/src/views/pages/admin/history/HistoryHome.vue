@@ -1,28 +1,29 @@
 <template>
 
-    <DataTable filterable :filter-fields="tableFilters" :title="$t('source.common.list')"
+    <DataTable filterable :filter-fields="tableFilters" :title="$t('common.history')"
                :columns="headers"
                :data-source="data"
                :loading="loading"
                :page-index="pageIndex"
                :page-size="pageSize"
                :total="dataCount"
-               @refresh="handlerInitialize"
+               @refresh="initialize"
                @search="onSearch"
                @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'source'">
-          <span>{{ record?.source?.name }}</span>
+          <EllipsisCell :text="record?.source?.name"/>
         </template>
         <template v-else-if="column.key === 'type'">
-          <MfTooltip :content="record?.source?.type">
+          <MfTooltip v-if="record?.source?.type" :content="record.source.type">
             <MfAvatar size="sm"
-                      :src="'/static/images/plugin/' + record?.source?.type.toLowerCase() + '.svg'"
-                      :alt="record?.source?.type"
+                      :src="'/static/images/plugin/' + record.source.type.toLowerCase() + '.svg'"
+                      :alt="record.source.type"
                       class="cursor-pointer"/>
           </MfTooltip>
+          <span v-else class="text-content-tertiary">-</span>
         </template>
         <template v-else-if="column.key === 'mode'">
           <MfTag v-if="record.mode === 'ADHOC'">{{ $t('common.adhoc') }}</MfTag>
@@ -33,22 +34,35 @@
           <MfTag v-else>{{ record.mode }}</MfTag>
         </template>
         <template v-else-if="column.key === 'state'">
-          <MfTag :variant="record.state === 'SUCCESS' ? 'success' : 'danger'">{{ record.state }}</MfTag>
+          <MfTag :variant="record.state === 'SUCCESS' ? 'success' : 'danger'">
+            {{ record.state === 'SUCCESS' ? $t('common.success') : $t('common.failure') }}
+          </MfTag>
         </template>
         <template v-else-if="column.key === 'format'">
-          <MfTooltip :content="record?.format">
+          <MfTooltip v-if="record?.format" :content="record?.format">
             <MfAvatar size="sm"
-                      :src="'/static/images/convert/' + record?.format.replace('Convert', '').toLowerCase() + '.svg'"
-                      :alt="record?.source?.type"
+                      :src="'/static/images/convert/' + record.format.replace('Convert', '').toLowerCase() + '.svg'"
+                      :alt="record.format"
                       class="cursor-pointer"/>
           </MfTooltip>
+          <span v-else class="text-content-tertiary">-</span>
+        </template>
+        <template v-else-if="column.key === 'content'">
+          <EllipsisCell :text="record?.content" class="font-mono text-xs"/>
+        </template>
+        <template v-else-if="column.key === 'user'">
+          <div v-if="record?.user" class="flex items-center gap-2">
+            <MfAvatar size="xs" :src="record.user.avatarConfigure?.path" :alt="record.user.username"/>
+            <span class="min-w-0 truncate text-xs">{{ record.user.username }}</span>
+          </div>
+          <span v-else class="text-content-tertiary">-</span>
         </template>
         <template v-else-if="column.key === 'action'">
-          <MfSpace size="xs">
+          <MfSpace :wrap="false" :size="2">
             <MfTooltip :content="$t('common.error')">
               <MfButton variant="ghost"
                         size="sm"
-                        class="rounded-full! text-danger!"
+                        shape="circle" class="text-danger!"
                         :disabled="record.state === 'SUCCESS'"
                         @click="handlerShowContent(true, record?.message)">
                 <TriangleAlert :size="15" />
@@ -56,7 +70,7 @@
             </MfTooltip>
 
             <MfDropdown trigger="click" placement="bottomRight">
-              <MfButton variant="ghost" size="sm" class="rounded-full!">
+              <MfButton variant="ghost" size="sm" shape="circle">
                 <EllipsisVertical :size="15" />
               </MfButton>
 
@@ -92,7 +106,7 @@
       </template>
     </DataTable>
 
-  <SqlInfo v-if="contentVisible && content"
+  <SqlInfo v-if="contentVisible"
            :is-visible="contentVisible"
            :content="content"
            @close="handlerShowContent(false, null)"/>
@@ -105,12 +119,13 @@
 
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
-import { FilterModel, type TableFilters } from '@/model/filter.ts'
 import AuditService from '@/services/audit'
 import { useHeaders } from '@/views/pages/admin/history/HistoryUtils'
 import { HistoryModel } from '@/model/history'
 import DataTable from '@/views/components/table/DataTable.vue'
+import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import { useTableFilters } from '@/views/components/table/tableFilters'
+import { usePagedList } from '@/composables/usePagedList'
 import SqlInfo from '@/views/components/sql/SqlInfo.vue'
 import HistoryData from '@/views/pages/admin/history/HistoryData.vue'
 import { ChevronRight, EllipsisVertical, FileCode2, Table, TriangleAlert } from '@lucide/vue'
@@ -118,54 +133,24 @@ import { ChevronRight, EllipsisVertical, FileCode2, Table, TriangleAlert } from 
 defineOptions({ name: 'HistoryHome' })
 
 const tableFilters = useTableFilters('history')
-const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 
-const loading = ref(false)
-const data = ref<any[]>([])
-const pageIndex = ref(1)
-const pageSize = ref(10)
-const dataCount = ref(0)
 const contentVisible = ref(false)
 const dataInfo = ref<HistoryModel | null>(null)
 const dataVisible = ref(false)
 const content = ref<string | null>(null)
 
-const onSearch = (values: TableFilters) => {
-  Object.assign(filter, values, { page: 1 })
-  pageIndex.value = 1
-  handlerInitialize()
-}
-
-let latestRequest = 0
-const handlerInitialize = () => {
-  const request = ++latestRequest
-  loading.value = true
-  AuditService.getAll({ ...filter })
-              .then((response) => {
-                 if (request !== latestRequest) return
-                if (response.status) {
-                  data.value = response.data.content
-                  dataCount.value = response.data.total
-                  pageSize.value = response.data.size
-                  pageIndex.value = response.data.page
-                }
-              })
-              .finally(() => { if (request === latestRequest) loading.value = false })
-}
-
-const fetchData = (value: number) => {
-  filter.page = value
-  filter.size = pageSize.value
-  handlerInitialize()
-}
-
-const onPageChange = (value: number) => fetchData(value)
-
-const onSizeChange = (_current: number, size: number) => {
-  pageSize.value = size
-  fetchData(pageIndex.value)
-}
+const {
+    loading,
+    data,
+    pageIndex,
+    pageSize,
+    dataCount,
+    initialize,
+    onSearch,
+    onPageChange,
+    onSizeChange
+  } = usePagedList<any>(filter => AuditService.getAll(filter))
 
 const handlerShowContent = (opened: boolean, value: string | null) => {
   contentVisible.value = opened
@@ -177,5 +162,5 @@ const handlerShowData = (opened: boolean, value: HistoryModel | null) => {
   dataInfo.value = value
 }
 
-onMounted(() => handlerInitialize())
+onMounted(() => initialize())
 </script>

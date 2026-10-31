@@ -21,11 +21,6 @@ export function pageAccess(to: { fullPath: string; meta: Record<string, unknown>
     return true
 }
 
-export function signInTarget(value: unknown): string {
-    return typeof value === 'string' && value.startsWith('/') && !value.startsWith('//') && !value.includes('\\')
-        && !/[\u0000-\u001f\u007f]/.test(value) && !/^\/(auth|setup)(?:[/?#]|$)/i.test(value) ? canonicalPagePath(value) : '/home'
-}
-
 /** Normalize stale menu caches until the current catalogue is fetched from the server. */
 export function normalizeNavigation(menus: unknown, user: { roles?: unknown } | null | undefined): any[] {
     if (!Array.isArray(menus)) return []

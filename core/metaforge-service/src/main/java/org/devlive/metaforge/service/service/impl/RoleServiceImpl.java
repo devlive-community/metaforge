@@ -6,6 +6,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.common.enums.ServiceState;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.common.utils.CodeUtils;
+import org.devlive.metaforge.service.body.FilterBody;
+import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.RoleEntity;
 import org.devlive.metaforge.service.initializer.RoleCodeConstraint;
 import org.devlive.metaforge.service.record.TreeRecord;
@@ -32,6 +34,9 @@ public class RoleServiceImpl
         implements RoleService
 {
     private static final Pattern CODE_PATTERN = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$");
+
+    // The built-in administrator role keeps the instance manageable; it can never be deleted or disabled.
+    private static final String BUILT_IN_ROLE_CODE = "ADMIN";
 
     private final RoleRepository repository;
     private final MenuAccessRepository menuRepository;
@@ -151,9 +156,36 @@ public class RoleServiceImpl
     }
 
     @Override
+    public CommonResponse<PageEntity<RoleEntity>> getAll(BaseRepository<RoleEntity, Long> repository, FilterBody filter)
+    {
+        CommonResponse<PageEntity<RoleEntity>> response = RoleService.super.getAll(repository, filter);
+        if (response.getStatus() && response.getData() != null) {
+            response.getData()
+                    .getContent()
+                    .forEach(role -> {
+                        role.setUserCount(linkRepository.countUsersOfRole(role.getId()));
+                        role.setMenuCount(linkRepository.countMenusOfRole(role.getId()));
+                    });
+        }
+        return response;
+    }
+
+    @Override
+    public CommonResponse<RoleEntity> changeActive(BaseRepository<RoleEntity, Long> repository, String code, boolean active)
+    {
+        if (!active && BUILT_IN_ROLE_CODE.equals(code)) {
+            return CommonResponse.failure("The built-in role cannot be disabled");
+        }
+        return RoleService.super.changeActive(repository, code, active);
+    }
+
+    @Override
     @Transactional
     public CommonResponse<String> deleteByCode(BaseRepository<RoleEntity, Long> repository, String code)
     {
+        if (BUILT_IN_ROLE_CODE.equals(code)) {
+            return CommonResponse.failure("The built-in role cannot be deleted");
+        }
         repository.findByCode(code).ifPresent(value -> linkRepository.deleteRole(value.getId()));
         return RoleService.super.deleteByCode(repository, code);
     }

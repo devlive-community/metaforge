@@ -65,18 +65,16 @@
           </div>
 
           <MfForm v-if="formState" layout="vertical" class="dc-profile__form">
-            <MfFormItem name="" :label="$t('user.common.username')">
+            <MfFormItem name="" :label="$t('user.common.username')" :tip="$t('user.tip.username')">
               <MfInput :model-value="formState.username" disabled/>
-              <div class="text-xs text-content-tertiary">{{ $t('user.tip.username') }}</div>
             </MfFormItem>
 
             <MfFormItem name="" :label="$t('common.role')">
               <MfInput :model-value="(formState.roles || []).map(role => role.name).join(', ')" disabled/>
             </MfFormItem>
 
-            <MfFormItem name="" :label="$t('user.common.createTime')">
+            <MfFormItem name="" :label="$t('user.common.createTime')" :tip="$t('user.tip.createTime')">
               <MfInput :model-value="formState.createTime" disabled/>
-              <div class="text-xs text-content-tertiary">{{ $t('user.tip.createTime') }}</div>
             </MfFormItem>
 
             <MfFormItem name="" :label="$t('common.updateTime')">

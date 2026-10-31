@@ -75,6 +75,17 @@ public class ScheduledServiceImpl
     }
 
     @Override
+    public CommonResponse<ScheduledEntity> changeSystem(String code, boolean system)
+    {
+        return scheduledRepository.findByCode(code)
+                .map(task -> {
+                    task.setSystem(system);
+                    return CommonResponse.success(scheduledRepository.save(task));
+                })
+                .orElseGet(() -> CommonResponse.failure(String.format("Scheduled task [ %s ] not found", code)));
+    }
+
+    @Override
     @Transactional
     public CommonResponse<String> deleteByCode(BaseRepository<ScheduledEntity, Long> repository, String code)
     {

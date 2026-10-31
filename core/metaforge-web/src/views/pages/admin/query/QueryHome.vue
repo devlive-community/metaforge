@@ -27,9 +27,7 @@
       <MfEmpty v-else class="flex-1" size="sm" variant="initial" :title="$t('source.tip.selected')"/>
     </aside>
 
-    <div v-show="!focusMode"
-         class="mx-1 w-2 shrink-0 cursor-col-resize rounded-mf-full transition-[background-color] duration-(--mf-duration-fast) hover:bg-primary/15"
-         @pointerdown="startResize('left', $event)"></div>
+    <MfResizeHandle v-show="!focusMode" v-model="leftWidth" :min="240" :max="420" :label="$t('query.workspace.resizeLeft')" @change="saveLayout"/>
 
     <section ref="centerRef" class="flex min-w-0 flex-1 flex-col">
       <div :style="{ height: editorHeight }"
@@ -249,9 +247,7 @@
       </div>
     </section>
 
-    <div v-show="!focusMode"
-         class="mx-1 w-2 shrink-0 cursor-col-resize rounded-mf-full transition-[background-color] duration-(--mf-duration-fast) hover:bg-primary/15"
-         @pointerdown="startResize('right', $event)"></div>
+    <MfResizeHandle v-show="!focusMode" v-model="rightWidth" reverse :min="240" :max="420" :label="$t('query.workspace.resizeRight')" @change="saveLayout"/>
 
     <aside v-show="!focusMode"
            :style="{ width: rightWidth + 'px' }"
@@ -289,6 +285,8 @@
 </template>
 
 <script setup lang="ts">
+import { MfResizeHandle } from 'metaforge-ui'
+import { useQueryWorkspaceLayout } from '@/composables/useQueryWorkspaceLayout'
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
@@ -344,67 +342,7 @@ const onEditorCreated = (editor: any) => {
   aceEditorInstance = editor
 }
 
-const centerRef = ref<HTMLElement | null>(null)
-const leftWidth = ref(280)
-const rightWidth = ref(320)
-const editorRatio = ref(0.42)
-const editorHeight = computed(() => `${ Math.round(editorRatio.value * 1000) / 10 }%`)
-
-const LAYOUT_KEY = 'MetaForgeQueryLayout'
-
-const loadLayout = () => {
-  try {
-    const raw = localStorage.getItem(LAYOUT_KEY)
-    if (!raw) {
-      return
-    }
-    const layout = JSON.parse(raw)
-    if (layout.leftWidth) {
-      leftWidth.value = layout.leftWidth
-    }
-    if (layout.rightWidth) {
-      rightWidth.value = layout.rightWidth
-    }
-    if (layout.editorRatio) {
-      editorRatio.value = layout.editorRatio
-    }
-  }
-  catch {
-    // Keep defaults when the stored layout is unreadable.
-  }
-}
-
-type ResizeKind = 'left' | 'right' | 'editor'
-
-const startResize = (kind: ResizeKind, event: PointerEvent) => {
-  event.preventDefault()
-  const start = kind === 'editor'
-    ? { startY: event.clientY, startRatio: editorRatio.value }
-    : { startX: event.clientX, startWidth: kind === 'left' ? leftWidth.value : rightWidth.value }
-
-  const onMove = (moveEvent: PointerEvent) => {
-    if (kind === 'editor') {
-      const container = centerRef.value?.clientHeight ?? 1
-      const delta = (moveEvent.clientY - start.startY) / container
-      editorRatio.value = Math.min(0.7, Math.max(0.2, start.startRatio + delta))
-    }
-    else if (kind === 'left') {
-      leftWidth.value = Math.min(420, Math.max(240, start.startWidth + (moveEvent.clientX - start.startX)))
-    }
-    else {
-      rightWidth.value = Math.min(420, Math.max(240, start.startWidth - (moveEvent.clientX - start.startX)))
-    }
-  }
-  const onUp = () => {
-    document.documentElement.style.userSelect = ''
-    window.removeEventListener('pointermove', onMove)
-    window.removeEventListener('pointerup', onUp)
-    localStorage.setItem(LAYOUT_KEY, JSON.stringify({ leftWidth: leftWidth.value, rightWidth: rightWidth.value, editorRatio: editorRatio.value }))
-  }
-  document.documentElement.style.userSelect = 'none'
-  window.addEventListener('pointermove', onMove)
-  window.addEventListener('pointerup', onUp)
-}
+const { centerRef, leftWidth, rightWidth, editorHeight, loadLayout, startResize, saveLayout } = useQueryWorkspaceLayout()
 
 const editorConfigure = reactive<UserEditor>({ fontSize: 12, theme: 'chrome' })
 const editorConfigureKey = ref(0)
@@ -583,6 +521,7 @@ const runContent = (sql: string, syncEditorFromResponse: boolean) => {
   queryConfigure.cancelToken = axios.CancelToken.source()
   queryConfigure.configure!.name = selectSource.code as string
   queryConfigure.configure!.content = sql
+  queryConfigure.configure!.label = executedEditor?.title
 
   loading.running = true
   ExecuteService.execute(queryConfigure.configure!, queryConfigure.cancelToken.token)
@@ -628,6 +567,7 @@ const onRunPlan = () => {
   queryConfigure.configure!.name = selectSource.code as string
   const editor = editors.value[activeEditor.value as string]
   queryConfigure.configure!.content = editor.content
+  queryConfigure.configure!.label = editor?.title
 
   const plannedSql = editor.content
   // The editor keeps the user SQL; the plan rows render in the result grid.

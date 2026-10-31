@@ -27,6 +27,7 @@ import MfPopover from './components/MfPopover.vue'
 import MfRadio from './components/MfRadio.vue'
 import MfRadioGroup from './components/MfRadioGroup.vue'
 import MfResult from './components/MfResult.vue'
+import MfResizeHandle from './components/MfResizeHandle.vue'
 import MfSelect from './components/MfSelect.vue'
 import MfSkeleton from './components/MfSkeleton.vue'
 import MfSpace from './components/MfSpace.vue'
@@ -74,6 +75,7 @@ export const components = {
     MfRadio,
     MfRadioGroup,
     MfResult,
+    MfResizeHandle,
     MfSelect,
     MfSkeleton,
     MfSpace,
@@ -132,6 +134,7 @@ export {
     MfRadio,
     MfRadioGroup,
     MfResult,
+    MfResizeHandle,
     MfSelect,
     MfSkeleton,
     MfSpace,

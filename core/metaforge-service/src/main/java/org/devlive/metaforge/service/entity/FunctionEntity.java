@@ -64,6 +64,40 @@ public class FunctionEntity
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private FunctionType type = FunctionType.KEYWORD;
 
+    // SQL knowledge fields; only name is mandatory, everything else is per-entry optional.
+    @Column("category")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String category;
+
+    @Column("syntax")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String syntax;
+
+    @Column("examples")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String examples;
+
+    @Column("parameters")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String parameters;
+
+    @Column("return_type")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String returnType;
+
+    @Column("notes")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String notes;
+
+    @Column("version")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String version;
+
+    // JSON object holding plugin-specific properties collected during import.
+    @Column("attributes")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String attributes;
+
     public List<String> getPlugin()
     {
         return Arrays.asList(plugin.split(","));

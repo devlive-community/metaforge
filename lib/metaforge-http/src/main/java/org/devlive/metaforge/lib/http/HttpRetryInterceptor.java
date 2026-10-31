@@ -38,6 +38,7 @@ public class HttpRetryInterceptor
                 count++;
                 response = retry(chain);
             }
+            return response;
         }
         catch (Exception e) {
             if (e instanceof ConnectException) {
@@ -50,6 +51,11 @@ public class HttpRetryInterceptor
                 }
             }
         }
-        return response;
+        if (response != null) {
+            return response;
+        }
+        // An interceptor must never return null: okhttp would raise an NPE
+        // deep inside the chain instead of a meaningful failure.
+        throw new IllegalStateException("HTTP request failed after " + count + " attempt(s)");
     }
 }

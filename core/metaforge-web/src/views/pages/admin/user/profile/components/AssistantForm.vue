@@ -25,35 +25,31 @@
 
           <div class="relative">
             <MfForm v-if="formState" layout="vertical" class="dc-ai__form">
-              <MfFormItem name="host" required-mark :label="$t('user.common.host')">
+              <MfFormItem name="host" required-mark :label="$t('user.common.host')" :tip="$t('user.tip.host')">
                 <MfInput v-model="formState.host"
                          :placeholder="$t('user.placeholder.host')"/>
-                <div class="dc-ai__hint">{{ $t('user.tip.host') }}</div>
               </MfFormItem>
 
-              <MfFormItem name="token" required-mark :label="$t('user.common.apiToken')">
+              <MfFormItem name="token" required-mark :label="$t('user.common.apiToken')" :tip="$t('user.tip.token')">
                 <MfInput v-model="formState.token" type="password" show-password>
                   <template #suffix>
                     <span class="dc-ai__kbd">🔑</span>
                   </template>
                 </MfInput>
-                <div class="dc-ai__hint">{{ $t('user.tip.token') }}</div>
               </MfFormItem>
 
-              <MfFormItem name="timeout" required-mark :label="$t('user.common.timeoutSeconds')">
+              <MfFormItem name="timeout" required-mark :label="$t('user.common.timeoutSeconds')" :tip="$t('user.tip.timeout')">
                 <MfInputNumber v-model="formState.timeout"
                                 class="w-full"
                                 :min="1"
                                 :max="600"/>
-                <div class="dc-ai__hint">{{ $t('user.tip.timeout') }}</div>
               </MfFormItem>
 
-              <MfFormItem name="contentCount" required-mark :label="$t('user.common.contextCount')">
+              <MfFormItem name="contentCount" required-mark :label="$t('user.common.contextCount')" :tip="$t('user.tip.contentCount')">
                 <MfInputNumber v-model="formState.contentCount"
                                 class="w-full"
                                 :min="1"
                                 :max="20"/>
-                <div class="dc-ai__hint">{{ $t('user.tip.contentCount') }}</div>
               </MfFormItem>
             </MfForm>
 

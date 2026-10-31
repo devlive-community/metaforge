@@ -1,0 +1,154 @@
+name: Release
+
+on:
+  release:
+    types: [ published ]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to build (e.g., v2026.0.0)'
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  APP_NAME: metaforge
+  GITHUB_REGISTRY: ghcr.io
+  APP_GITHUB_GROUP: devlive-community
+  APP_DOCKER_GROUP: devliveorg
+  PLATFORMS: linux/amd64,linux/arm64
+
+jobs:
+  build:
+    name: Build the distribution
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    outputs:
+      APP_VERSION: ${{ steps.version.outputs.APP_VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      # The frontend-maven-plugin embeds the web build into the server
+      # distribution, so the pnpm flags are intentionally not used here.
+      - name: Resolve the application version
+        id: version
+        run: >
+          echo "APP_VERSION=$(./mvnw -B -Dexec.executable=echo
+          -Dexec.args='${project.version}' --non-recursive exec:exec
+          -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN | tail -1)"
+          >> "$GITHUB_OUTPUT"
+
+      - name: Build the distribution
+        run: >
+          ./mvnw -B clean install package
+          -DskipTests -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
+
+      - name: Upload the distribution artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: distribution
+          if-no-files-found: error
+          path: |
+            Dockerfile
+            dist/metaforge-server-*-bin.tar.gz
+
+  docker:
+    name: Publish Docker images
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: build
+    steps:
+      - name: Download the distribution artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: distribution
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.GITHUB_REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push the images
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: ${{ env.PLATFORMS }}
+          push: true
+          tags: |
+            ${{ env.GITHUB_REGISTRY }}/${{ env.APP_GITHUB_GROUP }}/${{ env.APP_NAME }}:${{ needs.build.outputs.APP_VERSION }}
+            ${{ env.GITHUB_REGISTRY }}/${{ env.APP_GITHUB_GROUP }}/${{ env.APP_NAME }}:latest
+            ${{ env.APP_DOCKER_GROUP }}/${{ env.APP_NAME }}:${{ needs.build.outputs.APP_VERSION }}
+            ${{ env.APP_DOCKER_GROUP }}/${{ env.APP_NAME }}:latest
+
+  maven:
+    name: Publish to Maven Central
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+      # Imports the GPG key and injects the metaforge-ossrh server
+      # credentials into the Maven settings. The gpg-passphrase input is the
+      # NAME of the env variable holding the passphrase, provided below.
+      - name: Set up JDK 21 with signing and repository credentials
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          gpg-private-key: ${{ secrets.GPG_SECRET }}
+          gpg-passphrase: GPG_PASSPHRASE
+          server-id: metaforge-ossrh
+          server-username: OSSRH_USERNAME
+          server-password: OSSRH_TOKEN
+
+      # Fails fast with a clear message when the key or passphrase is wrong,
+      # instead of stalling or failing halfway through the deploy.
+      - name: Verify the GPG signing key
+        env:
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSWORD }}
+        run: |
+          gpg --list-secret-keys --keyid-format long
+          echo 'metaforge signing check' | gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --local-user "$(gpg --list-secret-keys --keyid-format long --with-colons | awk -F: '/^sec/{print $5; exit}')" -o /tmp/signing-check.sig --sign
+          rm -f /tmp/signing-check.sig
+
+      - name: Deploy to Maven Central
+        env:
+          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+          OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSWORD }}
+        run: >
+          ./mvnw -B clean deploy -Pdeploy
+          -DskipTests -Dcheckstyle.skip -Dspotbugs.skip
+          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+          -Dgpg.passphrase="$GPG_PASSPHRASE"
+          -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'

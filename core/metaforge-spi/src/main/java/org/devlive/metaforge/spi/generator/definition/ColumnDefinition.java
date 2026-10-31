@@ -38,6 +38,10 @@ public class ColumnDefinition
     private String collate;
     private boolean primaryKey;
     private boolean autoIncrement;
+    // Optional position anchor for ALTER ... AFTER <column> reordering.
+    private String after;
+    // Moves the column to the first position (ALTER ... FIRST).
+    private boolean first;
     private OrderBy.Direction order;
     private Filter.Operator operator;
     private Object value;

@@ -294,8 +294,9 @@ public class SetupService
         for (Map.Entry<String, String> entry : lines.entrySet()) {
             content.append(entry.getKey()).append('=').append(entry.getValue()).append('\n');
         }
-        if (override.getParentFile() != null && !override.getParentFile().exists()) {
-            override.getParentFile().mkdirs();
+        File parent = override.getParentFile();
+        if (parent != null && !parent.exists() && !parent.mkdirs()) {
+            throw new IllegalStateException("Cannot create directory: " + parent);
         }
         Files.write(override.toPath(), content.toString().getBytes(StandardCharsets.UTF_8));
     }

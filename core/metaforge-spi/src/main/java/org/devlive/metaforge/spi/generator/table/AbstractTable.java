@@ -20,6 +20,8 @@ public abstract class AbstractTable
     protected String collate = "utf8mb4_general_ci";
     protected String comment;
     protected String rowFormat;
+    protected Long autoIncrement;
+    protected String dataDirectory;
 
     protected AbstractTable(String database, String name)
     {
@@ -81,6 +83,18 @@ public abstract class AbstractTable
         return this;
     }
 
+    public AbstractTable autoIncrement(long value)
+    {
+        this.autoIncrement = value;
+        return this;
+    }
+
+    public AbstractTable dataDirectory(String directory)
+    {
+        this.dataDirectory = directory;
+        return this;
+    }
+
     protected void appendTableOptions(StringBuilder sql)
     {
         if (!engine.isEmpty()) {
@@ -99,8 +113,16 @@ public abstract class AbstractTable
             sql.append(" ROW_FORMAT=").append(rowFormat);
         }
 
+        if (autoIncrement != null) {
+            sql.append(" AUTO_INCREMENT=").append(autoIncrement);
+        }
+
         if (comment != null) {
             sql.append(" COMMENT='").append(comment).append("'");
+        }
+
+        if (dataDirectory != null && !dataDirectory.trim().isEmpty()) {
+            sql.append(" DATA DIRECTORY '").append(dataDirectory.trim()).append("'");
         }
     }
 }

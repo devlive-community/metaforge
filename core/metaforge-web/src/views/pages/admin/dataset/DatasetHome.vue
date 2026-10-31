@@ -8,7 +8,7 @@
              :page-index="pageIndex"
              :page-size="pageSize"
              :total="dataCount"
-             @refresh="handleInitialize"
+             @refresh="initialize"
              @search="onSearch"
              @reset="onSearch"
              @page-change="onPageChange"
@@ -50,22 +50,22 @@
           </MfPopover>
         </template>
         <template v-else-if="column.key === 'action'">
-          <MfSpace size="xs">
-            <MfTooltip :content="$t('dataset.common.info')"><router-link :to="`/dataset/detail/${record.code}`"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.info')"><Eye :size="15"/></MfButton></router-link></MfTooltip>
-            <MfTooltip :content="$t('dataset.common.modify')"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.modify')" @click="openWizard(record.code)"><Pencil :size="15"/></MfButton></MfTooltip>
+          <MfSpace :wrap="false" :size="2">
+            <MfTooltip :content="$t('dataset.common.info')"><router-link :to="`/dataset/detail/${record.code}`"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.info')" shape="circle"><Eye :size="15"/></MfButton></router-link></MfTooltip>
+            <MfTooltip :content="$t('dataset.common.modify')"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.modify')" @click="openWizard(record.code)" shape="circle"><Pencil :size="15"/></MfButton></MfTooltip>
             <MfTooltip :content="$t('dataset.common.adhoc')">
               <router-link v-if="isSuccess(record?.state)" :to="`/dataset/adhoc/${ record?.code }`" target="_blank">
-                <MfButton variant="ghost" size="sm">
+                <MfButton variant="ghost" size="sm" shape="circle">
                   <ChartColumn :size="15" />
                 </MfButton>
               </router-link>
-              <MfButton v-else variant="ghost" size="sm" disabled>
+              <MfButton v-else variant="ghost" size="sm" disabled shape="circle">
                 <ChartColumn :size="15" />
               </MfButton>
             </MfTooltip>
 
             <MfDropdown trigger="click" placement="bottomRight">
-              <MfButton variant="ghost" size="sm">
+              <MfButton variant="ghost" size="sm" shape="circle">
                 <Settings :size="15" />
               </MfButton>
 
@@ -160,12 +160,12 @@
 </template>
 
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-import { FilterModel, type TableFilters } from '@/model/filter'
+import { onMounted, ref } from 'vue'
 import { useDatasetHeaders } from './DatasetUtils'
 import { DatasetModel } from '@/model/dataset'
 import { useUtil } from '@/utils/common'
 import DataTable from '@/views/components/table/DataTable.vue'
+import { usePagedList } from '@/composables/usePagedList'
 import { useTableFilters } from '@/views/components/table/tableFilters'
 import DatasetWizard from './DatasetWizard.vue'
 import { useRouter } from 'vue-router'
@@ -188,15 +188,9 @@ const fieldCounts = ref<Record<string, number | null>>({})
 const openWizard = (code = '') => { editingCode.value = code; wizardVisible.value = true }
 const onSubmitted = (result: {code:string}) => { wizardVisible.value = false; router.push(result.code ? `/dataset/detail/${encodeURIComponent(result.code)}?submitted=1` : '/dataset') }
 const tableFilters = useTableFilters('dataset')
-const filter: FilterModel = new FilterModel()
 const { headers } = useDatasetHeaders()
 const { getDatasetStateText } = useUtil()
 
-const loading = ref(false)
-const data = ref<any[]>([])
-const pageIndex = ref(1)
-const pageSize = ref(10)
-const dataCount = ref(0)
 const contextData = ref<DatasetModel | null>(null)
 const rebuildVisible = ref(false)
 const historyVisible = ref(false)
@@ -205,46 +199,39 @@ const clearDataVisible = ref(false)
 const errorVisible = ref(false)
 const deleteVisible = ref(false)
 
-const onSearch = (values: TableFilters) => {
-  Object.assign(filter, values, { page: 1 })
-  pageIndex.value = 1
-  handleInitialize()
+let fieldCountRequest = 0
+const loadFieldCounts = (rows: any[]) => {
+  const request = ++fieldCountRequest
+  fieldCounts.value = {}
+  Promise.allSettled(rows.map(async (record) => {
+    try {
+      const fields = await DatasetService.getColumnsByCode(record.code)
+      if (request === fieldCountRequest) {
+        fieldCounts.value[record.code] = fields.status ? fields.data.length : null
+        record.columnCount = fieldCounts.value[record.code]
+      }
+    }
+    catch {
+      if (request === fieldCountRequest) {
+        fieldCounts.value[record.code] = null
+      }
+    }
+  }))
 }
 
-let latestRequest = 0
-const handleInitialize = () => {
-  const request = ++latestRequest
-  loading.value = true
-  DatasetService.getAll({ ...filter })
-                .then((response) => {
-                 if (request !== latestRequest) return
-                  if (response.status) {
-                    data.value = response.data.content
-                    fieldCounts.value = {}
-                    Promise.allSettled(data.value.map(async (record) => {
-                      try { const fields = await DatasetService.getColumnsByCode(record.code); if (request === latestRequest) { fieldCounts.value[record.code] = fields.status ? fields.data.length : null; record.columnCount = fieldCounts.value[record.code] } }
-                      catch { if (request === latestRequest) fieldCounts.value[record.code] = null }
-                    }))
-                    dataCount.value = response.data.total
-                    pageSize.value = response.data.size
-                    pageIndex.value = response.data.page
-                  }
-                })
-                .finally(() => { if (request === latestRequest) loading.value = false })
-}
-
-const fetchData = (value: number) => {
-  filter.page = value
-  filter.size = pageSize.value
-  handleInitialize()
-}
-
-const onPageChange = (value: number) => fetchData(value)
-
-const onSizeChange = (_current: number, size: number) => {
-  pageSize.value = size
-  fetchData(pageIndex.value)
-}
+const {
+    loading,
+    data,
+    pageIndex,
+    pageSize,
+    dataCount,
+    initialize,
+    onSearch,
+    onPageChange,
+    onSizeChange
+  } = usePagedList<any>(filter => DatasetService.getAll(filter), {
+    onData: rows => loadFieldCounts(rows)
+  })
 
 const isSuccess = (state: Array<any> | null) => {
   if (state && state.length > 0) {
@@ -289,7 +276,7 @@ const visibleClearData = (record: DatasetModel | null, opened: boolean) => {
   contextData.value = record
   clearDataVisible.value = opened
   if (!opened) {
-    handleInitialize()
+    initialize()
   }
 }
 
@@ -302,10 +289,9 @@ const visibleDelete = (record: DatasetModel | null, opened: boolean) => {
   deleteVisible.value = opened
   contextData.value = record
   if (!opened) {
-    handleInitialize()
+    initialize()
   }
 }
 
-onBeforeUnmount(() => { latestRequest++ })
-onMounted(() => handleInitialize())
+onMounted(() => initialize())
 </script>

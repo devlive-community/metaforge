@@ -5,7 +5,7 @@
            class="dc-src-modal">
     <!-- 头部 -->
     <div class="dc-src__head">
-      <div class="dc-src__head-title">{{ wizardTitle }}</div>
+      <div class="dc-src__head-title" :title="wizardTitle">{{ wizardTitle }}</div>
       <div class="dc-src__head-desc">{{ $t('source.wizard.desc') }}</div>
     </div>
 
@@ -627,12 +627,18 @@ handleInitialize()
 <style scoped>
 .dc-src__head {
     display: flex;
+    flex-direction: column;
     align-items: flex-start;
-    gap: 16px;
+    gap: 4px;
+    min-width: 0;
     padding-right: 40px;
 }
 
 .dc-src__head-title {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 20px;
     font-weight: 600;
     color: var(--dc-text-title);

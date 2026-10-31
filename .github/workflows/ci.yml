@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [ dev, main, master, 2026.0.0 ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+  pull_request:
+    branches: [ dev, main, master, 2026.0.0 ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9.13.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: pnpm
+          cache-dependency-path: core/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: core
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check the component library
+        working-directory: core
+        run: pnpm --filter metaforge-ui run build
+
+      - name: Build the application
+        working-directory: core
+        run: pnpm --filter metaforge-web run build
+
+  backend:
+    name: Backend build, style and bug analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      # Checkstyle is bound to the validate phase of every module
+      # (failOnViolation=true), so the build fails on style violations.
+      - name: Build and check code style (Checkstyle)
+        run: >
+          ./mvnw -B clean install
+          -DskipTests -Dspotbugs.skip -Dgpg.skip
+          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+
+      # Analyzes the compiled classes of the whole reactor and fails the
+      # build on medium+ threshold bug patterns.
+      - name: Detect bugs with SpotBugs
+        env:
+          MAVEN_OPTS: -Xmx2048m
+        run: >
+          ./mvnw -B spotbugs:check
+          -Dcheckstyle.skip -Dgpg.skip
+          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+
+  tests:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      # The root pom has no Surefire pin; Maven's default (2.12.4) cannot run
+      # JUnit 5 and silently executes zero tests. Invoke Surefire explicitly
+      # until the root pom pins the plugin version.
+      - name: Run the JUnit 5 suite
+        run: >
+          ./mvnw -B test-compile org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
+          -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
+          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm

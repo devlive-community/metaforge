@@ -11,8 +11,9 @@ export function useHeaders()
         { title: t('common.device'), dataIndex: 'device', key: 'device' },
         { title: t('common.client'), dataIndex: 'client', key: 'client' },
         { title: t('common.ip'), dataIndex: 'ip', key: 'ip' },
-        { title: t('common.state'), key: 'state' },
-        { title: t('common.ua'), dataIndex: 'ua', key: 'ua', width: 350 },
+        { title: t('common.state'), key: 'state', width: 100 },
+        { title: t('common.ua'), dataIndex: 'ua', key: 'ua', width: 350, ellipsis: true },
+        { title: t('common.message'), dataIndex: 'message', key: 'message', width: 220, ellipsis: true },
         { title: t('common.loginTime'), dataIndex: 'createTime', key: 'createTime' }
     ])
 

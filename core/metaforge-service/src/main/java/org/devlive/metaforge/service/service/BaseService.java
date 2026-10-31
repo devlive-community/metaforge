@@ -74,6 +74,20 @@ public interface BaseService<T extends BaseEntity>
                 .orElseGet(() -> CommonResponse.failure(String.format("Resource [ %s ] not found", code)));
     }
 
+    /**
+     * Toggle the active flag of a resource without touching its other columns.
+     * Services may override to add guards (e.g. protected accounts).
+     */
+    default CommonResponse<T> changeActive(BaseRepository<T, Long> repository, String code, boolean active)
+    {
+        return repository.findByCode(code)
+                .map(entity -> {
+                    entity.setActive(active);
+                    return CommonResponse.success(repository.save(entity));
+                })
+                .orElseGet(() -> CommonResponse.failure(String.format("Resource [ %s ] not found", code)));
+    }
+
     default <R> CommonResponse<R> validatorUser(R value)
     {
         if (!ownedBySelf(value)) {

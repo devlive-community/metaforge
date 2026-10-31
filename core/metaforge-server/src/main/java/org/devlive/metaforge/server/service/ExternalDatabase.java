@@ -37,7 +37,8 @@ public enum ExternalDatabase
 
     public String url(String host, Integer port, String database)
     {
-        return String.format(urlTemplate, host.trim(), port == null ? defaultPort : port, database.trim());
+        int effectivePort = port == null ? defaultPort : port;
+        return String.format(urlTemplate, host.trim(), effectivePort, database.trim());
     }
 
     public String getLabel()

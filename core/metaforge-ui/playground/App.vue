@@ -26,6 +26,7 @@ import {
     MfModal,
     MfRadio,
     MfRadioGroup,
+    MfResizeHandle,
     MfSelect,
     MfSpace,
     MfSpinner,
@@ -38,6 +39,7 @@ import {
 } from '../src/index'
 
 const mode = ref<MfThemeMode>('light')
+const demoPaneWidth = ref(220)
 const menuMode = ref<'horizontal' | 'inline'>('horizontal')
 const menuSelectedKeys = ref<(string | number)[]>(['/home'])
 const menuClickCount = ref(0)
@@ -296,6 +298,14 @@ function simulateLoading(): void {
                         </MfEmpty>
                         <MfEmpty variant="search" title="未找到匹配结果" description="试试调整筛选条件或清空关键字。"/>
                         <MfEmpty variant="initial" title="等待执行查询" description="选择数据源并执行 SQL，查询结果将显示在这里。"/>
+                    </div>
+                </MfCard>
+
+                <MfCard title="可调整面板">
+                    <div class="flex h-36 overflow-hidden rounded-mf-md border border-line">
+                        <aside class="shrink-0 p-4 text-sm text-content-secondary" :style="{ width: demoPaneWidth + 'px' }">可拖拽左侧面板</aside>
+                        <MfResizeHandle v-model="demoPaneWidth" :min="140" :max="360" label="调整演示面板宽度"/>
+                        <div class="min-w-0 flex-1 p-4 text-sm text-content-tertiary">拖动分隔线，或用方向键调整宽度。</div>
                     </div>
                 </MfCard>
 

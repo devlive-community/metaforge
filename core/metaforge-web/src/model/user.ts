@@ -3,14 +3,18 @@ import { RoleModel } from '@/model/role'
 export interface UserModel
 {
     id?: number
+    name?: string
     username?: string
     code?: string
     avatar?: string
+    active?: boolean
     chatConfigure?: UserChatModel
     system?: boolean
     editorConfigure?: string
     createTime?: string
     updateTime?: string
+    lastLoginTime?: string
+    lastLoginIp?: string
     roles?: RoleModel[] | []
     avatarConfigure?: UserAvatarModel
     password?: string

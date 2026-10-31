@@ -224,7 +224,7 @@
                 <MfButton v-if="restartRequired" variant="outline" @click="onFinished">
                   {{ $t('setup.install.acknowledge') }}
                 </MfButton>
-                <MfButton v-else variant="primary" @click="$router.push('/auth/signin')">
+                <MfButton v-else variant="primary" @click="$router.push({ path: '/auth/signin', query: redirectQuery })">
                   {{ $t('setup.install.goToSignin') }}
                 </MfButton>
               </template>
@@ -249,10 +249,13 @@ import { MfMessage } from 'metaforge-ui'
 import SetupService from '@/services/setup'
 import BaseLayout from '@/views/layouts/base/BaseLayout.vue'
 import { invalidateSetupCheck } from '@/router'
+import { useRouteRedirect } from '@/composables/useRouteRedirect'
 
 defineOptions({ name: 'SetupHome' })
 
 const { t } = useI18n()
+// 安装完成去登录时把安装前想访问的地址继续带下去。
+const { query: redirectQuery } = useRouteRedirect()
 
 const step = ref(0)
 const stepLabels = computed(() => [

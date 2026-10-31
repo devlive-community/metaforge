@@ -1,9 +1,12 @@
 package org.devlive.metaforge.spi;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.plugin.Service;
 import org.devlive.metaforge.spi.adapter.Adapter;
 import org.devlive.metaforge.spi.adapter.BatchWriter;
@@ -17,12 +20,17 @@ import org.devlive.metaforge.spi.connection.JdbcConnection;
 import org.devlive.metaforge.spi.connection.JdbcUrlGuard;
 import org.devlive.metaforge.spi.generator.DataType;
 import org.devlive.metaforge.spi.generator.Filter;
+import org.devlive.metaforge.spi.generator.Index;
 import org.devlive.metaforge.spi.generator.OrderBy;
 import org.devlive.metaforge.spi.generator.column.CreateColumn;
 import org.devlive.metaforge.spi.generator.column.SelectColumn;
 import org.devlive.metaforge.spi.generator.definition.BaseDefinition;
 import org.devlive.metaforge.spi.generator.definition.ColumnDefinition;
+import org.devlive.metaforge.spi.generator.definition.ForeignKeyDefinition;
+import org.devlive.metaforge.spi.generator.definition.IndexDefinition;
 import org.devlive.metaforge.spi.generator.definition.TableDefinition;
+import org.devlive.metaforge.spi.generator.definition.TableOptionsDefinition;
+import org.devlive.metaforge.spi.generator.definition.TriggerDefinition;
 import org.devlive.metaforge.spi.generator.table.AbstractTable;
 import org.devlive.metaforge.spi.generator.table.AlterTable;
 import org.devlive.metaforge.spi.generator.table.CreateTable;
@@ -32,14 +40,21 @@ import org.devlive.metaforge.spi.generator.table.InsertTable;
 import org.devlive.metaforge.spi.generator.table.SelectTable;
 import org.devlive.metaforge.spi.generator.table.TruncateTable;
 import org.devlive.metaforge.spi.generator.table.UpdateTable;
+import org.devlive.metaforge.spi.model.ManagementCapabilities;
+import org.devlive.metaforge.spi.model.ManagementDetail;
+import org.devlive.metaforge.spi.model.ManagementDownload;
+import org.devlive.metaforge.spi.model.ManagementPage;
+import org.devlive.metaforge.spi.model.ManagementRequest;
 import org.devlive.metaforge.spi.model.Pagination;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
+import org.devlive.metaforge.spi.sql.TableDdl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +67,31 @@ public interface PluginService
 {
     ThreadLocal<Connection> local = new ThreadLocal<>();
     Logger log = LoggerFactory.getLogger(PluginService.class);
+
+    default ManagementCapabilities managementCapabilities()
+    {
+        return ManagementCapabilities.forJdbc(connectType());
+    }
+
+    default ManagementPage managementNamespaces(RuntimeConfigure configure, ManagementRequest request)
+    {
+        throw new UnsupportedOperationException("Namespace browsing is not supported");
+    }
+
+    default ManagementPage managementList(RuntimeConfigure configure, ManagementRequest request)
+    {
+        throw new UnsupportedOperationException("Native browsing is not supported");
+    }
+
+    default ManagementDetail managementDetail(RuntimeConfigure configure, ManagementRequest request)
+    {
+        throw new UnsupportedOperationException("Native details are not supported");
+    }
+
+    default ManagementDownload managementDownload(RuntimeConfigure configure, ManagementRequest request)
+    {
+        throw new UnsupportedOperationException("Native downloads are not supported");
+    }
 
     default String validator()
     {
@@ -475,7 +515,11 @@ public interface PluginService
      */
     default Response getColumns(RuntimeConfigure configure, String database, String table)
     {
-        String sql = "SELECT detail.*\n" +
+        String sql = "SELECT detail.*,\n" +
+                "    COALESCE(meta.CHARACTER_MAXIMUM_LENGTH, meta.NUMERIC_PRECISION, 0) AS object_length,\n" +
+                "    CASE WHEN meta.EXTRA LIKE '%auto_increment%' THEN 'YES' ELSE 'NO' END AS object_autoincrement,\n" +
+                "    meta.CHARACTER_SET_NAME AS object_charset,\n" +
+                "    meta.COLLATION_NAME AS object_collation\n" +
                 "FROM (\n" +
                 "    -- 列信息\n" +
                 "    SELECT\n" +
@@ -567,6 +611,9 @@ public interface PluginService
                 "        EVENT_OBJECT_SCHEMA = '{0}'\n" +
                 "        AND EVENT_OBJECT_TABLE = '{1}'\n" +
                 ") detail\n" +
+                "LEFT JOIN information_schema.COLUMNS meta\n" +
+                "    ON detail.type_name = 'column' AND meta.TABLE_SCHEMA = '{0}'\n" +
+                "    AND meta.TABLE_NAME = '{1}' AND meta.COLUMN_NAME = detail.object_name\n" +
                 "ORDER BY\n" +
                 "    FIELD(type_name, 'column', 'primary', 'index', 'trigger'),\n" +
                 "    object_position,\n" +
@@ -604,9 +651,12 @@ public interface PluginService
                 "object_default_value",
                 "object_comment",
                 "object_position",
-                "object_definition"));
+                "object_definition",
+                "object_length",
+                "object_autoincrement",
+                "object_scale"));
         response.setTypes(Lists.newArrayList(
-                "String", "String", "String", "String", "String", "String", "Integer", "String"));
+                "String", "String", "String", "String", "String", "String", "Integer", "String", "Integer", "String", "Integer"));
         List<Object> rows = Lists.newArrayList();
         response.setColumns(rows);
         try {
@@ -615,15 +665,32 @@ public interface PluginService
                 while (resultSet.next()) {
                     String defaultValue = resultSet.getString("COLUMN_DEF");
                     String comment = resultSet.getString("REMARKS");
+                    int columnSize;
+                    try {
+                        columnSize = resultSet.getInt("COLUMN_SIZE");
+                    }
+                    catch (SQLException ignored) {
+                        columnSize = 0;
+                    }
+                    int decimalDigits;
+                    try {
+                        decimalDigits = resultSet.getInt("DECIMAL_DIGITS");
+                    }
+                    catch (SQLException ignored) {
+                        decimalDigits = 0;
+                    }
                     rows.add(Lists.newArrayList(
                             "column",
                             resultSet.getString("COLUMN_NAME"),
                             resultSet.getString("TYPE_NAME"),
                             resultSet.getInt("NULLABLE") == java.sql.ResultSetMetaData.columnNullable ? "YES" : "NO",
-                            defaultValue == null ? "" : defaultValue,
+                            defaultValue,
                             comment == null ? "" : comment,
                             resultSet.getInt("ORDINAL_POSITION"),
-                            ""));
+                            "",
+                            columnSize,
+                            resultSet.getString("IS_AUTOINCREMENT"),
+                            decimalDigits));
                 }
             }
             try (ResultSet resultSet = metaData.getPrimaryKeys(null, database, table)) {
@@ -637,7 +704,8 @@ public interface PluginService
                             primaryColumn,
                             "", "", "", "",
                             0,
-                            "PRIMARY KEY on (" + String.join(", ", primaryColumns) + ")"));
+                            "PRIMARY KEY on (" + String.join(", ", primaryColumns) + ")",
+                            0, "NO", 0));
                 }
             }
             response.setIsConnected(true);
@@ -653,6 +721,521 @@ public interface PluginService
             destroy();
         }
         return response;
+    }
+
+    /**
+     * 数据表索引结构 | Table index structure
+     *
+     * @param configure 配置信息 | Configuration information
+     * @param database 数据库 | Database
+     * @param table 数据表 | Table
+     * @return 索引结构 | Index structure
+     */
+    default Response metadataIndexes(RuntimeConfigure configure, String database, String table)
+    {
+        Response response = new Response();
+        response.setHeaders(Lists.newArrayList(
+                "type_name",
+                "object_name",
+                "object_column",
+                "object_unique",
+                "object_definition"));
+        response.setTypes(Lists.newArrayList(
+                "String", "String", "String", "Boolean", "String"));
+        List<Object> rows = Lists.newArrayList();
+        try (ResultSet resultSet = openJdbcConnection(configure).getMetaData().getIndexInfo(null, database, table, false, false)) {
+            while (resultSet.next()) {
+                String indexName = resultSet.getString("INDEX_NAME");
+                if (indexName == null) {
+                    continue;
+                }
+                rows.add(Lists.newArrayList(
+                        "index",
+                        indexName,
+                        resultSet.getString("COLUMN_NAME"),
+                        !resultSet.getBoolean("NON_UNIQUE"),
+                        ""));
+            }
+        }
+        catch (Exception ignored) {
+            // drivers without index metadata simply report an empty list
+        }
+        response.setColumns(rows);
+        return response;
+    }
+
+    /**
+     * 数据表外键结构 | Table foreign key structure
+     *
+     * @param configure 配置信息 | Configuration information
+     * @param database 数据库 | Database
+     * @param table 数据表 | Table
+     * @return 外键结构 | Foreign key structure
+     */
+    default Response metadataForeignKeys(RuntimeConfigure configure, String database, String table)
+    {
+        Response response = new Response();
+        response.setHeaders(Lists.newArrayList(
+                "type_name",
+                "object_name",
+                "object_column",
+                "object_reference_table",
+                "object_reference_column"));
+        response.setTypes(Lists.newArrayList(
+                "String", "String", "String", "String", "String"));
+        List<Object> rows = Lists.newArrayList();
+        try (ResultSet resultSet = openJdbcConnection(configure).getMetaData().getImportedKeys(null, database, table)) {
+            while (resultSet.next()) {
+                rows.add(Lists.newArrayList(
+                        "foreignkey",
+                        resultSet.getString("FK_NAME"),
+                        resultSet.getString("FKCOLUMN_NAME"),
+                        resultSet.getString("PKTABLE_NAME"),
+                        resultSet.getString("PKCOLUMN_NAME")));
+            }
+        }
+        catch (Exception ignored) {
+            // drivers without foreign key metadata simply report an empty list
+        }
+        response.setColumns(rows);
+        return response;
+    }
+
+    /**
+     * 创建索引 | Create index
+     *
+     * @param configure 配置信息 | Configuration information
+     * @param definition 表配置定义 | Table configuration definition
+     * @return 执行结果 | Execution result
+     */
+    default Response createIndex(RuntimeConfigure configure, TableDefinition definition)
+    {
+        return this.executeStatements(definition.getIndexes().stream()
+                .map(index -> this.createIndexStatement(definition.getDatabase(), definition.getName(), index))
+                .collect(Collectors.toList()), configure, definition);
+    }
+
+    /**
+     * 修改或重建索引 | Change or rebuild an index: drops the original and adds the new definition in
+     * one ALTER, so the table never goes without it in between.
+     */
+    default Response alterIndex(RuntimeConfigure configure, TableDefinition definition)
+    {
+        return this.executeStatements(definition.getIndexes().stream()
+                .map(index -> this.alterIndexStatement(definition.getDatabase(), definition.getName(), index))
+                .collect(Collectors.toList()), configure, definition);
+    }
+
+    /**
+     * 删除索引 | Drop index
+     *
+     * @param configure 配置信息 | Configuration information
+     * @param definition 表配置定义 | Table configuration definition
+     * @return 执行结果 | Execution result
+     */
+    default Response dropIndex(RuntimeConfigure configure, TableDefinition definition)
+    {
+        String table = sqlIdentifier(definition.getDatabase()) + "." + sqlIdentifier(definition.getName());
+        return this.executeStatements(definition.getIndexes().stream()
+                .map(index -> isPrimaryIndex(index.getName())
+                        ? "ALTER TABLE " + table + " DROP PRIMARY KEY"
+                        : "DROP INDEX " + sqlIdentifier(index.getName()) + " ON " + table)
+                .collect(Collectors.toList()), configure, definition);
+    }
+
+    default boolean isPrimaryIndex(String name)
+    {
+        return "PRIMARY".equalsIgnoreCase(name);
+    }
+
+    /** FULLTEXT and SPATIAL are index kinds of their own; BTREE and HASH are access methods. */
+    default String indexKind(IndexDefinition index)
+    {
+        String type = index.getType() == null ? "" : index.getType().trim().toUpperCase(java.util.Locale.ROOT);
+        return "FULLTEXT".equals(type) || "SPATIAL".equals(type) ? type : "";
+    }
+
+    default String indexMethod(IndexDefinition index)
+    {
+        String type = index.getType() == null ? "" : index.getType().trim().toUpperCase(java.util.Locale.ROOT);
+        return "BTREE".equals(type) || "HASH".equals(type) ? " USING " + type : "";
+    }
+
+    /** `col`(length) ASC, ... ; FULLTEXT and SPATIAL columns take no direction. */
+    default String indexColumns(IndexDefinition index)
+    {
+        boolean ordered = indexKind(index).isEmpty();
+        List<String> parts = Lists.newArrayList();
+        for (int position = 0; position < index.getColumns().size(); position++) {
+            StringBuilder part = new StringBuilder(sqlIdentifier(index.getColumns().get(position)));
+            Integer length = position < index.getLengths().size() ? index.getLengths().get(position) : null;
+            if (length != null && length > 0) {
+                part.append("(").append(length).append(")");
+            }
+            String order = position < index.getOrders().size() ? index.getOrders().get(position) : null;
+            if (ordered && order != null && ("ASC".equalsIgnoreCase(order) || "DESC".equalsIgnoreCase(order))) {
+                part.append(" ").append(order.toUpperCase(java.util.Locale.ROOT));
+            }
+            parts.add(part.toString());
+        }
+        return "(" + String.join(", ", parts) + ")";
+    }
+
+    default String indexComment(IndexDefinition index)
+    {
+        return index.getComment() == null || index.getComment().isEmpty() ? "" : " COMMENT " + sqlLiteral(index.getComment());
+    }
+
+    default String indexAlgorithm(IndexDefinition index, String separator)
+    {
+        String algorithm = index.getAlgorithm() == null ? "" : index.getAlgorithm().trim().toUpperCase(java.util.Locale.ROOT);
+        return "INPLACE".equals(algorithm) || "COPY".equals(algorithm) ? separator + "ALGORITHM = " + algorithm : "";
+    }
+
+    /** The ADD clause of an index inside ALTER TABLE. */
+    default String addIndexClause(IndexDefinition index)
+    {
+        if (isPrimaryIndex(index.getName())) {
+            return "ADD PRIMARY KEY" + indexMethod(index) + " " + indexColumns(index) + indexComment(index);
+        }
+        String kind = indexKind(index);
+        String prefix = !kind.isEmpty() ? kind + " " : index.isUnique() ? "UNIQUE " : "";
+        return "ADD " + prefix + "INDEX " + sqlIdentifier(index.getName()) + (kind.isEmpty() ? indexMethod(index) : "") + " " + indexColumns(index) + indexComment(index);
+    }
+
+    default String createIndexStatement(String database, String table, IndexDefinition index)
+    {
+        String target = sqlIdentifier(database) + "." + sqlIdentifier(table);
+        if (isPrimaryIndex(index.getName())) {
+            return "ALTER TABLE " + target + "\n    " + addIndexClause(index) + indexAlgorithm(index, ",\n    ");
+        }
+        String kind = indexKind(index);
+        String prefix = !kind.isEmpty() ? kind + " " : index.isUnique() ? "UNIQUE " : "";
+        return "CREATE " + prefix + "INDEX " + sqlIdentifier(index.getName()) + (kind.isEmpty() ? indexMethod(index) : "")
+                + "\n    ON " + target + " " + indexColumns(index) + indexComment(index) + indexAlgorithm(index, "\n    ");
+    }
+
+    default String alterIndexStatement(String database, String table, IndexDefinition index)
+    {
+        String original = index.getOriginalName() == null || index.getOriginalName().isEmpty() ? index.getName() : index.getOriginalName();
+        String drop = isPrimaryIndex(original) ? "DROP PRIMARY KEY" : "DROP INDEX " + sqlIdentifier(original);
+        return "ALTER TABLE " + sqlIdentifier(database) + "." + sqlIdentifier(table)
+                + "\n    " + drop + ",\n    " + addIndexClause(index) + indexAlgorithm(index, ",\n    ");
+    }
+
+    /**
+     * 索引明细 | One row per index column with what the index page shows: kind, uniqueness, order,
+     * prefix, cardinality, comment, an estimated key length (as EXPLAIN reports key_len) and, when
+     * performance_schema is readable, how often the index was used.
+     * Rows: index_name, non_unique, seq_in_index, column_name, collation, cardinality, sub_part,
+     * index_type, index_comment, nullable, key_length, usage_count, usage_rows.
+     */
+    default Response getIndexDetails(RuntimeConfigure configure, String database, String table)
+    {
+        String schema = sqlLiteral(database);
+        String name = sqlLiteral(table);
+        // Bytes per character for the column's character set, from its declared length.
+        String charBytes = "IFNULL(c.CHARACTER_OCTET_LENGTH / NULLIF(c.CHARACTER_MAXIMUM_LENGTH, 0), 1)";
+        String keyLength = "CASE\n"
+                + "        WHEN c.DATA_TYPE IN ('tinyint') THEN 1 WHEN c.DATA_TYPE = 'smallint' THEN 2 WHEN c.DATA_TYPE = 'mediumint' THEN 3\n"
+                + "        WHEN c.DATA_TYPE IN ('int', 'integer', 'float', 'timestamp') THEN 4 WHEN c.DATA_TYPE IN ('bigint', 'double') THEN 8\n"
+                + "        WHEN c.DATA_TYPE = 'date' THEN 3 WHEN c.DATA_TYPE = 'datetime' THEN 5 WHEN c.DATA_TYPE = 'time' THEN 3 WHEN c.DATA_TYPE = 'year' THEN 1\n"
+                + "        WHEN c.DATA_TYPE = 'decimal' THEN CEIL(c.NUMERIC_PRECISION / 2)\n"
+                + "        WHEN c.DATA_TYPE IN ('char', 'varchar', 'binary', 'varbinary', 'tinytext', 'text', 'mediumtext', 'longtext', 'tinyblob', 'blob', 'mediumblob', 'longblob')\n"
+                + "            THEN IFNULL(s.SUB_PART * " + charBytes + ", c.CHARACTER_OCTET_LENGTH) + IF(c.DATA_TYPE IN ('char', 'binary'), 0, 2)\n"
+                + "        ELSE NULL END + IF(c.IS_NULLABLE = 'YES', 1, 0)";
+        String sql = "SELECT s.INDEX_NAME AS index_name, s.NON_UNIQUE AS non_unique, s.SEQ_IN_INDEX AS seq_in_index, s.COLUMN_NAME AS column_name,\n"
+                + "    s.COLLATION AS collation, s.CARDINALITY AS cardinality, s.SUB_PART AS sub_part, s.INDEX_TYPE AS index_type,\n"
+                + "    s.INDEX_COMMENT AS index_comment, s.NULLABLE AS nullable,\n"
+                // Key length only applies to BTREE-style indexes; FULLTEXT and SPATIAL report none.
+                + "    IF(s.INDEX_TYPE IN ('FULLTEXT', 'SPATIAL'), NULL, CAST(ROUND(" + keyLength + ") AS UNSIGNED)) AS key_length\n"
+                + "FROM information_schema.STATISTICS s\n"
+                + "LEFT JOIN information_schema.COLUMNS c\n"
+                + "    ON c.TABLE_SCHEMA = s.TABLE_SCHEMA AND c.TABLE_NAME = s.TABLE_NAME AND c.COLUMN_NAME = s.COLUMN_NAME\n"
+                + "WHERE s.TABLE_SCHEMA = " + schema + " AND s.TABLE_NAME = " + name + "\n"
+                + "ORDER BY s.INDEX_NAME = 'PRIMARY' DESC, s.INDEX_NAME, s.SEQ_IN_INDEX";
+        Response response = this.execute(configure, sql);
+        if (response == null || !Boolean.TRUE.equals(response.getIsSuccessful())) {
+            return response;
+        }
+        // Usage is optional: performance_schema may be off or unreadable for this account.
+        java.util.Map<String, ObjectNode> usage = new java.util.HashMap<>();
+        Response stats = this.execute(configure, "SELECT INDEX_NAME AS index_name, COUNT_STAR AS usage_count, COUNT_READ AS usage_rows\n"
+                + "FROM performance_schema.table_io_waits_summary_by_index_usage\n"
+                + "WHERE OBJECT_SCHEMA = " + schema + " AND OBJECT_NAME = " + name + " AND INDEX_NAME IS NOT NULL");
+        if (stats != null && Boolean.TRUE.equals(stats.getIsSuccessful()) && stats.getColumns() != null) {
+            stats.getColumns().stream().filter(ObjectNode.class::isInstance).map(ObjectNode.class::cast)
+                    .forEach(row -> usage.put(row.path("index_name").asText(), row));
+        }
+        if (response.getColumns() != null) {
+            response.getColumns().stream().filter(ObjectNode.class::isInstance).map(ObjectNode.class::cast).forEach(row -> {
+                ObjectNode used = usage.get(row.path("index_name").asText());
+                row.set("usage_count", used == null ? row.nullNode() : used.get("usage_count"));
+                row.set("usage_rows", used == null ? row.nullNode() : used.get("usage_rows"));
+            });
+        }
+        List<String> headers = response.getHeaders() == null ? Lists.newArrayList() : Lists.newArrayList(response.getHeaders());
+        headers.add("usage_count");
+        headers.add("usage_rows");
+        response.setHeaders(headers);
+        response.setContent(sql);
+        return response;
+    }
+
+    /**
+     * 外键明细 | One row per foreign key column of this table: the referenced column, the update
+     * and delete rules, and whether the referenced table still exists.
+     * Rows: constraint_name, column_name, ordinal_position, referenced_database, referenced_table,
+     * referenced_column, update_rule, delete_rule, referenced_exists.
+     */
+    default Response getForeignKeyDetails(RuntimeConfigure configure, String database, String table)
+    {
+        String sql = "SELECT k.CONSTRAINT_NAME AS constraint_name, k.COLUMN_NAME AS column_name, k.ORDINAL_POSITION AS ordinal_position,\n"
+                + "    k.REFERENCED_TABLE_SCHEMA AS referenced_database, k.REFERENCED_TABLE_NAME AS referenced_table,\n"
+                + "    k.REFERENCED_COLUMN_NAME AS referenced_column, r.UPDATE_RULE AS update_rule, r.DELETE_RULE AS delete_rule,\n"
+                + "    IF(t.TABLE_NAME IS NULL, 0, 1) AS referenced_exists\n"
+                + "FROM information_schema.KEY_COLUMN_USAGE k\n"
+                + "JOIN information_schema.REFERENTIAL_CONSTRAINTS r\n"
+                + "    ON r.CONSTRAINT_SCHEMA = k.CONSTRAINT_SCHEMA AND r.CONSTRAINT_NAME = k.CONSTRAINT_NAME AND r.TABLE_NAME = k.TABLE_NAME\n"
+                + "LEFT JOIN information_schema.TABLES t\n"
+                + "    ON t.TABLE_SCHEMA = k.REFERENCED_TABLE_SCHEMA AND t.TABLE_NAME = k.REFERENCED_TABLE_NAME\n"
+                + "WHERE k.TABLE_SCHEMA = " + sqlLiteral(database) + " AND k.TABLE_NAME = " + sqlLiteral(table) + " AND k.REFERENCED_TABLE_NAME IS NOT NULL\n"
+                + "ORDER BY k.CONSTRAINT_NAME, k.ORDINAL_POSITION";
+        Response response = this.execute(configure, sql);
+        if (response != null) {
+            response.setContent(sql);
+        }
+        return response;
+    }
+
+    default Response createForeignKey(RuntimeConfigure configure, TableDefinition definition)
+    {
+        return this.executeStatements(definition.getForeignKeys().stream()
+                .map(key -> "ALTER TABLE " + sqlIdentifier(definition.getDatabase()) + "." + sqlIdentifier(definition.getName()) + this.addForeignKeyClause(definition, key))
+                .collect(Collectors.toList()), configure, definition);
+    }
+
+    /**
+     * 修改或重建外键 | Change or rebuild a foreign key: MySQL only drops and adds a foreign key in one
+     * ALTER with ALGORITHM=INPLACE, which adding one with foreign key checks on does not allow, so it
+     * is dropped first and added in a second statement.
+     */
+    default Response alterForeignKey(RuntimeConfigure configure, TableDefinition definition)
+    {
+        String table = sqlIdentifier(definition.getDatabase()) + "." + sqlIdentifier(definition.getName());
+        List<String> statements = Lists.newArrayList();
+        definition.getForeignKeys().forEach(key -> {
+            String original = key.getOriginalName() == null || key.getOriginalName().isEmpty() ? key.getName() : key.getOriginalName();
+            statements.add("ALTER TABLE " + table + " DROP FOREIGN KEY " + sqlIdentifier(original));
+            statements.add("ALTER TABLE " + table + this.addForeignKeyClause(definition, key));
+        });
+        return this.executeStatements(statements, configure, definition);
+    }
+
+    default Response dropForeignKey(RuntimeConfigure configure, TableDefinition definition)
+    {
+        String table = sqlIdentifier(definition.getDatabase()) + "." + sqlIdentifier(definition.getName());
+        return this.executeStatements(definition.getForeignKeys().stream()
+                .map(key -> "ALTER TABLE " + table + " DROP FOREIGN KEY " + sqlIdentifier(key.getName()))
+                .collect(Collectors.toList()), configure, definition);
+    }
+
+    /** The ADD CONSTRAINT part, laid out one clause per line as the prototype shows it. */
+    default String addForeignKeyClause(TableDefinition definition, ForeignKeyDefinition key)
+    {
+        String referencedDatabase = key.getReferencedDatabase() == null || key.getReferencedDatabase().isEmpty() ? definition.getDatabase() : key.getReferencedDatabase();
+        StringBuilder clause = new StringBuilder()
+                .append("\n    ADD CONSTRAINT ").append(sqlIdentifier(key.getName()))
+                .append("\n    FOREIGN KEY (").append(key.getColumns().stream().map(this::sqlIdentifier).collect(Collectors.joining(", "))).append(")")
+                .append("\n    REFERENCES ").append(sqlIdentifier(referencedDatabase)).append(".").append(sqlIdentifier(key.getReferencedTable()))
+                .append(" (").append(key.getReferencedColumns().stream().map(this::sqlIdentifier).collect(Collectors.joining(", "))).append(")");
+        String onUpdate = foreignKeyRule(key.getOnUpdate());
+        String onDelete = foreignKeyRule(key.getOnDelete());
+        if (!onUpdate.isEmpty()) {
+            clause.append("\n    ON UPDATE ").append(onUpdate);
+        }
+        if (!onDelete.isEmpty()) {
+            clause.append("\n    ON DELETE ").append(onDelete);
+        }
+        return clause.toString();
+    }
+
+    /** Only the referential actions InnoDB enforces; anything else falls back to the default. */
+    default String foreignKeyRule(String rule)
+    {
+        String value = rule == null ? "" : rule.trim().toUpperCase(java.util.Locale.ROOT).replaceAll("\\s+", " ");
+        return java.util.Arrays.asList("RESTRICT", "CASCADE", "SET NULL", "NO ACTION").contains(value) ? value : "";
+    }
+
+    /**
+     * 触发器明细 | Triggers of the table with timing, event, body, definer, creation time, SQL mode
+     * and client character set.
+     */
+    default Response getTriggerDetails(RuntimeConfigure configure, String database, String table)
+    {
+        String sql = "SELECT TRIGGER_NAME AS trigger_name, ACTION_TIMING AS timing, EVENT_MANIPULATION AS event, ACTION_STATEMENT AS body,\n"
+                + "    DEFINER AS definer, CREATED AS created, SQL_MODE AS sql_mode, CHARACTER_SET_CLIENT AS charset, ACTION_ORDER AS action_order\n"
+                + "FROM information_schema.TRIGGERS\n"
+                + "WHERE EVENT_OBJECT_SCHEMA = " + sqlLiteral(database) + " AND EVENT_OBJECT_TABLE = " + sqlLiteral(table) + "\n"
+                + "ORDER BY ACTION_TIMING, EVENT_MANIPULATION, ACTION_ORDER";
+        Response response = this.execute(configure, sql);
+        if (response != null) {
+            response.setContent(sql);
+        }
+        return response;
+    }
+
+    default Response createTrigger(RuntimeConfigure configure, TableDefinition definition)
+    {
+        return this.executeStatements(definition.getTriggers().stream()
+                .map(trigger -> this.createTriggerStatement(definition.getDatabase(), definition.getName(), trigger))
+                .collect(Collectors.toList()), configure, definition);
+    }
+
+    default Response dropTrigger(RuntimeConfigure configure, TableDefinition definition)
+    {
+        return this.executeStatements(definition.getTriggers().stream()
+                .map(trigger -> "DROP TRIGGER " + sqlIdentifier(definition.getDatabase()) + "." + sqlIdentifier(trigger.getName()))
+                .collect(Collectors.toList()), configure, definition);
+    }
+
+    /**
+     * 修改或重建触发器 | MySQL has no ALTER TRIGGER, so the trigger is dropped and created again. The
+     * original statement is read first; when the new one fails it is run again so the table keeps
+     * its trigger.
+     */
+    default Response alterTrigger(RuntimeConfigure configure, TableDefinition definition)
+    {
+        TriggerDefinition trigger = definition.getTriggers().get(0);
+        String original = trigger.getOriginalName() == null || trigger.getOriginalName().isEmpty() ? trigger.getName() : trigger.getOriginalName();
+        String drop = "DROP TRIGGER " + sqlIdentifier(definition.getDatabase()) + "." + sqlIdentifier(original) + ";";
+        String create = this.createTriggerStatement(definition.getDatabase(), definition.getName(), trigger) + ";";
+        if (definition.isPreview()) {
+            return this.getResponse(drop + "\n" + create, configure, definition);
+        }
+        Response shown = this.execute(configure, "SHOW CREATE TRIGGER " + sqlIdentifier(definition.getDatabase()) + "." + sqlIdentifier(original));
+        String restore = shown != null && Boolean.TRUE.equals(shown.getIsSuccessful()) && shown.getColumns() != null && !shown.getColumns().isEmpty()
+                && shown.getColumns().get(0) instanceof ObjectNode
+                ? ((ObjectNode) shown.getColumns().get(0)).path("SQL Original Statement").asText(null) : null;
+        Response dropped = this.getResponse(drop, configure, definition);
+        if (!Boolean.TRUE.equals(dropped.getIsSuccessful())) {
+            dropped.setContent(drop);
+            return dropped;
+        }
+        Response created = this.getResponse(create, configure, definition);
+        created.setContent(drop + "\n" + create);
+        if (!Boolean.TRUE.equals(created.getIsSuccessful()) && restore != null) {
+            Response restored = this.execute(configure, restore);
+            boolean back = restored != null && Boolean.TRUE.equals(restored.getIsSuccessful());
+            created.setContent(drop + "\n" + create + "\n" + restore + ";");
+            created.setMessage(created.getMessage() + (back ? " (the original trigger was restored)" : " (restoring the original trigger failed: " + (restored == null ? "" : restored.getMessage()) + ")"));
+        }
+        return created;
+    }
+
+    default String createTriggerStatement(String database, String table, TriggerDefinition trigger)
+    {
+        String timing = "AFTER".equalsIgnoreCase(trigger.getTiming()) ? "AFTER" : "BEFORE";
+        String event = trigger.getEvent() == null ? "" : trigger.getEvent().trim().toUpperCase(java.util.Locale.ROOT);
+        if (!java.util.Arrays.asList("INSERT", "UPDATE", "DELETE").contains(event)) {
+            throw new IllegalArgumentException("Trigger event must be INSERT, UPDATE or DELETE");
+        }
+        String body = trigger.getBody() == null ? "" : trigger.getBody().trim().replaceAll(";+\\s*$", "");
+        if (body.isEmpty()) {
+            throw new IllegalArgumentException("Trigger body is required");
+        }
+        StringBuilder sql = new StringBuilder("CREATE ");
+        String definer = trigger.getDefiner() == null ? "" : trigger.getDefiner().trim();
+        if (!definer.isEmpty()) {
+            int at = definer.lastIndexOf('@');
+            String user = (at < 0 ? definer : definer.substring(0, at)).replaceAll("^[`'\"]|[`'\"]$", "");
+            String host = (at < 0 ? "%" : definer.substring(at + 1)).replaceAll("^[`'\"]|[`'\"]$", "");
+            sql.append("DEFINER = ").append(sqlLiteral(user)).append("@").append(sqlLiteral(host)).append(" ");
+        }
+        return sql.append("TRIGGER ").append(sqlIdentifier(database)).append(".").append(sqlIdentifier(trigger.getName()))
+                .append("\n").append(timing).append(" ").append(event).append(" ON ").append(sqlIdentifier(database)).append(".").append(sqlIdentifier(table))
+                .append("\nFOR EACH ROW\n").append(body).toString();
+    }
+
+    /**
+     * 表属性 | The table's options and statistics: type, engine, row format, character set and
+     * collation, next auto-increment value, data and index bytes, rows, comment, and index and
+     * foreign key counts.
+     */
+    default Response getTableProperties(RuntimeConfigure configure, String database, String table)
+    {
+        String schema = sqlLiteral(database);
+        String name = sqlLiteral(table);
+        String sql = "SELECT t.TABLE_NAME AS table_name, t.TABLE_SCHEMA AS table_schema, t.TABLE_TYPE AS table_type, t.ENGINE AS engine,\n"
+                + "    t.ROW_FORMAT AS row_format, t.CREATE_TIME AS create_time, t.UPDATE_TIME AS update_time, c.CHARACTER_SET_NAME AS charset,\n"
+                + "    t.TABLE_COLLATION AS collation, t.AUTO_INCREMENT AS auto_increment, t.DATA_LENGTH AS data_length,\n"
+                + "    t.INDEX_LENGTH AS index_length, t.TABLE_ROWS AS table_rows, t.TABLE_COMMENT AS table_comment,\n"
+                + "    (SELECT COUNT(DISTINCT INDEX_NAME) FROM information_schema.STATISTICS s WHERE s.TABLE_SCHEMA = t.TABLE_SCHEMA AND s.TABLE_NAME = t.TABLE_NAME) AS index_count,\n"
+                + "    (SELECT COUNT(*) FROM information_schema.REFERENTIAL_CONSTRAINTS r WHERE r.CONSTRAINT_SCHEMA = t.TABLE_SCHEMA AND r.TABLE_NAME = t.TABLE_NAME) AS foreign_key_count\n"
+                + "FROM information_schema.TABLES t\n"
+                + "LEFT JOIN information_schema.COLLATIONS c ON c.COLLATION_NAME = t.TABLE_COLLATION\n"
+                + "WHERE t.TABLE_SCHEMA = " + schema + " AND t.TABLE_NAME = " + name;
+        Response response = this.execute(configure, sql);
+        if (response != null) {
+            response.setContent(sql);
+        }
+        return response;
+    }
+
+    /** 字符集与排序规则 | Every character set with its collations; is_default marks the default one. */
+    default Response getCharacterSets(RuntimeConfigure configure)
+    {
+        return this.execute(configure, "SELECT CHARACTER_SET_NAME AS charset, COLLATION_NAME AS collation, IS_DEFAULT AS is_default\n"
+                + "FROM information_schema.COLLATIONS WHERE CHARACTER_SET_NAME IS NOT NULL ORDER BY CHARACTER_SET_NAME, COLLATION_NAME");
+    }
+
+    /** 修改表属性 | Changes the given table options in one ALTER TABLE. */
+    default Response alterTableOptions(RuntimeConfigure configure, TableDefinition definition)
+    {
+        return this.executeStatements(Lists.newArrayList(this.tableOptionsStatement(definition.getDatabase(), definition.getName(), definition.getOptions())),
+                configure, definition);
+    }
+
+    default String tableOptionsStatement(String database, String table, TableOptionsDefinition options)
+    {
+        List<String> clauses = Lists.newArrayList();
+        if (options != null) {
+            if (options.getEngine() != null) {
+                clauses.add("ENGINE = " + tableOptionWord(options.getEngine(), "engine"));
+            }
+            if (options.getRowFormat() != null) {
+                clauses.add("ROW_FORMAT = " + tableOptionWord(options.getRowFormat(), "row format").toUpperCase(java.util.Locale.ROOT));
+            }
+            if (options.getAutoIncrement() != null) {
+                if (options.getAutoIncrement() < 1) {
+                    throw new IllegalArgumentException("The next auto-increment value must be at least 1");
+                }
+                clauses.add("AUTO_INCREMENT = " + options.getAutoIncrement());
+            }
+            if (options.getCharset() != null) {
+                clauses.add("DEFAULT CHARACTER SET = " + tableOptionWord(options.getCharset(), "character set"));
+            }
+            if (options.getCollate() != null) {
+                clauses.add("COLLATE = " + tableOptionWord(options.getCollate(), "collation"));
+            }
+            if (options.getComment() != null) {
+                clauses.add("COMMENT = " + sqlLiteral(options.getComment()));
+            }
+        }
+        if (clauses.isEmpty()) {
+            throw new IllegalArgumentException("No table option to change");
+        }
+        return "ALTER TABLE " + sqlIdentifier(database) + "." + sqlIdentifier(table) + "\n    " + String.join("\n    ", clauses);
+    }
+
+    /** Engines, row formats, character sets and collations are bare words; anything else is refused. */
+    default String tableOptionWord(String value, String option)
+    {
+        String word = value.trim();
+        if (!word.matches("[A-Za-z0-9_]+")) {
+            throw new IllegalArgumentException("Invalid " + option + ": " + value);
+        }
+        return word;
     }
 
     default Response getPrimaryKeys(RuntimeConfigure configure, String database, String table)
@@ -688,56 +1271,82 @@ public interface PluginService
      */
     default Response getDatabase(RuntimeConfigure configure, String database)
     {
-        String sql = "SELECT \n" +
-                "    s.SCHEMA_NAME as object_name,\n" +
-                "    s.DEFAULT_CHARACTER_SET_NAME as object_charset,\n" +
-                "    s.DEFAULT_COLLATION_NAME as object_collation,\n" +
-                "    db_stats.object_create_time,\n" +
-                "    db_stats.object_update_time,\n" +
-                "    db_stats.object_data_size,\n" +
-                "    db_stats.object_index_size,\n" +
-                "    db_stats.object_total_size,\n" +
-                "    db_stats.object_table_count,\n" +
-                "    db_stats.object_column_count,\n" +
-                "    db_stats.object_index_count,\n" +
-                "    db_stats.object_view_count,\n" +
-                "    db_stats.object_procedure_count,\n" +
-                "    db_stats.object_trigger_count,\n" +
-                "    db_stats.object_foreign_key_count,\n" +
-                "    db_stats.object_total_rows\n" +
-                "FROM\n" +
-                "    information_schema.SCHEMATA s,\n" +
-                "    (\n" +
-                "        SELECT\n" +
-                "            TABLE_SCHEMA,\n" +
-                "            MIN(CREATE_TIME) as object_create_time,\n" +
-                "            MAX(UPDATE_TIME) as object_update_time,\n" +
-                "            ROUND(SUM(DATA_LENGTH)/1024/1024, 2) as object_data_size,\n" +
-                "            ROUND(SUM(INDEX_LENGTH)/1024/1024, 2) as object_index_size,\n" +
-                "            ROUND(SUM(DATA_LENGTH + INDEX_LENGTH)/1024/1024, 2) as object_total_size,\n" +
-                "            COUNT(*) as object_table_count,\n" +
-                "            SUM(TABLE_ROWS) as object_total_rows,\n" +
-                "            (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{0}') as object_column_count,\n" +
-                "            (SELECT COUNT(DISTINCT INDEX_NAME) FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = '{0}') as object_index_count,\n" +
-                "            (SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_SCHEMA = '{0}') as object_view_count,\n" +
-                "            (SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = '{0}' AND ROUTINE_TYPE = 'PROCEDURE') as object_procedure_count,\n" +
-                "            (SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = '{0}') as object_trigger_count,\n" +
-                "            (SELECT COUNT(DISTINCT CONSTRAINT_NAME) FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = '{0}') as object_foreign_key_count\n" +
-                "        FROM\n" +
-                "            information_schema.TABLES\n" +
-                "        WHERE\n" +
-                "            TABLE_SCHEMA = '{0}'\n" +
-                "            AND TABLE_TYPE = 'BASE TABLE'\n" +
-                "        GROUP BY\n" +
-                "            TABLE_SCHEMA\n" +
-                "    ) as db_stats\n" +
-                "WHERE\n" +
-                "    s.SCHEMA_NAME = '{0}';";
+        String schema = sqlLiteral(database);
+        // A LEFT JOIN keeps the schema row for a database without tables; counts cover base tables only.
+        String sql = "SELECT\n"
+                + "    s.SCHEMA_NAME AS object_name,\n"
+                + "    s.DEFAULT_CHARACTER_SET_NAME AS object_charset,\n"
+                + "    s.DEFAULT_COLLATION_NAME AS object_collation,\n"
+                + "    t.object_create_time,\n"
+                + "    t.object_update_time,\n"
+                + "    ROUND(IFNULL(t.data_length, 0) / 1024 / 1024, 2) AS object_data_size,\n"
+                + "    ROUND(IFNULL(t.index_length, 0) / 1024 / 1024, 2) AS object_index_size,\n"
+                + "    ROUND(IFNULL(t.data_length + t.index_length, 0) / 1024 / 1024, 2) AS object_total_size,\n"
+                + "    IFNULL(t.data_length, 0) AS object_data_length,\n"
+                + "    IFNULL(t.index_length, 0) AS object_index_length,\n"
+                + "    IFNULL(t.data_free, 0) AS object_data_free,\n"
+                + "    IFNULL(t.table_count, 0) AS object_table_count,\n"
+                + "    IFNULL(t.total_rows, 0) AS object_total_rows,\n"
+                + "    (SELECT COUNT(*) FROM information_schema.COLUMNS c JOIN information_schema.TABLES b\n"
+                + "        ON b.TABLE_SCHEMA = c.TABLE_SCHEMA AND b.TABLE_NAME = c.TABLE_NAME AND b.TABLE_TYPE = 'BASE TABLE'\n"
+                + "        WHERE c.TABLE_SCHEMA = " + schema + ") AS object_column_count,\n"
+                + "    (SELECT COUNT(*) FROM (SELECT DISTINCT TABLE_NAME, INDEX_NAME FROM information_schema.STATISTICS\n"
+                + "        WHERE TABLE_SCHEMA = " + schema + ") i) AS object_index_count,\n"
+                + "    (SELECT COUNT(*) FROM information_schema.VIEWS WHERE TABLE_SCHEMA = " + schema + ") AS object_view_count,\n"
+                + "    (SELECT COUNT(*) FROM information_schema.ROUTINES WHERE ROUTINE_SCHEMA = " + schema + " AND ROUTINE_TYPE = 'PROCEDURE') AS object_procedure_count,\n"
+                + "    (SELECT COUNT(*) FROM information_schema.EVENTS WHERE EVENT_SCHEMA = " + schema + ") AS object_event_count,\n"
+                + "    (SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_SCHEMA = " + schema + ") AS object_trigger_count,\n"
+                + "    (SELECT COUNT(*) FROM information_schema.REFERENTIAL_CONSTRAINTS WHERE CONSTRAINT_SCHEMA = " + schema + ") AS object_foreign_key_count\n"
+                + "FROM information_schema.SCHEMATA s\n"
+                + "LEFT JOIN (\n"
+                + "    SELECT TABLE_SCHEMA, MIN(CREATE_TIME) AS object_create_time, MAX(UPDATE_TIME) AS object_update_time,\n"
+                + "        SUM(DATA_LENGTH) AS data_length, SUM(INDEX_LENGTH) AS index_length, SUM(DATA_FREE) AS data_free,\n"
+                + "        COUNT(*) AS table_count, SUM(TABLE_ROWS) AS total_rows\n"
+                + "    FROM information_schema.TABLES\n"
+                + "    WHERE TABLE_SCHEMA = " + schema + " AND TABLE_TYPE = 'BASE TABLE'\n"
+                + "    GROUP BY TABLE_SCHEMA\n"
+                + ") t ON t.TABLE_SCHEMA = s.SCHEMA_NAME\n"
+                + "WHERE s.SCHEMA_NAME = " + schema;
+        return this.execute(configure, sql);
+    }
 
-        return this.execute(
-                configure,
-                sql.replace("{0}", database)
-        );
+    /**
+     * 数据库表概览 | Base tables of the database with engine, estimated rows, data and index sizes in
+     * bytes, creation and update times and comment, by name.
+     */
+    default Response getDatabaseTables(RuntimeConfigure configure, String database)
+    {
+        String sql = "SELECT TABLE_NAME AS object_name, ENGINE AS object_engine, TABLE_ROWS AS object_rows,\n"
+                + "    DATA_LENGTH AS object_data_length, INDEX_LENGTH AS object_index_length,\n"
+                + "    CREATE_TIME AS object_create_time, UPDATE_TIME AS object_update_time, TABLE_COMMENT AS object_comment\n"
+                + "FROM information_schema.TABLES\n"
+                + "WHERE TABLE_SCHEMA = " + sqlLiteral(database) + " AND TABLE_TYPE = 'BASE TABLE'\n"
+                + "ORDER BY TABLE_NAME";
+        return this.execute(configure, sql);
+    }
+
+    /**
+     * 修改数据库默认字符集与排序规则 | Changes the database's default character set and collation in
+     * one ALTER DATABASE; tables keep theirs, only new tables follow the new default.
+     */
+    default Response alterDatabaseOptions(RuntimeConfigure configure, TableDefinition definition)
+    {
+        return this.executeStatements(Lists.newArrayList(this.databaseOptionsStatement(definition.getDatabase(), definition.getOptions())), configure, definition);
+    }
+
+    default String databaseOptionsStatement(String database, TableOptionsDefinition options)
+    {
+        List<String> clauses = Lists.newArrayList();
+        if (options != null && options.getCharset() != null) {
+            clauses.add("DEFAULT CHARACTER SET = " + tableOptionWord(options.getCharset(), "character set"));
+        }
+        if (options != null && options.getCollate() != null) {
+            clauses.add("DEFAULT COLLATE = " + tableOptionWord(options.getCollate(), "collation"));
+        }
+        if (clauses.isEmpty()) {
+            throw new IllegalArgumentException("Nothing to change");
+        }
+        return "ALTER DATABASE " + sqlIdentifier(database) + " " + String.join(" ", clauses);
     }
 
     /**
@@ -969,6 +1578,91 @@ public interface PluginService
         );
     }
 
+    /**
+     * 生成表 DDL | Builds one kind of DDL for the table from SHOW CREATE TABLE: create (as printed),
+     * structure (columns and options only), indexes, constraints, alter (one MODIFY per column),
+     * alter-table (one statement restating every column and option) or sample-data (INSERT
+     * statements for the first rows). Nothing is changed; the content holds the generated SQL.
+     */
+    default Response getTableDdl(RuntimeConfigure configure, String database, String table, String kind)
+    {
+        String target = sqlIdentifier(database) + "." + sqlIdentifier(table);
+        Response shown = this.execute(configure, "SHOW CREATE TABLE " + target);
+        if (shown == null || !Boolean.TRUE.equals(shown.getIsSuccessful())) {
+            return shown;
+        }
+        String create = shown.getColumns() == null || shown.getColumns().isEmpty() || !(shown.getColumns().get(0) instanceof ObjectNode)
+                ? null : ((ObjectNode) shown.getColumns().get(0)).path("Create Table").asText(null);
+        if (create == null) {
+            throw new IllegalArgumentException("Only tables have a DDL statement");
+        }
+        TableDdl ddl = TableDdl.parse(create);
+        String sql;
+        switch (kind == null ? "" : kind) {
+            case "create":
+                sql = ddl.create();
+                break;
+            case "structure":
+                sql = ddl.structure();
+                break;
+            case "indexes":
+                sql = ddl.indexes(target);
+                break;
+            case "constraints":
+                sql = ddl.constraints(target);
+                break;
+            case "alter":
+                sql = ddl.alterColumns(target);
+                break;
+            case "alter-table":
+                sql = ddl.alterTable(target);
+                break;
+            case "sample-data":
+                return this.sampleInserts(configure, target, ddl.insertableColumns());
+            default:
+                throw new IllegalArgumentException("Unknown DDL kind: " + kind);
+        }
+        return Response.builder().isSuccessful(true).isConnected(true).headers(Lists.newArrayList()).columns(Lists.newArrayList())
+                .types(Lists.newArrayList()).content(sql).build();
+    }
+
+    /** One multi-row INSERT for the first ten rows of the table; empty when the table has none. */
+    default Response sampleInserts(RuntimeConfigure configure, String target, List<String> columns)
+    {
+        if (columns.isEmpty()) {
+            throw new IllegalArgumentException("The table has no insertable columns");
+        }
+        String select = "SELECT " + columns.stream().map(this::sqlIdentifier).collect(Collectors.joining(", ")) + " FROM " + target + " LIMIT 10";
+        Response rows = this.execute(configure, select);
+        if (rows == null || !Boolean.TRUE.equals(rows.getIsSuccessful())) {
+            return rows;
+        }
+        ObjectMapper mapper = new ObjectMapper();
+        List<String> values = Lists.newArrayList();
+        for (Object row : rows.getColumns() == null ? Lists.newArrayList() : rows.getColumns()) {
+            JsonNode node = row instanceof JsonNode ? (JsonNode) row : mapper.valueToTree(row);
+            values.add("(" + columns.stream().map(column -> this.sqlValue(node.get(column))).collect(Collectors.joining(", ")) + ")");
+        }
+        String sql = values.isEmpty() ? "" : "INSERT INTO " + target + " (" + columns.stream().map(this::sqlIdentifier).collect(Collectors.joining(", ")) + ") VALUES\n  "
+                + String.join(",\n  ", values) + ";";
+        return Response.builder().isSuccessful(true).isConnected(true).headers(Lists.newArrayList()).columns(Lists.newArrayList())
+                .types(Lists.newArrayList()).content(sql).build();
+    }
+
+    default String sqlValue(JsonNode value)
+    {
+        if (value == null || value.isNull() || value.isMissingNode()) {
+            return "NULL";
+        }
+        if (value.isNumber()) {
+            return value.asText();
+        }
+        if (value.isBoolean()) {
+            return value.asBoolean() ? "1" : "0";
+        }
+        return sqlLiteral(value.isValueNode() ? value.asText() : value.toString());
+    }
+
     default Response getSuggests(RuntimeConfigure configure, String keyword)
     {
         String sql = "(\n" +
@@ -1096,9 +1790,42 @@ public interface PluginService
      */
     default Response createTable(RuntimeConfigure configure, TableDefinition definition)
     {
-        AbstractTable tableDefinition = CreateTable.create(definition.getDatabase(), definition.getName())
-                .comment(definition.getComment())
-                .engine(definition.getEngine());
+        AbstractTable tableDefinition = buildCreateTable(definition);
+        return this.getResponse(tableDefinition.build(), configure, definition);
+    }
+
+    /** Builds the CREATE TABLE statement for a definition without executing or recording anything. */
+    default Response previewCreateTable(RuntimeConfigure configure, TableDefinition definition, String kind)
+    {
+        CreateTable tableDefinition = buildCreateTable(definition);
+        Response response = new Response();
+        response.setIsSuccessful(Boolean.TRUE);
+        response.setContent(tableDefinition.build(kind == null || kind.isBlank() ? "full" : kind));
+        return response;
+    }
+
+    private CreateTable buildCreateTable(TableDefinition definition)
+    {
+        CreateTable tableDefinition = CreateTable.create(definition.getDatabase(), definition.getName());
+        tableDefinition.comment(definition.getComment());
+        tableDefinition.engine(definition.getEngine());
+        tableDefinition.rowFormat(definition.getFormat());
+
+        if (definition.getAutoIncrement() > 0) {
+            tableDefinition.autoIncrement(definition.getAutoIncrement());
+        }
+
+        if (StringUtils.isNotEmpty(definition.getCharset())) {
+            tableDefinition.charset(definition.getCharset());
+        }
+
+        if (StringUtils.isNotEmpty(definition.getCollate())) {
+            tableDefinition.collate(definition.getCollate());
+        }
+
+        if (StringUtils.isNotEmpty(definition.getDataDirectory())) {
+            tableDefinition.dataDirectory(definition.getDataDirectory());
+        }
 
         definition.getColumns().forEach(col -> {
             if (col.isPrimaryKey()) {
@@ -1110,11 +1837,16 @@ public interface PluginService
             tableDefinition.addColumn(column);
         });
 
-        return this.getResponse(
-                tableDefinition.build(),
-                configure,
-                definition
-        );
+        definition.getIndexes()
+                .forEach(index -> {
+                    Index builder = Index.create(index.getName(), index.getColumns().toArray(new String[0]));
+                    if (index.isUnique()) {
+                        builder.unique();
+                    }
+                    tableDefinition.addIndex(builder);
+                });
+
+        return tableDefinition;
     }
 
     /**
@@ -1244,6 +1976,9 @@ public interface PluginService
      */
     default Response dropColumn(RuntimeConfigure configure, TableDefinition definition)
     {
+        if (definition.isForce()) {
+            return this.executeStatements(this.forceDropColumnStatements(configure, definition), configure, definition);
+        }
         AlterTable tableDefinition = AlterTable.create(definition.getDatabase(), definition.getName());
 
         definition.getColumns().forEach(col -> tableDefinition.dropColumn(col.getName()));
@@ -1253,6 +1988,214 @@ public interface PluginService
                 configure,
                 definition
         );
+    }
+
+    /**
+     * 表依赖对象 | Objects that depend on the table, checked before dropping it: foreign keys of other
+     * tables referencing it (incoming), views naming it, stored procedures and functions of the
+     * same schema mentioning it, and its own triggers, which are dropped with it. Routine bodies are
+     * matched by name, so a routine listed may only mention the table. Each row has object_type
+     * (foreign_key, view, routine or trigger), object_schema, object_name and object_detail.
+     */
+    default Response getTableDependencies(RuntimeConfigure configure, String database, String table)
+    {
+        String schema = sqlLiteral(database);
+        String name = sqlLiteral(table);
+        List<String> queries = Lists.newArrayList(
+                "SELECT 'foreign_key' AS object_type, TABLE_SCHEMA AS object_schema, CONSTRAINT_NAME AS object_name,\n"
+                        + "    CONCAT(TABLE_NAME, ' (', GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', '), ') -> (',\n"
+                        + "        GROUP_CONCAT(REFERENCED_COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', '), ')') AS object_detail\n"
+                        + "FROM information_schema.KEY_COLUMN_USAGE\n"
+                        + "WHERE REFERENCED_TABLE_SCHEMA = " + schema + " AND REFERENCED_TABLE_NAME = " + name + "\n"
+                        + "    AND NOT (TABLE_SCHEMA = " + schema + " AND TABLE_NAME = " + name + ")\n"
+                        + "GROUP BY TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME",
+                "SELECT 'view' AS object_type, TABLE_SCHEMA AS object_schema, TABLE_NAME AS object_name, '' AS object_detail\n"
+                        + "FROM information_schema.VIEWS\n"
+                        + "WHERE LOCATE(" + sqlLiteral("`" + database + "`.`" + table + "`") + ", VIEW_DEFINITION) > 0",
+                "SELECT 'routine' AS object_type, ROUTINE_SCHEMA AS object_schema, ROUTINE_NAME AS object_name, ROUTINE_TYPE AS object_detail\n"
+                        + "FROM information_schema.ROUTINES\n"
+                        + "WHERE ROUTINE_SCHEMA = " + schema + " AND LOCATE(LOWER(" + name + "), LOWER(ROUTINE_DEFINITION)) > 0",
+                "SELECT 'trigger' AS object_type, TRIGGER_SCHEMA AS object_schema, TRIGGER_NAME AS object_name,\n"
+                        + "    CONCAT(ACTION_TIMING, ' ', EVENT_MANIPULATION) AS object_detail\n"
+                        + "FROM information_schema.TRIGGERS\n"
+                        + "WHERE EVENT_OBJECT_SCHEMA = " + schema + " AND EVENT_OBJECT_TABLE = " + name);
+        Response response = Response.builder()
+                .isSuccessful(true)
+                .isConnected(true)
+                .headers(Lists.newArrayList("object_type", "object_schema", "object_name", "object_detail"))
+                .types(Lists.newArrayList("String", "String", "String", "String"))
+                .columns(Lists.newArrayList())
+                .build();
+        List<String> failures = Lists.newArrayList();
+        for (String query : queries) {
+            Response part = this.execute(configure, query);
+            if (part != null && Boolean.TRUE.equals(part.getIsSuccessful()) && part.getColumns() != null) {
+                response.getColumns().addAll(part.getColumns());
+            }
+            else if (part != null && part.getMessage() != null) {
+                failures.add(part.getMessage());
+            }
+        }
+        if (!failures.isEmpty()) {
+            response.setMessage(String.join("; ", failures));
+        }
+        return response;
+    }
+
+    /**
+     * Objects that depend on the given columns: indexes, foreign keys in both directions, triggers on
+     * the table, views and generated columns that reference them. Each kind is looked up on its own,
+     * so a catalog view the account cannot read only hides that kind.
+     * Rows: object_type (index, foreign_key, trigger, view, other), object_name, object_kind,
+     * object_columns, object_schema, object_table, object_detail.
+     */
+    default Response getColumnDependencies(RuntimeConfigure configure, TableDefinition definition)
+    {
+        String database = sqlLiteral(definition.getDatabase());
+        String table = sqlLiteral(definition.getName());
+        List<String> names = definition.getColumns().stream().map(ColumnDefinition::getName).collect(Collectors.toList());
+        String columns = names.stream().map(this::sqlLiteral).collect(Collectors.joining(", "));
+        // Backtick-quoted names as MySQL writes them into trigger, view and generation expressions.
+        java.util.function.Function<String, String> mentions = expression -> names.stream()
+                .map(name -> "LOCATE(" + sqlLiteral("`" + name + "`") + ", " + expression + ") > 0")
+                .collect(Collectors.joining(" OR ", "(", ")"));
+        String select = "SELECT {type} AS object_type, {name} AS object_name, {kind} AS object_kind, {columns} AS object_columns,\n"
+                + "    {schema} AS object_schema, {table} AS object_table, {detail} AS object_detail\n";
+        List<String> queries = Lists.newArrayList(
+                select.replace("{type}", "'index'").replace("{name}", "INDEX_NAME")
+                        .replace("{kind}", "CASE WHEN INDEX_NAME = 'PRIMARY' THEN 'PRIMARY' WHEN MAX(NON_UNIQUE) = 0 THEN 'UNIQUE' "
+                                + "WHEN MAX(INDEX_TYPE) = 'FULLTEXT' THEN 'FULLTEXT' ELSE 'NORMAL' END")
+                        .replace("{columns}", "GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX SEPARATOR ', ')")
+                        .replace("{schema}", "TABLE_SCHEMA").replace("{table}", "TABLE_NAME").replace("{detail}", "''")
+                        + "FROM information_schema.STATISTICS\n"
+                        + "WHERE TABLE_SCHEMA = " + database + " AND TABLE_NAME = " + table + "\n"
+                        + "GROUP BY TABLE_SCHEMA, TABLE_NAME, INDEX_NAME\n"
+                        + "HAVING SUM(COLUMN_NAME IN (" + columns + ")) > 0",
+                select.replace("{type}", "'foreign_key'").replace("{name}", "CONSTRAINT_NAME")
+                        .replace("{kind}", "IF(TABLE_SCHEMA = " + database + " AND TABLE_NAME = " + table + ", 'OUTGOING', 'INCOMING')")
+                        .replace("{columns}", "GROUP_CONCAT(COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', ')")
+                        .replace("{schema}", "TABLE_SCHEMA").replace("{table}", "TABLE_NAME")
+                        .replace("{detail}", "CONCAT(REFERENCED_TABLE_SCHEMA, '.', REFERENCED_TABLE_NAME, ' (', "
+                                + "GROUP_CONCAT(REFERENCED_COLUMN_NAME ORDER BY ORDINAL_POSITION SEPARATOR ', '), ')')")
+                        + "FROM information_schema.KEY_COLUMN_USAGE\n"
+                        + "WHERE REFERENCED_TABLE_NAME IS NOT NULL AND (\n"
+                        + "    (TABLE_SCHEMA = " + database + " AND TABLE_NAME = " + table + " AND COLUMN_NAME IN (" + columns + "))\n"
+                        + "    OR (REFERENCED_TABLE_SCHEMA = " + database + " AND REFERENCED_TABLE_NAME = " + table
+                        + " AND REFERENCED_COLUMN_NAME IN (" + columns + ")))\n"
+                        + "GROUP BY TABLE_SCHEMA, TABLE_NAME, CONSTRAINT_NAME, REFERENCED_TABLE_SCHEMA, REFERENCED_TABLE_NAME",
+                select.replace("{type}", "'trigger'").replace("{name}", "TRIGGER_NAME")
+                        .replace("{kind}", "CONCAT(ACTION_TIMING, ' ', EVENT_MANIPULATION)").replace("{columns}", "''")
+                        .replace("{schema}", "TRIGGER_SCHEMA").replace("{table}", "EVENT_OBJECT_TABLE").replace("{detail}", "''")
+                        + "FROM information_schema.TRIGGERS\n"
+                        + "WHERE EVENT_OBJECT_SCHEMA = " + database + " AND EVENT_OBJECT_TABLE = " + table
+                        + " AND " + mentions.apply("ACTION_STATEMENT"),
+                select.replace("{type}", "'view'").replace("{name}", "TABLE_NAME").replace("{kind}", "'VIEW'").replace("{columns}", "''")
+                        .replace("{schema}", "TABLE_SCHEMA").replace("{table}", "TABLE_NAME").replace("{detail}", "''")
+                        + "FROM information_schema.VIEWS\n"
+                        + "WHERE LOCATE(" + sqlLiteral("`" + definition.getDatabase() + "`.`" + definition.getName() + "`") + ", VIEW_DEFINITION) > 0"
+                        + " AND " + mentions.apply("VIEW_DEFINITION"),
+                select.replace("{type}", "'other'").replace("{name}", "COLUMN_NAME").replace("{kind}", "'GENERATED'").replace("{columns}", "COLUMN_NAME")
+                        .replace("{schema}", "TABLE_SCHEMA").replace("{table}", "TABLE_NAME").replace("{detail}", "GENERATION_EXPRESSION")
+                        + "FROM information_schema.COLUMNS\n"
+                        + "WHERE TABLE_SCHEMA = " + database + " AND TABLE_NAME = " + table + " AND GENERATION_EXPRESSION <> ''"
+                        + " AND COLUMN_NAME NOT IN (" + columns + ") AND " + mentions.apply("GENERATION_EXPRESSION"));
+
+        Response response = Response.builder()
+                .isSuccessful(true)
+                .isConnected(true)
+                .headers(Lists.newArrayList("object_type", "object_name", "object_kind", "object_columns", "object_schema", "object_table", "object_detail"))
+                .types(Lists.newArrayList("String", "String", "String", "String", "String", "String", "String"))
+                .columns(Lists.newArrayList())
+                .build();
+        List<String> failures = Lists.newArrayList();
+        for (String query : queries) {
+            Response part = this.execute(configure, query);
+            if (part != null && Boolean.TRUE.equals(part.getIsSuccessful()) && part.getColumns() != null) {
+                response.getColumns().addAll(part.getColumns());
+            }
+            else if (part != null && part.getMessage() != null) {
+                failures.add(part.getMessage());
+            }
+        }
+        if (!failures.isEmpty()) {
+            response.setMessage(String.join("; ", failures));
+        }
+        response.setContent(String.join(";\n\n", queries) + ";");
+        return response;
+    }
+
+    /**
+     * Statements for a forced drop: foreign keys (on this table and on tables referencing it), triggers
+     * and views go first, then one ALTER drops the dependent indexes, generated columns and the columns.
+     */
+    default List<String> forceDropColumnStatements(RuntimeConfigure configure, TableDefinition definition)
+    {
+        Response dependencies = this.getColumnDependencies(configure, definition);
+        List<String> statements = Lists.newArrayList();
+        List<String> alterations = Lists.newArrayList();
+        for (Object item : dependencies.getColumns()) {
+            if (!(item instanceof ObjectNode)) {
+                continue;
+            }
+            ObjectNode node = (ObjectNode) item;
+            String type = node.path("object_type").asText();
+            String name = sqlIdentifier(node.path("object_name").asText());
+            String owner = sqlIdentifier(node.path("object_schema").asText()) + "." + sqlIdentifier(node.path("object_table").asText());
+            switch (type) {
+                case "foreign_key":
+                    statements.add("ALTER TABLE " + owner + " DROP FOREIGN KEY " + name);
+                    break;
+                case "trigger":
+                    statements.add("DROP TRIGGER " + sqlIdentifier(node.path("object_schema").asText()) + "." + name);
+                    break;
+                case "view":
+                    statements.add("DROP VIEW " + owner);
+                    break;
+                case "index":
+                    alterations.add("PRIMARY".equals(node.path("object_name").asText()) ? "DROP PRIMARY KEY" : "DROP INDEX " + name);
+                    break;
+                case "other":
+                    alterations.add("DROP COLUMN " + name);
+                    break;
+                default:
+                    break;
+            }
+        }
+        definition.getColumns().forEach(column -> alterations.add("DROP COLUMN " + sqlIdentifier(column.getName())));
+        statements.add("ALTER TABLE " + sqlIdentifier(definition.getDatabase()) + "." + sqlIdentifier(definition.getName())
+                + "\n    " + String.join(",\n    ", alterations));
+        return statements;
+    }
+
+    /**
+     * Runs statements one at a time and stops at the first failure; the response content lists every
+     * statement that was run, the failing one included.
+     */
+    default Response executeStatements(List<String> statements, RuntimeConfigure configure, TableDefinition definition)
+    {
+        List<String> executed = Lists.newArrayList();
+        Response response = null;
+        for (String statement : statements) {
+            executed.add(statement + ";");
+            response = this.getResponse(statement + ";", configure, definition);
+            if (!Boolean.TRUE.equals(response.getIsSuccessful())) {
+                break;
+            }
+        }
+        if (response != null) {
+            response.setContent(String.join("\n", definition.isPreview() ? statements.stream().map(statement -> statement + ";").collect(Collectors.toList()) : executed));
+        }
+        return response;
+    }
+
+    default String sqlLiteral(String value)
+    {
+        return "'" + String.valueOf(value).replace("\\", "\\\\").replace("'", "''") + "'";
+    }
+
+    default String sqlIdentifier(String value)
+    {
+        return "`" + String.valueOf(value).replace("`", "``") + "`";
     }
 
     /**
@@ -1487,14 +2430,38 @@ public interface PluginService
         CreateColumn column = CreateColumn.create(col.getName(), col.getType());
 
         column.comment(col.getComment())
-                .length(col.getLength())
                 .defaultValue(col.getDefaultValue());
+
+        if (col.getLength() != null) {
+            column.length(col.getLength());
+        }
+
+        if (col.getPrecision() != null) {
+            column.precision(col.getPrecision(), col.getScale() == null ? 0 : col.getScale());
+        }
+
+        if (StringUtils.isNotEmpty(col.getCharset())) {
+            column.charset(col.getCharset());
+        }
+
+        if (StringUtils.isNotEmpty(col.getCollate())) {
+            column.collate(col.getCollate());
+        }
+
+        if (StringUtils.isNotEmpty(col.getAfter())) {
+            column.after(col.getAfter());
+        }
+
+        if (col.isFirst()) {
+            column.first();
+        }
 
         if (col.isAutoIncrement()) {
             column.autoIncrement();
         }
 
-        if (col.isNullable()) {
+        // nullable=true keeps the column nullable; only explicit false adds NOT NULL
+        if (!col.isNullable()) {
             column.notNull();
         }
 
@@ -1530,7 +2497,7 @@ public interface PluginService
                     "    least(({2} * {3}), total) as object_end_index\n" +
                     "FROM (\n" +
                     "    SELECT count(1) as total\n" +
-                    "    FROM `{0}`.`{1}`\n" +
+                    "    FROM `{0}`.`{1}`{4}\n" +
                     ") t";
 
             return this.formatPagination(configure, sql, definition);
@@ -1540,13 +2507,28 @@ public interface PluginService
         }
     }
 
+    /**
+     * The WHERE clause matching {@link #queryTable}, so the total counts the same rows the page shows.
+     */
+    default String formatFilterClause(TableDefinition definition)
+    {
+        if (definition.getFilters() == null || definition.getFilters().isEmpty()) {
+            return "";
+        }
+        return "\n    WHERE " + definition.getFilters().stream()
+                .map(filter -> Filter.create(filter.getName(), filter.getOperator(), filter.getValue()).build())
+                .collect(Collectors.joining(" AND "));
+    }
+
     default Pagination formatPagination(RuntimeConfigure configure, String sql, TableDefinition definition)
     {
         Response response = this.getResponse(
                 sql.replace("{0}", definition.getDatabase())
                         .replace("{1}", definition.getName())
                         .replace("{2}", String.valueOf(definition.getPagination().getPage()))
-                        .replace("{3}", String.valueOf(definition.getPagination().getSize())),
+                        .replace("{3}", String.valueOf(definition.getPagination().getSize()))
+                        // Filter values are user input: substitute them last so they are never re-scanned for placeholders.
+                        .replace("{4}", formatFilterClause(definition)),
                 configure,
                 definition
         );

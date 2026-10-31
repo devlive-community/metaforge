@@ -8,7 +8,7 @@ export function useHeaders()
     // MfTable 列格式（bodyCell 契约）；type/public/version/available/action 走 #bodyCell
     const headers = computed(() => [
         { title: t('common.id'), dataIndex: 'id', key: 'id' },
-        { title: t('common.name'), dataIndex: 'name', key: 'name' },
+        { title: t('common.name'), dataIndex: 'name', key: 'name', width: 200, ellipsis: true },
         { title: t('common.type'), key: 'type' },
         { title: t('common.protocol'), dataIndex: 'protocol', key: 'protocol' },
         { title: t('common.host'), dataIndex: 'host', key: 'host' },

@@ -2,6 +2,7 @@ package org.devlive.metaforge.spi.generator.definition;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
@@ -13,6 +14,7 @@ import lombok.ToString;
 import org.apache.commons.compress.utils.Sets;
 import org.devlive.metaforge.spi.model.Pagination;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -31,13 +33,24 @@ public class TableDefinition
     private String name;
     private String comment;
     private String engine;
+    private String charset;
+    private String collate;
+    private String dataDirectory;
     private long autoIncrement;
     private String format;
     private long count;
     private Set<ColumnDefinition> columns = Sets.newHashSet();
-    private Set<ColumnDefinition> orders = Sets.newHashSet();
+    private Set<IndexDefinition> indexes = Sets.newHashSet();
+    // Sort rules apply in the order given; a plain HashSet would shuffle them.
+    @JsonDeserialize(as = LinkedHashSet.class)
+    private Set<ColumnDefinition> orders = new LinkedHashSet<>();
     private Set<ColumnDefinition> filters = Sets.newHashSet();
     private Pagination pagination;
+    private List<ForeignKeyDefinition> foreignKeys = Lists.newArrayList();
+    private List<TriggerDefinition> triggers = Lists.newArrayList();
+    private TableOptionsDefinition options;
+    // Dropping columns also drops the objects that depend on them (indexes, foreign keys, triggers, views, generated columns).
+    private boolean force;
     private List<JsonNode> rows = Lists.newArrayList();
 
     private TableDefinition(String database, String name)

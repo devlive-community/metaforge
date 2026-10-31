@@ -12,13 +12,15 @@
       <!-- 表单区 -->
       <div class="lg:col-span-2">
         <div class="dc-rename__card">
-          <MfSkeleton :loading="defaultLoading">
-            <MfForm v-if="formState" layout="vertical" class="dc-rename__form">
+          <div v-if="defaultLoading" class="flex items-center justify-center py-10">
+            <MfSpinner/>
+          </div>
+          <MfForm v-else-if="!defaultLoading && formState" layout="vertical" class="dc-rename__form">
               <MfFormItem name="oldUsername" :label="$t('user.common.currentUsername')">
                 <MfInput :model-value="formState.oldUsername" disabled/>
               </MfFormItem>
 
-              <MfFormItem name="newUsername" required-mark :label="$t('user.common.newUsername')">
+              <MfFormItem name="newUsername" required-mark :label="$t('user.common.newUsername')" :tip="$t('user.tip.newUsernameFormat')">
                 <MfInput v-model="formState.newUsername"
                          @input="onUsernameInput">
                   <template #suffix>
@@ -28,12 +30,10 @@
                   </template>
                 </MfInput>
                 <div v-if="checkState === 'error'" class="dc-rename__field-error">{{ checkMessage }}</div>
-                <div v-else class="dc-rename__field-hint">{{ $t('user.tip.newUsernameFormat') }}</div>
               </MfFormItem>
 
-              <MfFormItem name="password" required-mark :label="$t('user.common.currentPassword')">
+              <MfFormItem name="password" required-mark :label="$t('user.common.currentPassword')" :tip="$t('user.tip.passwordConfirm')">
                 <MfInput v-model="formState.password" type="password" show-password/>
-                <div class="dc-rename__field-hint">{{ $t('user.tip.passwordConfirm') }}</div>
               </MfFormItem>
             </MfForm>
 
@@ -48,7 +48,7 @@
                 {{ $t('common.cancel') }}
               </MfButton>
             </div>
-          </MfSkeleton>
+          
         </div>
       </div>
 

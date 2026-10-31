@@ -37,6 +37,7 @@ public class PluginConfiguration
         Path projectRoot = PluginPathUtils.findProjectRoot();
         PluginConfigure config = PluginConfigure.builder()
                 .pluginsDir(pluginsDirectory(projectRoot, EnvironmentUtils.isIdeEnvironment()))
+                .loadThreads(environment.getProperty("plugin.manager.load-threads", Integer.class, 0))
                 .autoCleanup(true)
                 .build();
 
@@ -52,8 +53,12 @@ public class PluginConfiguration
         return pluginManager;
     }
 
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings(value = "NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", justification = "findProjectRoot may report null; the method falls back to the installed plugins directory")
     Path pluginsDirectory(Path projectRoot, boolean development)
     {
+        if (projectRoot == null) {
+            return Path.of("plugins");
+        }
         if (development) {
             for (String property : new String[] {"spring.config.additional-location", "spring.config.location"}) {
                 String locations = environment.getProperty(property, "");

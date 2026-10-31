@@ -1,165 +1,127 @@
 <template>
-  <div class="relative min-h-screen">
-    <MfSkeleton v-if="loading"/>
-
-    <div v-else-if="dataInfo">
-      <div class="mt-4 grid grid-cols-3 gap-5">
-        <div class="flex items-center space-x-2">
-          <Type :size="16" />
-          <span>{{ $t('common.'+ dataInfo.type_name) }}</span>
+  <div class="flex h-full min-h-0 flex-col gap-3 overflow-y-auto">
+    <MfEmpty v-if="!properties && !loading" class="flex-1" variant="initial" :title="$t('common.noData')"/>
+    <div v-else-if="!properties" class="flex flex-1 items-center justify-center"><MfSpinner/></div>
+    <template v-else>
+      <section class="shrink-0 rounded-mf-md border border-line p-4">
+        <div class="mb-3 flex items-center justify-between gap-2">
+          <h3 class="m-0 text-base font-semibold text-content">{{ $t('source.props.basic') }}</h3>
+          <MfButton v-if="executed" size="sm" @click="executedVisible = true">
+            <CircleCheck v-if="executed.success" :size="14" class="text-success"/><CircleX v-else :size="14" class="text-danger"/>{{ $t('source.executed.view') }}
+          </MfButton>
         </div>
-
-        <div class="flex items-center space-x-2">
-          <Table :size="16" />
-          <span>{{ dataInfo.object_name }}</span>
+        <div class="grid grid-cols-1 gap-x-10 gap-y-2 md:grid-cols-2">
+          <dl v-for="(group, index) in basics" :key="index" class="m-0 grid grid-cols-[8rem_minmax(0,1fr)] gap-y-2.5 text-sm" :class="index === 1 && 'md:border-l md:border-line md:pl-10'">
+            <template v-for="item in group" :key="item.label">
+              <dt class="text-content-secondary">{{ item.label }}</dt>
+              <dd class="m-0 flex min-w-0 items-center gap-1.5 text-content">
+                <span class="break-words">{{ item.value }}</span>
+                <button v-if="item.copy" type="button" class="inline-flex shrink-0 text-content-tertiary hover:text-content" :aria-label="$t('source.executed.copy')" @click="copy(String(item.value))"><Copy :size="14"/></button>
+                <button v-if="item.edit && editable" type="button" class="inline-flex shrink-0 text-content-tertiary hover:text-content" :aria-label="$t('source.props.editComment')" @click="openEditor(true)"><Pencil :size="14"/></button>
+              </dd>
+            </template>
+          </dl>
         </div>
+      </section>
 
-        <MfTooltip :content="$t('common.createTime')">
-          <div class="flex items-center space-x-2">
-            <Clock :size="16" />
-            <span>{{ dataInfo?.object_create_time === null ? $t('source.common.notSpecified') : dataInfo.object_create_time }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('common.updateTime')">
-          <div class="flex items-center space-x-2">
-            <Clock :size="16" />
-            <span>{{ dataInfo?.object_update_time === null ? $t('source.common.notUpdated') : dataInfo.object_update_time }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('source.common.engine')">
-          <div class="flex items-center space-x-2">
-            <Calendar :size="16" />
-            <span>{{ dataInfo.object_engine === null ? $t('source.common.notSpecifiedEngine') : dataInfo.object_engine }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('source.common.collation')">
-          <div class="flex items-center space-x-2">
-            <MoveVertical :size="16" />
-            <span>{{ dataInfo.object_collation === null ? $t('source.common.notSpecifiedCollation') : dataInfo.object_collation }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('source.common.totalRows')">
-          <div class="flex items-center space-x-2">
-            <Rows3 :size="16" />
-            <span>{{ dataInfo.object_rows }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('source.common.format')">
-          <div class="flex items-center space-x-2">
-            <Eraser :size="16" />
-            <span>{{ dataInfo.object_format === null ? $t('source.common.notSpecifiedFormat') : dataInfo.object_format }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('source.common.avgRowLength')">
-          <div class="flex items-center space-x-2">
-            <ArrowUpNarrowWide :size="16" />
-            <span>{{ dataInfo.object_avg_row_length === null ? 0 : dataInfo.object_avg_row_length }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('source.common.dataSize')">
-          <div class="flex items-center space-x-2">
-            <MoveVertical :size="16" />
-            <span>{{ dataInfo.object_data_size === null ? 0 : dataInfo.object_data_size }} MB</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('source.common.indexSize')">
-          <div class="flex items-center space-x-2">
-            <Search :size="16" />
-            <span>{{ dataInfo.object_index_size === null ? $t('source.common.notSpecifiedIndex') : dataInfo.object_index_size }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('common.columnCount')">
-          <div class="flex items-center space-x-2">
-            <Columns3 :size="16" />
-            <span>{{ dataInfo.object_column_count === null ? $t('source.common.notSpecifiedIndex') : dataInfo.object_column_count }}</span>
-          </div>
-        </MfTooltip>
-
-        <MfTooltip :content="$t('common.indexCount')">
-          <div class="flex items-center space-x-2">
-            <Search :size="16" />
-            <span>{{ dataInfo.object_index_count === null ? $t('source.common.notSpecifiedIndex') : dataInfo.object_index_count }}</span>
-          </div>
-        </MfTooltip>
-
-        <div class="flex items-center space-x-4 justify-between">
-          <MfTooltip :content="$t('source.common.autoIncrement')">
-            <div class="flex items-center space-x-2">
-              <MoveVertical :size="16" />
-              <span>{{ dataInfo.object_auto_increment === null ? $t('source.common.notSpecifiedPrimaryKey') : dataInfo.object_auto_increment }}</span>
+      <section class="shrink-0 rounded-mf-md border border-line p-4">
+        <h3 class="m-0 mb-3 text-base font-semibold text-content">{{ $t('source.props.statistics') }}</h3>
+        <div class="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <div v-for="tile in tiles" :key="tile.label" class="flex flex-col gap-1 rounded-mf-md border border-line px-3 py-3">
+            <div class="flex items-center gap-3">
+              <component :is="tile.icon" :size="22" class="shrink-0" :class="tile.tone"/>
+              <div class="min-w-0">
+                <p class="m-0 text-xs text-content-secondary">{{ tile.label }}</p>
+                <p class="m-0 text-lg font-semibold tabular-nums text-content">{{ tile.value }}</p>
+              </div>
             </div>
-          </MfTooltip>
-          <div>
-            <MfTooltip :content="$t('source.common.resetAutoIncrement')">
-              <MfButton variant="ghost" size="sm" :disabled="dataInfo.object_auto_increment === null" @click="autoIncrement = true">
-                <Settings :size="16" />
-              </MfButton>
-            </MfTooltip>
+            <p class="m-0 text-xs text-content-tertiary">{{ tile.hint }}</p>
           </div>
         </div>
+        <p class="m-0 mt-3 flex items-center gap-1.5 rounded-mf-md bg-surface-hover px-3 py-2 text-xs text-content-tertiary"><Info :size="13" class="shrink-0"/>{{ $t('source.props.statisticsNote') }}</p>
+      </section>
 
-        <div class="col-span-3">
-          <MfDivider class="mt-4 mb-4"/>
-
-          <div class="mb-2">{{ $t('source.common.comment') }}</div>
-
-          <MfTextarea v-model="dataInfo.object_comment"/>
+      <section class="flex shrink-0 items-start justify-between gap-4 rounded-mf-md border border-line p-4">
+        <div class="flex min-w-0 gap-3">
+          <FileText :size="22" class="shrink-0 text-content-secondary"/>
+          <div class="min-w-0">
+            <h3 class="m-0 text-base font-semibold text-content">{{ $t('source.props.comment') }}</h3>
+            <p class="m-0 mt-1 break-words text-sm" :class="properties.comment ? 'text-content-secondary' : 'text-content-tertiary'">{{ properties.comment || $t('source.props.noComment') }}</p>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
+        <MfButton v-if="editable" size="sm" :disabled="saving" @click="openEditor(true)"><Pencil :size="14"/>{{ $t('common.edit') }}</MfButton>
+      </section>
 
-  <TableAutoIncrement v-if="autoIncrement"
-                      :visible="autoIncrement"
-                      :info="dataInfo"
-                      @close="autoIncrement = false"/>
+      <section class="shrink-0 rounded-mf-md border border-line p-4">
+        <h3 class="m-0 mb-3 text-base font-semibold text-content">{{ $t('source.props.currentSql') }}</h3>
+        <SqlCodeBlock :code="currentSql"/>
+      </section>
+    </template>
+
+    <SourceTablePropertiesEditor v-if="editorVisible" v-model="form" :open="editorVisible" :table="properties?.name || ''" :engines="engines" :charsets="charsets"
+                                 :collations="charsetCollations" :focus-comment="focusComment" :issues="issues" :preview-sql="previewSql" :preview-error="previewError"
+                                 :saving="saving" :width="fieldPanelWidth" :container="fieldPanelHost" @close="closeEditor()" @charset="onCharset" @save="submitEditor"/>
+    <ExecutedSqlDialog v-model:open="executedVisible" :executed="executed"/>
+  </div>
 </template>
 
-<script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useRoute } from 'vue-router'
+<script lang="ts" setup>
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { CircleCheck, CircleX, Copy, Database, FileText, Hash, Info, Layers, Link, Link2, Pencil, Table2 } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
-import MetadataService from '@/services/metadata.ts'
-import TableAutoIncrement from '@/views/pages/admin/source/components/TableAutoIncrement.vue'
-import { ArrowUpNarrowWide, Calendar, Clock, Columns3, Eraser, MoveVertical, Rows3, Search, Settings, Table, Type } from '@lucide/vue'
+import { ObjectUtils } from '@/utils/object'
+import ExecutedSqlDialog from '@/views/components/sql/ExecutedSqlDialog.vue'
+import SqlCodeBlock from '@/views/components/sql/SqlCodeBlock.vue'
+import SourceTablePropertiesEditor from './components/SourceTablePropertiesEditor.vue'
+import { formatBytes } from '@/model/source-table-properties'
+import { useSourceTableProperties } from '@/composables/useSourceTableProperties'
 
 defineOptions({ name: 'SourceTableInfo' })
+const { t } = useI18n()
+const {
+  editable, loading, saving, properties, currentSql, engines, charsets, charsetCollations, editorVisible, form, issues, previewSql, previewError,
+  focusComment, fieldPanelHost, fieldPanelWidth, openEditor, closeEditor, onCharset, submitEditor, executed, executedVisible,
+} = useSourceTableProperties()
 
-const route = useRoute()
-
-const loading = ref(false)
-const autoIncrement = ref(false)
-const dataInfo = ref<any | null>(null)
-
-const handleInitialize = () => {
-  const code = route?.params.source as string
-  const database = route?.params.database as string
-  const table = route?.params.table as string
-  if (code && database && table) {
-    loading.value = true
-    MetadataService.getTable(code, database, table)
-                   .then((response) => {
-                     if (response.status && response.data && response.data.isSuccessful) {
-                       dataInfo.value = response.data.columns[0] || null
-                     }
-                     else {
-                       MfMessage.error(response.message)
-                     }
-                   })
-                   .finally(() => (loading.value = false))
-  }
+const number = (value: number | null) => value === null ? '-' : value.toLocaleString()
+type BasicItem = { label: string; value: string; copy?: boolean; edit?: boolean }
+const basics = computed<BasicItem[][]>(() => {
+  const table = properties.value
+  if (!table) return []
+  return [
+    [
+      { label: t('source.props.name'), value: table.name, copy: true },
+      { label: t('source.props.database'), value: table.database },
+      { label: t('source.props.type'), value: table.type || '-' },
+      { label: t('source.props.engine'), value: table.engine || '-' },
+      { label: t('source.props.rowFormat'), value: table.rowFormat || '-' },
+      { label: t('source.props.created'), value: table.created || '-' },
+    ],
+    [
+      { label: t('source.props.charset'), value: table.charset || '-' },
+      { label: t('source.props.collation'), value: table.collation || '-' },
+      { label: t('source.props.autoIncrement'), value: number(table.autoIncrement) },
+      { label: t('source.props.dataLength'), value: formatBytes(table.dataLength) },
+      { label: t('source.props.indexLength'), value: formatBytes(table.indexLength) },
+      { label: t('source.props.comment'), value: table.comment || '-', edit: true },
+    ],
+  ]
+})
+const tiles = computed(() => {
+  const table = properties.value
+  if (!table) return []
+  return [
+    { icon: Table2, tone: 'text-success', label: t('source.props.rows'), value: number(table.rows), hint: t('source.props.rowsHint') },
+    { icon: Database, tone: 'text-info', label: t('source.props.dataSize'), value: formatBytes(table.dataLength, 'MB'), hint: t('source.props.dataSizeHint') },
+    { icon: Link, tone: 'text-success', label: t('source.props.indexCount'), value: number(table.indexCount), hint: t('source.props.indexCountHint') },
+    { icon: Layers, tone: 'text-success', label: t('source.props.indexSize'), value: formatBytes(table.indexLength, 'MB'), hint: t('source.props.indexSizeHint') },
+    { icon: Link2, tone: 'text-content-secondary', label: t('source.props.foreignKeyCount'), value: number(table.foreignKeyCount), hint: t('source.props.foreignKeyCountHint') },
+    { icon: Hash, tone: 'text-info', label: t('source.props.nextAutoIncrement'), value: number(table.autoIncrement), hint: t('source.props.nextAutoIncrementTile') },
+  ]
+})
+function copy(text: string) {
+  ObjectUtils.copy(text)
+  MfMessage.success(t('query.tip.copySuccess'))
 }
-
-watch(() => route?.params.table, () => handleInitialize())
-
-handleInitialize()
 </script>

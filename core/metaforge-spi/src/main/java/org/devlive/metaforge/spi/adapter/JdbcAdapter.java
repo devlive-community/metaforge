@@ -8,6 +8,7 @@ import org.devlive.metaforge.spi.connection.JdbcConnection;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.devlive.metaforge.spi.model.Time;
+import org.devlive.metaforge.spi.sql.SqlStatements;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -69,8 +70,9 @@ public class JdbcAdapter
                             types.add(Integer.class.getSimpleName());
                             List<Object> _columns = new ArrayList<>();
                             connection.setAutoCommit(false);
-                            String[] parts = content.replaceAll("[\\r\\n|\\r|\\n]+", " ")
-                                    .split("(?<=\\);)|(?<=\\r\\n)|(?<=\\r)|(?<=\\n)|(?<=\\n;)|(?<=\\r;)|(?<=\\r\\n;)|(?<=;)");
+                            // Split at the semicolons that end statements, keeping compound bodies (triggers,
+                            // procedures), quoted text and comments intact and the line breaks as written.
+                            List<String> parts = SqlStatements.split(content);
                             int count = 0;
                             for (String part : parts) {
                                 if (!part.trim().isEmpty()) {

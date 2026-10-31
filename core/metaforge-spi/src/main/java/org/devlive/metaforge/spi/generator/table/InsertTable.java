@@ -79,8 +79,8 @@ public class InsertTable
 
     private Object processJsonValue(JsonNode value, String columnName)
     {
-        // 如果是主键列，返回 null
-        if (primaryKeys.contains(columnName)) {
+        // An empty primary key lets the database generate it; an entered key is kept as typed.
+        if (primaryKeys.contains(columnName) && value != null && value.isTextual() && value.asText().isEmpty()) {
             return null;
         }
 
@@ -91,8 +91,11 @@ public class InsertTable
             return value.asText().replace("'", "''");
         }
         if (value.isNumber()) {
-            return value.isInt() || value.isLong() ?
-                    value.asLong() : value.asDouble();
+            // Separate branches: a conditional expression would promote the long to double (1011 -> 1011.0).
+            if (value.isInt() || value.isLong()) {
+                return value.asLong();
+            }
+            return value.asDouble();
         }
         if (value.isBoolean()) {
             return value.asBoolean();

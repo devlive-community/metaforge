@@ -93,7 +93,7 @@
                   {{ $t('user.auth.hasUserTip') }}
                 </MfDivider>
 
-                <MfButton block @click="$router.push('/auth/signin')">
+                <MfButton block @click="$router.push({ path: '/auth/signin', query: redirectQuery })">
                   {{ $t('user.common.signin') }}
                 </MfButton>
               </MfSpace>
@@ -112,6 +112,7 @@ import { MfMessage } from 'metaforge-ui'
 import CaptchaService from '@/services/captcha'
 import UserService from '@/services/user'
 import router from '@/router'
+import { useRouteRedirect } from '@/composables/useRouteRedirect'
 import BaseLayout from '@/views/layouts/base/BaseLayout.vue'
 
 interface Props
@@ -126,6 +127,7 @@ interface Props
 defineOptions({ name: 'AuthSignup' })
 
 const { t } = useI18n()
+const { query: redirectQuery } = useRouteRedirect()
 
 const formRef = ref()
 const formState = ref<Props>({} as Props)
@@ -168,7 +170,7 @@ const onSubmit = async () => {
   UserService.signup(formState.value as any)
              .then(response => {
                if (response.status) {
-                 router.push('/auth/signin')
+                 router.push({ path: '/auth/signin', query: redirectQuery.value })
                }
                else {
                  MfMessage.error(response.message)

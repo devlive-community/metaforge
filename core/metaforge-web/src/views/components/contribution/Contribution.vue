@@ -174,7 +174,8 @@ export default defineComponent({
     }
 
     const tooltipText = (day: { date: string; count: number }): string => {
-      return `${ new Date(day.date).toLocaleDateString() }: ${ day.count }`
+      // day.date 已是 ISO yyyy-MM-dd，直接展示，避免 locale 的斜杠格式
+      return `${ day.date }: ${ day.count }`
     }
 
     const onSelect = (day: { date: string; count: number }) => {

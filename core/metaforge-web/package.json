@@ -22,8 +22,6 @@
     "@vue-flow/controls": "^1.1.1",
     "@vue-flow/core": "^1.33.4",
     "ace-builds": "^1.32.7",
-    "ag-grid-community": "^31.3.4",
-    "ag-grid-vue3": "^31.3.4",
     "ansi_up": "^6.0.2",
     "axios": "^1.7.4",
     "clsx": "^2.1.0",

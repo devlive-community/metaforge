@@ -11,6 +11,8 @@ const props = withDefaults(defineProps<{
     showSize?: boolean
     showTotal?: boolean
     simple?: boolean
+    /** Page-size option label; `{size}` is replaced with the number. */
+    sizeText?: string
 }>(), {
     current: 1,
     total: 0,
@@ -19,6 +21,7 @@ const props = withDefaults(defineProps<{
     showSize: true,
     showTotal: false,
     simple: false,
+    sizeText: '{size} / page',
 })
 
 const emit = defineEmits<{
@@ -43,7 +46,7 @@ function changeSize(value: string | number | (string | number)[]): void {
     emit('change', 1, size)
 }
 
-const sizeOptions = computed(() => props.pageSizes.map(size => ({ label: `${size} / page`, value: size })))
+const sizeOptions = computed(() => props.pageSizes.map(size => ({ label: props.sizeText.replace('{size}', String(size)), value: size })))
 
 const items = computed<(number | '...')[]>(() => {
     const total = pages.value

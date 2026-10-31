@@ -47,7 +47,7 @@ function toggle(): void {
 
 <template>
     <label
-        class="inline-flex cursor-pointer items-center gap-2 text-sm text-content"
+        class="relative inline-flex cursor-pointer items-center gap-2 text-sm text-content"
         :class="disabled && 'cursor-not-allowed opacity-60'"
     >
         <span

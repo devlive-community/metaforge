@@ -34,6 +34,10 @@ public class PluginConfigure
     // Scan depth, only effective when scanning directory
     private int scanDepth;
 
+    // 0 根据 CPU 自动选择（最多 4），1 恢复串行加载
+    // 0 selects up to 4 workers based on available CPUs; 1 loads sequentially
+    private int loadThreads;
+
     // 自动清理, 只有卸载时才会生效
     // Auto cleanup, only effective when unloading
     private boolean autoCleanup;

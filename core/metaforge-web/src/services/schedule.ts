@@ -37,6 +37,14 @@ class ScheduleService
     }
 
     /**
+     * Toggle the built-in flag of a scheduled task.
+     */
+    changeSystem(code: string, system: boolean): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${DEFAULT_PATH}/${code}/system?system=${system}`)
+    }
+
+    /**
      * Get the upcoming execution times of the schedule.
      *
      * @param {number} id - the ID of the schedule

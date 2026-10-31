@@ -13,7 +13,7 @@
       <div class="lg:col-span-2">
         <div class="dc-password__card">
           <MfForm layout="vertical" class="dc-password__form">
-            <MfFormItem name="oldPassword" required-mark :label="$t('user.common.currentPassword')">
+            <MfFormItem name="oldPassword" required-mark :label="$t('user.common.currentPassword')" :tip="$t('user.tip.currentPasswordLive')">
               <MfInput v-model="formState.oldPassword"
                        type="password"
                        show-password
@@ -22,10 +22,9 @@
                   <Lock :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
                 </template>
               </MfInput>
-              <div class="dc-password__hint">{{ $t('user.tip.currentPasswordLive') }}</div>
             </MfFormItem>
 
-            <MfFormItem name="newPassword" required-mark :label="$t('user.common.newPassword')">
+            <MfFormItem name="newPassword" required-mark :label="$t('user.common.newPassword')" :tip="$t('user.tip.newPasswordFormat')">
               <MfInput v-model="formState.newPassword"
                        type="password"
                        show-password
@@ -34,7 +33,6 @@
                   <Lock :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
                 </template>
               </MfInput>
-              <div class="dc-password__hint">{{ $t('user.tip.newPasswordFormat') }}</div>
 
               <!-- 强度条 -->
               <div class="dc-password__meter">
@@ -61,7 +59,7 @@
               </div>
             </MfFormItem>
 
-            <MfFormItem name="confirmPassword" required-mark :label="$t('user.common.confirmPassword')">
+            <MfFormItem name="confirmPassword" required-mark :label="$t('user.common.confirmPassword')" :tip="$t('user.tip.confirmNewPassword')">
               <MfInput v-model="formState.confirmPassword"
                        type="password"
                        show-password
@@ -70,7 +68,6 @@
                   <Lock :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
                 </template>
               </MfInput>
-              <div class="dc-password__hint">{{ $t('user.tip.confirmNewPassword') }}</div>
             </MfFormItem>
           </MfForm>
 
@@ -248,11 +245,6 @@ const onReset = () => {
     margin-bottom: 16px;
 }
 
-.dc-password__hint {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 6px;
-}
 
 .dc-password__meter {
     display: flex;

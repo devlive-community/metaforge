@@ -34,4 +34,13 @@ public class RoleEntity
 
     @Transient
     private Set<MenuEntity> menus = new HashSet<>();
+
+    // Filled by RoleServiceImpl when listing roles.
+    @Transient
+    @JsonView(value = {EntityView.AdminView.class})
+    private Long userCount;
+
+    @Transient
+    @JsonView(value = {EntityView.AdminView.class})
+    private Long menuCount;
 }

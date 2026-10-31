@@ -7,6 +7,8 @@ import org.devlive.metaforge.plugin.Plugin
 import org.devlive.metaforge.plugin.PluginConfigure
 import org.devlive.metaforge.plugin.PluginManager
 import org.devlive.metaforge.plugin.utils.PluginPathUtils
+import org.junit.Assert
+import org.junit.Assume
 import org.junit.Assert.assertNotNull
 import org.junit.FixMethodOrder
 import org.junit.Test
@@ -27,6 +29,7 @@ abstract class BaseServiceTest(
 )
 {
     private val log = LoggerFactory.getLogger(this::class.java)
+    private var available = false
     private val pluginManager: PluginManager
     private val fileName = "${pluginName}PluginTest.kt"
     private val request: FsRequest
@@ -54,6 +57,14 @@ abstract class BaseServiceTest(
         }
         log.info("endpoint [ {} ]", endpoint)
 
+        // 云存储插件测试依赖打包后的插件 jar 与真实凭证；CI（仅 test-compile、无凭证）跳过
+        available = pluginManager.getPlugin(pluginName).isPresent
+        val credentialsPresent = System.getProperty("$pluginPrefix.access") != null
+        Assume.assumeTrue(
+            "$pluginName plugin or credentials are not available in this environment, skipping",
+            available && credentialsPresent
+        )
+
         request = FsRequest.builder()
             .access(System.getProperty("$pluginPrefix.access"))
             .secret(System.getProperty("$pluginPrefix.secret"))
@@ -66,14 +77,13 @@ abstract class BaseServiceTest(
 
     private fun getPlugin(): Optional<Plugin>
     {
-        val plugin = pluginManager.getPlugin(pluginName)
-        assertNotNull(plugin.get())
-        return plugin
+        return pluginManager.getPlugin(pluginName)
     }
 
     @Test
     fun step1_plugin()
     {
+        Assume.assumeTrue(available)
         val plugin = pluginManager.getPlugin(pluginName)
         assertNotNull(plugin.get())
     }

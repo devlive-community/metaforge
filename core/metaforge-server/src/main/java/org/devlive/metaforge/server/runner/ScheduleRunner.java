@@ -12,6 +12,8 @@ import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.service.SourceService;
 import org.devlive.metaforge.service.source.CheckScheduledRunnable;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.scheduling.config.CronTask;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PreDestroy;
@@ -107,6 +109,30 @@ public class ScheduleRunner
         }
         catch (Exception e) {
             log.error("Failed to schedule task [ {} ]", task.getName(), e);
+        }
+    }
+
+    /**
+     * Re-register or unregister a task after its active/system flags change,
+     * without waiting for the next restart. Does not run the task immediately.
+     */
+    public void refresh(ScheduledEntity task)
+    {
+        try {
+            Function<String, Runnable> taskFactory = taskFactories.get(task.getType());
+            if (taskFactory == null) {
+                log.warn("Unsupported task type [ {} ]", task.getType());
+                return;
+            }
+            if (task.isActive() && task.isSystem()) {
+                scheduledCronRegistrar.addCronTask(new CronTask(taskFactory.apply(task.getName()), new CronTrigger(task.getExpression())));
+            }
+            else {
+                scheduledCronRegistrar.removeCronTask(taskFactory.apply(task.getName()));
+            }
+        }
+        catch (Exception e) {
+            log.error("Failed to refresh scheduled task [ {} ]", task.getName(), e);
         }
     }
 

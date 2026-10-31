@@ -14,4 +14,9 @@ public interface ScheduledService
     CommonResponse<PageEntity<ScheduledHistoryEntity>> getHistory(Long id, FilterBody filter);
 
     CommonResponse<List<String>> getUpcomingTimes(Long id);
+
+    /**
+     * Toggle the built-in flag of a scheduled task from the admin table.
+     */
+    CommonResponse<ScheduledEntity> changeSystem(String code, boolean system);
 }

@@ -39,6 +39,18 @@ public class LinkRepository
         jdbc.update("DELETE FROM metaforge_user_role WHERE user_id = :id", Map.of("id", userId));
     }
 
+    public long countUsersOfRole(Long roleId)
+    {
+        Long count = jdbc.queryForObject("SELECT COUNT(*) FROM metaforge_user_role WHERE role_id = :id", Map.of("id", roleId), Long.class);
+        return count == null ? 0 : count;
+    }
+
+    public long countMenusOfRole(Long roleId)
+    {
+        Long count = jdbc.queryForObject("SELECT COUNT(*) FROM metaforge_role_menu WHERE role_id = :id", Map.of("id", roleId), Long.class);
+        return count == null ? 0 : count;
+    }
+
     public void deleteRole(Long roleId)
     {
         jdbc.update("DELETE FROM metaforge_user_role WHERE role_id = :id", Map.of("id", roleId));

@@ -5,20 +5,26 @@
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <MfCard :title="$t('user.common.contribution')">
-        <MfSkeleton :loading="loading">
+        <template v-if="loading">
+          <div class="flex items-center justify-center py-10"><MfSpinner/></div>
+        </template>
+        <template v-else>
           <div class="text-sm text-gray-500">{{ $t('user.tip.contribution') }}</div>
           <div class="p-2">
             <Contribution :data="heatmap.data"/>
           </div>
-        </MfSkeleton>
+        </template>
       </MfCard>
       <MfCard :title="$t('user.common.radar7Days')">
-        <MfSkeleton :loading="loading">
+        <template v-if="loading">
+          <div class="flex items-center justify-center py-10"><MfSpinner/></div>
+        </template>
+        <template v-else>
           <div class="text-sm text-gray-500">{{ $t('user.tip.radar7Days') }}</div>
           <div class="p-2">
             <VisualPie v-if="radar.configuration" :configuration="radar.configuration as any" height="200px" :submitted="false"/>
           </div>
-        </MfSkeleton>
+        </template>
       </MfCard>
     </div>
   </MfCard>

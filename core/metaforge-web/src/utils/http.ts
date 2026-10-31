@@ -3,6 +3,8 @@ import router from '@/router'
 import { ResponseModel } from '@/model/response'
 import { TokenUtils } from '@/utils/token'
 import { AuthResponse } from '@/model/user/response/auth'
+import Common from '@/utils/common'
+import { currentLocation, interimLocation } from '@/composables/useRouteRedirect'
 
 axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 
@@ -13,7 +15,8 @@ export class HttpUtils
     constructor()
     {
         if (process.env.NODE_ENV === 'development') {
-            axios.defaults.baseURL = 'http://localhost:9096'
+            // 允许用 VITE_API_BASE_URL 指向独立验证实例（如 http://localhost:9097），默认仍是 9096
+            axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9096'
         }
         else {
             axios.defaults.baseURL = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '')
@@ -49,16 +52,9 @@ export class HttpUtils
             status: data.status
         }
 
-        // If the authorization key does not match, clear the local token reload page
+        // 4003 comes from the authentication entry point: the token is missing, invalid or expired
         if (response.code === 4003) {
-            const currentPath = router.currentRoute.value.path
-            router.push({
-                path: '/common/403',
-                query: {
-                    redirect: currentPath
-                },
-                replace: true
-            })
+            this.redirectToSignin()
         }
 
         if (response.code === 5000) {
@@ -75,20 +71,16 @@ export class HttpUtils
             status: false
         }
 
-        // Current route path, avoid repeated redirection
-        const currentPath = router.currentRoute.value.path
-        const isAlreadyOnErrorPage = currentPath.startsWith('/common/not_network')
+        // Current (or pending) location, avoid repeated redirection
+        const location = currentLocation(router)
+        const isAlreadyOnErrorPage = location.path.startsWith('/common/not_network')
 
         if (error.code === 'ERR_NETWORK' && !isAlreadyOnErrorPage) {
-            // Record the original page path of the user
-            const originalPath = router.currentRoute.value.fullPath
-            router.push({
-                path: '/common/not_network',
-                query: {
-                    redirect: originalPath
-                },
-                replace: true
-            })
+            // Keep the full original address so reconnecting returns to it
+            router.replace(interimLocation('/common/not_network', location))
+        }
+        else if (error.response?.status === 401) {
+            this.redirectToSignin()
         }
 
         return response
@@ -172,6 +164,16 @@ export class HttpUtils
                 resolve(this.handlerFailed(error))
             })
         })
+    }
+
+    private redirectToSignin()
+    {
+        localStorage.removeItem(Common.token)
+        localStorage.removeItem(Common.menu)
+        const location = currentLocation(router)
+        if (!location.path.startsWith('/auth/signin')) {
+            router.replace(interimLocation('/auth/signin', location))
+        }
     }
 
     private handlerMessage(message: string)

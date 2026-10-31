@@ -208,3 +208,95 @@ test('disabled menu items block links, parent actions and auxiliary clicks', asy
     }
     finally { host.unmount() }
 })
+
+test('searchable multi-select keeps selected tags visible while open and supports keyboard removal', async () => {
+    const originalFrame = globalThis.requestAnimationFrame
+    globalThis.requestAnimationFrame = callback => { queueMicrotask(() => callback(0)); return 1 }
+    const model = ref([])
+    const host = mountHost(() => h(Select, {
+        modelValue: model.value, multiple: true, searchable: true, placeholder: 'Choose fields',
+        options: [{ label: 'One', value: 'one' }, { label: 'Two', value: 'two' }],
+        'onUpdate:modelValue': value => { model.value = value },
+    }))
+    try {
+        await click(host.document, host.find(node => node.props.class?.includes('mf-invalidable')))
+        await click(host.document, host.find(node => node.props.role === 'option' && node.textContent.trim() === 'Two'))
+        await click(host.document, host.find(node => node.props.role === 'option' && node.textContent.trim() === 'One'))
+        assert.deepEqual(model.value, ['two', 'one'])
+        assert.ok(host.find(node => node.props.role === 'listbox'))
+        assert.deepEqual(host.all(node => node.props['aria-label']?.startsWith('remove ')).map(node => node.props['aria-label']), ['remove Two', 'remove One'])
+        const input = host.find(node => node.tag === 'input')
+        assert.equal(input.props.placeholder, '')
+        await click(host.document, input)
+        assert.ok(host.find(node => node.props.role === 'listbox'))
+        await keydown(host.document, input, 'Backspace')
+        assert.deepEqual(model.value, ['two'])
+        assert.ok(host.find(node => node.props['aria-label'] === 'remove Two'))
+        assert.ok(!host.find(node => node.props['aria-label'] === 'remove One'))
+        await click(host.document, host.find(node => node.props['aria-label'] === 'remove Two'))
+        assert.deepEqual(model.value, [])
+        assert.ok(host.find(node => node.props.role === 'listbox'))
+        assert.equal(host.find(node => node.tag === 'input').props.placeholder, 'Choose fields')
+    }
+    finally { host.unmount(); globalThis.requestAnimationFrame = originalFrame }
+})
+
+test('searching a multi-select filters options without hiding existing selected tags', async () => {
+    const originalFrame = globalThis.requestAnimationFrame
+    globalThis.requestAnimationFrame = callback => { queueMicrotask(() => callback(0)); return 1 }
+    const model = ref(['one'])
+    const host = mountHost(() => h(Select, {
+        modelValue: model.value, multiple: true, searchable: true,
+        options: [{ label: 'One', value: 'one' }, { label: 'Two', value: 'two' }],
+        'onUpdate:modelValue': value => { model.value = value },
+    }))
+    try {
+        await click(host.document, host.find(node => node.props.class?.includes('mf-invalidable')))
+        const input = host.find(node => node.tag === 'input')
+        input.value = 'Two'
+        input.dispatchEvent(new InteractionEvent('input', [input]))
+        await nextTick()
+        assert.deepEqual(host.all(node => node.props.role === 'option').map(node => node.textContent.trim()), ['Two'])
+        assert.ok(host.find(node => node.props['aria-label'] === 'remove One'))
+        await keydown(host.document, input, 'Enter')
+        assert.deepEqual(model.value, ['one', 'two'])
+        assert.ok(host.find(node => node.props['aria-label'] === 'remove Two'))
+        assert.equal(input.value, '')
+    }
+    finally { host.unmount(); globalThis.requestAnimationFrame = originalFrame }
+})
+
+test('a Select popup follows the trigger width after its surrounding layout resizes', async () => {
+    const host = mountHost(h(Select, { options: [{ label: 'One', value: 'one' }] }))
+    try {
+        await click(host.document, host.find(node => node.props.class?.includes('mf-invalidable')))
+        const popup = host.find(node => node.props.role === 'listbox')
+        assert.equal(popup.style.width, '200px')
+        const root = host.find(node => node.props.class?.includes('relative inline-flex'))
+        root.getBoundingClientRect = () => ({ left: 10, right: 330, top: 0, bottom: 36, width: 320, height: 36 })
+        host.document.defaultView.dispatchEvent(new Event('resize'))
+        await nextTick()
+        assert.equal(popup.style.width, '320px')
+    }
+    finally { host.unmount() }
+})
+
+test('a searchable single-select displays the chosen label and closes the popup', async () => {
+    const originalFrame = globalThis.requestAnimationFrame
+    globalThis.requestAnimationFrame = callback => { queueMicrotask(() => callback(0)); return 1 }
+    const model = ref('one')
+    const host = mountHost(() => h(Select, {
+        modelValue: model.value, searchable: true,
+        options: [{ label: 'One', value: 'one' }, { label: 'Two', value: 'two' }],
+        'onUpdate:modelValue': value => { model.value = value },
+    }))
+    try {
+        const trigger = () => host.find(node => node.props.class?.includes('mf-invalidable'))
+        await click(host.document, trigger())
+        await click(host.document, host.find(node => node.props.role === 'option' && node.textContent.trim() === 'Two'))
+        assert.equal(model.value, 'two')
+        assert.ok(!host.find(node => node.props.role === 'listbox'))
+        assert.equal(trigger().textContent.trim(), 'Two')
+    }
+    finally { host.unmount(); globalThis.requestAnimationFrame = originalFrame }
+})

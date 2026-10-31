@@ -33,7 +33,14 @@ public class CreateColumn
         }
 
         if (comment != null) {
-            sql.append(" COMMENT '").append(comment).append("'");
+            sql.append(" COMMENT '").append(comment.replace("'", "''")).append("'");
+        }
+
+        if (after != null) {
+            sql.append(" AFTER `").append(after.replace("`", "``")).append("`");
+        }
+        else if (first) {
+            sql.append(" FIRST");
         }
 
         return sql.toString();

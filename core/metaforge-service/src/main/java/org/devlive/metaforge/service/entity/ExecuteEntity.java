@@ -13,9 +13,14 @@ import java.util.Map;
 public class ExecuteEntity
 {
     private String name;
+    // Optional editor tab label carried into the query history for display.
+    private String label;
     private String content;
     private Map<String, Object> env;
     private String format = "JsonConvert";
     private int limit = 1000;
     private QueryMode mode;
+    // Table scope from a table's workbench: the statement may only use this table, and runs against this database.
+    private String database;
+    private String table;
 }

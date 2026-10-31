@@ -51,6 +51,7 @@ class HostNode extends EventTarget {
     }
     get textContent() { return this.tag === '#comment' ? '' : this.text + this.children.map(child => child.textContent).join('') }
     getBoundingClientRect() { return { top: 0, left: 0, bottom: 36, right: 200, width: 200, height: 36 } }
+    getRootNode() { return this.ownerDocument }
     focus() { this.ownerDocument.activeElement = this }
 }
 
@@ -62,8 +63,11 @@ function remove(node) {
 export function mountHost(vnode, document = new TestDocument(), configure = () => {}) {
     const previousDocument = globalThis.document
     const previousWindow = globalThis.window
+    const previousDocumentClass = globalThis.Document
     globalThis.document = document
     globalThis.window = document.defaultView
+    // Text v-model checks the root document when updating a focused input.
+    globalThis.Document = TestDocument
     const renderer = createRenderer({
         querySelector: selector => selector === 'body' ? document.body : null,
         createElement: tag => new HostNode(tag, document),
@@ -107,6 +111,7 @@ export function mountHost(vnode, document = new TestDocument(), configure = () =
             finally {
                 globalThis.document = previousDocument
                 globalThis.window = previousWindow
+                globalThis.Document = previousDocumentClass
             }
         },
     }

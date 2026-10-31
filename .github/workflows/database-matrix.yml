@@ -4,7 +4,7 @@ name: database matrix
 # against every database the setup wizard offers. Databases start in Testcontainers.
 on:
   push:
-    branches: [ main, master, 2026.0.0 ]
+    branches: [ dev, main, master, 2026.0.0 ]
     paths:
       - 'pom.xml'
       - 'core/metaforge-service/**'
@@ -12,7 +12,7 @@ on:
       - 'core/metaforge-server/src/**'
       - '.github/workflows/database-matrix.yml'
   pull_request:
-    branches: [ main, master, 2026.0.0 ]
+    branches: [ dev, main, master, 2026.0.0 ]
     paths:
       - 'pom.xml'
       - 'core/metaforge-service/**'

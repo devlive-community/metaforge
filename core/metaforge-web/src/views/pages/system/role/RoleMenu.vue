@@ -31,7 +31,7 @@
           </div>
         </div>
 
-        <div class="flex justify-end">
+        <div class="mt-4 flex justify-end">
           <MfButton variant="primary" :loading="saving" :disabled="saving || !loaded" @click="onSubmit()">
             {{ title }}
           </MfButton>

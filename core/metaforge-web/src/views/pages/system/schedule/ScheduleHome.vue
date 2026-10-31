@@ -9,18 +9,32 @@
                :page-index="pageIndex"
                :page-size="pageSize"
                :total="dataCount"
-               @refresh="handlerInitialize"
+               @refresh="initialize"
                @search="onSearch"
                @reset="onSearch"
                @page-change="onPageChange"
                @size-change="onSizeChange">
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'active'">
-          <MfSwitch v-model="record.active" size="sm" :disabled="record.active"/>
+        <template v-if="column.key === 'name'">
+          <EllipsisCell :text="record.name"/>
+        </template>
+
+        <template v-else-if="column.key === 'description'">
+          <EllipsisCell :text="record.description"/>
+        </template>
+
+        <template v-else-if="column.key === 'type'">
+          {{ $t(`schedule.type.${ record.type }`) }}
+        </template>
+
+        <template v-else-if="column.key === 'active'">
+          <MfSwitch :model-value="record.active" size="sm"
+                    @update:model-value="(value: boolean) => onChangeActive(record, value)"/>
         </template>
 
         <template v-else-if="column.key === 'system'">
-          <MfSwitch v-model="record.system" size="sm" :disabled="record.system"/>
+          <MfSwitch :model-value="record.system" size="sm"
+                    @update:model-value="(value: boolean) => onChangeSystem(record, value)"/>
         </template>
 
         <template v-else-if="column.key === 'expression'">
@@ -28,20 +42,20 @@
         </template>
 
         <template v-else-if="column.key === 'action'">
-          <MfSpace :wrap="false" size="xs">
+          <MfSpace :wrap="false" :size="2">
             <MfTooltip :content="$t('schedule.common.trigger')">
-              <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerTrigger(record)">
+              <MfButton variant="ghost" size="sm" shape="circle" @click="handlerTrigger(record)">
                 <MfSpinner v-if="triggeringId === record.id" size="sm"/>
                 <CirclePlay :size="15" v-else />
               </MfButton>
             </MfTooltip>
             <MfTooltip :content="$t('schedule.common.upcoming')">
-              <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerUpcoming(record)">
+              <MfButton variant="ghost" size="sm" shape="circle" @click="handlerUpcoming(record)">
                 <Clock :size="15" />
               </MfButton>
             </MfTooltip>
             <MfTooltip :content="$t('schedule.common.history')">
-              <MfButton variant="ghost" size="sm" class="rounded-full!" @click="handlerChangeInfo(true, record)">
+              <MfButton variant="ghost" size="sm" shape="circle" @click="handlerChangeInfo(true, record)">
                 <History :size="15" />
               </MfButton>
             </MfTooltip>
@@ -78,12 +92,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { FilterModel, type TableFilters } from '@/model/filter'
 import { useHeaders } from './ScheduleUtils'
 import ScheduleService from '@/services/schedule'
 import DataTable from '@/views/components/table/DataTable.vue'
 import { useTableFilters } from '@/views/components/table/tableFilters'
+import { usePagedList } from '@/composables/usePagedList'
 import ScheduleHistory from '@/views/pages/system/schedule/ScheduleHistory.vue'
+import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import { ScheduleModel } from '@/model/schedule'
 import { CirclePlay, Clock, History } from '@lucide/vue'
 
@@ -91,15 +106,9 @@ defineOptions({ name: 'ScheduleHome' })
 
 const { t } = useI18n()
 const tableFilters = useTableFilters('schedule')
-const filter: FilterModel = new FilterModel()
 const { headers } = useHeaders()
 
-const loading = ref(false)
 const dataHistoryVisible = ref(false)
-const data = ref<any[]>([])
-const pageIndex = ref(1)
-const pageSize = ref(10)
-const dataCount = ref(0)
 const dataInfo = ref<ScheduleModel | null>(null)
 
 const triggeringId = ref<number | null>(null)
@@ -110,40 +119,40 @@ const upcomingLoading = ref(false)
 const upcomingName = ref('')
 const upcomingTimes = ref<string[]>([])
 
-const onSearch = (values: TableFilters) => {
-  Object.assign(filter, values, { page: 1 })
-  pageIndex.value = 1
-  handlerInitialize()
-}
+const {
+    loading,
+    data,
+    pageIndex,
+    pageSize,
+    dataCount,
+    initialize,
+    onSearch,
+    onPageChange,
+    onSizeChange
+  } = usePagedList<any>(filter => ScheduleService.getAll(filter))
 
-let latestRequest = 0
-const handlerInitialize = () => {
-  const request = ++latestRequest
-  loading.value = true
-  ScheduleService.getAll({ ...filter })
+const onChangeActive = (record: any, value: boolean) => {
+  ScheduleService.changeActive(record.code, value)
                  .then((response) => {
-                 if (request !== latestRequest) return
                    if (response.status) {
-                     data.value = response.data.content
-                     dataCount.value = response.data.total
-                     pageSize.value = response.data.size
-                     pageIndex.value = response.data.page
+                     record.active = value
+                   }
+                   else {
+                     showNotice('danger', response.message)
                    }
                  })
-                 .finally(() => { if (request === latestRequest) loading.value = false })
 }
 
-const fetchData = (value: number) => {
-  filter.page = value
-  filter.size = pageSize.value
-  handlerInitialize()
-}
-
-const onPageChange = (value: number) => fetchData(value)
-
-const onSizeChange = (_current: number, size: number) => {
-  pageSize.value = size
-  fetchData(pageIndex.value)
+const onChangeSystem = (record: any, value: boolean) => {
+  ScheduleService.changeSystem(record.code, value)
+                 .then((response) => {
+                   if (response.status) {
+                     record.system = value
+                   }
+                   else {
+                     showNotice('danger', response.message)
+                   }
+                 })
 }
 
 const handlerChangeInfo = (isOpen: boolean, info: any) => {
@@ -171,7 +180,7 @@ const handlerTrigger = (record: any) => {
                  .then((response) => {
                    if (response.status) {
                      showNotice('success', t('schedule.common.triggerSuccess'))
-                     handlerInitialize()
+                     initialize()
                    }
                    else {
                      showNotice('danger', response.message || 'Trigger failed')
@@ -198,5 +207,5 @@ const handlerUpcoming = (record: any) => {
                  .finally(() => { upcomingLoading.value = false })
 }
 
-handlerInitialize()
+initialize()
 </script>

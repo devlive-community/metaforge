@@ -84,6 +84,11 @@ class CsvConvertService : ConvertService
             response.headers = request.headers
             val file = FileConvert.formatFile(request, name())
             FileUtils.writeStringToFile(file, response.headers.joinToString(","), Charsets.UTF_8)
+            // The column types follow the header as a second line.
+            if (request.includeStructure)
+            {
+                FileUtils.writeStringToFile(file, "\n" + request.headers.indices.joinToString(",") { request.types.getOrNull(it)?.toString() ?: "" }, Charsets.UTF_8, true)
+            }
 
             val columns = mutableListOf<Any>()
             request.columns
@@ -91,7 +96,7 @@ class CsvConvertService : ConvertService
                     FileUtils.writeStringToFile(file, "\n", Charsets.UTF_8, true)
                     when (it)
                     {
-                        is List<*> -> FileUtils.writeStringToFile(file, it.joinToString(separator = ","), Charsets.UTF_8, true)
+                        is List<*> -> FileUtils.writeStringToFile(file, it.joinToString(separator = ",") { value -> if (value == null && request.excludeNull) "" else value.toString() }, Charsets.UTF_8, true)
                         else -> FileUtils.writeStringToFile(file, it.toString(), Charsets.UTF_8, true)
                     }
                 }

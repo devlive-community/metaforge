@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- DDL statements generated from a table's DDL tab, listed newest first per table. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0005-source-ddl-history" author="metaforge">
+        <createTable tableName="metaforge_source_ddl_history">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_source_ddl_history" nullable="false"/>
+            </column>
+            <column name="source_code" type="${string}(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="database_name" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="table_name" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="kind" type="${string}(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="content" type="${text}"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="username" type="${string}(255)"/>
+            <column name="create_time" type="${instant}"/>
+        </createTable>
+        <createIndex tableName="metaforge_source_ddl_history" indexName="idx_ddlhist_table">
+            <column name="source_code"/>
+            <column name="database_name"/>
+            <column name="table_name"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

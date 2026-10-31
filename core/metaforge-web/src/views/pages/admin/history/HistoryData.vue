@@ -53,7 +53,7 @@ const handlerInitialize = () => {
                     configuration.value = ConfigurationRequest.of(response)
                   }
                   else {
-                    MfMessage.error(response.data.message)
+                    MfMessage.error(response.data?.message || response.message || t('common.requestError'))
                   }
                 })
                 .finally(() => (loading.value = false))

@@ -115,6 +115,12 @@ class TxtConvertService : ConvertService
                         .let { headers ->
                             FileUtils.writeStringToFile(file, headers.joinToString(separator = delimiter), Charsets.UTF_8)
                         }
+                    // The column types follow the header as a second line.
+                    if (request.includeStructure)
+                    {
+                        FileUtils.writeStringToFile(file, "\n" + request.headers.indices.joinToString(separator = delimiter) { request.types.getOrNull(it)?.toString() ?: "" },
+                            Charsets.UTF_8, true)
+                    }
                     log.info("${name()} writer file headers end")
 
                     log.info("${name()} writer file columns start")
@@ -123,7 +129,8 @@ class TxtConvertService : ConvertService
                             FileUtils.writeStringToFile(file, "\n", Charsets.UTF_8, true)
                             when (it)
                             {
-                                is List<*> -> FileUtils.writeStringToFile(file, it.joinToString(separator = delimiter), Charsets.UTF_8, true)
+                                is List<*> -> FileUtils.writeStringToFile(file, it.joinToString(separator = delimiter) { value -> if (value == null && request.excludeNull) "" else value.toString() },
+                                    Charsets.UTF_8, true)
                                 else -> FileUtils.writeStringToFile(file, it.toString(), Charsets.UTF_8, true)
                             }
                         }

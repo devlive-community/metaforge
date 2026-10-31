@@ -15,6 +15,8 @@ public abstract class AbstractColumn
     protected String comment;
     protected String charset;
     protected String collate;
+    protected String after;
+    protected boolean first;
 
     protected AbstractColumn(String name, DataType type)
     {
@@ -77,6 +79,18 @@ public abstract class AbstractColumn
         return this;
     }
 
+    public AbstractColumn after(String column)
+    {
+        this.after = column;
+        return this;
+    }
+
+    public AbstractColumn first()
+    {
+        this.first = true;
+        return this;
+    }
+
     protected StringBuilder buildBasicSQL()
     {
         StringBuilder sql = new StringBuilder();
@@ -109,7 +123,7 @@ public abstract class AbstractColumn
                 sql.append(" DEFAULT ").append(defaultValue);
             }
             else {
-                sql.append(" DEFAULT '").append(defaultValue).append("'");
+                sql.append(" DEFAULT '").append(defaultValue.replace("'", "''")).append("'");
             }
         }
 

@@ -18,6 +18,7 @@ const createHttpRoute = (router: Router) => {
             {
                 name: 'not_network',
                 path: 'not_network',
+                meta: { title: 'common.pageNotNetwork' },
                 component: () => import('@/views/common/error/NotNetwork.vue')
             }
         ]

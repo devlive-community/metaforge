@@ -4,7 +4,7 @@
       <aside class="w-[280px] shrink-0">
         <MfCard :title="$t('common.chat')">
           <template #extra>
-            <MfButton variant="ghost" size="sm" class="rounded-full!" @click="visibleInfo(true)">
+            <MfButton variant="ghost" size="sm" shape="circle" @click="visibleInfo(true)">
               <Plus :size="15" />
             </MfButton>
           </template>

@@ -5,6 +5,7 @@ import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.UploadBody;
 import org.devlive.metaforge.service.body.UserNameBody;
 import org.devlive.metaforge.service.body.UserPasswordBody;
+import org.devlive.metaforge.service.body.UserResetPasswordBody;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.entity.convert.AvatarEntity;
@@ -24,6 +25,11 @@ public interface UserService
     CommonResponse<UserEntity> info(String code);
 
     CommonResponse<Long> changePassword(UserPasswordBody configure);
+
+    /**
+     * Administrator shortcut: replace a user's password without the old one.
+     */
+    CommonResponse<Long> resetPassword(String code, UserResetPasswordBody configure);
 
     CommonResponse<Long> changeUsername(UserNameBody configure);
 

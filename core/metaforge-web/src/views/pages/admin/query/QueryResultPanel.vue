@@ -72,19 +72,15 @@
       </div>
 
       <template v-if="activeTab === 'results'">
-        <ag-grid-vue v-if="hasRows"
-                     class="ag-theme-metaforge h-full w-full"
-                     :key="gridKey"
-                     :pagination="true"
-                     :suppress-pagination-panel="true"
-                     :pagination-page-size="pageSize"
-                     :columnDefs="columnDefs"
-                     :rowData="rows"
-                     :gridOptions="gridOptions as any"
-                     @grid-ready="onGridReady"
-                     @first-data-rendered="onFirstDataRendered"
-                     @pagination-changed="onPaginationChanged"/>
-
+        <div v-if="hasRows" class="flex h-full min-h-0 flex-col">
+          <MfTable fill resizable :columns="tableColumns" :data-source="pagedRows" row-key="__row" density="compact" :bordered="false"
+                   :empty-text="$t('query.result.noMatch')" @resize="onResize" @resize-end="onResize">
+            <template v-for="column in tableColumns" :key="column.key" #[`cell-${column.key}`]="{ record }">
+              <span v-if="record[column.dataIndex] === null || record[column.dataIndex] === undefined" class="text-content-tertiary">NULL</span>
+              <div v-else :class="!widths[column.key] && 'max-w-80'"><EllipsisCell :text="cellText(record[column.dataIndex])"/></div>
+            </template>
+          </MfTable>
+        </div>
         <MfEmpty v-else-if="resultState === 'initial'" class="h-full" variant="initial"
                  :title="$t('query.result.initial')" :description="$t('query.result.initialTip')"/>
         <MfAlert v-else-if="resultState === 'error'" variant="danger" class="m-4" :title="$t('query.message.failed')">
@@ -136,7 +132,7 @@
       </div>
 
       <MfPagination :current="currentPage"
-                    :total="rowCount"
+                    :total="filteredRows.length"
                     :page-size="pageSize"
                     :show-size="false"
                     @update:current="onPageChange"/>
@@ -152,12 +148,8 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { AgGridVue } from 'ag-grid-vue3'
-import 'ag-grid-community/styles/ag-grid.css'
-import '@/views/components/grid/ag-theme-metaforge.css'
 import { ChartColumn, CircleAlert, CircleCheck, Download, Plus, RefreshCw, Search } from '@lucide/vue'
-import GridOptions from '@/views/components/grid/GridOptions'
-import { GridColumn } from '@/views/components/grid/GridColumn'
+import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import { GridConfigure } from '@/views/components/grid/GridConfigure'
 import GridVisual from '@/views/components/grid/GridVisual.vue'
 import { ResponseModel } from '@/model/response'
@@ -187,18 +179,15 @@ const emit = defineEmits<{
   (e: 'refresh'): void
 }>()
 
-const i18n = useI18n()
-const { t } = i18n
-
-const gridOptions = GridOptions.createDefaultOptions(i18n)
+const { t } = useI18n()
 
 const activeTab = ref<'results' | 'messages'>('results')
 const quickFilter = ref('')
 const pageSize = ref(100)
 const currentPage = ref(1)
 const visualVisible = ref(false)
-const gridKey = ref(0)
-let gridApi: any = null
+// Widths the user dragged or fitted; columns without one size to their content.
+const widths = ref<Record<string, number>>({})
 
 const tabs = computed(() => [
   { key: 'results' as const, label: t('query.result.results') },
@@ -222,7 +211,23 @@ const canAddDataset = computed(() => isSuccess.value && props.response?.data?.is
 const elapsed = computed(() => props.response?.data?.processor?.elapsed ?? 0)
 const connectionElapsed = computed(() => props.response?.data?.connection?.elapsed ?? 0)
 
-const columnDefs = computed<GridColumn[]>(() => headers.value.map(header => ({ headerName: header, field: header })))
+const cellText = (value: unknown) => typeof value === 'object' ? JSON.stringify(value) : String(value)
+// Keys carry the position so repeated header names still get their own column.
+const tableColumns = computed(() => headers.value.map((header, index) => {
+  const key = `${index}:${header}`
+  return { key, title: header, dataIndex: header, width: widths.value[key], ellipsis: !!widths.value[key] }
+}))
+/** The quick search keeps rows where any cell contains the text. */
+const filteredRows = computed(() => {
+  const text = quickFilter.value.trim().toLowerCase()
+  const list = text ? rows.value.filter(row => headers.value.some(header => {
+    const value = row[header]
+    return value !== null && value !== undefined && cellText(value).toLowerCase().includes(text)
+  })) : rows.value
+  return list.map((row, index) => ({ ...row, __row: String(index) }))
+})
+const pagedRows = computed(() => filteredRows.value.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value))
+const onResize = (column: { key?: string }, width: number) => { if (column.key) widths.value = { ...widths.value, [column.key]: width } }
 
 const visualConfigure = computed<GridConfigure>(() => ({
   headers: headers.value as any,
@@ -235,56 +240,21 @@ const visualConfigure = computed<GridConfigure>(() => ({
   code: props.sourceCode
 }))
 
-const onGridReady = (params: any) => {
-  gridApi = params.api
-  currentPage.value = gridApi.paginationGetCurrentPage() + 1
-  fitColumns()
-}
-
-/** Stretch few result columns across the grid width; wide results keep natural widths. */
-const fitColumns = () => {
-  if (!gridApi) {
-    return
-  }
-  const columns = gridApi.getColumns?.() ?? []
-  const totalWidth = columns.reduce((sum: number, column: any) => sum + column.getActualWidth(), 0)
-  const gridWidth = gridApi.getGridPanelElement?.()?.clientWidth ?? 0
-  if (columns.length > 0 && columns.length <= 10 && totalWidth > 0 && gridWidth > totalWidth) {
-    gridApi.sizeColumnsToFit()
-  }
-}
-
-const onFirstDataRendered = () => fitColumns()
-
-const onPaginationChanged = () => {
-  if (gridApi) {
-    currentPage.value = gridApi.paginationGetCurrentPage() + 1
-  }
-}
-
 const onPageChange = (page: number) => {
-  gridApi?.paginationGoToPage(page - 1)
   currentPage.value = page
 }
 
 const onPageSizeChange = () => {
-  gridApi?.setGridOption('paginationPageSize', pageSize.value)
-  gridApi?.paginationGoToPage(0)
   currentPage.value = 1
 }
 
-watch(quickFilter, value => gridApi?.setGridOption('quickFilterText', value))
+watch(quickFilter, () => { currentPage.value = 1 })
 
 watch(() => props.response, () => {
-  gridKey.value += 1
   quickFilter.value = ''
-  if (props.response && !props.response.status) {
-    activeTab.value = 'messages'
-  }
-  else {
-    activeTab.value = 'results'
-    currentPage.value = 1
-  }
+  widths.value = {}
+  currentPage.value = 1
+  activeTab.value = props.response && !props.response.status ? 'messages' : 'results'
 })
 
 const onExport = () => {

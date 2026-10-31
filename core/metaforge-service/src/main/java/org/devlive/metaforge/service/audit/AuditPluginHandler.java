@@ -97,6 +97,7 @@ public class AuditPluginHandler
                 pluginAudit.setContent(executeEntity.getContent());
                 pluginAudit.setMode(executeEntity.getMode());
                 pluginAudit.setFormat(executeEntity.getFormat());
+                pluginAudit.setName(executeEntity.getLabel());
                 this.sourceRepository.findByCode(executeEntity.getName())
                         .ifPresent(pluginAudit::setSource);
             }

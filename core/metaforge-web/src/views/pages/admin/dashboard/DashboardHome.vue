@@ -3,7 +3,7 @@
     <template #extra>
       <MfTooltip :content="$t('dashboard.common.create')">
         <router-link to="/dashboard/info" target="_blank">
-          <MfButton variant="primary" size="sm" class="rounded-full!">
+          <MfButton variant="primary" size="sm" shape="circle">
             <Plus :size="15" />
           </MfButton>
         </router-link>
@@ -31,7 +31,7 @@
                   </div>
 
                   <MfDropdown trigger="click" placement="bottomRight">
-                    <MfButton variant="ghost" size="sm" class="rounded-full!">
+                    <MfButton variant="ghost" size="sm" shape="circle">
                       <Settings :size="18" />
                     </MfButton>
 

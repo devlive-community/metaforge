@@ -1,5 +1,7 @@
 package org.devlive.metaforge.spi.generator;
 
+import java.util.Collection;
+
 public class Filter
 {
     private final String column;
@@ -82,6 +84,10 @@ public class Filter
         }
         if (value instanceof Object[]) {
             return String.join(", ", formatArrayValues((Object[]) value));
+        }
+        // JSON arrays bind as lists when a filter arrives through the REST API.
+        if (value instanceof Collection) {
+            return String.join(", ", formatArrayValues(((Collection<?>) value).toArray()));
         }
         return value;
     }

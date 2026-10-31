@@ -1,11 +1,18 @@
 import { createI18n } from 'vue-i18n'
 import { inject, provide, ref } from 'vue'
-import I18nService from '@/services/i18n'
-import { createLocaleLoader, normalizeLocale } from './locale-loader'
+import enMessages from './locales/en.json'
+import zhCnMessages from './locales/zh-cn.json'
 
 // 默认语言配置
 // Default locale
 const DEFAULT_LOCALE = 'zh-cn'
+// 语言包随前端打包（locales/*.json），不再依赖服务端 /api/v1/i18n 接口。
+// 语言包已迁移到前端并删除服务端相关文件（2026-10-29）。
+const SERVER_MESSAGES = {
+    'zh-cn': zhCnMessages,
+    en: enMessages
+}
+
 const DEFAULT_MESSAGES = {
     'zh-cn': {
         // 基础的回退翻译
@@ -179,6 +186,14 @@ const DEFAULT_MESSAGES = {
     }
 }
 
+function normalizeLocale(locale: string): 'zh-cn' | 'en'
+{
+    const normalized = locale.toLowerCase().replace(/_/g, '-')
+    return normalized === 'zh' || normalized.startsWith('zh-') ? 'zh-cn' : 'en'
+}
+
+const initialLocale = normalizeLocale(localStorage.getItem('locale') || navigator.language || DEFAULT_LOCALE)
+
 const i18n = createI18n({
     fallbackLocale: DEFAULT_LOCALE,
     globalInjection: true,
@@ -188,14 +203,13 @@ const i18n = createI18n({
     silentTranslationWarn: true,
     missingWarn: false,
     flatJson: true,
-    locale: normalizeLocale(localStorage.getItem('locale') || navigator.language || DEFAULT_LOCALE),
-    messages: DEFAULT_MESSAGES
+    locale: initialLocale,
+    messages: {
+        'zh-cn': { ...DEFAULT_MESSAGES['zh-cn'], ...SERVER_MESSAGES['zh-cn'] },
+        en: { ...DEFAULT_MESSAGES.en, ...SERVER_MESSAGES.en }
+    }
 })
 
-const ensureLocaleLoaded = createLocaleLoader(
-    locale => I18nService.getLocale(locale),
-    (locale, messages) => i18n.global.mergeLocaleMessage(locale, messages),
-)
 let localeRequest = 0
 
 export const I18N_KEY = Symbol('i18n-handler')
@@ -214,31 +228,16 @@ export function provideI18nHandler()
         errorMessage.value = ''
     }
 
+    // 语言包已随前端打包，切换语言只是本地状态变更，不再请求服务端。
     const loadLocale = async (locale: string) => {
         const request = ++localeRequest
         resetState()
-        loadingState.value = true
-        loadingText.value = i18n.global.t('common.loading')
-
-        try {
-            const normalized = await ensureLocaleLoaded(locale)
-            if (request !== localeRequest) return false
-            i18n.global.locale.value = normalized
-            localStorage.setItem('locale', normalized)
-            resetState()
-            return true
-        }
-        catch (error) {
-            if (request !== localeRequest) return false
-            errorState.value = true
-            errorMessage.value = error instanceof Error ? error.message : i18n.global.t('common.loadingFailed')
-
-            console.error('Failed to load locale:', error)
-            return false
-        }
-        finally {
-            if (request === localeRequest) loadingState.value = false
-        }
+        const normalized = normalizeLocale(locale)
+        if (request !== localeRequest) return false
+        i18n.global.locale.value = normalized
+        localStorage.setItem('locale', normalized)
+        resetState()
+        return true
     }
 
     const i18nHandler = {

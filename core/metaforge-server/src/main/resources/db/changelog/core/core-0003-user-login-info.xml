@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Track the most recent successful sign-in per user for the admin user list. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0003-user-login-info" author="metaforge">
+        <addColumn tableName="metaforge_user">
+            <column name="last_login_time" type="${instant}"/>
+            <column name="last_login_ip" type="${string}(64)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

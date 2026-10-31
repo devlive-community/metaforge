@@ -22,6 +22,7 @@ import org.springframework.web.context.request.RequestContextHolder;
 import javax.servlet.http.HttpServletRequest;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 @Aspect
 @Component
@@ -61,15 +62,6 @@ public class AuditUserLogHandler
     protected void handlerPlugin(final JoinPoint joinPoint, final UserLogEntity userLogEntity, CommonResponse jsonResult)
     {
         try {
-            if (jsonResult.getStatus()) {
-                userLogEntity.setState(State.SUCCESS);
-                userRepository.findByCode(UserDetailsService.getUser().getCode())
-                        .ifPresent(userLogEntity::setUser);
-            }
-            else {
-                userLogEntity.setMessage(jsonResult.getMessage().toString());
-                userLogEntity.setState(State.FAILURE);
-            }
             RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
             HttpServletRequest request = (HttpServletRequest) requestAttributes.resolveReference(RequestAttributes.REFERENCE_REQUEST);
             userLogEntity.setIp(this.getIpAddress(request));
@@ -77,6 +69,21 @@ public class AuditUserLogHandler
             UserAgent userAgent = UserAgent.parseUserAgentString(userLogEntity.getUa());
             userLogEntity.setClient(userAgent.getBrowser().getName());
             userLogEntity.setDevice(userAgent.getOperatingSystem().getDeviceType().getName());
+            if (jsonResult.getStatus()) {
+                userLogEntity.setState(State.SUCCESS);
+                userRepository.findByCode(UserDetailsService.getUser().getCode())
+                        .ifPresent(user -> {
+                            userLogEntity.setUser(user);
+                            // keep the latest successful sign-in visible in the admin user list
+                            user.setLastLoginTime(Date.from(userLogEntity.getCreateTime().toInstant()));
+                            user.setLastLoginIp(userLogEntity.getIp());
+                            userRepository.save(user);
+                        });
+            }
+            else {
+                userLogEntity.setMessage(jsonResult.getMessage().toString());
+                userLogEntity.setState(State.FAILURE);
+            }
             this.userLogRepository.save(userLogEntity);
         }
         catch (Exception ex) {

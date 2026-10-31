@@ -1,5 +1,6 @@
 package org.devlive.metaforge.plugin;
 
+import com.github.dockerjava.api.command.InspectImageResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.plugin.container.DmContainer;
 import org.devlive.metaforge.plugin.utils.PluginPathUtils;
@@ -50,6 +51,21 @@ public class DmServiceTest
         String arch = System.getProperty("os.arch", "");
         Assume.assumeTrue("Dameng image is amd64-only, skipping on " + arch,
                 "amd64".equals(arch) || "x86_64".equals(arch));
+        // 镜像标签可能被上游替换为其他平台（CI 曾拉到 linux/arm64 导致容器创建 404），
+        // 拉取后校验镜像平台与宿主机一致，不一致时跳过而不是让测试报错
+        try {
+            InspectImageResponse inspect = org.testcontainers.DockerClientFactory.instance().client()
+                    .inspectImageCmd(DAMENG_8).exec();
+            String imageArch = String.valueOf(inspect.getArch()).replace("amd64", "x86_64");
+            Assume.assumeTrue("Dameng image platform " + imageArch + " does not match host " + arch,
+                    imageArch.equalsIgnoreCase(arch));
+        }
+        catch (org.junit.internal.AssumptionViolatedException ex) {
+            throw ex;
+        }
+        catch (Throwable ex) {
+            Assume.assumeTrue("Dameng image could not be inspected, skipping: " + ex.getMessage(), false);
+        }
     }
 
     @Before

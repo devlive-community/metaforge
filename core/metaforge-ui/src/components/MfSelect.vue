@@ -58,12 +58,7 @@ const searchInput = ref<HTMLInputElement>()
 /** The popup teleports to body with fixed positioning, so scroll and
  *  overflow containers cannot clip it; the composable flips it above
  *  the trigger when the viewport has no room below. */
-const popupStyle = useOverlayPosition({ root, open, placement: () => 'bottomLeft', overlay, gap: 6 })
-const triggerWidth = ref(0)
-
-watch(open, value => {
-    if (value) triggerWidth.value = root.value?.offsetWidth ?? 0
-})
+const popupStyle = useOverlayPosition({ root, open, placement: () => 'bottomLeft', overlay, gap: 6, matchTriggerWidth: true })
 
 function toggle(): void {
     if (!props.disabled) {
@@ -114,6 +109,10 @@ function select(option: MfSelectOption): void {
     }
 }
 
+function remove(value: string | number): void {
+    commit(selectedValues.value.filter(item => item !== value))
+}
+
 function clear(): void {
     commit(isMultiple.value ? [] : '')
     query.value = ''
@@ -151,8 +150,11 @@ const filteredOptions = computed(() => {
         props.filterOption ? props.filterOption(option, q) : option.label.toLowerCase().includes(q))
 })
 
-const selectedOptions = computed(() =>
-    props.options.filter(option => isSelected(option)))
+const selectedOptions = computed(() => {
+    const byValue = new Map(props.options.map(option => [option.value, option]))
+    return [...new Set(selectedValues.value)].map(value => byValue.get(value))
+        .filter((option): option is MfSelectOption => option !== undefined)
+})
 
 const label = computed(() => selectedOptions.value.map(option => option.label).join(', '))
 
@@ -170,7 +172,7 @@ const heightClass = computed(() => CONTROL_SIZES[props.size].split(' ').find(c =
 const searchActive = computed(() => props.searchable && open.value)
 
 const triggerClass = computed(() => clsx(
-    'mf-invalidable inline-flex w-full cursor-pointer items-center gap-2 rounded-mf-md border bg-surface pl-3 pr-2.5 text-sm',
+    'mf-invalidable inline-flex min-w-0 w-full max-w-full cursor-pointer items-center gap-2 rounded-mf-md border bg-surface pl-3 pr-2.5 text-sm',
     isMultiple.value ? 'min-h-9 py-1' : heightClass.value,
     TRANSITION,
     props.invalid ? 'border-danger' : open.value ? 'border-primary' : 'border-line',
@@ -183,35 +185,47 @@ watch(open, value => {
 </script>
 
 <template>
-    <div ref="root" class="relative inline-flex w-full">
+    <div ref="root" class="relative inline-flex min-w-0 w-full max-w-full">
         <div :class="triggerClass" @click="toggle">
-            <input
-                v-if="searchActive"
-                ref="searchInput"
-                v-model="query"
-                class="min-w-0 flex-1 bg-transparent text-sm text-content placeholder:text-content-placeholder outline-none"
-                :placeholder="isMultiple || selectedOptions.length === 0 ? placeholder : label"
-                @keydown="onQueryKeydown"
-                @input="emit('search', query)"
-            >
+            <span v-if="$slots.prefix" class="inline-flex shrink-0 items-center text-content-secondary"><slot name="prefix" /></span>
             <span
-                v-else
-                class="flex min-w-0 flex-1 flex-wrap items-center gap-1 text-left"
+                class="flex min-w-0 flex-1 flex-wrap items-center gap-1 overflow-y-auto text-left"
                 :class="selectedOptions.length === 0 && 'text-content-placeholder'"
+                :style="isMultiple && selectedOptions.length > 0 ? { maxHeight: '96px' } : {}"
             >
-                <template v-if="selectedOptions.length === 0">{{ placeholder }}</template>
-                <template v-else-if="isMultiple">
+                <template v-if="isMultiple">
                     <span
                         v-for="option in selectedOptions"
                         :key="String(option.value)"
-                        class="inline-flex items-center gap-1 rounded-mf-sm bg-surface-active px-1.5 py-0.5 text-xs text-content"
+                        class="inline-flex min-w-0 max-w-40 items-center gap-1 rounded-mf-sm bg-surface-active px-1.5 py-0.5 text-xs text-content"
                     >
-                        {{ option.label }}
+                        <span class="truncate">{{ option.label }}</span>
+                        <button
+                            v-if="!disabled"
+                            type="button"
+                            class="inline-flex size-3.5 shrink-0 items-center justify-center rounded-mf-full text-content-tertiary hover:text-content"
+                            :aria-label="`remove ${option.label}`"
+                            @click.stop="remove(option.value)"
+                        >
+                            <svg class="size-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+                        </button>
                     </span>
                 </template>
-                <template v-else>
+                <template v-else-if="!searchActive && selectedOptions.length > 0">
                     <span class="truncate text-content">{{ label }}</span>
                 </template>
+                <input
+                    v-if="searchActive"
+                    ref="searchInput"
+                    v-model="query"
+                    class="w-0 min-w-0 bg-transparent text-sm text-content placeholder:text-content-placeholder outline-none"
+                    :class="isMultiple ? 'flex-[1_1_3rem]' : 'flex-1'"
+                    :placeholder="selectedOptions.length === 0 ? placeholder : isMultiple ? '' : label"
+                    @click.stop
+                    @keydown="onQueryKeydown"
+                    @input="emit('search', query)"
+                >
+                <span v-else-if="selectedOptions.length === 0">{{ placeholder }}</span>
             </span>
             <span
                 v-if="clearable && selectedOptions.length > 0 && !disabled"
@@ -245,7 +259,7 @@ watch(open, value => {
                 ref="overlay"
                 role="listbox"
                 class="fixed z-50 flex max-h-64 flex-col gap-1 overflow-y-auto rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg"
-                :style="[{ ...popupStyle, maxHeight: '16rem' }, { width: triggerWidth + 'px' }]"
+                :style="{ ...popupStyle, maxHeight: '16rem' }"
             >
                 <template v-for="[group, groupOptions] in grouped" :key="group || 'default'">
                     <li v-if="group" class="px-2.5 pt-1.5 pb-1 text-xs font-semibold text-content-tertiary">

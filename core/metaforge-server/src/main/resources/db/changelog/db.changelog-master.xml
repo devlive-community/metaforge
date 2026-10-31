@@ -28,4 +28,7 @@
 
     <include file="core/core-0001-baseline.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0002-seed.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0003-user-login-info.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0004-function-knowledge.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0005-source-ddl-history.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

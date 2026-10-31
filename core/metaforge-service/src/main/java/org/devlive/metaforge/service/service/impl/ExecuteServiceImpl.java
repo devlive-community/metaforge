@@ -19,11 +19,14 @@ import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.service.ExecuteService;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.Response;
+import org.devlive.metaforge.spi.model.RuntimeConfigure;
+import org.devlive.metaforge.spi.sql.TableScopedSql;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 
 @Slf4j
@@ -60,8 +63,17 @@ public class ExecuteServiceImpl
     @Override
     public CommonResponse<Object> execute(ExecuteEntity configure)
     {
+        String database = null;
+        if (StringUtils.isNotBlank(configure.getTable())) {
+            Optional<String> violation = TableScopedSql.validate(configure.getContent(), configure.getDatabase(), configure.getTable());
+            if (violation.isPresent()) {
+                return CommonResponse.failure(ServiceState.PLUGIN_EXECUTE_FAILED, violation.get());
+            }
+            database = StringUtils.trimToNull(configure.getDatabase());
+        }
+        String scopedDatabase = database;
         return sourceRepository.findByCode(configure.getName())
-                .map(entity -> handleSourceEntity(entity, configure.getContent()))
+                .map(entity -> handleSourceEntity(entity, configure.getContent(), scopedDatabase))
                 .orElse(CommonResponse.failure(ServiceState.SOURCE_NOT_FOUND));
     }
 
@@ -100,7 +112,7 @@ public class ExecuteServiceImpl
         if (StringUtils.isEmpty(statement)) {
             return CommonResponse.failure(ServiceState.PLUGIN_EXECUTE_FAILED, "Query plan requires a SQL statement");
         }
-        return handleSourceEntity(entity, prefix + statement);
+        return handleSourceEntity(entity, prefix + statement, null);
     }
 
     /**
@@ -111,10 +123,10 @@ public class ExecuteServiceImpl
      * @param content SQL语句 / SQL statement
      * @return 插件执行结果 / Plugin execution result
      */
-    private CommonResponse<Object> handleSourceEntity(SourceEntity entity, String content)
+    private CommonResponse<Object> handleSourceEntity(SourceEntity entity, String content, String database)
     {
         return pluginManager.getPlugin(entity.getType())
-                .map(plugin -> executeWithPlugin(entity, plugin, content))
+                .map(plugin -> executeWithPlugin(entity, plugin, content, database))
                 .orElse(CommonResponse.failure(ServiceState.PLUGIN_NOT_FOUND));
     }
 
@@ -127,7 +139,7 @@ public class ExecuteServiceImpl
      * @param content SQL语句 / SQL statement
      * @return 插件执行结果 / Plugin execution result
      */
-    private CommonResponse<Object> executeWithPlugin(SourceEntity entity, Plugin plugin, String content)
+    private CommonResponse<Object> executeWithPlugin(SourceEntity entity, Plugin plugin, String content, String database)
     {
         try {
             PluginService service = plugin.getService(PluginService.class);
@@ -135,7 +147,7 @@ public class ExecuteServiceImpl
 
             // 执行插件并获取响应
             // Execute the plugin and get the response
-            Response response = executePlugin(service, entity, plugin, content);
+            Response response = executePlugin(service, entity, plugin, content, database);
 
             if (response.getIsSuccessful()) {
                 return CommonResponse.success(response);
@@ -191,12 +203,14 @@ public class ExecuteServiceImpl
      * @param content {@link String} 执行内容 / Execution content
      * @return {@link Response} 插件执行结果 / Plugin execution result
      */
-    private Response executePlugin(PluginService service, SourceEntity entity, Plugin plugin, String content)
+    private Response executePlugin(PluginService service, SourceEntity entity, Plugin plugin, String content, String database)
     {
-        Response response = service.execute(
-                entity.toConfigure(pluginManager, plugin),
-                content
-        );
+        RuntimeConfigure runtime = entity.toConfigure(pluginManager, plugin);
+        if (database != null) {
+            // A table-scoped statement runs in the table's database so unqualified names resolve to it.
+            runtime.setDatabase(Optional.of(database));
+        }
+        Response response = service.execute(runtime, content);
         response.setContent(content);
         return response;
     }

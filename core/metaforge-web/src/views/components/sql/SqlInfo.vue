@@ -1,6 +1,7 @@
 <template>
-  <MfModal v-model:open="visible" title="Show Content" width="40%">
+  <MfModal v-model:open="visible" :title="$t('query.common.showSql')" width="40%">
     <AceEditor v-if="content" :value="content" :read-only="true"/>
+    <p v-else class="py-6 text-center text-sm text-content-tertiary">{{ $t('common.noData') }}</p>
 
     <template #footer>
       <MfButton variant="danger" @click="onCancel">

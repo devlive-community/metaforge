@@ -227,7 +227,10 @@ const toggleableColumns = computed(() =>
 )
 
 const displayColumns = computed(() =>
-  props.columns.filter(col => !hiddenKeys.value.has(col.key))
+  props.columns
+       .filter(col => !hiddenKeys.value.has(col.key))
+       // 操作等锁定列始终固定在右侧，配合 MfTable 的横向滚动
+       .map(col => (props.lockedColumnKeys.includes(col.key) && !col.fixed ? { ...col, fixed: 'right' } : col))
 )
 
 const toggleColumn = (key: string, checked: boolean) => {

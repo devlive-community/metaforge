@@ -18,7 +18,7 @@
       <div class="flex justify-end">
         <MfSpace>
           <MfButton @click="onCancel">{{ $t('common.cancel') }}</MfButton>
-          <MfButton variant="danger" type="submit" :loading="loading">{{ title }}</MfButton>
+          <MfButton variant="danger" type="submit" :loading="loading">{{ $t('source.common.deleteButton') }}</MfButton>
         </MfSpace>
       </div>
     </MfForm>

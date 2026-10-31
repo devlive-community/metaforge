@@ -24,7 +24,7 @@
           </div>
         </template>
 
-        <MfButton variant="ghost" size="sm" class="rounded-full!">
+        <MfButton variant="ghost" size="sm" shape="circle">
           <Settings :size="15" />
         </MfButton>
       </MfPopover>

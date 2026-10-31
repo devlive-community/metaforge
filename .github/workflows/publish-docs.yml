@@ -1,37 +1,40 @@
-name: Publish docs via GitHub Pages
+name: Docs
 
 on:
   push:
-  pull_request:
-    types: [closed]
+    branches: [ dev, main, master, 2026.0.0 ]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/publish-docs.yml'
   workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   deploy:
+    name: Publish docs to GitHub Pages
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [ 18.x ]
-
+    timeout-minutes: 15
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: 20
 
-      - name: Install dependencies
-        run: npm install pageforge -g
+      - name: Install pageforge
+        run: npm install -g pageforge
 
-      - name: Build
+      - name: Build the docs site
+        working-directory: docs
         run: |
-          cd docs
           pageforge build
           echo 'metaforge.devlive.org' > dist/CNAME
 
-      - name: Deploy
-        uses: peaceiris/actions-gh-pages@v3
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
         with:
-          github_token: ${{ secrets.GH_TOKEN }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: docs/dist

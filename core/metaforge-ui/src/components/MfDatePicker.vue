@@ -38,7 +38,10 @@ const months = computed(() => Array.from({ length: 12 }, (_, index) => new Intl.
 const years = computed(() => Array.from({ length: 12 }, (_, index) => Math.floor(view.value.getFullYear() / 12) * 12 + index))
 const display = computed(() => {
     const date = parseDate(props.modelValue)
-    return date ? new Intl.DateTimeFormat(props.locale, { year: 'numeric', month: '2-digit', day: '2-digit' }).format(date) : ''
+    if (!date) return ''
+    // 日期统一使用 - 分隔（2026-10-29），不随 locale 变成斜杠格式
+    const pad = (value: number) => String(value).padStart(2, '0')
+    return `${ date.getFullYear() }-${ pad(date.getMonth() + 1) }-${ pad(date.getDate()) }`
 })
 const allowed = (key: string) => (!props.min || key >= props.min) && (!props.max || key <= props.max)
 

@@ -11,6 +11,7 @@ import org.devlive.metaforge.common.utils.DateUtils;
 import org.devlive.metaforge.common.utils.EnvironmentUtils;
 import org.devlive.metaforge.plugin.loader.PluginClassLoader;
 import org.devlive.metaforge.plugin.loader.PluginLoaderFactory;
+import org.devlive.metaforge.plugin.loader.PropertiesPluginLoader;
 import org.devlive.metaforge.plugin.loader.TarPluginLoader;
 import org.devlive.metaforge.plugin.utils.PluginClassLoaderUtils;
 import org.devlive.metaforge.plugin.utils.PluginPathUtils;
@@ -25,14 +26,23 @@ import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -76,8 +86,17 @@ public class PluginManager
         return thread;
     });
 
+    private ScheduledFuture<?> watcher;
+
+    @SuppressFBWarnings(value = "CT_CONSTRUCTOR_THROW", justification = "Reject invalid configuration before any plugins are opened")
     public PluginManager(PluginConfigure config)
     {
+        if (config.getLoadThreads() < 0) {
+            throw new IllegalArgumentException("Plugin loading thread count must be zero or positive");
+        }
+        if (config.isAutoReload() && config.getScanInterval() <= 0) {
+            throw new IllegalArgumentException("Plugin scan interval must be positive when auto reload is enabled");
+        }
         this.config = config;
         this.plugins = Maps.newConcurrentMap();
         this.pluginClassLoaders = Maps.newConcurrentMap();
@@ -87,12 +106,16 @@ public class PluginManager
     // Start plugin manager
     public void start()
     {
-        running = true;
-        createPluginsDirectoryIfNotExists();
-        loadPlugins();
-
-        if (config.isAutoReload()) {
-            startPluginWatcher();
+        synchronized (installLock) {
+            if (running) {
+                return;
+            }
+            createPluginsDirectoryIfNotExists();
+            loadPlugins();
+            running = true;
+            if (config.isAutoReload()) {
+                startPluginWatcher();
+            }
         }
     }
 
@@ -100,16 +123,17 @@ public class PluginManager
     // Stop plugin manager
     public void stop()
     {
-        running = false;
-
-        // 关闭所有插件的类加载器
-        // Close class loaders for all plugins
-        plugins.values().forEach(this::closePluginClassLoader);
-
-        // 清理映射
-        // Clean up mappings
-        pluginClassLoaders.clear();
-        plugins.clear();
+        synchronized (installLock) {
+            running = false;
+            if (watcher != null) {
+                watcher.cancel(false);
+                watcher = null;
+            }
+            List<PluginMetadata> loaded = new ArrayList<>(plugins.values());
+            plugins.clear();
+            loaded.forEach(this::closePluginClassLoader);
+            pluginClassLoaders.clear();
+        }
     }
 
     // 创建插件目录（如果不存在）
@@ -528,175 +552,262 @@ public class PluginManager
         }
     }
 
-    // 加载所有插件
-    // Load all plugins
+    // 先发现独立路径，再并行初始化，最后按稳定顺序注册
+    // Discover independent paths, initialize in parallel, then register in stable order
     private void loadPlugins()
     {
-        try {
-            Path pluginsPath = config.getPluginsDir();
-
-            if (Files.isRegularFile(pluginsPath)) {
-                log.debug("Loading plugin from file: {}", pluginsPath);
-                // 如果是文件直接加载
-                // Load plugin from file
-                loadPluginFromDirectory(pluginsPath);
+        synchronized (installLock) {
+            long started = System.nanoTime();
+            List<Path> paths;
+            try {
+                paths = discoverPluginPaths();
             }
-            else {
-                // 如果是目录则遍历加载
-                // Load plugins from directory
-                try (Stream<Path> paths = Files.walk(pluginsPath, config.getScanDepth() == 0 ? 1 : config.getScanDepth())) {
-                    paths.filter(Files::isDirectory)
-                            .peek(path -> log.debug("Scanning plugin directory: {}", path))
-                            .filter(path -> !path.equals(pluginsPath))
-                            .forEach(this::loadPluginFromDirectory);
-                }
+            catch (IOException e) {
+                log.error("Failed to scan plugins directory", e);
+                return;
             }
-        }
-        catch (IOException e) {
-            log.error("Failed to scan plugins directory", e);
-        }
-    }
-
-    // 从目录加载插件
-    // Load plugin from directory
-    private void loadPluginFromDirectory(Path pluginDir)
-    {
-        try {
-            // 从目录名获取插件基本信息
-            // Get plugin basic information from directory name
-            String pluginBaseName = pluginDir.getFileName().toString();
-            log.debug("Found plugin directory: {}", pluginDir);
-            log.debug("Found plugin: {}", pluginBaseName);
-
-            // 获取插件版本(可以从配置文件或清单文件中读取)
-            // Get plugin version (can be read from config or manifest file)
-            String pluginVersion = VersionUtils.determinePluginVersion(pluginDir);
-            log.debug("Found plugin version: {}", pluginVersion);
-
-            PluginClassLoader loader;
-            if (config.isShareClassLoaderWhenSameDir()) {
-                log.info("Use shared ClassLoader for plugin: {} at {}", pluginBaseName, pluginDir);
-                // 多个插件在同一目录下，使用同一个类加载器
-                // Multiple plugins in the same directory, use the same class loader
-                loader = pluginClassLoaders.computeIfAbsent(
-                        pluginDir.toString(),
-                        k -> {
-                            try {
-                                return PluginClassLoaderUtils.createClassLoader(
-                                        pluginDir,
-                                        pluginBaseName,
-                                        pluginVersion,
-                                        true,
-                                        config.getParentClassLoaderPackages()
-                                );
-                            }
-                            catch (Exception e) {
-                                log.error("Failed to create ClassLoader for plugin: {} at {}", pluginBaseName, pluginDir, e);
-                                return null;
-                            }
-                        }
-                );
-            }
-            else {
-                log.info("Use independent ClassLoader for plugin: {} at {}", pluginBaseName, pluginDir);
-                // 创建插件专用类加载器
-                // Create plugin-specific class loader
-                loader = PluginClassLoaderUtils.createClassLoader(
-                        pluginDir,
-                        pluginBaseName,
-                        pluginVersion,
-                        true,
-                        config.getParentClassLoaderPackages()
-                );
-            }
-
-            if (loader == null) {
-                log.error("Failed to create ClassLoader for plugin: {} at {} skipped", pluginBaseName, pluginDir);
+            if (paths.isEmpty()) {
+                log.info("No plugin paths found in {}", config.getPluginsDir());
                 return;
             }
 
-            List<Plugin> modules = PluginContextManager.runWithClassLoader(loader, () -> PluginLoaderFactory.loadPlugins(pluginDir, config.getParentClassLoaderPackages()));
-
-            for (Plugin module : modules) {
-                PluginContextManager.runWithClassLoader(loader, () -> {
-                    log.debug("Loader version: {}", loader.getPluginVersion());
-                    log.debug("Module loader version: {}", module.getPluginClassLoader().getPluginVersion());
-
-                    // 为每个插件模块创建独立的注入器
-                    // Create separate injector for each plugin module
-                    Injector pluginInjector = Guice.createInjector(module);
-                    module.setInjector(pluginInjector);
-
-                    String pluginName = module.getName();
-                    // 保存类加载器信息
-                    // Save class loader information
-                    if (config.isShareClassLoaderWhenSameDir()) {
-                        pluginClassLoaders.putIfAbsent(pluginName, loader);
+            int configured = config.getLoadThreads();
+            int automatic = Math.min(4, Math.max(1, Runtime.getRuntime().availableProcessors()));
+            int workers = Math.min(paths.size(), configured == 0 ? automatic : configured);
+            log.info("Loading {} plugin paths with {} worker(s)", paths.size(), workers);
+            AtomicInteger threadNumber = new AtomicInteger();
+            ExecutorService executor = Executors.newFixedThreadPool(workers, task -> {
+                Thread thread = new Thread(task, "plugin-loader-" + threadNumber.incrementAndGet());
+                thread.setDaemon(true);
+                return thread;
+            });
+            List<Future<List<PluginMetadata>>> futures = new ArrayList<>();
+            List<PluginMetadata> staged = new ArrayList<>();
+            AtomicBoolean aborted = new AtomicBoolean();
+            boolean completed = false;
+            try {
+                for (Path path : paths) {
+                    futures.add(executor.submit(() -> {
+                        List<PluginMetadata> loaded = preparePlugins(path);
+                        synchronized (staged) {
+                            if (aborted.get()) {
+                                loaded.forEach(this::closePluginClassLoader);
+                            }
+                            else {
+                                staged.addAll(loaded);
+                            }
+                        }
+                        return loaded;
+                    }));
+                }
+                List<PluginMetadata> ordered = new ArrayList<>();
+                int failedPaths = 0;
+                for (int index = 0; index < futures.size(); index++) {
+                    try {
+                        List<PluginMetadata> loaded = futures.get(index).get();
+                        ordered.addAll(loaded);
+                        if (loaded.isEmpty()) {
+                            failedPaths++;
+                        }
                     }
-                    else {
-                        pluginClassLoaders.put(pluginName, loader);
+                    catch (ExecutionException e) {
+                        if (e.getCause() instanceof VirtualMachineError) {
+                            throw (VirtualMachineError) e.getCause();
+                        }
+                        failedPaths++;
+                        log.error("Failed to load plugin path: {}", paths.get(index), e.getCause());
                     }
-
-                    PluginMetadata pluginMetadata = PluginMetadata.builder()
-                            .name(pluginName)
-                            .version(Objects.equals(module.getVersion(), DEFAULT_VERSION) ? module.getPluginClassLoader().getPluginVersion() : module.getVersion())
-                            .location(pluginDir)
-                            .state(PluginState.CREATED)
-                            .classLoader(module.getPluginClassLoader() == null ? loader : module.getPluginClassLoader())
-                            .loaderName(module.getClassLoader())
-                            .instance(module)
-                            .type(module.getType())
-                            .key(module.getKey())
-                            .configure(module.describe())
-                            .loadTimestamp(System.currentTimeMillis())
-                            .loadTime(DateUtils.formatYMDHMSWithInterval())
-                            .build();
-
-                    // 移除旧版本插件
-                    // Remove old version plugin
-                    PluginMetadata oldPlugin = plugins.remove(pluginName);
-                    if (oldPlugin != null) {
-                        closePluginClassLoader(oldPlugin);
-                    }
-
-                    plugins.put(pluginName, pluginMetadata);
-
-                    log.info("Install plugin: [ {} ] type [ {} ] version [ {} ] loader [ {} ] from source [ {} ] loader name [ {} ]",
-                            pluginName, module.getType().getName(), module.getVersion(), pluginMetadata.getLoaderName(), pluginDir, loader.getName());
-
-                    return null;
-                });
+                }
+                ordered.forEach(this::registerPlugin);
+                completed = true;
+                log.info("Plugin loading completed: {} registered plugin(s), {} failed/empty path(s), {} worker(s), {} ms",
+                        plugins.size(), failedPaths, workers, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started));
             }
-        }
-        catch (Exception e) {
-            log.error("Failed to load plugin from directory: {}", pluginDir, e);
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IllegalStateException("Interrupted while loading plugins", e);
+            }
+            finally {
+                if (!completed) {
+                    synchronized (staged) {
+                        aborted.set(true);
+                        staged.forEach(this::closePluginClassLoader);
+                    }
+                    futures.forEach(future -> future.cancel(true));
+                    executor.shutdownNow();
+                }
+                else {
+                    executor.shutdown();
+                }
+            }
         }
     }
 
-    // 关闭插件类加载器
-    // Close plugin class loader
-    private void closePluginClassLoader(PluginMetadata pluginMetadata)
+    private List<Path> discoverPluginPaths()
+            throws IOException
     {
-        try {
-            String pluginName = pluginMetadata.getName();
-
-            // 从映射中移除
-            // Remove from mapping
-            PluginClassLoader removed = pluginClassLoaders.remove(pluginName);
-
-            if (removed != null) {
-                removed.close();
-                log.info("Closed class loader for plugin: {}", pluginName);
-            }
-
-            // 如果不是 PluginClassLoader，尝试关闭普通的 URLClassLoader
-            // If not PluginClassLoader, try to close normal URLClassLoader
-            if (pluginMetadata.getClassLoader() instanceof PluginClassLoader) {
-                ((PluginClassLoader) pluginMetadata.getClassLoader()).close();
+        Path root = config.getPluginsDir().toAbsolutePath().normalize();
+        List<Path> candidates;
+        if (Files.isRegularFile(root)) {
+            candidates = List.of(root);
+        }
+        else {
+            try (Stream<Path> paths = Files.walk(root, config.getScanDepth() == 0 ? 1 : config.getScanDepth())) {
+                candidates = paths.filter(Files::isDirectory)
+                        .filter(path -> !path.equals(root))
+                        .sorted()
+                        .collect(Collectors.toList());
             }
         }
+        Set<Path> plugins = new LinkedHashSet<>();
+        Set<Path> manifests = new HashSet<>();
+        for (Path path : candidates) {
+            try {
+                expandPluginPath(path, plugins, manifests);
+            }
+            catch (IOException e) {
+                log.warn("Failed to resolve plugin path: {}", path, e);
+            }
+        }
+        return new ArrayList<>(plugins);
+    }
+
+    private void expandPluginPath(Path path, Set<Path> paths, Set<Path> manifests)
+            throws IOException
+    {
+        Path normalized = Files.exists(path) ? path.toRealPath() : path.toAbsolutePath().normalize();
+        if (Files.isRegularFile(normalized) && normalized.toString().endsWith(".properties")) {
+            if (!manifests.add(normalized)) {
+                log.warn("Skipping repeated plugin manifest: {}", normalized);
+                return;
+            }
+            for (Path entry : new PropertiesPluginLoader().resolvePaths(normalized)) {
+                try {
+                    expandPluginPath(entry, paths, manifests);
+                }
+                catch (IOException e) {
+                    log.warn("Failed to resolve manifest entry: {}", entry, e);
+                }
+            }
+        }
+        else {
+            if (Files.isRegularFile(normalized) && normalized.endsWith("pom.xml")) {
+                normalized = normalized.getParent();
+            }
+            paths.add(normalized);
+        }
+    }
+
+    // 安装时仍同步加载；启动/监视扫描复用同一初始化过程
+    // Installation remains synchronous; startup and watcher scans share preparation
+    private void loadPluginFromDirectory(Path pluginDir)
+    {
+        preparePlugins(pluginDir).forEach(this::registerPlugin);
+    }
+
+    private List<PluginMetadata> preparePlugins(Path pluginDir)
+    {
+        long started = System.nanoTime();
+        List<PluginMetadata> prepared = new ArrayList<>();
+        Set<PluginClassLoader> loaders = new HashSet<>();
+        try {
+            List<Plugin> modules = PluginLoaderFactory.loadPlugins(pluginDir, config.getParentClassLoaderPackages());
+            PluginClassLoader sharedFallback = null;
+            for (Plugin module : modules) {
+                try {
+                    // 复用加载器已建立的真实依赖路径，不再提前重复扫描整个插件目录
+                    // Reuse the actual module loader instead of scanning all dependencies again
+                    PluginClassLoader loader = module.getPluginClassLoader();
+                    if (loader == null) {
+                        if (config.isShareClassLoaderWhenSameDir() && sharedFallback != null) {
+                            loader = sharedFallback;
+                        }
+                        else {
+                            loader = PluginClassLoaderUtils.createClassLoader(pluginDir, pluginDir.getFileName().toString(),
+                                    VersionUtils.determinePluginVersion(pluginDir), true, config.getParentClassLoaderPackages());
+                            sharedFallback = loader;
+                        }
+                        module.setPluginClassLoader(loader);
+                    }
+                    loaders.add(loader);
+                    PluginClassLoader actualLoader = loader;
+                    prepared.add(PluginContextManager.runWithClassLoader(actualLoader, () -> {
+                        Injector injector = Guice.createInjector(module);
+                        module.setInjector(injector);
+                        String version = module.getVersion();
+                        return PluginMetadata.builder()
+                                .name(module.getName())
+                                .version(Objects.equals(version, DEFAULT_VERSION) ? actualLoader.getPluginVersion() : version)
+                                .location(pluginDir)
+                                .state(PluginState.CREATED)
+                                .classLoader(actualLoader)
+                                .loaderName(module.getClassLoader())
+                                .instance(module)
+                                .type(module.getType())
+                                .key(module.getKey())
+                                .configure(module.describe())
+                                .loadTimestamp(System.currentTimeMillis())
+                                .loadTime(DateUtils.formatYMDHMSWithInterval())
+                                .build();
+                    }));
+                }
+                catch (Exception | LinkageError e) {
+                    log.error("Failed to initialize plugin module: {} from {}", module.getClass().getName(), pluginDir, e);
+                }
+            }
+        }
+        catch (Exception | LinkageError e) {
+            log.error("Failed to load plugin from directory: {}", pluginDir, e);
+        }
+        finally {
+            prepared.forEach(metadata -> loaders.remove(metadata.getClassLoader()));
+            loaders.forEach(this::closeLoader);
+            log.info("Prepared {} plugin(s) from {} in {} ms", prepared.size(), pluginDir,
+                    TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - started));
+        }
+        return prepared;
+    }
+
+    private void registerPlugin(PluginMetadata metadata)
+    {
+        synchronized (installLock) {
+            String name = metadata.getName();
+            PluginMetadata oldPlugin = plugins.remove(name);
+            if (oldPlugin != null && oldPlugin.getClassLoader() != metadata.getClassLoader()) {
+                closePluginClassLoader(oldPlugin);
+            }
+            PluginClassLoader loader = (PluginClassLoader) metadata.getClassLoader();
+            pluginClassLoaders.put(name, loader);
+            if (config.isShareClassLoaderWhenSameDir()) {
+                pluginClassLoaders.put(metadata.getLocation().toString(), loader);
+            }
+            plugins.put(name, metadata);
+            log.info("Install plugin: [ {} ] type [ {} ] version [ {} ] loader [ {} ] from source [ {} ]",
+                    name, metadata.getType().getName(), metadata.getVersion(), metadata.getLoaderName(), metadata.getLocation());
+        }
+    }
+
+    private void closePluginClassLoader(PluginMetadata metadata)
+    {
+        ClassLoader loader = metadata.getClassLoader();
+        pluginClassLoaders.remove(metadata.getName(), loader);
+        // 同目录的其他模块仍在使用时，保留共享加载器
+        // Keep shared loaders alive while another registered module still uses them
+        if (plugins.values().stream().noneMatch(other -> other != metadata && other.getClassLoader() == loader)) {
+            pluginClassLoaders.values().removeIf(value -> value == loader);
+            if (loader instanceof PluginClassLoader) {
+                closeLoader((PluginClassLoader) loader);
+            }
+        }
+    }
+
+    private void closeLoader(PluginClassLoader loader)
+    {
+        try {
+            loader.close();
+        }
         catch (IOException e) {
-            log.error("Failed to close plugin classloader: {}", pluginMetadata.getName(), e);
+            log.warn("Failed to close plugin class loader: {}", loader.getPluginName(), e);
         }
     }
 
@@ -704,14 +815,18 @@ public class PluginManager
     // Start plugin watcher thread
     private void startPluginWatcher()
     {
-        scheduler.scheduleWithFixedDelay(() -> {
+        watcher = scheduler.scheduleWithFixedDelay(() -> {
             try {
-                loadPlugins();
+                synchronized (installLock) {
+                    if (running) {
+                        loadPlugins();
+                    }
+                }
             }
             catch (Exception e) {
                 log.error("Failed to load plugins during watch cycle", e);
             }
-        }, 0, config.getScanInterval(), TimeUnit.MILLISECONDS);
+        }, config.getScanInterval(), config.getScanInterval(), TimeUnit.MILLISECONDS);
 
         log.info("Started plugin watcher with scan interval: {}ms", config.getScanInterval());
     }
@@ -740,6 +855,7 @@ public class PluginManager
     public void destroy()
     {
         stopPluginWatcher();
+        stop();
     }
 
     // 获取指定名称的插件

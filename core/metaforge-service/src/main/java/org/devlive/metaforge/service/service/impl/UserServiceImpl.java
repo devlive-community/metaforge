@@ -20,6 +20,7 @@ import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.UploadBody;
 import org.devlive.metaforge.service.body.UserNameBody;
 import org.devlive.metaforge.service.body.UserPasswordBody;
+import org.devlive.metaforge.service.body.UserResetPasswordBody;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.RoleEntity;
 import org.devlive.metaforge.service.entity.SourceEntity;
@@ -175,6 +176,12 @@ public class UserServiceImpl
     {
         return userRepository.findByCode(code)
                 .map(user -> {
+                    if (user.isSystem()) {
+                        return CommonResponse.<String>failure("The built-in account cannot be deleted");
+                    }
+                    if (user.getId().equals(UserDetailsService.getUser().getId())) {
+                        return CommonResponse.<String>failure("The currently signed-in account cannot be deleted");
+                    }
                     // owned rows that JPA used to cascade
                     for (SourceEntity source : sourceRepository.findAllByUserId(user.getId())) {
                         pluginAuditRepository.deleteAllBySourceId(source.getId());
@@ -192,7 +199,8 @@ public class UserServiceImpl
     @Override
     public CommonResponse<UserEntity> saveOrUpdate(BaseRepository<UserEntity, Long> repository, UserEntity configure)
     {
-        if (configure.getId() != null) {
+        // edits without a new password keep the stored hash; the one-arg overload copies it back
+        if (configure.getId() != null && StringUtils.isNotEmpty(configure.getPassword())) {
             configure.setPassword(encoder.encode(configure.getPassword()));
         }
         return this.saveOrUpdate(configure);
@@ -213,6 +221,46 @@ public class UserServiceImpl
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toList());
         return CommonResponse.success(new JwtResponse(jwt, userDetails.getCode(), userDetails.getUsername(), roles, userDetails.getAvatar()));
+    }
+
+    @Override
+    public CommonResponse<PageEntity<UserEntity>> getAll(BaseRepository<UserEntity, Long> repository, FilterBody filter)
+    {
+        CommonResponse<PageEntity<UserEntity>> response = UserService.super.getAll(repository, filter);
+        if (response.getStatus() && response.getData() != null) {
+            withRoles(response.getData().getContent());
+        }
+        return response;
+    }
+
+    @Override
+    public CommonResponse<UserEntity> changeActive(BaseRepository<UserEntity, Long> repository, String code, boolean active)
+    {
+        if (!active) {
+            Optional<UserEntity> userOptional = userRepository.findByCode(code);
+            if (userOptional.isPresent()) {
+                UserEntity user = userOptional.get();
+                if (user.isSystem()) {
+                    return CommonResponse.failure("The built-in account cannot be disabled");
+                }
+                if (user.getId().equals(UserDetailsService.getUser().getId())) {
+                    return CommonResponse.failure("The currently signed-in account cannot be disabled");
+                }
+            }
+        }
+        return UserService.super.changeActive(repository, code, active);
+    }
+
+    @Override
+    public CommonResponse<Long> resetPassword(String code, UserResetPasswordBody configure)
+    {
+        return userRepository.findByCode(code)
+                .map(user -> {
+                    user.setPassword(encoder.encode(configure.getPassword()));
+                    userRepository.save(user);
+                    return CommonResponse.success(user.getId());
+                })
+                .orElseGet(() -> CommonResponse.failure(ServiceState.USER_NOT_FOUND));
     }
 
     @Override

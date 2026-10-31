@@ -144,6 +144,19 @@ class JsonConvertService : ConvertService
             val factory = JsonFactory()
             factory.createGenerator(file, JsonEncoding.UTF8).use { generator ->
                 generator.codec = ObjectMapper()
+                if (request.includeStructure)
+                {
+                    generator.writeStartObject()
+                    generator.writeArrayFieldStart("columns")
+                    request.headers.forEachIndexed { index, header ->
+                        generator.writeStartObject()
+                        generator.writeStringField("name", header.toString())
+                        generator.writeStringField("type", request.types.getOrNull(index)?.toString())
+                        generator.writeEndObject()
+                    }
+                    generator.writeEndArray()
+                    generator.writeFieldName("rows")
+                }
                 generator.writeStartArray()
                 request.columns.forEach { column ->
                     generator.writeStartObject()
@@ -155,6 +168,10 @@ class JsonConvertService : ConvertService
                             is List<*> ->
                             {
                                 val value = column[headerIndex]
+                                if (value == null && request.excludeNull)
+                                {
+                                    continue
+                                }
                                 if (value is LocalDateTime)
                                 {
                                     generator.writeStringField(header, value.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
@@ -168,6 +185,10 @@ class JsonConvertService : ConvertService
                             is ObjectNode ->
                             {
                                 val value = column.get(header)
+                                if ((value == null || value.isNull) && request.excludeNull)
+                                {
+                                    continue
+                                }
                                 if (value != null && isDateTime(value.asText()))
                                 {
                                     generator.writeStringField(header, value.asText())
@@ -192,6 +213,10 @@ class JsonConvertService : ConvertService
                     generator.writeEndObject()
                 }
                 generator.writeEndArray()
+                if (request.includeStructure)
+                {
+                    generator.writeEndObject()
+                }
             }
 
             log.info("${name()} writer end time [ ${DateUtils.now()} ]")

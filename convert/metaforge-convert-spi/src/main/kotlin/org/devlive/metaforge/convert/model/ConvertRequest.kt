@@ -17,6 +17,15 @@ class ConvertRequest
     // The format type of the original data
     var format: String? = null
 
+    // Column types in header order, written as field definitions when includeStructure is set (writer only)
+    var types: List<Any> = listOf()
+
+    // Write the column names and types ahead of the rows, in the way the format allows (writer only)
+    var includeStructure: Boolean = false
+
+    // Leave NULL values out: omitted fields in JSON and XML, empty cells in CSV and TXT (writer only)
+    var excludeNull: Boolean = false
+
     var headers: List<Any>
         get() = _headers.toList()
         set(value)

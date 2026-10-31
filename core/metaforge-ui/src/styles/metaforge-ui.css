@@ -33,6 +33,15 @@
     --color-danger-subtle: var(--mf-color-danger-subtle);
     --color-info: var(--mf-color-info);
     --color-info-subtle: var(--mf-color-info-subtle);
+    --color-code-bg: var(--mf-color-code-bg);
+    --color-code-header: var(--mf-color-code-header);
+    --color-code-fg: var(--mf-color-code-fg);
+    --color-code-muted: var(--mf-color-code-muted);
+    --color-code-keyword: var(--mf-color-code-keyword);
+    --color-code-type: var(--mf-color-code-type);
+    --color-code-string: var(--mf-color-code-string);
+    --color-code-identifier: var(--mf-color-code-identifier);
+    --color-code-number: var(--mf-color-code-number);
 
     /* surfaces & content */
     --color-page: var(--mf-color-page);

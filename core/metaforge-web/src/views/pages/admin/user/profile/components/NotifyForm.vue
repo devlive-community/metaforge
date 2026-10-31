@@ -21,7 +21,10 @@
         </div>
       </div>
 
-      <MfSkeleton :loading="loading">
+      <template v-if="loading">
+        <div class="flex items-center justify-center py-10"><MfSpinner/></div>
+      </template>
+      <template v-else>
         <div class="dc-notify__channel-grid">
           <div v-for="channel in channels"
                :key="channel.type"
@@ -50,7 +53,7 @@
             </div>
           </div>
         </div>
-      </MfSkeleton>
+      </template>
     </div>
 
     <!-- 触发场景 -->

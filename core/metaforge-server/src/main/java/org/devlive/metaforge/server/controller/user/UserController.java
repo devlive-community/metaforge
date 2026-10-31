@@ -10,6 +10,7 @@ import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.UploadBody;
 import org.devlive.metaforge.service.body.UserNameBody;
 import org.devlive.metaforge.service.body.UserPasswordBody;
+import org.devlive.metaforge.service.body.UserResetPasswordBody;
 import org.devlive.metaforge.service.body.user.UserRole;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.RoleEntity;
@@ -105,6 +106,18 @@ public class UserController
     public CommonResponse<List<TreeRecord>> getMenus()
     {
         return this.service.getMenus();
+    }
+
+    @PutMapping(value = "{code}/active")
+    public CommonResponse<UserEntity> changeActive(@PathVariable(value = "code") String code, @RequestParam(value = "active") boolean active)
+    {
+        return this.service.changeActive(this.repository, code, active);
+    }
+
+    @PutMapping(value = "{code}/resetPassword")
+    public CommonResponse<Long> resetPassword(@PathVariable(value = "code") String code, @Validated @RequestBody UserResetPasswordBody configure)
+    {
+        return this.service.resetPassword(code, configure);
     }
 
     @PutMapping(value = "allocationRole")

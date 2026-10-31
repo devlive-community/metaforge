@@ -81,7 +81,7 @@
                   {{ $t('user.auth.notUserTip') }}
                 </MfDivider>
 
-                <MfButton block @click="$router.push('/auth/signup')">
+                <MfButton block @click="$router.push({ path: '/auth/signup', query: redirectQuery })">
                   {{ $t('user.common.signup') }}
                 </MfButton>
               </MfSpace>
@@ -100,8 +100,7 @@ import { useUserStore } from '@/stores/user'
 import UserService from '@/services/user'
 import CaptchaService from '@/services/captcha'
 import CommonUtils from '@/utils/common'
-import router from '@/router'
-import { signInTarget } from '@/router/navigation'
+import { useRouteRedirect } from '@/composables/useRouteRedirect'
 import BaseLayout from '@/views/layouts/base/BaseLayout.vue'
 
 interface Props
@@ -115,6 +114,8 @@ interface Props
 defineOptions({ name: 'AuthSignin' })
 
 const userStore = useUserStore()
+// 登录成功回到被拦截前的原地址（未登录访问受保护页、登录过期都会带上 redirect）。
+const { query: redirectQuery, restore: restoreRedirect } = useRouteRedirect()
 
 const formRef = ref()
 const formState = ref<Props>({} as Props)
@@ -159,7 +160,7 @@ const onSubmit = async () => {
       if (menuResponse.status) {
         userStore.updateMenu(menuResponse.data)
         // 更新路由并跳转
-        await router.replace(signInTarget(router.currentRoute.value.query.redirect))
+        await restoreRedirect()
       }
       else {
         if (!menuResponse.status) {

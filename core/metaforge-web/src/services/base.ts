@@ -61,4 +61,12 @@ export abstract class BaseService
     {
         return new HttpUtils().delete(`${ this.baseUrl }/${ code }`)
     }
+
+    /**
+     * Toggle the active flag of a resource through the shared backend endpoint.
+     */
+    changeActive(code: string, active: boolean): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ this.baseUrl }/${ code }/active?active=${ active }`)
+    }
 }
