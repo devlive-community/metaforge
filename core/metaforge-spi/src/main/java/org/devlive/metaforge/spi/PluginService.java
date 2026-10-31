@@ -12,10 +12,8 @@ import org.devlive.metaforge.convert.model.ConvertRequest;
 import org.devlive.metaforge.plugin.Service;
 import org.devlive.metaforge.spi.adapter.Adapter;
 import org.devlive.metaforge.spi.adapter.BatchWriter;
-import org.devlive.metaforge.spi.adapter.HttpAdapter;
 import org.devlive.metaforge.spi.adapter.JdbcAdapter;
 import org.devlive.metaforge.spi.adapter.JdbcStreamAdapter;
-import org.devlive.metaforge.spi.adapter.NativeAdapter;
 import org.devlive.metaforge.spi.adapter.RowCallback;
 import org.devlive.metaforge.spi.connection.Connection;
 import org.devlive.metaforge.spi.connection.JdbcConnection;
@@ -211,16 +209,7 @@ public interface PluginService
         response.setContent(content);
         if (connection != null) {
             log.info("Execute [ {} ] plugin started", this.name());
-            Adapter adapter;
-            if (type().equals(PluginType.JDBC)) {
-                adapter = new JdbcAdapter(connection);
-            }
-            else if (type().equals(PluginType.NATIVE)) {
-                adapter = new NativeAdapter(connection);
-            }
-            else {
-                adapter = new HttpAdapter(connection);
-            }
+            Adapter adapter = new JdbcAdapter(connection);
             response = adapter.handlerExecute(content);
             log.info("Execute [ {} ] plugin end", this.name());
         }
