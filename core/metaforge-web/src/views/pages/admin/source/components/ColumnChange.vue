@@ -17,10 +17,11 @@
           <MfFormItem :name="`columns.${index}.type`"
                       :label="$t('source.common.columnType')"
                       :rules="[{ required: true, message: $t('source.validator.columnType.required') }]">
-            <MfSelect v-model="formState.columns[index].type"
+            <MfSelect v-if="can('datatype:list')" v-model="formState.columns[index].type"
                       :options="dataTypeOptions"
                       :placeholder="$t('source.placeholder.columnType')"
                       :loading="loading"/>
+            <MfInput v-else v-model="formState.columns[index].type" :placeholder="$t('source.placeholder.columnType')"/>
           </MfFormItem>
 
           <MfFormItem :name="`columns.${index}.length`"
@@ -45,7 +46,7 @@
             <MfSwitch v-model="formState.columns[index].primaryKey"/>
           </MfFormItem>
 
-          <MfFormItem :name="`columns.${index}.autoIncrement`" :label="$t('source.common.columnAutoIncrement')">
+          <MfFormItem v-if="can('table:auto-increment')" :name="`columns.${index}.autoIncrement`" :label="$t('source.common.columnAutoIncrement')">
             <MfSwitch v-model="formState.columns[index].autoIncrement"/>
           </MfFormItem>
 
@@ -72,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
@@ -84,6 +85,8 @@ defineOptions({ name: 'ColumnChange' })
 const props = withDefaults(defineProps<{ isVisible?: boolean; column?: string }>(), { isVisible: false })
 const emit = defineEmits<{ (e: 'close', value: boolean): void }>()
 
+// Type choices and auto increment follow the source plugin's declared capabilities.
+const can = inject<(capability: string) => boolean>('metadataCan', () => false)
 const route = useRoute()
 const { t } = useI18n()
 
@@ -117,7 +120,7 @@ const handleInitialize = () => {
 
   if (code && database && table) {
     loading.value = true
-    HttpUtils.all([MetadataService.getColumn(code, database, table, { columns: [{ name: props.column }] }), MetadataService.getDataTypes(code)])
+    HttpUtils.all([MetadataService.getColumn(code, database, table, { columns: [{ name: props.column }] }), can('datatype:list') ? MetadataService.getDataTypes(code) : Promise.resolve(null)])
              .then(HttpUtils.spread((...responses: any[]) => {
                const [columnResponse, dataTypeResponse] = responses
 
@@ -143,7 +146,10 @@ const handleInitialize = () => {
                  MfMessage.error(columnResponse.data.message)
                }
 
-               if (dataTypeResponse.status && dataTypeResponse.data && dataTypeResponse.data.isSuccessful) {
+               if (!dataTypeResponse) {
+                 dataTypes.value = []
+               }
+               else if (dataTypeResponse.status && dataTypeResponse.data && dataTypeResponse.data.isSuccessful) {
                  dataTypes.value = dataTypeResponse.data.columns
                }
                else {

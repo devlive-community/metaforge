@@ -70,3 +70,17 @@ export const pageCapabilitiesMet = (path: string, can: (capability: string) => b
 /** Compare modes and export formats a source can use: data needs its rows, sync SQL its statements. */
 export const compareModeCapabilities = (mode: CompareMode) => mode === 'data' ? ['table:read'] : []
 export const compareExportCapabilities = (kind: CompareMode, format: 'sql' | 'csv') => kind === 'data' ? ['table:read'] : format === 'sql' ? ['table:statement'] : []
+
+/** Actions the side tree's context menu offers on a table or column node, by declared capability. */
+export function sidebarActions(node: { table: boolean; column: boolean }, can: (capability: string) => boolean) {
+  return {
+    newTable: node.table && can('table:create'),
+    newColumn: (node.table || node.column) && can('column:create'),
+    exportData: node.table && can('table:export'),
+    truncateTable: node.table && can('table:truncate'),
+    dropTable: node.table && can('table:drop'),
+    changeColumn: node.column && can('column:modify'),
+    dropColumn: node.column && can('column:drop'),
+  }
+}
+export const hasSidebarActions = (actions: ReturnType<typeof sidebarActions>) => Object.values(actions).some(Boolean)

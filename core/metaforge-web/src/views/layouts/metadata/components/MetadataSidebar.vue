@@ -59,17 +59,17 @@
            :style="{ left: contextmenu.position.x + 'px', top: contextmenu.position.y + 'px' }"
            @click.stop>
         <MfMenu mode="vertical" style="min-width: 180px;">
-          <MfSubMenu v-if="dataInfo.level === StructureEnum.TABLE || dataInfo.level === StructureEnum.COLUMN || dataInfo.type === 'table' || dataInfo.type === 'column'"
+          <MfSubMenu v-if="contextActions.newTable || contextActions.newColumn"
                      key_="new"
                      :title="$t('source.common.menuNew')">
-            <MfMenuItem v-if="can('table:create') && (dataInfo.level === StructureEnum.TABLE || dataInfo.type === 'table')" key_="new-table" @click="visibleCreateTable(true)">
+            <MfMenuItem v-if="contextActions.newTable" key_="new-table" @click="visibleCreateTable(true)">
               <div class="flex items-center space-x-1">
                 <Table :size="16" />
                 <span>{{ $t('source.common.menuNewTable') }}</span>
               </div>
             </MfMenuItem>
 
-            <MfMenuItem v-if="can('column:create') && (dataInfo.level === StructureEnum.COLUMN || dataInfo.type === 'column' || dataInfo.level === StructureEnum.TABLE)" key_="new-column" @click="visibleCreateColumn(true)">
+            <MfMenuItem v-if="contextActions.newColumn" key_="new-column" @click="visibleCreateColumn(true)">
               <div class="flex items-center space-x-1">
                 <Columns3 :size="16" />
                 <span>{{ $t('source.common.newColumn') }}</span>
@@ -77,8 +77,8 @@
             </MfMenuItem>
           </MfSubMenu>
 
-          <MfSubMenu v-if="dataInfo.level === StructureEnum.TABLE" key_="export" :title="$t('source.common.menuExport')">
-            <MfMenuItem v-if="can('table:export')" key_="export-data" @click="visibleExportData(true)">
+          <MfSubMenu v-if="contextActions.exportData" key_="export" :title="$t('source.common.menuExport')">
+            <MfMenuItem key_="export-data" @click="visibleExportData(true)">
               <div class="flex items-center space-x-1">
                 <ArrowUpToLine :size="16" />
                 <span>{{ $t('source.common.exportData') }}</span>
@@ -86,28 +86,28 @@
             </MfMenuItem>
           </MfSubMenu>
 
-          <MfMenuItem v-if="can('table:truncate') && (dataInfo.level === StructureEnum.TABLE)" key_="truncate" @click="visibleTruncateTable(true)">
+          <MfMenuItem v-if="contextActions.truncateTable" key_="truncate" @click="visibleTruncateTable(true)">
             <div class="flex items-center space-x-1">
               <Trash2 :size="16" />
               <span>{{ $t('source.common.truncateTable') }}</span>
             </div>
           </MfMenuItem>
 
-          <MfMenuItem v-if="can('table:drop') && (dataInfo.level === StructureEnum.TABLE)" key_="drop-table" @click="visibleDropTable(true)">
+          <MfMenuItem v-if="contextActions.dropTable" key_="drop-table" @click="visibleDropTable(true)">
             <div class="flex items-center space-x-1">
               <Trash2 :size="16" />
               <span>{{ $t('source.common.dropTable') }}</span>
             </div>
           </MfMenuItem>
 
-          <MfMenuItem v-if="can('column:modify') && (dataInfo.level === StructureEnum.COLUMN)" key_="change-column" @click="visibleChangeColumn(true)">
+          <MfMenuItem v-if="contextActions.changeColumn" key_="change-column" @click="visibleChangeColumn(true)">
             <div class="flex items-center space-x-1">
               <Pencil :size="16" />
               <span>{{ $t('source.common.changeColumn') }}</span>
             </div>
           </MfMenuItem>
 
-          <MfMenuItem v-if="can('column:drop') && (dataInfo.level === StructureEnum.COLUMN)" key_="drop-column" @click="visibleDropColumn(true)">
+          <MfMenuItem v-if="contextActions.dropColumn" key_="drop-column" @click="visibleDropColumn(true)">
             <div class="flex items-center space-x-1">
               <Trash2 :size="16" />
               <span>{{ $t('source.common.dropColumn') }}</span>
@@ -159,7 +159,7 @@ import { useMetadataSidebar } from '@/composables/useMetadataSidebar'
 
 defineOptions({ name: 'MetadataSidebar' })
 
-const { can, loading, selectedKeys, originalSource, dataInfo, contextMenuRoot, tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible, columnCreateVisible, columnChangeVisible, columnDropVisible, contextmenu, tableEngine, searchKeyword, tableCount, filteredTreeArray, onSelect, onLoadData, visibleContextMenu, visibleCreateTable, visibleCreateColumn, visibleExportData, visibleTruncateTable, visibleDropTable, visibleChangeColumn, visibleDropColumn } = useMetadataSidebar()
+const { can, contextActions, loading, selectedKeys, originalSource, dataInfo, contextMenuRoot, tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible, columnCreateVisible, columnChangeVisible, columnDropVisible, contextmenu, tableEngine, searchKeyword, tableCount, filteredTreeArray, onSelect, onLoadData, visibleContextMenu, visibleCreateTable, visibleCreateColumn, visibleExportData, visibleTruncateTable, visibleDropTable, visibleChangeColumn, visibleDropColumn } = useMetadataSidebar()
 </script>
 
 <style scoped>

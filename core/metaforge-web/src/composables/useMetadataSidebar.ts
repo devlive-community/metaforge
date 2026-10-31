@@ -4,7 +4,7 @@ import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageR
 import { useI18n } from 'vue-i18n'
 import { MfMessage, useDismissableLayer } from 'metaforge-ui'
 import MetadataService from '@/services/metadata.ts'
-import { sourceManageLocation } from '@/model/source-manage'
+import { hasSidebarActions, sidebarActions, sourceManageLocation } from '@/model/source-manage'
 import { StructureEnum, StructureModel } from '@/model/structure.ts'
 
 export function useMetadataSidebar() {
@@ -211,10 +211,17 @@ export function useMetadataSidebar() {
     if (node.level === StructureEnum.TABLE && node.code !== route.params.table) {
       await router.push(sourceManageLocation({ source: String(route.params.source), database: String(route.params.database), table: node.code, tab: 'structure' }))
     }
+    // Nothing to offer on this node for this source: no menu at all.
+    if (!hasSidebarActions(sidebarActions(nodeKind(node), can))) return
     contextmenu.position = { x: event.clientX, y: event.clientY }
     dataInfo.value = node
     contextmenu.visible = true
   }
+  const nodeKind = (node: { level?: StructureEnum; type?: unknown }) => ({
+    table: node.level === StructureEnum.TABLE || node.type === 'table',
+    column: node.level === StructureEnum.COLUMN || node.type === 'column',
+  })
+  const contextActions = computed(() => dataInfo.value ? sidebarActions(nodeKind(dataInfo.value), can) : sidebarActions({ table: false, column: false }, can))
 
   const closeContextMenu = () => {
     contextmenu.visible = false
@@ -270,5 +277,5 @@ export function useMetadataSidebar() {
   watch(() => route.params.table, table => { selectedKeys.value = table ? [String(table) + '_table'] : [] }, { immediate: true })
   onScopeDispose(() => { tableRevision++ })
 
-  return { can, contextMenuRoot, loading, selectDatabase, selectedKeys, originalSource, dataInfo, tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible, columnCreateVisible, columnChangeVisible, columnDropVisible, contextmenu, tableEngine, searchKeyword, tableCount, filteredTreeArray, onChangeDatabase, onSelect, onLoadData, visibleContextMenu, visibleCreateTable, visibleCreateColumn, visibleExportData, visibleTruncateTable, visibleDropTable, visibleChangeColumn, visibleDropColumn }
+  return { can, contextActions, contextMenuRoot, loading, selectDatabase, selectedKeys, originalSource, dataInfo, tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible, columnCreateVisible, columnChangeVisible, columnDropVisible, contextmenu, tableEngine, searchKeyword, tableCount, filteredTreeArray, onChangeDatabase, onSelect, onLoadData, visibleContextMenu, visibleCreateTable, visibleCreateColumn, visibleExportData, visibleTruncateTable, visibleDropTable, visibleChangeColumn, visibleDropColumn }
 }
