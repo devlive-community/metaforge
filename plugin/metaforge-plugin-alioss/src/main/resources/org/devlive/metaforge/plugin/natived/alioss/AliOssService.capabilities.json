@@ -1,0 +1,12 @@
+{
+  "kind": "storage",
+  "capabilities": [
+    "namespace:list",
+    "object:list",
+    "object:read",
+    "object:download",
+    "tab:objects",
+    "tab:sql",
+    "query:execute"
+  ]
+}

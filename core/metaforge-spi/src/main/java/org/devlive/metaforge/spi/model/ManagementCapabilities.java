@@ -1,13 +1,20 @@
 package org.devlive.metaforge.spi.model;
 
 import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.devlive.metaforge.common.view.EntityView;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.LinkedHashSet;
-import java.util.Locale;
 import java.util.Set;
 
-/** Plugin-owned management contract. Capability names describe implemented operations, not user permissions. */
+/**
+ * Plugin-owned management contract: the kind of source and the capabilities its plugin declares
+ * (see {@link ManagementCapability}). Capability names describe implemented operations, not user
+ * permissions.
+ */
 public final class ManagementCapabilities
 {
     @JsonView({EntityView.UserView.class, EntityView.AdminView.class})
@@ -36,39 +43,69 @@ public final class ManagementCapabilities
         return capabilities.contains(capability);
     }
 
-    public static ManagementCapabilities queryOnly(String kind)
+    /** A source without management: no workspace, no management entries. */
+    public static ManagementCapabilities none()
     {
-        return new ManagementCapabilities(kind, Set.of("query:execute", "tab:sql"));
+        return new ManagementCapabilities("unknown", Set.of());
     }
 
-    public static ManagementCapabilities forJdbc(String connectType)
+    /**
+     * The capabilities a plugin declares in {@code <ServiceClass>.capabilities.json} next to its
+     * service class: {@code {"kind": "relational", "capabilities": ["database:list", ...]}}. The
+     * file is named after the class so plugins sharing a class path never read each other's. No
+     * file means no management; an unknown kind or capability is an error in the plugin.
+     */
+    public static ManagementCapabilities declaredBy(Class<?> service)
     {
-        String type = connectType == null ? "" : connectType.toLowerCase(Locale.ROOT);
-        if (type.equals("redis")) {
-            return queryOnly("key-value");
+        return DECLARED.get(service);
+    }
+
+    // Read once per service class: the declaration ships inside the plugin and never changes while it is loaded.
+    private static final ClassValue<ManagementCapabilities> DECLARED = new ClassValue<>()
+    {
+        @Override
+        protected ManagementCapabilities computeValue(Class<?> type)
+        {
+            return load(type);
         }
-        if (type.equals("mongodb")) {
-            return queryOnly("document");
+    };
+
+    private static ManagementCapabilities load(Class<?> service)
+    {
+        // A service extending another plugin's service inherits its declaration unless it has its own.
+        Class<?> owner = service;
+        while (owner != null && owner != Object.class && owner.getResource(owner.getSimpleName() + ".capabilities.json") == null) {
+            owner = owner.getSuperclass();
         }
-        if (type.equals("neo4j")) {
-            return queryOnly("graph");
+        if (owner == null || owner == Object.class) {
+            return none();
         }
-        if (type.isEmpty() || type.equals("metaforge")) {
-            return queryOnly("unknown");
+        String resource = owner.getSimpleName() + ".capabilities.json";
+        try (InputStream stream = owner.getResourceAsStream(resource)) {
+            return stream == null ? none() : read(resource, stream);
         }
-        Set<String> capabilities = new LinkedHashSet<>(Set.of(
-                "query:execute", "database:list", "table:list", "column:read", "index:read", "foreign-key:read",
-                "tab:structure", "tab:sql", "tab:indexes", "tab:foreignkeys"));
-        // The shared DDL/data generators currently target MySQL. Other plugins opt in when they implement a dialect.
-        if (type.equals("mysql")) {
-            capabilities.addAll(Set.of(
-                    "engine:list", "datatype:list", "database:info", "database:alter", "table:info", "table:read", "table:statement",
-                    "table:create", "table:drop", "table:truncate", "table:export", "table:auto-increment",
-                    "column:create", "column:modify", "column:drop", "column:reorder", "index:create", "index:drop",
-                    "foreign-key:create", "foreign-key:drop", "trigger:create", "trigger:drop", "table:alter",
-                    "data:insert", "data:modify", "data:delete", "trigger:read",
-                    "tab:data", "tab:info", "tab:statement", "tab:triggers", "tab:er-diagram"));
+        catch (IOException error) {
+            throw new IllegalStateException("Reading " + resource + " failed", error);
         }
-        return new ManagementCapabilities("relational", capabilities);
+    }
+
+    /** Reads and checks one declaration file; {@code resource} only names it in errors. */
+    public static ManagementCapabilities read(String resource, InputStream stream)
+            throws IOException
+    {
+        JsonNode root = new ObjectMapper().readTree(stream);
+        String kind = root.path("kind").asText("unknown");
+        if (!ManagementCapability.KINDS.contains(kind)) {
+            throw new IllegalStateException(resource + " declares the unknown kind " + kind);
+        }
+        Set<String> capabilities = new LinkedHashSet<>();
+        for (JsonNode node : root.path("capabilities")) {
+            String capability = node.asText();
+            if (!ManagementCapability.of(capability).isPresent()) {
+                throw new IllegalStateException(resource + " declares the unknown capability " + capability);
+            }
+            capabilities.add(capability);
+        }
+        return new ManagementCapabilities(kind, capabilities);
     }
 }

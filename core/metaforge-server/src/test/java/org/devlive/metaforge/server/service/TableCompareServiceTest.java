@@ -11,6 +11,7 @@ import org.devlive.metaforge.service.service.TableCompareService;
 import org.devlive.metaforge.service.service.impl.TableCompareServiceImpl;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.ManagementCapabilities;
+import org.devlive.metaforge.spi.model.ManagementCapability;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.jupiter.api.Test;
@@ -78,7 +79,7 @@ public class TableCompareServiceTest
             @Override
             public ManagementCapabilities managementCapabilities()
             {
-                return ManagementCapabilities.forJdbc("mysql");
+                return new ManagementCapabilities("relational", ManagementCapability.keys());
             }
 
             @Override

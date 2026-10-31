@@ -262,3 +262,74 @@ org.devlive.metaforge.plugin.http.questdb.QuestDBPluginModule
 
     插件的单元测试可以参考已经发布的插件进行测试
 !!!
+
+### 管理能力声明
+
+数据源管理（控制台、数据导入、数据导出、数据对比、ER 图）中的每个页面、标签页、弹窗、抽屉、侧边栏和按钮都由一个管理能力控制。插件在服务类旁边的 `<服务类名>.capabilities.json` 中声明自己实现了哪些能力，例如 `src/main/resources/org/devlive/metaforge/plugin/MySQLService.capabilities.json`：
+
+```json
+{
+  "kind": "relational",
+  "capabilities": ["query:execute", "database:list", "table:list", "column:read", "tab:structure", "tab:sql"]
+}
+```
+
+- `kind` 决定工作台布局：`relational`、`key-value`、`document`、`storage`、`graph`、`unknown`。
+- 没有声明文件的插件不提供数据管理：数据源列表隐藏「数据管理」入口，相关页面也无法打开。
+- 声明的每个能力都必须真正实现；服务端同样按声明拒绝未声明的操作。
+- 所有插件都通过 SQL 访问数据源，因此声明了能力的插件必须包含 `query:execute`。
+- 声明未知的能力或 `kind` 会在加载插件时报错；子类没有自己的声明文件时沿用父类的声明。
+- 新增管理功能时，先在 `ManagementCapability` 中登记能力，再在需要的插件中声明，并让该功能的每个界面入口都检查这个能力。
+
+| 能力 | 控制的界面 |
+|---|---|
+| `query:execute` | Run SQL in the query console and the SQL tab |
+| `namespace:list` | Namespace list of the native browser (Redis databases, buckets) |
+| `key:list` | Key list of the native browser |
+| `key:read` | Key detail panel |
+| `object:list` | Object list of the storage browser |
+| `object:read` | Object detail panel |
+| `object:download` | Object download button |
+| `database:list` | Database selector of the workbench header and the database list of the side tree |
+| `database:info` | Database overview page |
+| `database:alter` | Edit database properties button and drawer |
+| `engine:list` | Engine choices of the create table dialog and the table properties drawer |
+| `datatype:list` | Type choices of the column editor |
+| `table:list` | Table tree of the side panel and its search |
+| `table:info` | Table header facts and the table properties tab |
+| `table:read` | Data preview tab, data compare and the sample data DDL |
+| `table:statement` | DDL tab, the DDL quick menu and structure sync SQL |
+| `table:create` | New table entries (side tree, more actions, database overview) and new tables of an import |
+| `table:alter` | Edit table properties button and drawer |
+| `table:drop` | Drop table entries and dialog |
+| `table:truncate` | Truncate table entries and dialog, and empty-then-import |
+| `table:export` | Export data entries, dialog and the data export page |
+| `table:auto-increment` | Auto increment setting |
+| `column:read` | Column structure, structure compare and the data compare entry |
+| `column:create` | Add and insert column buttons and the column drawer |
+| `column:modify` | Edit column button and drawer |
+| `column:drop` | Drop column button and dialog |
+| `column:reorder` | Column drag sorting and the order dialog |
+| `index:read` | Index list |
+| `index:create` | New index button and drawer |
+| `index:drop` | Drop index button and dialog |
+| `foreign-key:read` | Foreign key list |
+| `foreign-key:create` | New foreign key button and drawer |
+| `foreign-key:drop` | Drop foreign key button and dialog |
+| `trigger:read` | Trigger list |
+| `trigger:create` | New and copy trigger buttons and the trigger drawer |
+| `trigger:drop` | Drop trigger button and dialog |
+| `data:insert` | Add row in the data preview and the data import page |
+| `data:modify` | Edit row in the data preview |
+| `data:delete` | Delete rows in the data preview |
+| `tab:structure` | Column structure tab |
+| `tab:data` | Data preview tab |
+| `tab:sql` | SQL tab |
+| `tab:indexes` | Indexes tab |
+| `tab:foreignkeys` | Foreign keys tab |
+| `tab:triggers` | Triggers tab |
+| `tab:info` | Table properties tab |
+| `tab:statement` | DDL tab |
+| `tab:er-diagram` | Table ER tab and the database ER page |
+| `tab:keys` | Key browser tab |
+| `tab:objects` | Object browser tab |

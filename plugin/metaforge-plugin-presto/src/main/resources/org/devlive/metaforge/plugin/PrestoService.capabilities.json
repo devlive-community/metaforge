@@ -1,0 +1,15 @@
+{
+  "kind": "relational",
+  "capabilities": [
+    "query:execute",
+    "database:list",
+    "table:list",
+    "column:read",
+    "index:read",
+    "foreign-key:read",
+    "tab:structure",
+    "tab:sql",
+    "tab:indexes",
+    "tab:foreignkeys"
+  ]
+}

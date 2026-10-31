@@ -68,9 +68,10 @@ public interface PluginService
     ThreadLocal<Connection> local = new ThreadLocal<>();
     Logger log = LoggerFactory.getLogger(PluginService.class);
 
+    /** What the source management pages offer for this plugin, declared in its capabilities file. */
     default ManagementCapabilities managementCapabilities()
     {
-        return ManagementCapabilities.forJdbc(connectType());
+        return ManagementCapabilities.declaredBy(getClass());
     }
 
     default ManagementPage managementNamespaces(RuntimeConfigure configure, ManagementRequest request)

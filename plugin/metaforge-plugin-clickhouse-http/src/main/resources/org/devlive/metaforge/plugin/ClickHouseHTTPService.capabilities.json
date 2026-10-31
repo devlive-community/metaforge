@@ -1,0 +1,7 @@
+{
+  "kind": "unknown",
+  "capabilities": [
+    "query:execute",
+    "tab:sql"
+  ]
+}

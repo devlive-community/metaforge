@@ -14,6 +14,7 @@ import org.devlive.metaforge.service.service.TableImportService;
 import org.devlive.metaforge.service.service.impl.TableImportServiceImpl;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.ManagementCapabilities;
+import org.devlive.metaforge.spi.model.ManagementCapability;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.jupiter.api.Test;
@@ -111,7 +112,7 @@ public class ImportTest
             @Override
             public ManagementCapabilities managementCapabilities()
             {
-                return ManagementCapabilities.forJdbc("mysql");
+                return new ManagementCapabilities("relational", ManagementCapability.keys());
             }
 
             @Override

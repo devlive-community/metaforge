@@ -1,0 +1,7 @@
+{
+  "kind": "document",
+  "capabilities": [
+    "query:execute",
+    "tab:sql"
+  ]
+}

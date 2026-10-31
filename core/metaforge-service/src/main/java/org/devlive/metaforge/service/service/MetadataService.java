@@ -11,11 +11,15 @@ import org.devlive.metaforge.spi.model.ManagementPage;
 import org.devlive.metaforge.spi.model.ManagementRequest;
 import org.devlive.metaforge.spi.model.Response;
 
+import java.util.List;
 import java.util.Map;
 
 public interface MetadataService
 {
     CommonResponse<ManagementCapabilities> getCapabilities(String code);
+
+    /** Capabilities of several sources at once; a source that can not be found manages nothing. */
+    CommonResponse<Map<String, ManagementCapabilities>> getCapabilities(List<String> codes);
 
     CommonResponse<ManagementPage> managementNamespaces(String code, ManagementRequest request);
 

@@ -14,6 +14,7 @@ import org.devlive.metaforge.service.service.TableExportService;
 import org.devlive.metaforge.service.service.impl.TableExportServiceImpl;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.ManagementCapabilities;
+import org.devlive.metaforge.spi.model.ManagementCapability;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.jupiter.api.Test;
@@ -103,7 +104,7 @@ public class TableExportServiceTest
             @Override
             public ManagementCapabilities managementCapabilities()
             {
-                return ManagementCapabilities.forJdbc("mysql");
+                return new ManagementCapabilities("relational", ManagementCapability.keys());
             }
 
             @Override
