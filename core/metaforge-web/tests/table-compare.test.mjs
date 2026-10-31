@@ -8,7 +8,7 @@ const load = async path => {
   return import(`data:text/javascript;base64,${Buffer.from(outputText).toString('base64')}`)
 }
 const { cellText, dataBody, emptyDataForm, structureSides } = await load('model/table-compare.ts')
-const { compareLocation, isSourceWorkbenchRoute, sourceManageContext } = await load('model/source-manage.ts')
+const { compareLocation, erLocation, isSourceWorkbenchRoute, sourceManageContext } = await load('model/source-manage.ts')
 
 const column = name => ({ name, type: 'int', nullable: false, defaultValue: null, comment: '' })
 const rows = [
@@ -41,4 +41,6 @@ test('the compare page carries the workbench context in its address', () => {
   assert.equal(sourceManageContext({ path: '/compare', params: {}, query: { source: 'old', database: 'db' } }).source, 'old')
   assert.equal(isSourceWorkbenchRoute({ path: '/compare', query: { id: 'demo' } }), true)
   assert.equal(isSourceWorkbenchRoute({ path: '/compare', query: {} }), false)
+  assert.deepEqual(erLocation({ source: 'demo', database: 'db' }), { path: '/er', query: { id: 'demo', database: 'db' } })
+  assert.equal(isSourceWorkbenchRoute({ path: '/er', query: { id: 'demo' } }), true)
 })

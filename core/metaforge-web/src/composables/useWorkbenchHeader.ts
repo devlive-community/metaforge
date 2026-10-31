@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
-import { MfMessage, useDismissableLayer } from 'metaforge-ui'
-import { compareLocation, sourceManageLocation } from '@/model/source-manage'
+import { MfMessage } from 'metaforge-ui'
+import { compareLocation, erLocation, sourceManageLocation } from '@/model/source-manage'
 import { useSourceCapabilities } from './useSourceCapabilities'
 import { useUserStore } from '@/stores/user'
 import { useI18n } from 'vue-i18n'
@@ -12,7 +12,7 @@ import NotificationService from '@/services/notification'
 import SourceService from '@/services/source'
 import MetadataService from '@/services/metadata'
 import { FilterModel } from '@/model/filter.ts'
-import { Database, Download, GitBranch, GitCompare, History, Home, LayoutDashboard, Presentation, Settings, SquareDashedBottomCode, SquarePlay, Store, Upload } from '@lucide/vue'
+import { Download, GitCompare, Home, Network, SquareTerminal, Upload } from '@lucide/vue'
 
 export function useWorkbenchHeader() {
   const route = useRoute()
@@ -23,45 +23,22 @@ export function useWorkbenchHeader() {
 
   const filter: FilterModel = new FilterModel()
 
-  // ===== 原型导航：源选择器 + 固定导航项 + 更多下拉 =====
+  // Source workbench navigation: home, then only what manages the current source and database.
+  const context = () => ({ source: routeSource.value, database: String(route.params.database || '') })
   const navItems = computed(() => [
     { path: '/home', label: t('common.home'), icon: Home },
-    { path: '/source', label: t('source.common.database'), icon: Database },
-    { path: '/query', label: 'SQL', icon: SquarePlay },
+    { path: '/manage', label: t('navigation.console'), icon: SquareTerminal, to: routeSource.value ? sourceManageLocation(context()) : '/source' },
     { path: '/import', label: t('navigation.dataImport'), icon: Upload },
     { path: '/export', label: t('navigation.dataExport'), icon: Download },
-    // Comparing starts from the source and database the header shows.
-    { path: '/compare', label: t('navigation.dataCompare'), icon: GitCompare,
-      to: routeSource.value ? compareLocation({ source: routeSource.value, database: String(route.params.database || '') }) : '/compare' }
-  ])
-
-  const moreNavItems = computed(() => [
-    { path: '/dataset', label: t('common.dataset'), icon: Database },
-    { path: '/workflow', label: t('common.workflow'), icon: GitBranch },
-    { path: '/snippet', label: t('common.snippet'), icon: SquareDashedBottomCode },
-    { path: '/history', label: t('common.history'), icon: History },
-    { path: '/report', label: t('common.report'), icon: Presentation },
-    { path: '/dashboard', label: t('common.dashboard'), icon: LayoutDashboard },
-    { path: '/store', label: t('common.store'), icon: Store },
-    ...(userStore.userInfo?.roles?.some((role: any) => String(role.code).includes('ADMIN'))
-        ? [{ path: '/admin/user', label: t('navigation.systemManagement'), icon: Settings }]
-        : [])
+    { path: '/compare', label: t('navigation.dataCompare'), icon: GitCompare, to: routeSource.value ? compareLocation(context()) : '/compare' },
+    { path: '/er', label: t('navigation.erDiagram'), icon: Network, to: routeSource.value ? erLocation(context()) : '/er' },
   ])
 
   const isNavActive = (path: string) => {
     if (path === '/home') return route.path === '/home' || route.path === '/'
-    if (path === '/source') return route.path.startsWith('/source') || route.path === '/manage'
-    if (path === '/query') return route.path.startsWith('/query')
     return route.path.startsWith(path)
   }
 
-  const searchIndex = ref<{ database: string; table: string }[]>([])
-
-  const searchFocused = ref(false)
-  const searchRoot = ref<HTMLElement | null>(null)
-  useDismissableLayer(searchRoot, searchFocused, () => { searchFocused.value = false })
-
-  let searchIndexSource = ''
 
   // 工作台头部跟随当前路由的数据源上下文
   const routeSource = computed(() => String(route.params.source || ''))
@@ -82,10 +59,10 @@ export function useWorkbenchHeader() {
     get: () => String(route.params.database || ''),
     set: (value: string) => {
       if (value && value !== route.params.database) {
-        // The compare page keeps its mode and starts over in the chosen database.
+        // The compare and ER pages stay where they are, in the chosen database.
         router.push(route.path === '/compare'
             ? compareLocation({ source: routeSource.value, database: value, mode: route.query.mode === 'data' ? 'data' : 'structure' })
-            : sourceManageLocation({ source: routeSource.value, database: value }))
+            : route.path === '/er' ? erLocation({ source: routeSource.value, database: value }) : sourceManageLocation({ source: routeSource.value, database: value }))
       }
     }
   })
@@ -95,8 +72,6 @@ export function useWorkbenchHeader() {
     const request = ++sourceRequest
     databaseOptions.value = []
     sourceInfo.value = null
-    searchIndex.value = []
-    searchIndexSource = ''
     if (!source) return
     SourceService.getByCode(source)
                  .then(response => {
@@ -115,56 +90,6 @@ export function useWorkbenchHeader() {
                      }
                    })
   }, { immediate: true })
-
-  const buildSearchIndex = () => {
-    const source = routeSource.value
-    if (!source || !can('table:list') || searchIndexSource === source) return
-    searchIndexSource = source
-    MetadataService.getDatabaseBySource(source)
-                   .then(response => {
-                     const databases = (response.data?.columns || [])
-                         .map((item: any) => item.object_name || item.schema_name)
-                         .filter(Boolean)
-                         .slice(0, 20)
-                     Promise.all(databases.map((database: string) =>
-                         MetadataService.getTablesByDatabase(source, database)
-                             .then(res => (res.data?.columns || [])
-                                 .filter((item: any) => item.type_name === 'table')
-                                 .map((item: any) => ({ database, table: item.object_name })))
-                             .catch(() => [] as { database: string; table: string }[])
-                     ))
-                         .then(groups => {
-                           if (routeSource.value === source) {
-                             searchIndex.value = groups.flat()
-                           }
-                         })
-                   })
-  }
-
-  const searchResults = computed(() => {
-    const keyword = searchText.value.trim().toLowerCase()
-    if (!keyword) return []
-    return searchIndex.value
-        .filter(item => item.table.toLowerCase().includes(keyword) || item.database.toLowerCase().includes(keyword))
-        .slice(0, 20)
-  })
-
-  // 切库后清空搜索索引，重新构建
-  watch(currentDatabase, () => {
-    searchIndex.value = []
-    searchIndexSource = ''
-    if (routeSource.value) buildSearchIndex()
-  })
-
-  const onSearchBlur = () => {
-    window.setTimeout(() => (searchFocused.value = false), 150)
-  }
-
-  const onSearchPick = (item: { database: string; table: string }) => {
-    searchFocused.value = false
-    searchText.value = ''
-    router.push(sourceManageLocation({ source: routeSource.value, database: item.database, table: item.table, tab: 'structure' }))
-  }
 
   const messages = ref<any[]>([])
 
@@ -211,30 +136,13 @@ export function useWorkbenchHeader() {
   }
 
   onMounted(async () => {
-    window.addEventListener('keydown', onGlobalKeydown)
     if (TokenUtils.getAuthUser()) {
       await Promise.all([userStore.fetchUserInfo(), userStore.fetchMenus()])
       await fetchMessages()
     }
   })
 
-  onBeforeUnmount(() => { sourceRequest++; window.removeEventListener('keydown', onGlobalKeydown) })
-
-  const searchText = ref('')
-  watch(searchFocused, focused => { if (focused) buildSearchIndex() })
-
-  const searchInputRef = ref<HTMLInputElement | null>(null)
-
-  const focusSearch = () => {
-    searchInputRef.value?.focus()
-  }
-
-  const onGlobalKeydown = (event: KeyboardEvent) => {
-    if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-      event.preventDefault()
-      focusSearch()
-    }
-  }
+  onBeforeUnmount(() => { sourceRequest++ })
 
   const logout = () => {
     userStore.logout()
@@ -255,7 +163,6 @@ export function useWorkbenchHeader() {
                          }
                        })
   }
-  return { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems, isNavActive, moreNavItems,
-    searchFocused, searchRoot, searchText, searchInputRef, onSearchBlur, searchResults, onSearchPick, userInfo,
+  return { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems, isNavActive, userInfo,
     messages, onNotifyScroll, handleNotificationClick, isLoggedIn, logout }
 }

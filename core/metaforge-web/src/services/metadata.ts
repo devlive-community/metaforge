@@ -53,6 +53,12 @@ class MetadataService
         return new HttpUtils().get(`${ DEFAULT_PATH }/${ code }/databases`)
     }
 
+    /** Tables, columns and foreign keys of the database for its ER diagram. */
+    getDatabaseEr(code: string, database: string): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH }/${ code }/${ database }/er`)
+    }
+
     /** Base tables of the database with engine, rows, data and index bytes and times. */
     getDatabaseTables(code: string, database: string): Promise<ResponseModel>
     {

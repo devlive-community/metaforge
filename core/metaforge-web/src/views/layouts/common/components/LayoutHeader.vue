@@ -45,19 +45,6 @@
       </div>
 
         <MfSpace :size="16" :wrap="false" class="dc-header__actions shrink-0">
-          <!-- 全局搜索 -->
-          <MfInput ref="searchInputRef"
-                   v-model="searchText"
-                   class="dc-header__search"
-                   :placeholder="$t('common.searchPlaceholder')">
-            <template #prefix>
-              <Search :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
-            </template>
-            <template #suffix>
-              <span class="dc-header__kbd">⌘K</span>
-            </template>
-          </MfInput>
-
           <!-- 帮助 -->
           <MfTooltip :content="$t('common.feedback')">
             <a href="https://github.com/devlive-community/metaforge" target="_blank" rel="noopener noreferrer"
@@ -165,7 +152,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import { useUserStore } from '@/stores/user'
@@ -174,7 +161,7 @@ import { TokenUtils } from '@/utils/token'
 import router from '@/router'
 import NotificationService from '@/services/notification'
 import { FilterModel } from '@/model/filter.ts'
-import { Bell, CircleHelp, LogOut, Search } from '@lucide/vue'
+import { Bell, CircleHelp, LogOut } from '@lucide/vue'
 import { MENU_ICONS } from '@/config/menu-icons'
 
 defineOptions({ name: 'LayoutHeader' })
@@ -252,24 +239,7 @@ onMounted(async () => {
     await Promise.all([userStore.fetchUserInfo(), userStore.fetchMenus()])
     await fetchMessages()
   }
-  window.addEventListener('keydown', onGlobalKeydown)
 })
-
-onBeforeUnmount(() => window.removeEventListener('keydown', onGlobalKeydown))
-
-const searchText = ref('')
-const searchInputRef = ref<HTMLInputElement | null>(null)
-
-const focusSearch = () => {
-  searchInputRef.value?.focus()
-}
-
-const onGlobalKeydown = (event: KeyboardEvent) => {
-  if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
-    event.preventDefault()
-    focusSearch()
-  }
-}
 
 const logout = () => {
   userStore.logout()
@@ -341,10 +311,6 @@ const handleNotificationClick = (msg: any) => {
     outline-offset: 2px;
 }
 
-.dc-header__search {
-    width: clamp(160px, 15vw, 240px);
-}
-
 :deep(.dc-header__menu) {
     flex-wrap: wrap;
 }
@@ -362,18 +328,6 @@ const handleNotificationClick = (msg: any) => {
     .dc-header__actions {
         margin-left: auto;
     }
-}
-
-.dc-header__kbd {
-    display: inline-flex;
-    align-items: center;
-    padding: 0 5px;
-    border: 1px solid var(--dc-border);
-    border-radius: 4px;
-    font-size: 11px;
-    line-height: 16px;
-    color: var(--dc-text-secondary);
-    background: var(--dc-bg);
 }
 
 .dc-header__avatar {
