@@ -40,6 +40,6 @@ public class RedisService
     @Override
     public String driver()
     {
-        return "org.devlive.metaforge.driver.RedisJdbcDriver";
+        return "org.devlive.metaforge.RedisDriver";
     }
 }

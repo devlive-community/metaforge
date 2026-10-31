@@ -86,7 +86,7 @@ public abstract class MongoJdbcBaseTest
     private void initializeJdbcConnection()
             throws Exception
     {
-        Class.forName("org.devlive.metaforge.driver.MongoJdbcDriver");
+        Class.forName("org.devlive.metaforge.MongoDriver");
         Properties props = new Properties();
         props.setProperty("database", "admin");
         props.setProperty("user", "mongoadmin");

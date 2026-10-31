@@ -30,6 +30,6 @@ class MongoCommunityService : PluginService
 
     override fun driver(): String
     {
-        return "com.dbschema.MongoJdbcDriver"
+        return "org.devlive.metaforge.MongoDriver"
     }
 }
