@@ -210,6 +210,12 @@ public class MetadataServiceImpl
     }
 
     @Override
+    public CommonResponse<Response> getDatabaseEr(String code, String database)
+    {
+        return withPlugin(code, List.of("database:info", "tab:er-diagram"), (service, configure) -> service.getDatabaseEr(configure, database));
+    }
+
+    @Override
     public CommonResponse<Response> alterDatabaseOptions(String code, String database, TableDefinition configure)
     {
         configure.setDatabase(database);

@@ -100,6 +100,13 @@ public class MetadataController
         return this.service.getDatabaseTables(code, database);
     }
 
+    /** Tables, columns and foreign keys of the database for its ER diagram. */
+    @GetMapping(value = "{code}/{database}/er")
+    public CommonResponse<Response> fetchDatabaseEr(@PathVariable String code, @PathVariable String database)
+    {
+        return this.service.getDatabaseEr(code, database);
+    }
+
     /** Changes the database's default character set and collation; preview returns the statement only. */
     @PostMapping(value = "{code}/{database}/alter-database-options")
     public CommonResponse<Response> alterDatabaseOptions(@PathVariable String code, @PathVariable String database, @RequestBody TableDefinition configure)
