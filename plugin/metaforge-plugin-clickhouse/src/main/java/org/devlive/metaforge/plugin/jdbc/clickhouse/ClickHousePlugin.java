@@ -45,7 +45,7 @@ public class ClickHousePlugin
                                 .required(true)
                                 .min(1L)
                                 .max(65535L)
-                                .value(9000)
+                                .value(8123)
                                 .message("port is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()

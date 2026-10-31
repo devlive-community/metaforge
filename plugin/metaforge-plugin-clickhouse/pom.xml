@@ -15,7 +15,7 @@
     <description>MetaForge - Plugin - ClickHouse</description>
 
     <properties>
-        <clickhouse-jdbc.version>0.6.5</clickhouse-jdbc.version>
+        <clickhouse-jdbc.version>0.11.0</clickhouse-jdbc.version>
         <httpclient5.version>5.3.1</httpclient5.version>
         <lz4.version>1.8.0</lz4.version>
     </properties>
@@ -47,6 +47,12 @@
             <groupId>org.lz4</groupId>
             <artifactId>lz4-java</artifactId>
             <version>${lz4.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-test-e2e</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 
