@@ -376,7 +376,8 @@ public class TableImportServiceImpl
         if (creates) {
             needed.add("table:create");
         }
-        if ("truncate".equals(plan.getSettings().getWriteMode())) {
+        // A table may override the write mode, so every imported table's own mode counts.
+        if (plan.getTables().stream().anyMatch(table -> !"skip".equals(table.getAction()) && "truncate".equals(writeMode(table, plan.getSettings())))) {
             needed.add("table:truncate");
         }
         Optional<String> missing = needed.stream().filter(capability -> !target.service.managementCapabilities().supports(capability)).findFirst();

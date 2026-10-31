@@ -24,9 +24,11 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -104,6 +106,11 @@ public class ImportTest
 
     private TableImportService service()
     {
+        return service(ManagementCapability.keys());
+    }
+
+    private TableImportService service(Set<String> capabilities)
+    {
         SourceRepository repository = mock(SourceRepository.class);
         PluginManager manager = mock(PluginManager.class);
         Plugin plugin = mock(Plugin.class);
@@ -112,7 +119,7 @@ public class ImportTest
             @Override
             public ManagementCapabilities managementCapabilities()
             {
-                return new ManagementCapabilities("relational", ManagementCapability.keys());
+                return new ManagementCapabilities("relational", capabilities);
             }
 
             @Override
@@ -204,5 +211,25 @@ public class ImportTest
         assertEquals(0L, table.get("skipped"));
         assertTrue(executed.stream().anyMatch(sql -> sql.startsWith("CREATE TABLE `app`.`logs_import`")));
         assertTrue(executed.stream().anyMatch(sql -> sql.startsWith("INSERT IGNORE INTO `app`.`logs_import` (`id`, `message`) VALUES")));
+    }
+
+    @Test
+    public void aTableEmptiedBeforeItsImportNeedsTheTruncateCapability()
+    {
+        Set<String> capabilities = new LinkedHashSet<>(ManagementCapability.keys());
+        capabilities.remove("table:truncate");
+        TableImportService service = service(capabilities);
+        Map<String, Object> analysed = service.analyze("demo", "app", new MockMultipartFile("file", "backup.sql", "text/plain", DUMP.getBytes(StandardCharsets.UTF_8)), null).getData();
+        ImportPlan plan = new ImportPlan();
+        plan.setImportId(String.valueOf(analysed.get("importId")));
+        ImportPlan.TablePlan table = new ImportPlan.TablePlan();
+        table.setSource("dataset");
+        table.setTarget("datacap_dataset");
+        table.setWriteMode("truncate");
+        table.setMappings(List.of(mapping("id", "id", "keep"), mapping("name", "name", "direct")));
+        plan.setTables(List.of(table));
+        CommonResponse<Map<String, Object>> started = service.execute("demo", "app", plan);
+        assertFalse(started.getStatus());
+        assertEquals("Source does not support table:truncate", started.getMessage());
     }
 }
