@@ -4,7 +4,7 @@
       <div class="relative z-30 flex w-full flex-col">
         <LayoutHeader/>
       </div>
-      <main class="container isolate min-h-screen py-6">
+      <main class="isolate min-h-screen px-2 py-6">
         <div class="flex w-full gap-4">
           <div class="shrink-0">
             <LayoutSidebar/>

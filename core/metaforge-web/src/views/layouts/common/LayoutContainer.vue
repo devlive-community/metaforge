@@ -23,7 +23,8 @@
         <RouterView/>
       </main>
 
-      <main v-else class="container isolate min-h-screen py-6">
+      <!-- Content keeps the query page side spacing (8px); only headers use .container. -->
+      <main v-else class="isolate min-h-screen px-2 py-6">
         <RouterView/>
       </main>
 
