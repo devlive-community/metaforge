@@ -224,6 +224,7 @@ nav:
       - /reference/connectors/postgresql/home.md
       - /reference/connectors/redis/home.md
       - /reference/connectors/mongocommunity/home.md
+      - /reference/connectors/neo4j/home.md
       - /reference/connectors/h2/home.md
       - /reference/connectors/snowflake/home.md
       - /reference/connectors/ydb/home.md
