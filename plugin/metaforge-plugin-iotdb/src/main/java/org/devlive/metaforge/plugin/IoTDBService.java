@@ -6,6 +6,13 @@ public class IoTDBService
         implements PluginService
 {
     @Override
+    public String validator()
+    {
+        // IoTDB has no version() function; SHOW VERSION starts with the version
+        return "SHOW VERSION";
+    }
+
+    @Override
     public String driver()
     {
         return "org.apache.iotdb.jdbc.IoTDBDriver";
