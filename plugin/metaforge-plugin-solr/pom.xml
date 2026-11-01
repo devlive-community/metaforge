@@ -36,7 +36,7 @@
         </dependency>
         <dependency>
             <groupId>org.apache.solr</groupId>
-            <artifactId>solr-solrj</artifactId>
+            <artifactId>solr-solrj-streaming</artifactId>
             <version>${metaforge.solr.version}</version>
         </dependency>
     </dependencies>

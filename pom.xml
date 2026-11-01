@@ -218,7 +218,7 @@
         <metaforge.qiniu.version>7.15.0</metaforge.qiniu.version>
         <metaforge.alioss.version>3.16.1</metaforge.alioss.version>
         <metaforge.commons-io.version>2.14.0</metaforge.commons-io.version>
-        <metaforge.solr.version>6.0.0</metaforge.solr.version>
+        <metaforge.solr.version>9.11.0</metaforge.solr.version>
         <metaforge.influxdb.version>0.2.6</metaforge.influxdb.version>
         <metaforge.cos.version>5.6.227</metaforge.cos.version>
         <metaforge.s3.version>1.12.771</metaforge.s3.version>
