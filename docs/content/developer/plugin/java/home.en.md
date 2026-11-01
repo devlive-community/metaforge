@@ -264,7 +264,7 @@ The content of this file is the plugin loading module we defined.
 
 ### Management capabilities
 
-Every page, tab, dialog, drawer, side panel and button of source management (console, data import, data export, data compare, ER diagram) is controlled by one management capability. A plugin declares the capabilities it implements in `<ServiceClass>.capabilities.json` next to its service class, for example `src/main/resources/org/devlive/metaforge/plugin/MySQLService.capabilities.json`:
+Every page, tab, dialog, drawer, side panel and button of source management (console, data import, data export, data compare, ER diagram) is controlled by one management capability. A plugin declares the capabilities it implements in `src/main/resources/org/devlive/metaforge/plugin/capabilities.json` (every plugin uses this path; only the copy in the plugin's own jar is read):
 
 ```json
 {
@@ -277,7 +277,7 @@ Every page, tab, dialog, drawer, side panel and button of source management (con
 - A plugin without a declaration offers no management: the source list hides its Manage entry and the related pages do not open.
 - Declare only what the plugin implements; the server refuses every operation the plugin did not declare.
 - Every plugin reaches its source through SQL, so a plugin that declares capabilities always declares `query:execute`.
-- An unknown capability or kind fails when the plugin loads; a subclass without its own file uses its parent's declaration.
+- An unknown capability or kind fails when the plugin loads; a subclass whose jar has no file uses its parent's declaration.
 - A new management feature first registers its capability in `ManagementCapability`, then plugins declare it, and every surface of the feature checks it.
 
 | Capability | Controls |

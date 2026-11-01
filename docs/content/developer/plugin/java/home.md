@@ -265,7 +265,7 @@ org.devlive.metaforge.plugin.QuestDBPluginModule
 
 ### 管理能力声明
 
-数据源管理（控制台、数据导入、数据导出、数据对比、ER 图）中的每个页面、标签页、弹窗、抽屉、侧边栏和按钮都由一个管理能力控制。插件在服务类旁边的 `<服务类名>.capabilities.json` 中声明自己实现了哪些能力，例如 `src/main/resources/org/devlive/metaforge/plugin/MySQLService.capabilities.json`：
+数据源管理（控制台、数据导入、数据导出、数据对比、ER 图）中的每个页面、标签页、弹窗、抽屉、侧边栏和按钮都由一个管理能力控制。插件在 `src/main/resources/org/devlive/metaforge/plugin/capabilities.json` 中声明自己实现了哪些能力（每个插件都放在这个路径，读取时只读插件自己 jar 里的这一份）：
 
 ```json
 {
@@ -278,7 +278,7 @@ org.devlive.metaforge.plugin.QuestDBPluginModule
 - 没有声明文件的插件不提供数据管理：数据源列表隐藏「数据管理」入口，相关页面也无法打开。
 - 声明的每个能力都必须真正实现；服务端同样按声明拒绝未声明的操作。
 - 所有插件都通过 SQL 访问数据源，因此声明了能力的插件必须包含 `query:execute`。
-- 声明未知的能力或 `kind` 会在加载插件时报错；子类没有自己的声明文件时沿用父类的声明。
+- 声明未知的能力或 `kind` 会在加载插件时报错；子类所在的 jar 没有声明文件时沿用父类 jar 里的声明。
 - 新增管理功能时，先在 `ManagementCapability` 中登记能力，再在需要的插件中声明，并让该功能的每个界面入口都检查这个能力。
 
 | 能力 | 控制的界面 |
