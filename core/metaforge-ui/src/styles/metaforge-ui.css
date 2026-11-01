@@ -75,3 +75,16 @@
     /* typography */
     --font-mf: var(--mf-font-family);
 }
+
+/* Browser autofill paints its own (blue) background on the bare <input>, leaving the
+ * field's icon and padding outside it. Keep the field's own colors instead. */
+@layer components {
+    .mf-invalidable input:-webkit-autofill,
+    .mf-invalidable input:-webkit-autofill:hover,
+    .mf-invalidable input:-webkit-autofill:focus {
+        -webkit-text-fill-color: var(--mf-color-content);
+        caret-color: var(--mf-color-content);
+        box-shadow: 0 0 0 1000px var(--mf-color-surface) inset;
+        transition: background-color 9999s ease-out 0s;
+    }
+}

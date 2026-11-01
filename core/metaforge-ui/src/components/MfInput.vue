@@ -18,6 +18,9 @@ const props = withDefaults(defineProps<{
     readonly?: boolean
     invalid?: boolean
     maxlength?: number
+    /** The browser's autofill hint, e.g. `username`, `current-password`, `new-password`; off by default. */
+    autocomplete?: string
+    name?: string
 }>(), {
     modelValue: '',
     type: 'text',
@@ -27,6 +30,8 @@ const props = withDefaults(defineProps<{
     disabled: false,
     readonly: false,
     invalid: false,
+    autocomplete: 'off',
+    name: undefined,
 })
 
 const emit = defineEmits<{
@@ -81,7 +86,8 @@ defineExpose({
             :maxlength="maxlength"
             class="h-full min-w-0 flex-1 appearance-none border-0 bg-transparent px-3 text-sm text-content placeholder:text-content-placeholder outline-none focus:ring-0"
             :class="readonly ? 'cursor-default' : ''"
-            autocomplete="off"
+            :autocomplete="autocomplete"
+            :name="name"
             @input="onInput"
             @blur="emit('blur', $event)"
             @keyup.enter="emit('enter', $event)"
