@@ -27,7 +27,8 @@ public class RedisDriver
     public boolean acceptsURL(String url)
             throws SQLException
     {
-        return url != null && url.startsWith("jdbc:redis:");
+        // jdbc:redis-cluster: is the released cluster driver's address and still accepted.
+        return url != null && (url.startsWith("jdbc:redis:") || url.startsWith("jdbc:redis-cluster:"));
     }
 
     @Override

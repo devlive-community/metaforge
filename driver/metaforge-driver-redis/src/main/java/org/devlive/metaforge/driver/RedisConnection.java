@@ -3,7 +3,9 @@ package org.devlive.metaforge.driver;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
+import org.redisson.config.SingleServerConfig;
 
 import java.sql.Array;
 import java.sql.Blob;
@@ -21,6 +23,8 @@ import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.Executor;
@@ -29,6 +33,9 @@ import java.util.concurrent.Executor;
 public class RedisConnection
         implements Connection
 {
+    static final String PREFIX = "jdbc:redis:";
+    static final String CLUSTER_PREFIX = "jdbc:redis-cluster:";
+
     private final RedissonClient client;
     private final int database;
     private boolean isClosed = false;
@@ -37,49 +44,29 @@ public class RedisConnection
             throws SQLException
     {
         try {
-            String redisUrl = url.substring(5);
-            if (redisUrl.startsWith("redis:")) {
-                redisUrl = redisUrl.substring(6);
-            }
-            while (redisUrl.startsWith("/")) {
-                redisUrl = redisUrl.substring(1);
-            }
-
-            String host = "localhost";
-            int port = 6379;
-            this.database = Integer.parseInt(info.getProperty("database", "0"));
-
-            if (!redisUrl.isEmpty()) {
-                String[] parts = redisUrl.split(":");
-                host = parts[0];
-                if (parts.length > 1) {
-                    port = Integer.parseInt(parts[1].split("/")[0]);
-                }
-            }
-
             String username = info.getProperty("user");
             String password = info.getProperty("password");
-
             Config config = new Config();
-            String address = "redis://" + host + ":" + port;
-
-            if (username != null && password != null) {
-                config.useSingleServer()
-                        .setAddress(address)
-                        .setDatabase(database)
-                        .setUsername(username)
-                        .setPassword(password);
-            }
-            else if (password != null) {
-                config.useSingleServer()
-                        .setAddress(address)
-                        .setDatabase(database)
-                        .setPassword(password);
+            if (isCluster(url)) {
+                // jdbc:redis-cluster://host1:port1,host2:port2 as the released cluster driver took it
+                this.database = 0;
+                ClusterServersConfig cluster = config.useClusterServers().addNodeAddress(addresses(url).toArray(new String[0]));
+                if (password != null) {
+                    cluster.setPassword(password);
+                }
+                if (username != null && password != null) {
+                    cluster.setUsername(username);
+                }
             }
             else {
-                config.useSingleServer()
-                        .setAddress(address)
-                        .setDatabase(database);
+                this.database = database(url, info);
+                SingleServerConfig single = config.useSingleServer().setAddress(addresses(url).get(0)).setDatabase(database);
+                if (password != null) {
+                    single.setPassword(password);
+                }
+                if (username != null && password != null) {
+                    single.setUsername(username);
+                }
             }
 
             this.client = Redisson.create(config);
@@ -88,6 +75,56 @@ public class RedisConnection
         catch (Exception e) {
             throw new SQLException("Failed to connect to Redis: " + e.getMessage(), e);
         }
+    }
+
+    static boolean isCluster(String url)
+    {
+        return url.startsWith(CLUSTER_PREFIX);
+    }
+
+    /** The node addresses of jdbc:redis://host:port[/db] or jdbc:redis-cluster://host:port,host:port. */
+    static List<String> addresses(String url)
+    {
+        String rest = location(url);
+        int path = rest.indexOf('/');
+        if (path >= 0) {
+            rest = rest.substring(0, path);
+        }
+        List<String> addresses = new ArrayList<>();
+        for (String node : rest.split(",")) {
+            String trimmed = node.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            addresses.add("redis://" + (trimmed.contains(":") ? trimmed : trimmed + ":6379"));
+        }
+        if (addresses.isEmpty()) {
+            addresses.add("redis://localhost:6379");
+        }
+        return addresses;
+    }
+
+    /** The database property, else the URL path (jdbc:redis://host:port/2), else 0. */
+    static int database(String url, Properties info)
+    {
+        String property = info.getProperty("database");
+        if (property != null && !property.trim().isEmpty()) {
+            return Integer.parseInt(property.trim());
+        }
+        String rest = location(url);
+        int path = rest.indexOf('/');
+        String value = path >= 0 ? rest.substring(path + 1).trim() : "";
+        return value.matches("\\d+") ? Integer.parseInt(value) : 0;
+    }
+
+    private static String location(String url)
+    {
+        String rest = url.substring(isCluster(url) ? CLUSTER_PREFIX.length() : PREFIX.length());
+        while (rest.startsWith("/")) {
+            rest = rest.substring(1);
+        }
+        int query = rest.indexOf('?');
+        return query >= 0 ? rest.substring(0, query) : rest;
     }
 
     public RedissonClient getClient()

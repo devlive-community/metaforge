@@ -11,6 +11,7 @@ import org.redisson.api.RedissonClient;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -25,6 +26,7 @@ public class RedisStatement
 {
     private final RedisConnection connection;
     private boolean isClosed = false;
+    private ResultSet resultSet;
 
     public RedisStatement(RedisConnection connection)
     {
@@ -38,6 +40,9 @@ public class RedisStatement
         checkClosed();
 
         try {
+            if (RedisCommands.isCommand(sql)) {
+                return new RedisResultSet(RedisCommands.run(connection.getClient(), sql));
+            }
             RedisParser parser = RedisParser.createParser(sql);
             if (parser instanceof RedisShowParser) {
                 return executeShowStatement((RedisShowParser) parser);
@@ -206,7 +211,17 @@ public class RedisStatement
     public int executeUpdate(String sql)
             throws SQLException
     {
-        throw new UnsupportedOperationException("Update operation not supported");
+        checkClosed();
+        if (!RedisCommands.isCommand(sql)) {
+            throw new SQLFeatureNotSupportedException("Only Redis commands can update: " + sql);
+        }
+        try {
+            // The released driver answered with the number of reply values.
+            return RedisCommands.run(connection.getClient(), sql).size();
+        }
+        catch (Exception e) {
+            throw new SQLException("Failed to execute command", e);
+        }
     }
 
     private void checkClosed()
@@ -291,21 +306,23 @@ public class RedisStatement
     public boolean execute(String sql)
             throws SQLException
     {
-        return false;
+        resultSet = executeQuery(sql);
+        return true;
     }
 
     @Override
     public ResultSet getResultSet()
             throws SQLException
     {
-        return null;
+        return resultSet;
     }
 
     @Override
     public int getUpdateCount()
             throws SQLException
     {
-        return 0;
+        // execute() always leaves a result set, so there is no update count.
+        return -1;
     }
 
     @Override
