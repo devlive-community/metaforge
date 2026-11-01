@@ -268,6 +268,15 @@ const createDefaultRouter = (router: Router) => {
                     isRoot: false
                 },
                 component: () => import('@/views/pages/system/configure/ConfigureHome.vue')
+            },
+            {
+                name: 'settings',
+                path: 'settings',
+                meta: {
+                    title: 'navigation.systemSettings',
+                    isRoot: false
+                },
+                component: () => import('@/views/pages/system/settings/SettingsHome.vue')
             }
         ]
     })
