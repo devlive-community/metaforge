@@ -187,8 +187,12 @@ public class ConfigureUtils
         return configures.stream().filter(v -> !isEmpty(v)).collect(Collectors.toList());
     }
 
+    /** A field without a value is empty whatever its type, so it is not applied; a blank string is empty too. */
     public static boolean isEmpty(PluginConfigureField field)
     {
+        if (field.getValue() == null) {
+            return true;
+        }
         boolean flag = true;
         switch (field.getType()) {
             case String:
@@ -234,6 +238,9 @@ public class ConfigureUtils
         PluginConfigureField configureField = getConfigure(configures, key);
         if (configureField.getType().equals(PluginConfigureFieldType.Array)) {
             List<LinkedHashMap<String, Object>> list = (List<LinkedHashMap<String, Object>>) configureField.getValue();
+            if (list == null) {
+                return values;
+            }
             list.forEach(map -> values.put(String.valueOf(map.get(PluginConfigureFieldName.field.name())), map.get(PluginConfigureFieldName.value.name())));
         }
         else {
