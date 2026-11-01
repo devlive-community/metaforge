@@ -2,11 +2,13 @@ package org.devlive.metaforge.plugin.solr
 
 import org.devlive.metaforge.spi.PluginService
 import org.devlive.metaforge.spi.connection.JdbcUrlGuard
+import org.devlive.metaforge.spi.model.Response
 import org.devlive.metaforge.spi.model.RuntimeConfigure
 
 /**
  * Solr's SQL through the SolrCloud JDBC driver: the host and port are ZooKeeper's (9983 for
- * Solr's embedded ZooKeeper) and the database is the collection a connection opens.
+ * Solr's embedded ZooKeeper) and the database is the collection a connection opens. Collections
+ * are tables of one database.
  */
 class SolrService : PluginService
 {
@@ -45,5 +47,23 @@ class SolrService : PluginService
         }
         val url = "jdbc:solr://${JdbcUrlGuard.validateHost(configure.host)}:${configure.port}"
         return if (parameters.isEmpty()) url else url + "?" + parameters.joinToString("&")
+    }
+
+    override fun getDatabases(configure: RuntimeConfigure): Response
+    {
+        return this.execute(configure, "SELECT 'default' AS object_name, 'DATABASE' AS object_type, '' AS object_comment")
+    }
+
+    override fun getTables(configure: RuntimeConfigure, database: String): Response
+    {
+        return this.execute(configure, "SELECT 'table' AS type_name, tableName AS object_name, '' AS object_comment " +
+                "FROM metadata.TABLES WHERE tableType = 'TABLE'")
+    }
+
+    override fun getColumns(configure: RuntimeConfigure, database: String, table: String): Response
+    {
+        return this.execute(configure, "SELECT 'column' AS type_name, columnName AS object_name, typeName AS object_data_type, " +
+                "isNullable AS object_nullable, ordinalPosition AS object_position " +
+                "FROM metadata.COLUMNS WHERE tableName = '${table.replace("'", "''")}'")
     }
 }
