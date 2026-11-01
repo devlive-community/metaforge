@@ -158,19 +158,31 @@ public class TableCompareServiceImpl
         return StructureDiff.compare(columns(source, body.getSourceDatabase(), body.getSourceTable()), columns(source, body.getTargetDatabase(), body.getTargetTable()));
     }
 
+    /** The columns every plugin lists through getColumns, so any source with column:read can be compared. */
     private static List<StructureDiff.Column> columns(Source source, String database, String table)
     {
-        PluginService service = source.service;
-        Response response = service.execute(source.raw, "SELECT COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT, COLUMN_COMMENT FROM information_schema.COLUMNS"
-                + " WHERE TABLE_SCHEMA = " + service.sqlLiteral(database) + " AND TABLE_NAME = " + service.sqlLiteral(table) + " ORDER BY ORDINAL_POSITION");
-        List<List<Object>> rows = rows(response);
-        if (rows.isEmpty()) {
+        Response response = source.service.getColumns(source.raw, database, table);
+        List<String> headers = response == null || response.getHeaders() == null ? List.of() : response.getHeaders();
+        int kind = headers.indexOf("type_name");
+        int name = headers.indexOf("object_name");
+        int type = headers.indexOf("object_data_type");
+        int nullable = headers.indexOf("object_nullable");
+        int fallback = headers.indexOf("object_default_value");
+        int comment = headers.indexOf("object_comment");
+        List<StructureDiff.Column> columns = new ArrayList<>();
+        if (name >= 0) {
+            for (List<Object> row : rows(response)) {
+                if (kind >= 0 && !"column".equalsIgnoreCase(text(row.get(kind)))) {
+                    continue;
+                }
+                columns.add(new StructureDiff.Column(text(row.get(name)), type >= 0 ? text(row.get(type)) : "", nullable >= 0 && "YES".equalsIgnoreCase(text(row.get(nullable))),
+                        fallback >= 0 && row.get(fallback) != null ? text(row.get(fallback)) : null, comment >= 0 ? text(row.get(comment)) : ""));
+            }
+        }
+        if (columns.isEmpty()) {
             throw new IllegalArgumentException("Table " + database + "." + table + " has no columns or does not exist");
         }
-        return rows.stream()
-                .map(row -> new StructureDiff.Column(text(row.get(0)), text(row.get(1)), "YES".equalsIgnoreCase(text(row.get(2))), row.get(3) == null ? null : text(row.get(3)),
-                        text(row.get(4))))
-                .collect(Collectors.toList());
+        return columns;
     }
 
     /** ADD, MODIFY and DROP COLUMN statements built from the source table's own column definitions. */
