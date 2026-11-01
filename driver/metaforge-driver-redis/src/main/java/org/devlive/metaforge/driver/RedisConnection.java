@@ -3,6 +3,7 @@ package org.devlive.metaforge.driver;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
 import org.redisson.config.SingleServerConfig;
@@ -47,6 +48,8 @@ public class RedisConnection
             String username = info.getProperty("user");
             String password = info.getProperty("password");
             Config config = new Config();
+            // Values are plain strings, as redis-cli and other clients write them, not Redisson's binary encoding.
+            config.setCodec(StringCodec.INSTANCE);
             if (isCluster(url)) {
                 // jdbc:redis-cluster://host1:port1,host2:port2 as the released cluster driver took it
                 this.database = 0;

@@ -16,7 +16,9 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Slf4j
@@ -60,44 +62,97 @@ public class RedisStatement
         }
     }
 
+    /** SELECT version(): the server's redis_version from INFO server. */
     private ResultSet handleServerInfo()
     {
+        String version = "";
+        for (Map<String, Object> line : RedisCommands.run(connection.getClient(), "INFO server")) {
+            for (String part : String.valueOf(line.get(RedisCommands.COLUMN)).split("\\r?\\n")) {
+                if (part.startsWith("redis_version:")) {
+                    version = part.substring("redis_version:".length()).trim();
+                }
+            }
+        }
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("version", version);
         List<Map<String, Object>> rows = new ArrayList<>();
-        Map<String, Object> row = new HashMap<>();
-        row.put("info", "Redis Server");
         rows.add(row);
         return new RedisResultSet(rows);
     }
 
+    /**
+     * SELECT ... FROM key: an exact key, a pattern with * or ? (`test:*`), or else the keys starting
+     * with the name; FROM * reads every key.
+     * Each key is a row of key, type and value, and the selected columns are kept in order.
+     */
     private ResultSet executeSelectStatement(RedisParser parser)
+            throws SQLException
     {
         RedissonClient client = connection.getClient();
-        String collection = parser.getCollection();
-        List<Map<String, Object>> rows = new ArrayList<>();
-
-        if (collection == null || collection.equals("*")) {
-            RKeys keys = client.getKeys();
-            for (String key : keys.getKeys()) {
-                Map<String, Object> row = new HashMap<>();
-                row.put("key", key);
-                row.put("type", getKeyType(client, key));
-                row.put("value", getKeyValue(client, key));
-                rows.add(row);
-            }
+        String collection = unquote(parser.getCollection());
+        Iterable<String> keys;
+        if (collection == null || collection.isEmpty() || collection.equals("*")) {
+            keys = client.getKeys().getKeys();
+        }
+        else if (collection.contains("*") || collection.contains("?")) {
+            keys = client.getKeys().getKeysByPattern(collection);
+        }
+        else if (client.getKeys().countExists(collection) > 0) {
+            keys = List.of(collection);
         }
         else {
-            RKeys keys = client.getKeys();
-            String pattern = collection.contains("*") || collection.contains("?") ? collection : collection + "*";
-            for (String key : keys.getKeysByPattern(pattern)) {
-                Map<String, Object> row = new HashMap<>();
-                row.put("key", key);
-                row.put("type", getKeyType(client, key));
-                row.put("value", getKeyValue(client, key));
-                rows.add(row);
-            }
+            // Not a key: the keys starting with it, as FROM test always read test:*.
+            keys = client.getKeys().getKeysByPattern(collection + "*");
         }
 
-        return new RedisResultSet(rows);
+        List<String> columns = columns(parser.getFields());
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (String key : keys) {
+            Map<String, Object> all = new LinkedHashMap<>();
+            all.put("key", key);
+            all.put("type", getKeyType(client, key));
+            all.put("value", getKeyValue(client, key));
+            Map<String, Object> row = new LinkedHashMap<>();
+            columns.forEach(column -> row.put(column, all.get(column)));
+            rows.add(row);
+        }
+        return new RedisResultSet(columns, rows);
+    }
+
+    private static final List<String> COLUMNS = List.of("key", "type", "value");
+
+    private static List<String> columns(List<String> fields)
+            throws SQLException
+    {
+        if (fields == null || fields.isEmpty() || fields.stream().anyMatch(field -> "*".equals(unquote(field)))) {
+            return COLUMNS;
+        }
+        List<String> columns = new ArrayList<>();
+        for (String field : fields) {
+            String name = unquote(field).toLowerCase(Locale.ROOT);
+            if (!COLUMNS.contains(name)) {
+                throw new SQLException("Unknown column " + field + "; a key has the columns key, type and value");
+            }
+            columns.add(name);
+        }
+        return columns;
+    }
+
+    /** Keys and columns may be quoted: `test:list`, "test:list" or 'test:list'. */
+    private static String unquote(String name)
+    {
+        if (name == null) {
+            return null;
+        }
+        String trimmed = name.trim();
+        if (trimmed.length() >= 2) {
+            char first = trimmed.charAt(0);
+            char last = trimmed.charAt(trimmed.length() - 1);
+            if ((first == '`' || first == '"' || first == '\'') && first == last) {
+                return trimmed.substring(1, trimmed.length() - 1);
+            }
+        }
+        return trimmed;
     }
 
     private String getKeyType(RedissonClient client, String key)

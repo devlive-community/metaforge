@@ -45,6 +45,10 @@ public class RedisSelectParser
                     }
                     fields.add(fieldName);
                 }
+                else if (element.getColumn() != null) {
+                    // A plain column (key, type or value) comes as the column name, not an expression.
+                    fields.add(element.getColumn());
+                }
             }
         }
 

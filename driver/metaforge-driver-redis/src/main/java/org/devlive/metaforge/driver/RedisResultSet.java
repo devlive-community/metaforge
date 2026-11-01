@@ -23,6 +23,7 @@ import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,16 +40,16 @@ public class RedisResultSet
 
     public RedisResultSet(List<Map<String, Object>> rows)
     {
-        this.rows = rows;
-        this.columnNames = new ArrayList<>();
-        this.current = null;
-        this.metadata = null;
+        this(rows.isEmpty() ? new ArrayList<>() : new ArrayList<>(rows.get(0).keySet()), rows);
+    }
 
-        if (!rows.isEmpty()) {
-            Map<String, Object> first = rows.get(0);
-            columnNames.addAll(first.keySet());
-            this.metadata = new RedisResultSetMetaData(columnNames, first);
-        }
+    /** Rows with known columns, so an empty result still describes them. */
+    public RedisResultSet(List<String> columns, List<Map<String, Object>> rows)
+    {
+        this.rows = rows;
+        this.columnNames = new ArrayList<>(columns);
+        this.current = null;
+        this.metadata = new RedisResultSetMetaData(columnNames, rows.isEmpty() ? new HashMap<>() : rows.get(0));
     }
 
     @Override
