@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.connection.JdbcUrlGuard;
+import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.nio.file.Paths;
@@ -48,4 +49,20 @@ public class DuckDBService
         return "jdbc:duckdb:" + Paths.get(directory, database);
     }
 
+    /**
+     * DuckDB reports tables as BASE TABLE, a type JDBC metadata lookups for TABLE miss, so read them
+     * from information_schema.
+     */
+    @Override
+    public Response getTables(RuntimeConfigure configure, String database)
+    {
+        String sql = "SELECT\n" +
+                "    CASE WHEN table_type = 'VIEW' THEN 'view' ELSE 'table' END AS type_name,\n" +
+                "    table_name AS object_name,\n" +
+                "    '' AS object_comment\n" +
+                "FROM information_schema.tables\n" +
+                "WHERE table_schema = '{0}'\n" +
+                "ORDER BY table_name";
+        return this.execute(configure, sql.replace("{0}", database.replace("'", "''")));
+    }
 }
