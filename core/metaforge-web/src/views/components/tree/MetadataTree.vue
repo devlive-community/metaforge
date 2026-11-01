@@ -31,9 +31,11 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { Columns3, Database, Table } from '@lucide/vue'
+import { ChevronsDown, Columns3, Database, KeyRound, Table } from '@lucide/vue'
 import { StructureEnum } from '@/model/structure'
 import MetadataService from '@/services/metadata.ts'
+import { nativePage } from '@/model/source-native'
+import { useSourceCapabilities } from '@/composables/useSourceCapabilities'
 import { ObjectUtils } from '@/utils/object'
 
 /** Tree node shape used by this component (MfTreeNode + metadata level info). */
@@ -48,7 +50,13 @@ interface TreeNode
   table?: string
   isLeaf: boolean
   children?: TreeNode[]
+  /** Key-value sources: a key, or the entry that loads the next page of keys from `cursor`. */
+  kind?: 'key' | 'more'
+  cursor?: string
 }
+
+/** Keys read per page from a key-value source. */
+const KEY_PAGE = 200
 
 defineOptions({ name: 'MetadataTree' })
 
@@ -64,8 +72,13 @@ const expandedKeys = ref<(string | number)[]>([])
 const data = ref<TreeNode[]>([])
 const errorMessage = ref<string | null>(null)
 
-const iconOf = (node: TreeNode) => node.level === StructureEnum.DATABASE
-  ? Database
+// Sources without databases and tables but with namespaces (Redis) list their keys instead.
+const { can, capabilityLoading } = useSourceCapabilities(computed(() => props.code || ''))
+const keyValue = computed(() => can('namespace:list') && !can('database:list'))
+
+const iconOf = (node: TreeNode) => node.kind === 'key' ? KeyRound
+  : node.kind === 'more' ? ChevronsDown
+  : node.level === StructureEnum.DATABASE ? Database
   : node.level === StructureEnum.COLUMN ? Columns3 : Table
 
 const keyword = computed(() => (props.keyword ?? '').trim().toLowerCase())
@@ -163,10 +176,52 @@ const loadColumns = (item: TreeNode): Promise<TreeNode[]> => {
   })
 }
 
+/** One page of a namespace's keys; a last "more" entry continues from the returned cursor. */
+const loadKeys = async (namespace: TreeNode, cursor = ''): Promise<TreeNode[]> => {
+  try {
+    const page = nativePage(await MetadataService.nativeBrowse(props.code!, { namespace: namespace.code, prefix: '', cursor, limit: KEY_PAGE }))
+    const keys: TreeNode[] = page.entries.map(entry => ({
+      key: `${ namespace.key }::${ entry.id }`, title: entry.name, code: entry.name, database: namespace.code, level: StructureEnum.TABLE, isLeaf: true, kind: 'key'
+    }))
+    if (page.hasMore && page.nextCursor) {
+      keys.push({ key: `${ namespace.key }::more::${ page.nextCursor }`, title: t('query.tree.more'), database: namespace.code, level: StructureEnum.GROUP, isLeaf: true,
+        kind: 'more', cursor: page.nextCursor, catalog: namespace.key })
+    }
+    return keys
+  }
+  catch (error) {
+    MfMessage.error(error instanceof Error ? error.message : String(error))
+    return []
+  }
+}
+
+const findNode = (list: TreeNode[], key: string): TreeNode | undefined => {
+  for (const node of list) {
+    if (node.key === key) return node
+    const found = node.children ? findNode(node.children, key) : undefined
+    if (found) return found
+  }
+  return undefined
+}
+
+const loadMoreKeys = async (more: TreeNode) => {
+  const namespace = findNode(data.value, more.catalog!)
+  if (!namespace) return
+  const next = await loadKeys(namespace, more.cursor)
+  const kept = (namespace.children || []).filter(child => child.kind !== 'more')
+  data.value = updateTreeChildren(data.value, namespace.key, [...kept, ...next])
+}
+
 const onLoadData = (treeNode: any): Promise<TreeNode[]> => {
   const item = treeNode as TreeNode
   if (item.children) {
     return Promise.resolve([])
+  }
+  if (keyValue.value && item.level === StructureEnum.DATABASE) {
+    return loadKeys(item).then(children => {
+      data.value = updateTreeChildren(data.value, item.key, children)
+      return children
+    })
   }
   if (item.level === StructureEnum.DATABASE) {
     return loadTables(item)
@@ -188,6 +243,18 @@ const onLoadData = (treeNode: any): Promise<TreeNode[]> => {
 
 const onSelect = (_keys: (string | number)[], info: any) => {
   const item = info.node as TreeNode
+  if (item.kind === 'more') {
+    selectedKeys.value = []
+    loadMoreKeys(item)
+    return
+  }
+  if (item.kind === 'key') {
+    // A key reads as a table of key, type and value in the Redis driver's SQL.
+    ObjectUtils.copy(`SELECT * FROM \`${ item.title }\``)
+    MfMessage.success(t('query.tree.keyCopied'))
+    emit('select-table', null)
+    return
+  }
   switch (item.level) {
     case StructureEnum.TABLE:
       ObjectUtils.copy(item.database + '.' + item.title)
@@ -204,7 +271,33 @@ const onSelect = (_keys: (string | number)[], info: any) => {
   }
 }
 
+const initializeKeyValue = async () => {
+  data.value = []
+  errorMessage.value = null
+  selectedKeys.value = []
+  expandedKeys.value = []
+  loading.value = true
+  try {
+    const page = nativePage(await MetadataService.nativeNamespaces(props.code!, {}))
+    data.value = page.entries.map(entry => ({ key: `ns:${ entry.id }`, title: entry.name, code: entry.id, catalog: entry.id, level: StructureEnum.DATABASE, isLeaf: false }))
+  }
+  catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : String(error)
+  }
+  finally {
+    loading.value = false
+  }
+}
+
 const handleInitialize = () => {
+  if (props.code && capabilityLoading.value) {
+    loading.value = true
+    return
+  }
+  if (props.code && keyValue.value) {
+    initializeKeyValue()
+    return
+  }
   if (props.code) {
     data.value = []
     errorMessage.value = null
@@ -234,7 +327,6 @@ const handleInitialize = () => {
   }
 }
 
-watch(() => props.code, () => handleInitialize())
-
-handleInitialize()
+// The tree's shape follows the source's capabilities, so it starts once they are known.
+watch(() => [props.code, capabilityLoading.value, keyValue.value], () => handleInitialize(), { immediate: true })
 </script>
