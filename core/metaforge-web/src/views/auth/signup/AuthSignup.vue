@@ -8,14 +8,16 @@
       </MfResult>
       <MfForm v-else ref="formRef" :model="form" layout="vertical" @finish="onSubmit(options)">
         <MfFormItem name="username" :rules="[{ required: true, message: $t('auth.field.usernameRequired') }, { pattern: USERNAME_PATTERN, message: $t('auth.field.usernameRule') }]">
-          <MfInput v-model="form.username" size="lg" :maxlength="32" :placeholder="$t('auth.field.username')">
-            <template #prefix><User :size="17"/></template>
-          </MfInput>
-          <p class="m-0 mt-1.5 text-xs text-content-tertiary">{{ $t('auth.field.usernameRule') }}</p>
+          <div class="flex w-full flex-col gap-1.5">
+            <MfInput v-model="form.username" size="lg" :maxlength="32" name="username" autocomplete="username" :placeholder="$t('auth.field.username')">
+              <template #prefix><User :size="17"/></template>
+            </MfInput>
+            <p class="m-0 text-xs text-content-tertiary">{{ $t('auth.field.usernameRule') }}</p>
+          </div>
         </MfFormItem>
         <template v-if="options.emailVerification">
           <MfFormItem name="email" :rules="[{ required: true, message: $t('auth.field.emailRequired') }, { pattern: EMAIL_PATTERN, message: $t('auth.field.emailInvalid') }]">
-            <MfInput v-model="form.email" size="lg" :placeholder="$t('auth.field.email')">
+            <MfInput v-model="form.email" size="lg" name="email" autocomplete="email" :placeholder="$t('auth.field.email')">
               <template #prefix><Mail :size="17"/></template>
             </MfInput>
           </MfFormItem>
@@ -23,18 +25,19 @@
             <AuthCodeField v-model="form.code" :label="code.label.value" :disabled="code.disabled.value || !EMAIL_PATTERN.test(form.email.trim())" @send="code.send(form.email)"/>
           </MfFormItem>
         </template>
-        <MfFormItem v-if="options.captcha" name="captcha" :rules="[{ required: true, message: $t('auth.field.captchaRequired') }]">
-          <AuthCaptcha v-model="form.captcha" :image="captcha.image.value" :loading="captcha.loading.value" @refresh="captcha.refresh"/>
-        </MfFormItem>
         <MfFormItem name="password" :rules="[{ required: true, message: $t('auth.field.passwordRequired') }, { min: 6, max: 20, message: $t('auth.field.passwordRule') }]">
-          <MfInput v-model="form.password" size="lg" show-password :placeholder="$t('auth.field.newPassword')">
+          <MfInput v-model="form.password" size="lg" show-password name="new-password" autocomplete="new-password" :placeholder="$t('auth.field.newPassword')">
             <template #prefix><Lock :size="17"/></template>
           </MfInput>
         </MfFormItem>
         <MfFormItem name="confirm" :rules="[{ required: true, message: $t('auth.field.confirmRequired') }, { validator: value => value === form.password || $t('auth.field.confirmMismatch') }]">
-          <MfInput v-model="form.confirm" size="lg" show-password :placeholder="$t('auth.field.confirm')">
+          <MfInput v-model="form.confirm" size="lg" show-password name="confirm-password" autocomplete="new-password" :placeholder="$t('auth.field.confirm')">
             <template #prefix><Lock :size="17"/></template>
           </MfInput>
+        </MfFormItem>
+        <!-- After the passwords, so browsers do not take the captcha for the username. -->
+        <MfFormItem v-if="options.captcha" name="captcha" :rules="[{ required: true, message: $t('auth.field.captchaRequired') }]">
+          <AuthCaptcha v-model="form.captcha" :image="captcha.image.value" :loading="captcha.loading.value" @refresh="captcha.refresh"/>
         </MfFormItem>
         <MfFormItem v-if="agreements(options).length" name="agree" :rules="[{ validator: value => value === true || $t('auth.signup.agreeRequired') }]">
           <MfCheckbox v-model="form.agree">

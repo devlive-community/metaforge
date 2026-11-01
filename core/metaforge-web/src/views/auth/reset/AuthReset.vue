@@ -9,7 +9,7 @@
       <MfForm v-else ref="formRef" :model="form" layout="vertical" @finish="onSubmit">
         <p class="m-0 text-sm text-content-secondary">{{ $t('auth.reset.hint') }}</p>
         <MfFormItem name="email" :rules="[{ required: true, message: $t('auth.field.emailRequired') }, { pattern: EMAIL_PATTERN, message: $t('auth.field.emailInvalid') }]">
-          <MfInput v-model="form.email" size="lg" :placeholder="$t('auth.field.email')">
+          <MfInput v-model="form.email" size="lg" name="email" autocomplete="email" :placeholder="$t('auth.field.email')">
             <template #prefix><Mail :size="17"/></template>
           </MfInput>
         </MfFormItem>
@@ -17,12 +17,12 @@
           <AuthCodeField v-model="form.code" :label="code.label.value" :disabled="code.disabled.value || !EMAIL_PATTERN.test(form.email.trim())" @send="code.send(form.email)"/>
         </MfFormItem>
         <MfFormItem name="password" :rules="[{ required: true, message: $t('auth.field.passwordRequired') }, { min: 6, max: 20, message: $t('auth.field.passwordRule') }]">
-          <MfInput v-model="form.password" size="lg" show-password :placeholder="$t('auth.field.newPassword')">
+          <MfInput v-model="form.password" size="lg" show-password name="new-password" autocomplete="new-password" :placeholder="$t('auth.field.newPassword')">
             <template #prefix><Lock :size="17"/></template>
           </MfInput>
         </MfFormItem>
         <MfFormItem name="confirm" :rules="[{ required: true, message: $t('auth.field.confirmRequired') }, { validator: value => value === form.password || $t('auth.field.confirmMismatch') }]">
-          <MfInput v-model="form.confirm" size="lg" show-password :placeholder="$t('auth.field.confirm')">
+          <MfInput v-model="form.confirm" size="lg" show-password name="confirm-password" autocomplete="new-password" :placeholder="$t('auth.field.confirm')">
             <template #prefix><Lock :size="17"/></template>
           </MfInput>
         </MfFormItem>

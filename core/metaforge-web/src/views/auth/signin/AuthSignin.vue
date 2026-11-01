@@ -3,12 +3,12 @@
     <template #default="{ options }">
       <MfForm ref="formRef" :model="form" layout="vertical" @finish="onSubmit(options)">
         <MfFormItem name="username" :rules="[{ required: true, message: $t(options.emailSignin ? 'auth.field.accountRequired' : 'auth.field.usernameRequired') }, { max: 255 }]">
-          <MfInput v-model="form.username" size="lg" :placeholder="$t(options.emailSignin ? 'auth.field.account' : 'auth.field.username')">
+          <MfInput v-model="form.username" size="lg" name="username" autocomplete="username" :placeholder="$t(options.emailSignin ? 'auth.field.account' : 'auth.field.username')">
             <template #prefix><User :size="17"/></template>
           </MfInput>
         </MfFormItem>
         <MfFormItem name="password" :rules="[{ required: true, message: $t('auth.field.passwordRequired') }]">
-          <MfInput v-model="form.password" size="lg" show-password :placeholder="$t('auth.field.password')">
+          <MfInput v-model="form.password" size="lg" show-password name="password" autocomplete="current-password" :placeholder="$t('auth.field.password')">
             <template #prefix><Lock :size="17"/></template>
           </MfInput>
         </MfFormItem>

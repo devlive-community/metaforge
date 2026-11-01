@@ -1,12 +1,13 @@
 <template>
   <BaseLayout>
-    <div class="relative flex min-h-screen overflow-hidden bg-linear-to-br from-primary/10 via-surface to-primary/5">
+    <div class="relative flex min-h-dvh overflow-hidden bg-surface bg-linear-to-br from-primary/10 via-surface to-primary/5">
       <!-- Soft waves along the bottom edge. -->
       <svg class="pointer-events-none absolute inset-x-0 bottom-0 h-40 w-full" viewBox="0 0 1440 160" preserveAspectRatio="none" aria-hidden="true">
         <path d="M0 96 C240 40 480 150 760 104 C1040 58 1240 120 1440 72 L1440 160 L0 160 Z" class="fill-primary/10"/>
         <path d="M0 128 C300 84 560 160 860 126 C1120 96 1300 140 1440 112 L1440 160 L0 160 Z" class="fill-primary/15"/>
       </svg>
 
+      <!-- min-h-dvh, not min-h-screen: style.css redefines .min-h-screen for the app layout. -->
       <div class="relative mx-auto flex w-full max-w-6xl items-center justify-center gap-16 px-4 py-10 lg:justify-between lg:px-10">
         <section class="hidden max-w-sm flex-col lg:flex">
           <h1 class="m-0 text-5xl font-bold tracking-tight text-content">MetaForge</h1>
