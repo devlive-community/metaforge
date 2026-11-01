@@ -154,6 +154,7 @@ export class HttpUtils
                         return { status: true, blob, fileName: encoded ? decodeURIComponent(encoded) : plain || 'export' }
                     }, error => {
                         this.handlerMessage(error.message)
+                        this.handlerFailed(error)
                         return { status: false, message: String(error.message || '') }
                     })
     }
