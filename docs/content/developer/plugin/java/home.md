@@ -2,12 +2,35 @@
 title: Java 实现
 ---
 
-MetaForge 支持自定义插件，使用者可以编写自己的插件集成到系统中。该文档主要讲解如何快速集成一个插件到 MetaForge 系统中。
+MetaForge 支持自定义插件。本文以仓库中的 QuestDB 插件（`plugin/metaforge-plugin-questdb`）为例，说明如何开发一个数据源插件。
 
-!!! note
+### 必须遵守的规则
 
-    本文使用集成基于 HTTP 协议的 QuestDB 数据存储系统来演示。
+!!! warning
+
+    - **只通过 JDBC 访问数据源**：使用数据源官方或第三方的 JDBC 驱动；没有 JDBC 驱动的数据源，基于 `metaforge-driver-sql`（SQL 解析器 `metaforge-parser`）在 `driver/` 下编写专属驱动，类名为 `org.devlive.metaforge.<Name>Driver`。插件名不带 `Jdbc`、`Http` 等协议词。
+    - **所有插件使用同一套元数据管理**：与 MySQL 相同的结构——顶部选择数据库、左侧表树、表的列结构，以及按能力显示的标签页和按钮。不允许为某个数据源编写独立的工作区、侧边栏或树。非关系型数据源也映射为库、表、列，例如 Redis（库 `0..n` / 键 / `key`、`type`、`value`）、MongoDB（库 / 集合 / 文档字段）、Neo4j（库 / 标签 / 属性）。
+    - **能力声明即契约**：只在 `capabilities.json` 中声明真正实现的能力，界面和服务端都按声明开放功能。
+    - **必须有 e2e 测试**：用容器验证至少两个版本，并在连接器文档中列出验证过的版本。
 !!!
+
+### 目录结构
+
+```
+plugin/metaforge-plugin-questdb
+├── pom.xml
+└── src
+    ├── main
+    │   ├── java/org/devlive/metaforge/plugin
+    │   │   ├── QuestDBPlugin.java        # 配置字段与介绍
+    │   │   └── QuestDBService.java       # 驱动、连接与元数据
+    │   └── resources
+    │       ├── META-INF/services
+    │       │   ├── org.devlive.metaforge.plugin.Plugin
+    │       │   └── org.devlive.metaforge.plugin.Service
+    │       └── org/devlive/metaforge/plugin/capabilities.json
+    └── test/java/org/devlive/metaforge/plugin/QuestDBE2ETest.java
+```
 
 ### `pom.xml` 依赖
 
@@ -17,251 +40,134 @@ MetaForge 支持自定义插件，使用者可以编写自己的插件集成到�
     <artifactId>metaforge-spi</artifactId>
     <scope>provided</scope>
 </dependency>
+<!-- 数据源的 JDBC 驱动，或 driver/ 下的自建驱动 -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>${metaforge.pgsql.version}</version>
+</dependency>
 <dependency>
     <groupId>org.devlive.metaforge</groupId>
-    <artifactId>metaforge-common</artifactId>
-</dependency>
-<dependency>
-    <groupId>commons-beanutils</groupId>
-    <artifactId>commons-beanutils</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.slf4j</groupId>
-    <artifactId>slf4j-api</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.slf4j</groupId>
-    <artifactId>slf4j-simple</artifactId>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>org.testcontainers</groupId>
-    <artifactId>testcontainers</artifactId>
+    <artifactId>metaforge-test-e2e</artifactId>
+    <version>${project.version}</version>
     <scope>test</scope>
 </dependency>
 ```
 
-以上配置添加了 `metaforge-spi` 和 `metaforge-common` 模块，其他的是一些辅助依赖。
+构建时 `maven-dependency-plugin` 把运行依赖复制到 `target/dependencies`，插件运行时从那里加载驱动（参考已有插件的 `pom.xml`）。
 
-!!! warning
+### 插件类：配置字段
 
-    需要注意的是如果您是单独开启的项目需要指定各个依赖的版本号。
-!!!
-
-### 插件加载器
+插件类继承 `org.devlive.metaforge.plugin.Plugin`，在 `describe()` 中声明数据源的配置字段和介绍：
 
 ```java
-public class QuestDBPluginModule
-        extends AbstractPluginModule
-        implements PluginModule
-{
-    @Override
-    public String getName()
-    {
-        return "QuestDB";
-    }
-
-    @Override
-    public PluginType getType()
-    {
-        return PluginType.HTTP;
-    }
-
-    @Override
-    public AbstractPluginModule get()
-    {
-        return this;
-    }
-
-    protected void configure()
-    {
-        Multibinder<Plugin> plugin = Multibinder.newSetBinder(this.binder(), Plugin.class);
-        plugin.addBinding().to(QuestDBPlugin.class);
-    }
-}
-```
-
-加载器需要继承 `AbstractPluginModule` 类，并实现 `PluginModule` 接口，这样系统会在启动时自动将插件加载到系统中。
-
-!!! note
-
-    需要注意的是，需要覆盖父类中的 `configure()` 方法，并将插件绑定到系统中。
-!!!
-
-### 插件执行器
-
-```java
-@Slf4j
 public class QuestDBPlugin
-        implements Plugin
+        extends Plugin
 {
-    private HttpConfigure configure;
-    private HttpConnection connection;
-    private Response response;
-
     @Override
-    public String name()
+    public PluginConfigure describe()
     {
-        return "QuestDB";
-    }
-
-    @Override
-    public String description()
-    {
-        return "Integrate QuestDB data sources";
-    }
-
-    @Override
-    public PluginType type()
-    {
-        return PluginType.HTTP;
-    }
-
-    @Override
-    public void connect(Configure configure)
-    {
-        try {
-            this.response = new Response();
-            this.configure = new HttpConfigure();
-            BeanUtils.copyProperties(this.configure, configure);
-            this.connection = new HttpConnection(this.configure, this.response);
-        }
-        catch (Exception ex) {
-            this.response.setIsConnected(Boolean.FALSE);
-            this.response.setMessage(ex.getMessage());
-        }
-    }
-
-    @Override
-    public Response execute(String content)
-    {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            log.info("Execute questdb plugin logic started");
-            this.response = this.connection.getResponse();
-            QuestDBAdapter processor = new QuestDBAdapter(this.connection);
-            this.response = processor.handlerExecute(content);
-            log.info("Execute questdb plugin logic end");
-        }
-        this.destroy();
-        return this.response;
-    }
-
-    @Override
-    public void destroy()
-    {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            this.connection.destroy();
-        }
+        PluginConfigure configure = PluginConfigure.of("QuestDB", Arrays.asList(
+                PluginConfigureField.builder().field(PluginConfigureFieldName.name).type(PluginConfigureFieldType.String).required(true).build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.host).type(PluginConfigureFieldType.String).required(true).value("127.0.0.1").build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.port).type(PluginConfigureFieldType.Number).required(true).value(8812).build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.username).type(PluginConfigureFieldType.String)
+                        .group(PluginConfigureFieldGroup.authorization).build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.password).type(PluginConfigureFieldType.String)
+                        .group(PluginConfigureFieldGroup.authorization).build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.database).type(PluginConfigureFieldType.String).value("qdb")
+                        .group(PluginConfigureFieldGroup.advanced).build()),
+                null);
+        configure.setDescriptions(Map.of("zh", "QuestDB 是高性能时序数据库。", "en", "QuestDB is a high-performance time-series database."));
+        configure.setCategory(PluginConfigureCategory.NOSQL);
+        return configure;
     }
 }
 ```
 
-执行器需要实现 `Plugin` 接口，该接口中提供了以下方法
+### 服务类：连接与元数据
 
-- `name()`: 插件有唯一名称，同名插件只会在第一次加载时生效
-- `description()`: 对于该插件的描述
-- `type()`: 插件类型
-- `connect(Configure configure)`: 插件需要提前连接信息，比如当前插件插件，就是插件的连接阶段（系统预设 HTTP 连接方式直接使用）。
-- `execute(String content)`: 具体执行操作逻辑
-- `destroy()`:  插件最后的销毁，注意销毁需要包含连接中的信息
-
-### 插件转换器
+服务类实现 `org.devlive.metaforge.spi.PluginService`。查询通过 `driver()` 指定的 JDBC 驱动执行，连接地址默认是 `jdbc:<connectType>://host:port/database`。
 
 ```java
-@Slf4j
-public class QuestDBAdapter
-        extends HttpAdapter
+public class QuestDBService
+        implements PluginService
 {
-    public QuestDBAdapter(HttpConnection connection)
+    @Override
+    public String driver()
     {
-        super(connection);
+        return "org.postgresql.Driver";
     }
 
     @Override
-    public Response handlerExecute(String content)
+    public String connectType()
     {
-        Time processorTime = new Time();
-        processorTime.setStart(new Date().getTime());
-        Response response = this.httpConnection.getResponse();
-        HttpConfigure configure = new HttpConfigure();
-        if (response.getIsConnected()) {
-            List<String> headers = new ArrayList<>();
-            List<String> types = new ArrayList<>();
-            List<Object> columns = new ArrayList<>();
-            try {
-                BeanUtils.copyProperties(configure, this.httpConnection.getConfigure());
-                configure.setAutoConnected(Boolean.FALSE);
-                configure.setRetry(0);
-                configure.setMethod(HttpMethod.GET);
-                configure.setPath("exec");
-                Map<String, String> parameters = Maps.newHashMap();
-                parameters.put("query", content);
-                configure.setParams(parameters);
-                configure.setDecoded(true);
-                HttpConnection httpConnection = new HttpConnection(configure, new Response());
-                HttpClient httpClient = HttpClient.getInstance(configure, httpConnection);
-                String body = httpClient.execute();
-                QuestDBResponse requestResponse = JSON.objectmapper.readValue(body, QuestDBResponse.class);
-                if (ObjectUtils.isNotEmpty(requestResponse.getQuery())) {
-                    response.setIsSuccessful(true);
-                    if (ObjectUtils.isNotEmpty(requestResponse.getColumns())) {
-                        requestResponse.getColumns()
-                                .forEach(schema -> {
-                                    headers.add(schema.getName());
-                                    types.add(schema.getType());
-                                });
-                    }
-                    requestResponse.getDataset()
-                            .forEach(record -> columns.add(handlerFormatter(configure.getFormat(), headers, record)));
-                }
-                else {
-                    response.setIsSuccessful(Boolean.FALSE);
-                    response.setMessage(requestResponse.getError());
-                }
-            }
-            catch (Exception ex) {
-                log.error("Execute content failed content {} exception ", content, ex);
-                response.setIsSuccessful(Boolean.FALSE);
-                response.setMessage(ex.getMessage());
-            }
-            finally {
-                response.setHeaders(headers);
-                response.setTypes(types);
-                response.setColumns(columns);
-            }
-        }
-        processorTime.setEnd(new Date().getTime());
-        response.setProcessor(processorTime);
-        return response;
+        return "postgresql";
+    }
+
+    /** 连接测试执行的语句，第一列返回服务端版本。 */
+    @Override
+    public String validator()
+    {
+        return "SELECT build() AS version";
+    }
+
+    @Override
+    public Response getDatabases(RuntimeConfigure configure)
+    {
+        return this.execute(configure, "SELECT current_database() AS object_name, 'DATABASE' AS object_type, '' AS object_comment");
+    }
+
+    @Override
+    public Response getTables(RuntimeConfigure configure, String database)
+    {
+        return this.execute(configure, "SELECT 'table' AS type_name, table_name AS object_name, '' AS object_comment FROM tables()");
+    }
+
+    @Override
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
+    {
+        return this.execute(configure, "SELECT 'column' AS type_name, \"column\" AS object_name, type AS object_data_type FROM table_columns('" + table + "')");
     }
 }
 ```
 
-插件转换器用于对当前插件执行后的结果的转化，将其转换为 MetaForge 中可以使用的逻辑。主要是用于封装 `Response` 返回结果。
+库、表、列有两种提供方式，二选一：
 
-本文是基于 JDBC 的插件所以直接继承 `HttpAdapter` 父类即可实现部分功能。
+1. **JDBC 元数据（推荐）**：驱动实现了 `DatabaseMetaData`（`getSchemas`/`getCatalogs`、`getTables`、`getColumns`）时，直接返回 `metadataDatabases(configure)`、`metadataTables(configure, database)`、`metadataColumns(configure, database, table)`。数据库按 JDBC schema 读取；驱动只报告 catalog 时，库列表回退到 catalog。
+2. **SQL**：用数据源自己的系统表或函数查询，结果列名必须是下面这些：
 
-### SPI 加载器
+| 方法 | 结果列 |
+|:--|:--|
+| `getDatabases` | `object_name`、`object_type`、`object_comment` |
+| `getTables` | `type_name`（`table`/`view`）、`object_name`、`object_comment` |
+| `getColumns` | `type_name`（`column`）、`object_name`、`object_data_type`、`object_nullable`、`object_default_value`、`object_comment`、`object_position`、`object_definition`、`object_length`、`object_autoincrement`、`object_scale` |
 
-在 `resources` 源目录下添加 `META-INF` 和 `services` 目录
+### 自建 JDBC 驱动
 
-!!! warning
+数据源没有 JDBC 驱动时，在 `driver/metaforge-driver-<name>` 下编写驱动（参考 ZooKeeper、Kafka、HDFS、Redis、MongoDB 驱动）：
 
-    `services` 在 `resources` 目录中需要
-!!!
+- 依赖 `metaforge-driver-sql`，实现 `SqlSource`（`databases()`、`tables(database)`、`columns(database, table)`、`rows(...)`），`Connection.getMetaData()` 返回 `new SqlSourceDatabaseMetaData(new SqlSourceConnection(source, url, database, user))`，插件即可走 JDBC 元数据。
+- `Statement.execute(sql)` 必须把查询结果留在 `getResultSet()` 并返回 `true`、`getUpdateCount()` 返回 `-1`：MetaForge 只通过 `execute()` 运行语句，返回 `false` 会让所有查询变成更新数 0。
+- 空结果也必须有 `ResultSetMetaData`（列名可为空）。
+- 配置的数据库必须生效：从连接属性 `database` 或 URL 路径（`jdbc:<type>://host:port/<database>`）读取。
+- 在 `META-INF/services/java.sql.Driver` 中登记驱动类。
 
-创建 `org.devlive.metaforge.spi.PluginModule` 文件，内容如下
+### SPI 注册
 
-```java
-org.devlive.metaforge.plugin.QuestDBPluginModule
+在 `src/main/resources/META-INF/services` 下创建两个文件：
+
+`org.devlive.metaforge.plugin.Plugin`
+
+```
+org.devlive.metaforge.plugin.QuestDBPlugin
 ```
 
-该文件的内容是我们定义好的插件加载模块。
+`org.devlive.metaforge.plugin.Service`
 
-!!! warning
-
-    插件的单元测试可以参考已经发布的插件进行测试
-!!!
+```
+org.devlive.metaforge.plugin.QuestDBService
+```
 
 ### 管理能力声明
 
@@ -274,22 +180,17 @@ org.devlive.metaforge.plugin.QuestDBPluginModule
 }
 ```
 
-- `kind` 决定工作台布局：`relational`、`key-value`、`document`、`storage`、`graph`、`unknown`。
+- `kind` 描述数据源类型：`relational`、`key-value`、`document`、`storage`、`graph`、`unknown`。所有类型使用同一套界面，界面只由能力决定。
+- 每个插件至少声明 `query:execute`、`database:list`、`table:list`、`column:read`，让顶部选库、表树和列结构可用。
 - 没有声明文件的插件不提供数据管理：数据源列表隐藏「数据管理」入口，相关页面也无法打开。
 - 声明的每个能力都必须真正实现；服务端同样按声明拒绝未声明的操作。
-- 所有插件都通过 SQL 访问数据源，因此声明了能力的插件必须包含 `query:execute`。
 - 声明未知的能力或 `kind` 会在加载插件时报错；子类所在的 jar 没有声明文件时沿用父类 jar 里的声明。
 - 新增管理功能时，先在 `ManagementCapability` 中登记能力，再在需要的插件中声明，并让该功能的每个界面入口都检查这个能力。
+- `namespace:list`, `key:list`, `key:read`, `object:list`, `object:read`, `object:download`, `tab:keys`, `tab:objects` 属于已废弃的独立浏览器，插件不得声明。
 
 | 能力 | 控制的界面 |
 |---|---|
 | `query:execute` | Run SQL in the query console and the SQL tab |
-| `namespace:list` | Namespace list of the native browser (Redis databases, buckets) |
-| `key:list` | Key list of the native browser |
-| `key:read` | Key detail panel |
-| `object:list` | Object list of the storage browser |
-| `object:read` | Object detail panel |
-| `object:download` | Object download button |
 | `database:list` | Database selector of the workbench header and the database list of the side tree |
 | `database:info` | Database overview page |
 | `database:alter` | Edit database properties button and drawer |
@@ -332,5 +233,43 @@ org.devlive.metaforge.plugin.QuestDBPluginModule
 | `tab:info` | Table properties tab |
 | `tab:statement` | DDL tab |
 | `tab:er-diagram` | Table ER tab and the database ER page |
-| `tab:keys` | Key browser tab |
-| `tab:objects` | Object browser tab |
+
+### e2e 测试
+
+每个插件都要有 e2e 测试，用 Testcontainers 在容器中验证每个支持的版本（参考 `QuestDBE2ETest`、`MySQLE2ETest`、`RedisE2ETest`）：
+
+```java
+@RunWith(Parameterized.class)
+public class QuestDBE2ETest
+{
+    @Parameterized.Parameters(name = "QuestDB {0}")
+    public static List<String> versions()
+    {
+        return List.of("8.3", "9.1");
+    }
+
+    @Test
+    public void tablesAndColumnsAreManaged()
+    {
+        assumeDocker();
+        try (GenericContainer<?> container = new GenericContainer<>("questdb/questdb:" + version).withExposedPorts(8812)) {
+            container.start();
+            PluginService service = new QuestDBService();
+            RuntimeConfigure configure = configure(container.getHost(), container.getMappedPort(8812), "admin", "quest", "qdb");
+
+            Assert.assertTrue(first(ok("validator", service.execute(configure, service.validator()))).startsWith(version + "."));
+            ok("create", service.execute(configure, "CREATE TABLE trades (ts TIMESTAMP, price DOUBLE) TIMESTAMP(ts)"));
+            Assert.assertTrue(column(ok("databases", service.getDatabases(configure)), "object_name").contains("qdb"));
+            Assert.assertTrue(column(ok("tables", service.getTables(configure, "qdb")), "object_name").contains("trades"));
+            Assert.assertTrue(column(ok("columns", service.getColumns(configure, "qdb", "trades")), "object_name").contains("price"));
+        }
+    }
+}
+```
+
+测试至少覆盖：服务端版本、`getDatabases`、`getTables`、`getColumns`，以及读回其他客户端写入的数据。`PluginE2E`（`test/metaforge-test-e2e`）提供 `assumeDocker`、`configure`、`ok`、`column`、`first`。
+
+### 本地调试与文档
+
+- 在 `configure/etc/conf/plugins.properties` 中登记插件模块（`metaforge-plugin-questdb=plugin/metaforge-plugin-questdb/pom.xml`），执行 `./mvnw install -pl plugin/metaforge-plugin-questdb` 后重启服务，开发模式会从模块的 `target/classes` 和 `target/dependencies` 加载插件。
+- 在 `docs/content/reference/connectors/<name>/home.md` 编写连接器文档，「版本（验证）」中列出 e2e 验证过的版本，并在 `docs/pageforge.yaml` 中登记。
