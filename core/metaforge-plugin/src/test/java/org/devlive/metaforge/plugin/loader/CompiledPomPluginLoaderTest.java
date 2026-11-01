@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 public class CompiledPomPluginLoaderTest
 {
@@ -68,5 +70,29 @@ public class CompiledPomPluginLoaderTest
         finally {
             manager.stop();
         }
+    }
+
+    @Test
+    public void dependencyJarsCopiedByThePluginBuildAreOnTheClassPath()
+            throws Exception
+    {
+        // A plugin build copies its driver to target/dependencies; the plugin must load it from there.
+        Path root = module("DriverProbePlugin", "EXECUTOR");
+        Path sources = temporary.newFolder("driver-sources").toPath();
+        Path classes = temporary.newFolder("driver-classes").toPath();
+        Path source = sources.resolve("ProbeDriver.java");
+        Files.writeString(source, "package fixtures.driver; public class ProbeDriver {}");
+        Assert.assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, "-d", classes.toString(), source.toString()));
+        Path dependencies = Files.createDirectories(root.resolve("target/dependencies"));
+        try (JarOutputStream jar = new JarOutputStream(Files.newOutputStream(dependencies.resolve("probe-driver.jar")))) {
+            jar.putNextEntry(new JarEntry("fixtures/driver/ProbeDriver.class"));
+            jar.write(Files.readAllBytes(classes.resolve("fixtures/driver/ProbeDriver.class")));
+            jar.closeEntry();
+        }
+
+        Assert.assertEquals(List.of(dependencies.resolve("probe-driver.jar")), CompiledPomPluginLoader.dependencyJars(root));
+        Plugin plugin = new CompiledPomPluginLoader().load(root, Set.of("java.", "org.devlive.metaforge.plugin.")).get(0);
+        Assert.assertNotNull(plugin.getPluginClassLoader().loadClass("fixtures.driver.ProbeDriver"));
+        plugin.getPluginClassLoader().close();
     }
 }
