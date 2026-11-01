@@ -353,7 +353,7 @@ public abstract class Plugin
     }
 
     // 获取所有服务
-// Get all services
+    // Get all services
     public <T extends Service> Set<T> getAllServices(Class<T> serviceClass)
     {
         validateInjector();
