@@ -3,7 +3,9 @@ package org.devlive.metaforge.convert
 import com.google.common.base.Preconditions.checkArgument
 import com.google.common.base.Preconditions.checkState
 import org.devlive.metaforge.common.utils.DateUtils
+import org.devlive.metaforge.convert.model.ConvertOption
 import org.devlive.metaforge.convert.model.ConvertRequest
+import org.devlive.metaforge.convert.model.choice
 import org.devlive.metaforge.convert.model.ConvertResponse
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.ObjectUtils.isNotEmpty
@@ -96,12 +98,28 @@ class TxtConvertService : ConvertService
         return response
     }
 
+    override fun options(): List<ConvertOption>
+    {
+        return listOf(
+            ConvertOption("delimiter", mapOf("zh" to "分隔符", "en" to "Delimiter"), "\t",
+                listOf(choice("\t", "制表符", "Tab"), choice(",", "逗号 ,", "Comma ,"), choice(" ", "空格", "Space"), choice("|", "竖线 |", "Pipe |"))),
+            ConvertOption("header", mapOf("zh" to "首行字段名", "en" to "Header row"), "true",
+                listOf(choice("true", "包含", "Included"), choice("false", "不包含", "Left out"))),
+            ConvertOption("nulls", mapOf("zh" to "NULL 值处理", "en" to "NULL values"), "empty",
+                listOf(choice("empty", "留空", "Empty"), choice("NULL", "写为 NULL", "Write NULL")))
+        )
+    }
+
     override fun writer(request: ConvertRequest): ConvertResponse
     {
         val response = ConvertResponse()
         try
         {
+            // A declared delimiter option wins over the request's delimiter.
+            request.options["delimiter"]?.takeIf { it.isNotEmpty() }?.let { request.delimiter = it.replace("\\t", "\t") }
             checkArgument(isNotEmpty(request.delimiter), "Delimiter must not be empty")
+            val header = request.option("header", "true") != "false"
+            val nullText = if (request.excludeNull) "" else request.option("nulls", "empty").let { if (it == "NULL") "NULL" else "" }
 
             log.info("${name()} writer origin path [ ${request.path} ]")
             log.info("${name()} writer start time [ ${DateUtils.now()} ]")
@@ -111,10 +129,7 @@ class TxtConvertService : ConvertService
             request.delimiter
                 ?.let { delimiter ->
                     log.info("${name()} writer file headers start")
-                    request.headers
-                        .let { headers ->
-                            FileUtils.writeStringToFile(file, headers.joinToString(separator = delimiter), Charsets.UTF_8)
-                        }
+                    FileUtils.writeStringToFile(file, if (header) request.headers.joinToString(separator = delimiter) else "", Charsets.UTF_8)
                     // The column types follow the header as a second line.
                     if (request.includeStructure)
                     {
@@ -129,7 +144,7 @@ class TxtConvertService : ConvertService
                             FileUtils.writeStringToFile(file, "\n", Charsets.UTF_8, true)
                             when (it)
                             {
-                                is List<*> -> FileUtils.writeStringToFile(file, it.joinToString(separator = delimiter) { value -> if (value == null && request.excludeNull) "" else value.toString() },
+                                is List<*> -> FileUtils.writeStringToFile(file, it.joinToString(separator = delimiter) { value -> value?.toString() ?: nullText },
                                     Charsets.UTF_8, true)
                                 else -> FileUtils.writeStringToFile(file, it.toString(), Charsets.UTF_8, true)
                             }
