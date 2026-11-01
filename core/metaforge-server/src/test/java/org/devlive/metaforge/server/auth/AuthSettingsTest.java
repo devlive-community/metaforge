@@ -16,6 +16,7 @@ import org.devlive.metaforge.service.settings.AuthSettings;
 import org.devlive.metaforge.service.settings.EmailCodes;
 import org.devlive.metaforge.service.settings.MailService;
 import org.devlive.metaforge.service.settings.MailSettings;
+import org.devlive.metaforge.service.settings.OAuthSettings;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -63,6 +64,7 @@ public class AuthSettingsTest
         PasswordEncoder encoder = mock(PasswordEncoder.class);
         when(encoder.encode(anyString())).thenAnswer(invocation -> "hash:" + invocation.getArgument(0));
         when(repository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(settings.oauth(any())).thenReturn(new OAuthSettings());
         service = new AuthServiceImpl(settings, codes, mail, users, repository, encoder, mock(InitializerConfigure.class));
     }
 
@@ -225,7 +227,7 @@ public class AuthSettingsTest
         assertEquals("", shown.getPassword());
         assertTrue(shown.isPasswordSet());
 
-        assertTrue(system.save(auth().build(), MAIL.toBuilder().password("").host("smtp.other.com").build()).getStatus());
+        assertTrue(system.save(auth().build(), MAIL.toBuilder().password("").host("smtp.other.com").build(), null).getStatus());
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, String>> values = ArgumentCaptor.forClass(Map.class);
         verify(configures).save(eq("SYSTEM"), eq("MAIL"), values.capture(), any());

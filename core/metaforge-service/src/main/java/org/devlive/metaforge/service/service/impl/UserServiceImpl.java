@@ -41,6 +41,7 @@ import org.devlive.metaforge.service.repository.UserRepository;
 import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.repository.jdbc.MenuAccessRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
+import org.devlive.metaforge.service.security.UserDetailsServiceImpl;
 import org.devlive.metaforge.service.service.JwtService;
 import org.devlive.metaforge.service.service.UserService;
 import org.springframework.core.env.Environment;
@@ -57,6 +58,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -97,8 +99,9 @@ public class UserServiceImpl
     private final InitializerConfigure initializer;
     private final PluginManager pluginManager;
     private final HttpServletRequest request;
+    private final UserDetailsServiceImpl userDetailsService;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, LinkRepository linkRepository, NotificationRepository notificationRepository, PluginAuditRepository pluginAuditRepository, ScheduledHistoryRepository scheduledHistoryRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request)
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, LinkRepository linkRepository, NotificationRepository notificationRepository, PluginAuditRepository pluginAuditRepository, ScheduledHistoryRepository scheduledHistoryRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request, UserDetailsServiceImpl userDetailsService)
     {
         this.userRepository = userRepository;
         this.linkRepository = linkRepository;
@@ -116,6 +119,7 @@ public class UserServiceImpl
         this.initializer = initializer;
         this.pluginManager = pluginManager;
         this.request = request;
+        this.userDetailsService = userDetailsService;
     }
 
     @Override
@@ -211,8 +215,19 @@ public class UserServiceImpl
     public CommonResponse<Object> authenticate(UserEntity configure, long expiration)
     {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(configure.getUsername(), configure.getPassword());
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        return token(authenticationManager.authenticate(authenticationToken), expiration);
+    }
 
+    @AuditUserLog
+    @Override
+    public CommonResponse<Object> issue(String username, long expiration)
+    {
+        UserDetails details = userDetailsService.loadUserByUsername(username);
+        return token(new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities()), expiration);
+    }
+
+    private CommonResponse<Object> token(Authentication authentication, long expiration)
+    {
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = jwtService.generateJwtToken(authentication, expiration);
 

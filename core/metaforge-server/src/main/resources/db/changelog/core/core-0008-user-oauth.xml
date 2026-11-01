@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Third-party sign-in: the accounts users have at GitHub, Google or an OpenID Connect provider. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0008-user-oauth" author="metaforge">
+        <createTable tableName="metaforge_user_oauth">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" primaryKeyName="pk_user_oauth" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="provider" type="${string}(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subject" type="${string}(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="create_time" type="${instant}"/>
+        </createTable>
+        <addUniqueConstraint tableName="metaforge_user_oauth" columnNames="provider, subject" constraintName="uk_user_oauth_subject"/>
+        <createIndex tableName="metaforge_user_oauth" indexName="idx_user_oauth_user">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

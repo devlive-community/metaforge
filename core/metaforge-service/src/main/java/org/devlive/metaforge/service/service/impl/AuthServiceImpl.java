@@ -19,13 +19,16 @@ import org.devlive.metaforge.service.settings.AuthSettings;
 import org.devlive.metaforge.service.settings.EmailCodes;
 import org.devlive.metaforge.service.settings.MailService;
 import org.devlive.metaforge.service.settings.MailSettings;
+import org.devlive.metaforge.service.settings.OAuthProvider;
+import org.devlive.metaforge.service.settings.OAuthSettings;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
@@ -99,8 +102,15 @@ public class AuthServiceImpl
         options.put("passwordReset", reset(auth, mail));
         options.put("termsUrl", auth.getTermsUrl());
         options.put("privacyUrl", auth.getPrivacyUrl());
-        // Third-party sign-in is listed here once a provider can be configured.
-        options.put("providers", Collections.emptyList());
+        // Only the providers that are on and fully configured; the others are not shown at all.
+        List<Map<String, String>> providers = new ArrayList<>();
+        for (OAuthProvider provider : OAuthProvider.values()) {
+            OAuthSettings configured = settings.oauth(provider);
+            if (configured.ready()) {
+                providers.add(Map.of("id", provider.getId(), "name", StringUtils.defaultIfBlank(configured.getName(), provider.getLabel())));
+            }
+        }
+        options.put("providers", providers);
         return options;
     }
 

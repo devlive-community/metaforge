@@ -4,13 +4,18 @@ import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
 import org.devlive.metaforge.plugin.configure.RuntimeConfigureFieldType;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * The system settings stored in metaforge_configure under the SYSTEM category.
  * Registration and captcha default to metaforge.registration.enable and metaforge.captcha.enable;
- * every other feature is off until an administrator turns it on.
+ * every other feature is off until an administrator turns it on. Each third-party sign-in provider
+ * has a row of its own, named by {@link OAuthProvider#configureName()}.
  */
 public final class SystemSettingSchema
 {
@@ -32,7 +37,8 @@ public final class SystemSettingSchema
                 new RuntimeConfigureField("emailVerification", RuntimeConfigureFieldType.BOOLEAN, "false", "Require an email and its code to sign up"),
                 new RuntimeConfigureField("passwordReset", RuntimeConfigureFieldType.BOOLEAN, "false", "Allow resetting a forgotten password by email"),
                 new RuntimeConfigureField("termsUrl", RuntimeConfigureFieldType.STRING, "", "Terms of service shown on sign-up"),
-                new RuntimeConfigureField("privacyUrl", RuntimeConfigureFieldType.STRING, "", "Privacy policy shown on sign-up"));
+                new RuntimeConfigureField("privacyUrl", RuntimeConfigureFieldType.STRING, "", "Privacy policy shown on sign-up"),
+                new RuntimeConfigureField("siteUrl", RuntimeConfigureFieldType.STRING, "", "Address MetaForge is opened at, for third-party sign-in callbacks"));
     }
 
     public static List<RuntimeConfigureField> mail()
@@ -44,6 +50,40 @@ public final class SystemSettingSchema
                 new RuntimeConfigureField("username", RuntimeConfigureFieldType.STRING, "", "SMTP account"),
                 new RuntimeConfigureField("password", RuntimeConfigureFieldType.PASSWORD, "", "SMTP password"),
                 new RuntimeConfigureField("from", RuntimeConfigureFieldType.STRING, "", "Sender address"));
+    }
+
+    public static List<RuntimeConfigureField> oauth(OAuthProvider provider)
+    {
+        List<RuntimeConfigureField> fields = new ArrayList<>(Arrays.asList(
+                new RuntimeConfigureField("enabled", RuntimeConfigureFieldType.BOOLEAN, "false", "Offer signing in with " + provider.getLabel()),
+                new RuntimeConfigureField("clientId", RuntimeConfigureFieldType.STRING, "", "OAuth client ID"),
+                new RuntimeConfigureField("clientSecret", RuntimeConfigureFieldType.PASSWORD, "", "OAuth client secret")));
+        if (provider.configurable()) {
+            fields.addAll(Arrays.asList(
+                    new RuntimeConfigureField("name", RuntimeConfigureFieldType.STRING, "", "Name shown for the provider"),
+                    new RuntimeConfigureField("issuer", RuntimeConfigureFieldType.STRING, "", "Issuer"),
+                    new RuntimeConfigureField("authorizationUrl", RuntimeConfigureFieldType.STRING, "", "Authorization endpoint"),
+                    new RuntimeConfigureField("tokenUrl", RuntimeConfigureFieldType.STRING, "", "Token endpoint"),
+                    new RuntimeConfigureField("userinfoUrl", RuntimeConfigureFieldType.STRING, "", "Userinfo endpoint"),
+                    new RuntimeConfigureField("scopes", RuntimeConfigureFieldType.STRING, provider.getScopes(), "Scopes")));
+        }
+        return fields;
+    }
+
+    /** An absolute http or https address with a host. */
+    public static boolean isUrl(String value)
+    {
+        if (StringUtils.isBlank(value)) {
+            return false;
+        }
+        try {
+            URI uri = new URI(value.trim());
+            String scheme = uri.getScheme() == null ? "" : uri.getScheme().toLowerCase(Locale.ROOT);
+            return (scheme.equals("http") || scheme.equals("https")) && StringUtils.isNotBlank(uri.getHost());
+        }
+        catch (URISyntaxException e) {
+            return false;
+        }
     }
 
     static String text(String value)

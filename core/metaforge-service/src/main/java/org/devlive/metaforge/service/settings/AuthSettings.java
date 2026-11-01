@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -27,6 +28,8 @@ public class AuthSettings
     private boolean passwordReset;
     private String termsUrl;
     private String privacyUrl;
+    /** Where MetaForge is opened, without a trailing slash; empty to take it from each request. */
+    private String siteUrl;
 
     public static AuthSettings from(Map<String, String> values)
     {
@@ -40,6 +43,7 @@ public class AuthSettings
                 .passwordReset(Boolean.parseBoolean(values.get("passwordReset")))
                 .termsUrl(SystemSettingSchema.text(values.get("termsUrl")))
                 .privacyUrl(SystemSettingSchema.text(values.get("privacyUrl")))
+                .siteUrl(site(values.get("siteUrl")))
                 .build();
     }
 
@@ -55,6 +59,12 @@ public class AuthSettings
         values.put("passwordReset", String.valueOf(passwordReset));
         values.put("termsUrl", SystemSettingSchema.text(termsUrl));
         values.put("privacyUrl", SystemSettingSchema.text(privacyUrl));
+        values.put("siteUrl", site(siteUrl));
         return values;
+    }
+
+    private static String site(String value)
+    {
+        return StringUtils.stripEnd(SystemSettingSchema.text(value), "/");
     }
 }

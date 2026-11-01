@@ -27,6 +27,12 @@ public interface UserService
      */
     CommonResponse<Object> authenticate(UserEntity configure, long expiration);
 
+    /**
+     * Signs in a user whose identity was checked some other way, such as by a third-party sign-in
+     * provider, and returns the same token as {@link #authenticate(UserEntity, long)}.
+     */
+    CommonResponse<Object> issue(String username, long expiration);
+
     CommonResponse<UserEntity> info(String code);
 
     CommonResponse<Long> changePassword(UserPasswordBody configure);

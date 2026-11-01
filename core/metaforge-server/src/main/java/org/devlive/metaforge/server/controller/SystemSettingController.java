@@ -7,6 +7,7 @@ import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.service.settings.AuthSettings;
 import org.devlive.metaforge.service.settings.MailSettings;
+import org.devlive.metaforge.service.settings.OAuthSettings;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -38,7 +39,7 @@ public class SystemSettingController
     @PutMapping
     public CommonResponse<Map<String, Object>> save(@RequestBody SettingsBody body)
     {
-        return service.save(body.getAuth(), body.getMail());
+        return service.save(body.getAuth(), body.getMail(), body.getOauth());
     }
 
     @PostMapping(value = "mail/test")
@@ -53,6 +54,8 @@ public class SystemSettingController
     {
         private AuthSettings auth;
         private MailSettings mail;
+        /** Third-party sign-in providers by id; left out to keep them as they are. */
+        private Map<String, OAuthSettings> oauth;
     }
 
     /** Tests the server as it is in the form, before it is saved. */
