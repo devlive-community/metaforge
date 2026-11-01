@@ -35,6 +35,18 @@ public class TDengineService
         return "TAOS-RS";
     }
 
+    /** Super tables and tables; the driver's table metadata asks for views, which TDengine 3.1 can not list. */
+    @Override
+    public Response getTables(RuntimeConfigure configure, String database)
+    {
+        String name = database.replace("'", "''");
+        return this.execute(configure, "SELECT 'table' AS type_name, stable_name AS object_name, '' AS object_comment\n" +
+                "FROM information_schema.ins_stables WHERE db_name = '" + name + "'\n" +
+                "UNION ALL\n" +
+                "SELECT 'table' AS type_name, table_name AS object_name, '' AS object_comment\n" +
+                "FROM information_schema.ins_tables WHERE db_name = '" + name + "'");
+    }
+
     /** The REST driver answers column metadata with no result set, so columns and tags come from DESCRIBE. */
     @Override
     public Response getColumns(RuntimeConfigure configure, String database, String table)
