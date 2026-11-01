@@ -48,13 +48,15 @@ public class MonetDBE2ETest
     }
 
     @Test
-    public void schemasTablesAndColumnsAreListedAndRead()
+    public void schemasTablesAndColumnsAreListedAndRead() throws Exception
     {
         try (GenericContainer<?> container = new GenericContainer<>("monetdb/monetdb:" + version)
                 .withEnv("MDB_DB_ADMIN_PASS", "monetdb")
                 .withExposedPorts(50000)
                 .waitingFor(Wait.forLogMessage(".*Starting MonetDB daemon.*", 1).withStartupTimeout(Duration.ofMinutes(5)))) {
             container.start();
+            // The daemon starts a database on its first connection, which an emulated server can drop; start it first
+            container.execInContainer("monetdb", "start", "monetdb");
             PluginService service = new MonetDBService();
             RuntimeConfigure configure = configure(container.getHost(), container.getMappedPort(50000), "monetdb", "monetdb", "monetdb");
             // Feature releases are named by month; the server reports the matching 11.x number

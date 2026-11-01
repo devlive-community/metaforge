@@ -222,6 +222,7 @@ nav:
       - /reference/connectors/cratedb/home.md
       - /reference/connectors/mysql/home.md
       - /reference/connectors/postgresql/home.md
+      - /reference/connectors/monetdb/home.md
       - /reference/connectors/redis/home.md
       - /reference/connectors/mongocommunity/home.md
       - /reference/connectors/neo4j/home.md
