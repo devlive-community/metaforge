@@ -16,6 +16,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-driver-sql</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver-sync</artifactId>
         </dependency>
