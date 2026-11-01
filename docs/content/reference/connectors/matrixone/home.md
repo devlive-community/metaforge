@@ -53,14 +53,15 @@ MatrixOne 是一款面向未来的超融合云和边缘原生 DBMS，通过简�
 |  流水线  | :check: |
 | 元数据管理 | :x: |
 
-#### 版本
+#### 版本（验证）
 
 ---
 
-!!! warning
+!!! note
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
+    插件的 e2e 测试 `MatrixOneE2ETest` 在容器中逐一验证以下版本：版本检查后，用 SQL 创建的数据库、数据表和字段被列出，并读回其中的数据。
 
-    - [x] `1.1.0`
+    - [x] 3.0
+    - [x] 4.2
 
 !!!
