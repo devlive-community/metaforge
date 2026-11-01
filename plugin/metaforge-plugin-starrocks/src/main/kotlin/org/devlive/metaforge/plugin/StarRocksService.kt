@@ -9,6 +9,12 @@ import org.devlive.metaforge.spi.model.Response
 @SuppressFBWarnings(value = ["NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"])
 class StarRocksService : PluginService
 {
+    override fun validator(): String
+    {
+        // version() answers the MySQL version StarRocks emulates; current_version() is StarRocks' own
+        return "SELECT current_version() AS version"
+    }
+
     override fun connectType(): String
     {
         return "mysql"
