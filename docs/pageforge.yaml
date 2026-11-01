@@ -222,6 +222,7 @@ nav:
       - /reference/connectors/cratedb/home.md
       - /reference/connectors/mysql/home.md
       - /reference/connectors/redis/home.md
+      - /reference/connectors/mongocommunity/home.md
       - /reference/connectors/h2/home.md
       - /reference/connectors/snowflake/home.md
       - /reference/connectors/ydb/home.md
