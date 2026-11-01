@@ -25,7 +25,7 @@
           {{ $t('dataset.common.visual') }}
         </MfButton>
         <MfButton size="sm" variant="primary" :disabled="!canAddDataset" @click="emit('add-dataset')"><Plus :size="14"/>{{ $t('dataset.common.create') }}</MfButton>
-        <MfDropdown trigger="click" placement="bottomRight"><MfButton size="sm" :disabled="!canAddDataset" :aria-label="$t('dataset.prototype.moreCreation')">···</MfButton><template #overlay><button type="button" class="rounded-mf-md px-3 py-2 text-sm text-content hover:bg-surface-hover" @click="emit('existing-dataset')">{{ $t('dataset.prototype.applyExisting') }}</button></template></MfDropdown>
+        <MfDropdown trigger="click" placement="bottomRight" :disabled="!canAddDataset"><MfButton size="sm" :disabled="!canAddDataset" :aria-label="$t('dataset.prototype.moreCreation')">···</MfButton><template #overlay><button type="button" class="rounded-mf-md px-3 py-2 text-sm text-content hover:bg-surface-hover" @click="emit('existing-dataset')">{{ $t('dataset.prototype.applyExisting') }}</button></template></MfDropdown>
       </div>
     </div>
 
