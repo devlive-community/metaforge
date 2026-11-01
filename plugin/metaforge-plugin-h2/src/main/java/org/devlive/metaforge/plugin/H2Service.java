@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.connection.JdbcUrlGuard;
+import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 @Slf4j
@@ -43,4 +44,22 @@ public class H2Service
         return "org.h2.Driver";
     }
 
+    // H2 upper-cases unquoted aliases, so information_schema rows come back keyed OBJECT_NAME; JDBC metadata keys them as callers read them
+    @Override
+    public Response getDatabases(RuntimeConfigure configure)
+    {
+        return metadataDatabases(configure);
+    }
+
+    @Override
+    public Response getTables(RuntimeConfigure configure, String database)
+    {
+        return metadataTables(configure, database);
+    }
+
+    @Override
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
+    {
+        return metadataColumns(configure, database, table);
+    }
 }
