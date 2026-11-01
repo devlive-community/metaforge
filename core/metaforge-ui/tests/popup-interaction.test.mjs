@@ -31,6 +31,18 @@ test('click dropdown closes outside and unregisters on unmount', async () => {
     assert.equal(host.document.count('keydown'), 0)
 })
 
+test('a disabled dropdown does not open from its trigger', async () => {
+    const host = mountHost(h(Dropdown, { trigger: 'click', disabled: true }, {
+        default: () => h('button', 'Open'),
+        overlay: () => h('div', { 'data-panel': 'dropdown' }, 'Choices'),
+    }))
+    try {
+        await click(host.document, host.find(node => node.tag === 'button'))
+        assert.ok(!host.find(node => node.props['data-panel'] === 'dropdown'))
+    }
+    finally { host.unmount() }
+})
+
 test('an outside control that stops click propagation still dismisses the dropdown and acts once', async () => {
     let actions = 0
     const host = mountHost(h('div', [

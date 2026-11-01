@@ -6,9 +6,12 @@ import { useOverlayPosition, type OverlayPlacement } from '../composables/useOve
 const props = withDefaults(defineProps<{
     trigger?: ('click' | 'hover' | 'contextmenu')[] | string
     placement?: OverlayPlacement
+    /** Never opens. A disabled button as the trigger has the same effect. */
+    disabled?: boolean
 }>(), {
     trigger: 'hover',
     placement: 'bottomLeft',
+    disabled: false,
 })
 
 const open = defineModel<boolean>('open', { default: false })
@@ -35,7 +38,13 @@ function onOverlayClick(event: Event): void {
     if (target?.closest?.('button, a, [role="menuitem"]')) close()
 }
 
+/** A disabled trigger lets clicks through (pointer-events: none) to this wrapper, so it is checked here. */
+function blocked(): boolean {
+    return props.disabled || !!root.value?.querySelector?.(':scope > :is(button, [role="button"]):is(:disabled, [aria-disabled="true"])')
+}
+
 function show(): void {
+    if (blocked()) return
     if (timer) clearTimeout(timer)
     timer = undefined
     open.value = true
@@ -51,6 +60,10 @@ function toggle(event: Event): void {
     timer = undefined
     if (triggers.value.includes('contextmenu')) {
         event.preventDefault()
+    }
+    if (blocked()) {
+        open.value = false
+        return
     }
     open.value = !open.value
 }
