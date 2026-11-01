@@ -7,7 +7,8 @@ class InfluxdbService : PluginService
 {
     override fun validator(): String
     {
-        return "SELECT 1"
+        // InfluxQL needs FROM in every SELECT; the diagnostics start with the build: branch, commit and version
+        return "SHOW DIAGNOSTICS"
     }
 
     override fun driver(): String
