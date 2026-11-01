@@ -23,7 +23,7 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 !!! note
 
-    Queries are executed through the JDBC driver (`metaforge-driver-redis`), supporting the `SELECT` and `SHOW` keywords.
+    Queries are executed through the JDBC driver (`metaforge-driver-redis`): `SELECT` and `SHOW` read keys, and any other statement is sent to Redis as a plain command (`GET user:1`, `HGETALL h`, `KEYS *`), as earlier releases did.
 
 !!!
 
@@ -49,11 +49,26 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `RedisE2ETest` verifies each version below in a container: keys written with plain Redis commands, read back with SQL, and browsed in the key tree.
 
-    - [x] 6.x
-    - [x] 7.x
+    - [x] 6.2
+    - [x] 7.4
 
 !!!
+
+#### SQL
+
+---
+
+| Statement | Result |
+|:--|:--|
+| ``SELECT * FROM `user:1` `` | The key, one row of `key`, `type`, `value` |
+| ``SELECT `key`, type FROM `user:*` `` | Every key matching the pattern (`*`, `?`) |
+| `SELECT * FROM user` | `user` itself, or else every key starting with `user` |
+| `SHOW DATABASES` / `SHOW TABLES` | The databases / the keys |
+| `GET user:1`, `HGETALL h`, ... | A plain command; its reply in one `RESULTS` column |
+
+- Quote keys with `:` or other symbols in backticks, and write the `key` column as `` `key` ``: `KEY` is a reserved word.
+- Choose the database in the source settings, not with `SELECT n`: connections are pooled, so the command is refused.
