@@ -56,15 +56,16 @@ public class DatabaseMigratorTest
             DatabaseMigrator.migrate(connection);
 
             JdbcTemplate jdbc = jdbc(connection);
-            assertEquals(20, count(jdbc, "SELECT COUNT(*) FROM metaforge_menu"));
+            assertEquals(21, count(jdbc, "SELECT COUNT(*) FROM metaforge_menu"));
             assertEquals(4, count(jdbc, "SELECT COUNT(*) FROM metaforge_role"));
-            assertEquals(28, count(jdbc, "SELECT COUNT(*) FROM metaforge_role_menu"));
+            assertEquals(29, count(jdbc, "SELECT COUNT(*) FROM metaforge_role_menu"));
+            assertEquals(count(jdbc, "SELECT id FROM metaforge_menu WHERE code = 'SYSTEM'"), count(jdbc, "SELECT parent FROM metaforge_menu WHERE code = 'SYSTEM_SETTINGS'"));
             assertEquals(2, count(jdbc, "SELECT COUNT(*) FROM metaforge_function"));
             assertEquals(2, count(jdbc, "SELECT COUNT(*) FROM metaforge_scheduled"));
             assertEquals("系统管理员", jdbc.queryForObject("SELECT name FROM metaforge_role WHERE code = 'ADMIN'", String.class));
             assertEquals(count(jdbc, "SELECT id FROM metaforge_menu WHERE code = 'MANAGEMENT'"),
                     count(jdbc, "SELECT parent FROM metaforge_menu WHERE code = 'QUERY'"));
-            assertEquals(18, count(jdbc, "SELECT COUNT(*) FROM metaforge_role_menu rm JOIN metaforge_role r ON r.id = rm.role_id WHERE r.code = 'ADMIN'"));
+            assertEquals(19, count(jdbc, "SELECT COUNT(*) FROM metaforge_role_menu rm JOIN metaforge_role r ON r.id = rm.role_id WHERE r.code = 'ADMIN'"));
 
             // Unicode text, booleans, timestamps and generated keys behave the same everywhere.
             jdbc.update("INSERT INTO metaforge_source (name, code, source_type, host, port, is_public, use_ssl, create_time) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
@@ -154,7 +155,9 @@ public class DatabaseMigratorTest
 
         assertEquals(1, count(jdbc, "SELECT COUNT(*) FROM metaforge_user_role WHERE user_id = 7 AND role_id = 1"));
         assertEquals(0, count(jdbc, "SELECT COUNT(*) FROM metaforge_user_role WHERE role_id = 999"));
-        assertEquals(18, count(jdbc, "SELECT COUNT(*) FROM metaforge_role_menu WHERE role_id = 1"));
+        // the legacy menus plus System settings, added to existing installs by core-0007
+        assertEquals(19, count(jdbc, "SELECT COUNT(*) FROM metaforge_role_menu WHERE role_id = 1"));
+        assertEquals(1, count(jdbc, "SELECT COUNT(*) FROM metaforge_menu WHERE code = 'SYSTEM_SETTINGS'"));
         assertEquals("Redis", jdbc.queryForObject("SELECT source_type FROM metaforge_source WHERE id = 11", String.class));
         assertTrue(jdbc.queryForObject("SELECT is_public FROM metaforge_source WHERE id = 11", Boolean.class));
         assertEquals(7, count(jdbc, "SELECT user_id FROM metaforge_dataset WHERE id = 21"));

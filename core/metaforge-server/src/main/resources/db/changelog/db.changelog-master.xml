@@ -32,4 +32,5 @@
     <include file="core/core-0004-function-knowledge.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0005-source-ddl-history.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0006-jdbc-only-sources.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0007-system-settings.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

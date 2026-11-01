@@ -20,7 +20,12 @@ public interface UserService
 {
     CommonResponse<UserEntity> saveOrUpdate(UserEntity configure);
 
-    CommonResponse<Object> authenticate(UserEntity configure);
+    /**
+     * Signs in and returns the token.
+     *
+     * @param expiration how long the token lasts in milliseconds; 0 for the configured default
+     */
+    CommonResponse<Object> authenticate(UserEntity configure, long expiration);
 
     CommonResponse<UserEntity> info(String code);
 

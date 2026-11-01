@@ -66,6 +66,10 @@ public class UserEntity
     @JsonView(value = {EntityView.NoneView.class})
     private String password;
 
+    @Column("email")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String email;
+
     @Column("chat_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String chatConfigure;

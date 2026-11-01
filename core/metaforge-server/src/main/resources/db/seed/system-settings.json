@@ -1,0 +1,23 @@
+{
+  "menus": [
+    {
+      "code": "SYSTEM_SETTINGS",
+      "name": "管理员 - 系统 - 系统设置",
+      "description": "管理员：管理员权限用户可以访问\\n位置：顶部管理一级子菜单",
+      "url": "/admin/settings",
+      "group": null,
+      "sorted": 7,
+      "type": "VIEW",
+      "parent": "SYSTEM",
+      "active": true,
+      "i18nKey": "navigation.systemSettings",
+      "icon": "SlidersHorizontal",
+      "isNew": false
+    }
+  ],
+  "roleMenus": {
+    "ADMIN": [
+      "SYSTEM_SETTINGS"
+    ]
+  }
+}

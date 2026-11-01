@@ -208,13 +208,13 @@ public class UserServiceImpl
 
     @AuditUserLog
     @Override
-    public CommonResponse<Object> authenticate(UserEntity configure)
+    public CommonResponse<Object> authenticate(UserEntity configure, long expiration)
     {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(configure.getUsername(), configure.getPassword());
         Authentication authentication = authenticationManager.authenticate(authenticationToken);
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtService.generateJwtToken(authentication);
+        String jwt = jwtService.generateJwtToken(authentication, expiration);
 
         UserDetailsService userDetails = (UserDetailsService) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()

@@ -203,6 +203,8 @@
         <redis.version>3.8.0</redis.version>
         <snakeyaml.version>1.33</snakeyaml.version>
         <useragent.version>1.21</useragent.version>
+        <jakarta-mail.version>1.6.7</jakarta-mail.version>
+        <jakarta-activation.version>1.2.2</jakarta-activation.version>
         <openai.version>2024.01.3</openai.version>
         <testcontainers.version>1.20.1</testcontainers.version>
         <quartz.version>2.3.2</quartz.version>
