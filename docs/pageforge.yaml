@@ -221,6 +221,7 @@ nav:
       - /reference/connectors/clickhouse/home.md
       - /reference/connectors/cratedb/home.md
       - /reference/connectors/mysql/home.md
+      - /reference/connectors/postgresql/home.md
       - /reference/connectors/redis/home.md
       - /reference/connectors/mongocommunity/home.md
       - /reference/connectors/h2/home.md
