@@ -15,7 +15,7 @@
     <description>MetaForge - Plugin - Dremio</description>
 
     <properties>
-        <dremio.version>20.1.0-202202061055110045-36733c65</dremio.version>
+        <flight-sql-jdbc.version>19.0.0</flight-sql-jdbc.version>
     </properties>
 
     <dependencies>
@@ -25,9 +25,9 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.dremio.distribution</groupId>
-            <artifactId>dremio-jdbc-driver</artifactId>
-            <version>${dremio.version}</version>
+            <groupId>org.apache.arrow</groupId>
+            <artifactId>flight-sql-jdbc-driver</artifactId>
+            <version>${flight-sql-jdbc.version}</version>
         </dependency>
     </dependencies>
 
