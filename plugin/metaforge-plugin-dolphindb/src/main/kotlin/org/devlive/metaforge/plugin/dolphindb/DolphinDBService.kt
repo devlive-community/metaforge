@@ -6,7 +6,8 @@ class DolphinDBService : PluginService
 {
     override fun validator(): String?
     {
-        return "select version() as version"
+        // Without FROM the driver returns the whole column as one vector object; select from a one-row table
+        return "select version() as version from table(1 as x)"
     }
 
     override fun driver(): String
