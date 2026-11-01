@@ -47,12 +47,15 @@ Support Time: `2024-02-05`
 |      Pipeline       | :x: |
 | Metadata management | :x: |
 
-#### Version
+#### Version (Validation)
 
 ---
 
-!!! Version
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/devlive-community/metaforge/issues/new/choose) to us
+    The plugin's e2e test `TimescaleE2ETest` verifies each version below in a container: the version check, then a hypertable created with SQL is listed as a table with its columns, and its rows read back.
 
-- [x] `all`
+    - [x] TimescaleDB 2.17 (PostgreSQL 16)
+    - [x] TimescaleDB 2.22 (PostgreSQL 17)
+
+!!!
