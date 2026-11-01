@@ -1,7 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { MfMessage } from 'metaforge-ui'
-import { canOpenWorkbenchPage, compareLocation, erLocation, importLocation, sourceManageLocation } from '@/model/source-manage'
+import { canOpenWorkbenchPage, compareLocation, erLocation, exportLocation, importLocation, sourceManageLocation } from '@/model/source-manage'
 import { useSourceCapabilities } from './useSourceCapabilities'
 import { useUserStore } from '@/stores/user'
 import { useI18n } from 'vue-i18n'
@@ -29,7 +29,7 @@ export function useWorkbenchHeader() {
     { path: '/home', label: t('common.home'), icon: Home },
     { path: '/manage', label: t('navigation.console'), icon: SquareTerminal, to: routeSource.value ? sourceManageLocation(context()) : '/source' },
     { path: '/import', label: t('navigation.dataImport'), icon: Upload, to: routeSource.value ? importLocation(context()) : '/import' },
-    { path: '/export', label: t('navigation.dataExport'), icon: Download },
+    { path: '/export', label: t('navigation.dataExport'), icon: Download, to: routeSource.value ? exportLocation(context()) : '/export' },
     { path: '/compare', label: t('navigation.dataCompare'), icon: GitCompare, to: routeSource.value ? compareLocation(context()) : '/compare' },
     { path: '/er', label: t('navigation.erDiagram'), icon: Network, to: routeSource.value ? erLocation(context()) : '/er' },
   ].filter(item => item.path === '/home' || canOpenWorkbenchPage(item.path, profile.value?.capabilities || [])))
@@ -63,7 +63,8 @@ export function useWorkbenchHeader() {
         router.push(route.path === '/compare'
             ? compareLocation({ source: routeSource.value, database: value, mode: route.query.mode === 'data' ? 'data' : 'structure' })
             : route.path === '/er' ? erLocation({ source: routeSource.value, database: value })
-                : route.path === '/import' ? importLocation({ source: routeSource.value, database: value }) : sourceManageLocation({ source: routeSource.value, database: value }))
+                : route.path === '/import' ? importLocation({ source: routeSource.value, database: value })
+                    : route.path === '/export' ? exportLocation({ source: routeSource.value, database: value }) : sourceManageLocation({ source: routeSource.value, database: value }))
       }
     }
   })
