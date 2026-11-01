@@ -8,7 +8,7 @@ public class IgniteService
     @Override
     public String validator()
     {
-        return "SELECT '-' AS version";
+        return "SELECT VERSION AS version FROM SYS.NODES WHERE IS_CLIENT = FALSE LIMIT 1";
     }
 
     @Override
