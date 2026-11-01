@@ -36,7 +36,7 @@ class SolrPlugin : Plugin()
                                 .required(true)
                                 .min(1L)
                                 .max(65535L)
-                                .value("8983")
+                                .value(9983)
                                 .message("port is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()
