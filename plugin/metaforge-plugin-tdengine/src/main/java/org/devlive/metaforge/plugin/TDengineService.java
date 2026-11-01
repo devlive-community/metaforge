@@ -6,6 +6,13 @@ public class TDengineService
         implements PluginService
 {
     @Override
+    public String validator()
+    {
+        // TDengine names its version function server_version()
+        return "SELECT server_version() AS version";
+    }
+
+    @Override
     public String driver()
     {
         return "com.taosdata.jdbc.TSDBDriver";
