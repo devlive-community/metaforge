@@ -111,14 +111,15 @@
               <MfSwitch v-model="oauth[id].enabled" class="shrink-0" :aria-label="$t(`settings.oauth.${id}`)"/>
             </div>
             <MfAlert v-if="status(id).key === 'incomplete'" variant="warning" :title="$t(id === 'oidc' ? 'settings.oauth.incompleteOidc' : 'settings.oauth.incomplete')"/>
-            <label v-for="field in fields(id)" :key="field" class="flex min-w-0 flex-col gap-1.5">
+            <div v-for="field in fields(id)" :key="field" class="flex min-w-0 flex-col gap-1.5">
               <span class="text-sm font-medium text-content">{{ $t(`settings.oauth.field.${field}`) }}</span>
-              <MfInput v-model="oauth[id][field]" :show-password="field === 'clientSecret'" :placeholder="placeholder(id, field)"/>
-            </label>
+              <MfInput v-model="oauth[id][field]" :show-password="field === 'clientSecret'" :placeholder="placeholder(id, field)"
+                       :aria-label="`${ $t(`settings.oauth.${id}`) } ${ $t(`settings.oauth.field.${field}`) }`"/>
+            </div>
             <div class="flex min-w-0 flex-col gap-1.5">
               <span class="text-sm font-medium text-content">{{ $t('settings.oauth.callback') }}</span>
               <div class="flex items-center gap-2">
-                <MfInput :model-value="callback(id)" readonly class="min-w-0 flex-1"/>
+                <MfInput :model-value="callback(id)" readonly class="min-w-0 flex-1" :aria-label="$t('settings.oauth.callback')"/>
                 <MfTooltip :content="$t('settings.oauth.copy')">
                   <MfButton class="shrink-0" :aria-label="$t('settings.oauth.copy')" @click="copy(callback(id))"><Copy :size="15"/></MfButton>
                 </MfTooltip>
