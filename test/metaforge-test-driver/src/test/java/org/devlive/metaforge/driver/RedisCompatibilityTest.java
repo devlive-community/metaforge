@@ -15,6 +15,7 @@ import java.util.Properties;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 /** What the DataCap 2025.1.0 drivers accepted keeps working, without a Redis server. */
@@ -28,14 +29,14 @@ public class RedisCompatibilityTest
             Class.forName(name);
             assertTrue(name, RedisDriver.class.isAssignableFrom(Class.forName(name)));
         }
-        assertTrue(DriverManager.getDriver("jdbc:redis://localhost:6379") instanceof RedisDriver);
+        assertSame(RedisDriver.class, DriverManager.getDriver("jdbc:redis://localhost:6379").getClass());
         assertTrue(new RedisClusterDriver().acceptsURL("jdbc:redis-cluster://a:7000,b:7001"));
 
         for (String name : new String[] {"io.edurt.datacap.driver.MongoJdbcDriver", "com.dbschema.MongoJdbcDriver"}) {
             assertTrue(name, MongoDriver.class.isAssignableFrom(Class.forName(name)));
         }
         assertTrue(new MongoJdbcDriver().acceptsURL("jdbc:mongodb://localhost:27017/app"));
-        assertTrue(DriverManager.getDriver("jdbc:mongo://localhost:27017") instanceof MongoDriver);
+        assertSame(MongoDriver.class, DriverManager.getDriver("jdbc:mongo://localhost:27017").getClass());
     }
 
     @Test

@@ -15,7 +15,15 @@ import static org.junit.Assert.fail;
 public class RedisJdbcDriverCommandTest
         extends RedisJdbcBaseTest
 {
-    private List<String> values(ResultSet result)
+    private List<String> values(String sql)
+            throws SQLException
+    {
+        try (ResultSet result = statement.executeQuery(sql)) {
+            return read(result);
+        }
+    }
+
+    private static List<String> read(ResultSet result)
             throws SQLException
     {
         List<String> values = new ArrayList<>();
@@ -29,15 +37,17 @@ public class RedisJdbcDriverCommandTest
     public void commandsReadAndWrite()
             throws SQLException
     {
-        assertEquals(List.of("OK"), values(statement.executeQuery("SET compat:greeting \"hello world\"")));
-        assertEquals(List.of("hello world"), values(statement.executeQuery("GET compat:greeting")));
+        assertEquals(List.of("OK"), values("SET compat:greeting \"hello world\""));
+        assertEquals(List.of("hello world"), values("GET compat:greeting"));
         // Like the released driver, an update answers with the number of reply values: HSET replies "2".
         assertEquals(1, statement.executeUpdate("HSET compat:hash name metaforge version 2026"));
-        assertEquals(List.of("name", "metaforge", "version", "2026"), values(statement.executeQuery("HGETALL compat:hash")));
-        assertTrue(values(statement.executeQuery("KEYS compat:*")).containsAll(List.of("compat:greeting", "compat:hash")));
+        assertEquals(List.of("name", "metaforge", "version", "2026"), values("HGETALL compat:hash"));
+        assertTrue(values("KEYS compat:*").containsAll(List.of("compat:greeting", "compat:hash")));
 
         assertTrue(statement.execute("GET compat:greeting"));
-        assertEquals(List.of("hello world"), values(statement.getResultSet()));
+        try (ResultSet result = statement.getResultSet()) {
+            assertEquals(List.of("hello world"), read(result));
+        }
         assertEquals(-1, statement.getUpdateCount());
         assertEquals(1, statement.executeUpdate("DEL compat:greeting"));
     }
@@ -46,14 +56,15 @@ public class RedisJdbcDriverCommandTest
     public void theSqlSubsetStillWorks()
             throws SQLException
     {
-        assertTrue(values(statement.executeQuery("SHOW TABLES")).isEmpty() || statement.executeQuery("SHOW TABLES").next());
+        try (ResultSet result = statement.executeQuery("SHOW TABLES")) {
+            assertEquals(1, result.getMetaData().getColumnCount());
+        }
     }
 
     @Test
     public void switchingTheDatabaseByCommandIsRefused()
     {
-        try {
-            statement.executeQuery("SELECT 2");
+        try (ResultSet ignored = statement.executeQuery("SELECT 2")) {
             fail("SELECT 2 must be refused");
         }
         catch (SQLException expected) {
