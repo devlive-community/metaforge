@@ -1,3 +1,4 @@
+import { watch } from 'vue'
 import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
 import i18n from '@/i18n/I18n'
 import { createAuthRoute } from '@/router/auth'
@@ -54,12 +55,14 @@ export function invalidateSetupCheck(): void
     setupChecked = undefined
 }
 
-// 标题统一为「页面名 - MetaForge」；无页面标题的路由只显示 MetaForge。
-router.afterEach(to => {
-    const key = to.meta?.title
+// 标题统一为「页面名 - MetaForge」；无页面标题的路由只显示 MetaForge。切换语言后按新语言重写。
+function refreshTitle() {
+    const key = router.currentRoute.value.meta?.title
     const page = typeof key === 'string' ? i18n.global.t(key) : ''
     document.title = page && page !== key ? `${page} - MetaForge` : 'MetaForge'
-})
+}
+router.afterEach(refreshTitle)
+watch(i18n.global.locale, refreshTitle)
 
 router.beforeEach(async (_to, _from, _next) => {
     // 404 的"返回"回到跳转前所在的页面；不存在的地址本身回跳只会再次 404。

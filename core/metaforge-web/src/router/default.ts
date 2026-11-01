@@ -12,7 +12,7 @@ const createDefaultRouter = (router: Router) => {
         component: LayoutContainer,
         meta: { requiresAuth: true },
         children: [
-            { name: 'home', path: 'home', component: () => import('@/views/pages/default/dashboard/DashboardHome.vue') },
+            { name: 'home', path: 'home', meta: { title: 'common.home' }, component: () => import('@/views/pages/default/dashboard/DashboardHome.vue') },
             { name: 'store', path: 'store', meta: { title: 'common.store' }, component: () => import('@/views/pages/store/StoreHome.vue') },
             { name: 'workspace', path: 'workspace', redirect: '/query' },
             { name: 'analysis', path: 'analysis', redirect: '/dashboard' },

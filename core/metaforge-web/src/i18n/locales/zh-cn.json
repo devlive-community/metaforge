@@ -1271,6 +1271,8 @@
   "navigation.dataExport": "数据导出",
   "navigation.dataImport": "数据导入",
   "navigation.erDiagram": "ER 图",
+  "navigation.pageNotAuthorized": "无权访问",
+  "navigation.pageNotFound": "页面未找到",
   "navigation.systemManagement": "系统管理",
   "notify.common.apply": "应用",
   "notify.common.batch": "批量设置",

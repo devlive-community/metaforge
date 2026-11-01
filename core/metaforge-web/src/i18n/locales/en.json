@@ -1271,6 +1271,8 @@
   "navigation.dataExport": "Data export",
   "navigation.dataImport": "Data import",
   "navigation.erDiagram": "ER diagram",
+  "navigation.pageNotAuthorized": "Not authorized",
+  "navigation.pageNotFound": "Page not found",
   "navigation.systemManagement": "Administration",
   "notify.common.apply": "Apply",
   "notify.common.batch": "Batch Settings",
