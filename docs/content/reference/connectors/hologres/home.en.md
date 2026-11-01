@@ -52,6 +52,6 @@ Support Time: `2023-04-25`
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    Hologres is only offered as a hosted Alibaba Cloud service with no container image, so the plugin has no container e2e test and no version is verified. The plugin connects through the PostgreSQL JDBC driver, the same path `PostgreSQLE2ETest` verifies against PostgreSQL. If you test it against Hologres, please report the result in [issues](https://github.com/devlive-community/metaforge/issues/new/choose).
 
-- [x] all
+!!!
