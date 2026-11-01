@@ -26,34 +26,55 @@
 
         <MfButton variant="primary" type="submit" size="lg" block :loading="submitting">{{ $t('auth.signin.submit') }}</MfButton>
       </MfForm>
+
+      <!-- Only the providers an administrator turned on and configured; none, and the row is not there. -->
+      <div v-if="options.providers.length" class="mt-7 flex flex-col gap-5">
+        <MfDivider :label="$t('auth.oauth.others')"/>
+        <div class="flex items-center justify-center gap-4">
+          <MfTooltip v-for="provider in options.providers" :key="provider.id" :content="$t('auth.oauth.with', { name: provider.name })">
+            <button type="button" class="inline-flex size-12 items-center justify-center rounded-mf-lg border border-line bg-surface text-content outline-none transition-colors hover:border-primary/60 hover:bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary/40 disabled:opacity-60"
+                    :aria-label="$t('auth.oauth.with', { name: provider.name })" :disabled="!!leaving" @click="signinWith(provider.id)">
+              <MfSpinner v-if="leaving === provider.id"/>
+              <AuthProviderIcon v-else :provider="provider.id" :size="22"/>
+            </button>
+          </MfTooltip>
+        </div>
+      </div>
     </template>
   </AuthShell>
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { MfMessage } from 'metaforge-ui'
 import { Lock, User } from '@lucide/vue'
-import { useUserStore } from '@/stores/user'
 import UserService from '@/services/user'
-import CommonUtils from '@/utils/common'
+import AuthService from '@/services/auth'
 import { useRouteRedirect } from '@/composables/useRouteRedirect'
+import { useSigninSession } from '@/composables/useSigninSession'
 import { useAuthCaptcha } from '@/composables/useAuthCaptcha'
 import { useAuthOptions } from '@/composables/useAuthOptions'
-import type { AuthOptions } from '@/model/system-setting'
+import type { AuthOptions, OAuthProviderId } from '@/model/system-setting'
 import AuthShell from '../components/AuthShell.vue'
 import AuthCaptcha from '../components/AuthCaptcha.vue'
+import AuthProviderIcon from '../components/AuthProviderIcon.vue'
 
 defineOptions({ name: 'AuthSignin' })
 
-const userStore = useUserStore()
 // 登录成功回到被拦截前的原地址（未登录访问受保护页、登录过期都会带上 redirect）。
-const { query: redirectQuery, restore } = useRouteRedirect()
+const { query: redirectQuery, original } = useRouteRedirect()
+const { complete } = useSigninSession()
 const { options } = useAuthOptions()
 const captcha = useAuthCaptcha()
 const formRef = ref()
 const form = ref({ username: '', password: '', captcha: '', remember: false })
 const submitting = ref(false)
+// The provider the browser is leaving for, so the buttons do not start a second sign-in.
+const leaving = ref<OAuthProviderId | null>(null)
+// Coming back with the browser's back button restores the page as it was left.
+const resetLeaving = (event: PageTransitionEvent) => { if (event.persisted) leaving.value = null }
+onMounted(() => window.addEventListener('pageshow', resetLeaving))
+onBeforeUnmount(() => window.removeEventListener('pageshow', resetLeaving))
 
 // A captcha image is fetched only when the captcha is on.
 watch(() => options.value?.captcha, enabled => { if (enabled) captcha.refresh() }, { immediate: true })
@@ -71,19 +92,16 @@ async function onSubmit(current: AuthOptions) {
       if (current.captcha) { form.value.captcha = ''; captcha.refresh() }
       return
     }
-    localStorage.setItem(CommonUtils.token, JSON.stringify(response.data))
-    userStore.userInfo = response.data
-    const menus = await UserService.getMenus()
-    if (!menus.status) {
-      MfMessage.error(menus.message)
-      userStore.logout()
-      return
-    }
-    userStore.updateMenu(menus.data)
-    await restore()
+    await complete(response.data)
   }
   finally {
     submitting.value = false
   }
+}
+
+/** Leaves for the provider's sign-in page; the callback page finishes the sign-in. */
+function signinWith(provider: OAuthProviderId) {
+  leaving.value = provider
+  window.location.href = AuthService.authorizeUrl(provider, original.value || undefined)
 }
 </script>

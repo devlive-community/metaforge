@@ -1,6 +1,6 @@
 import { ResponseModel } from '@/model/response'
 import { HttpUtils } from '@/utils/http'
-import type { AuthSettings, MailSettings } from '@/model/system-setting'
+import type { AuthSettings, MailSettings, OAuthGroup } from '@/model/system-setting'
 
 const DEFAULT_PATH = '/api/v1/admin/settings'
 
@@ -11,9 +11,9 @@ class SystemSettingService
         return new HttpUtils().get(DEFAULT_PATH)
     }
 
-    save(auth: AuthSettings, mail: MailSettings): Promise<ResponseModel>
+    save(auth: AuthSettings, mail: MailSettings, oauth: OAuthGroup): Promise<ResponseModel>
     {
-        return new HttpUtils().put(DEFAULT_PATH, { auth, mail })
+        return new HttpUtils().put(DEFAULT_PATH, { auth, mail, oauth })
     }
 
     /** Sends a test mail with the server as it is in the form. */

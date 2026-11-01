@@ -1,5 +1,6 @@
 import { ref } from 'vue'
 import AuthService from '@/services/auth'
+import { knownProviders } from '@/model/system-setting'
 import type { AuthOptions } from '@/model/system-setting'
 
 const options = ref<AuthOptions | null>(null)
@@ -12,7 +13,7 @@ let pending: Promise<void> | null = null
 export function useAuthOptions() {
   function load() {
     pending ||= AuthService.options().then(response => {
-      if (response.status) options.value = { ...response.data, providers: response.data?.providers || [] }
+      if (response.status) options.value = { ...response.data, providers: knownProviders(response.data?.providers) }
     }).finally(() => { pending = null })
     return pending
   }

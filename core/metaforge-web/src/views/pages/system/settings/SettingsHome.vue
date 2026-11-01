@@ -87,6 +87,47 @@
           <span class="text-xs text-content-tertiary">{{ $t('settings.mail.testHint') }}</span>
         </div>
       </section>
+
+      <!-- Third-party sign-in: a provider shows on the sign-in page only once it is on and configured. -->
+      <section class="flex min-w-0 flex-col gap-4 rounded-mf-lg border border-line bg-surface p-5 xl:col-span-2">
+        <div>
+          <h2 class="m-0 text-base font-semibold text-content">{{ $t('settings.oauth.title') }}</h2>
+          <p class="m-0 mt-1 text-xs text-content-tertiary">{{ $t('settings.oauth.description') }}</p>
+        </div>
+        <MfForm ref="siteRef" :model="auth" layout="vertical">
+          <MfFormItem name="siteUrl" :label="$t('settings.oauth.siteUrl')" :rules="[{ validator: optionalUrl }]">
+            <MfInput v-model="auth.siteUrl" :placeholder="origin"/>
+          </MfFormItem>
+          <p class="m-0 text-xs text-content-tertiary">{{ $t('settings.oauth.siteUrlHint') }}</p>
+        </MfForm>
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <div v-for="id in OAUTH_PROVIDERS" :key="id" class="flex min-w-0 flex-col gap-3 rounded-mf-md border border-line p-4">
+            <div class="flex items-center justify-between gap-3">
+              <span class="flex min-w-0 items-center gap-2">
+                <AuthProviderIcon :provider="id" :size="20" class="shrink-0"/>
+                <span class="truncate text-sm font-semibold text-content">{{ $t(`settings.oauth.${id}`) }}</span>
+                <MfTag size="sm" class="shrink-0" :variant="status(id).variant">{{ $t(`settings.oauth.status.${status(id).key}`) }}</MfTag>
+              </span>
+              <MfSwitch v-model="oauth[id].enabled" class="shrink-0" :aria-label="$t(`settings.oauth.${id}`)"/>
+            </div>
+            <MfAlert v-if="status(id).key === 'incomplete'" variant="warning" :title="$t(id === 'oidc' ? 'settings.oauth.incompleteOidc' : 'settings.oauth.incomplete')"/>
+            <label v-for="field in fields(id)" :key="field" class="flex min-w-0 flex-col gap-1.5">
+              <span class="text-sm font-medium text-content">{{ $t(`settings.oauth.field.${field}`) }}</span>
+              <MfInput v-model="oauth[id][field]" :show-password="field === 'clientSecret'" :placeholder="placeholder(id, field)"/>
+            </label>
+            <div class="flex min-w-0 flex-col gap-1.5">
+              <span class="text-sm font-medium text-content">{{ $t('settings.oauth.callback') }}</span>
+              <div class="flex items-center gap-2">
+                <MfInput :model-value="callback(id)" readonly class="min-w-0 flex-1"/>
+                <MfTooltip :content="$t('settings.oauth.copy')">
+                  <MfButton class="shrink-0" :aria-label="$t('settings.oauth.copy')" @click="copy(callback(id))"><Copy :size="15"/></MfButton>
+                </MfTooltip>
+              </div>
+              <span class="text-xs text-content-tertiary">{{ $t('settings.oauth.callbackHint') }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
   </div>
 </template>
@@ -95,9 +136,15 @@
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { Save, Send } from '@lucide/vue'
+import { Copy, Save, Send } from '@lucide/vue'
 import SystemSettingService from '@/services/system-setting'
-import { defaultAuthSettings, defaultMailSettings, EMAIL_PATTERN, mailReady, URL_PATTERN, waitingForMail } from '@/model/system-setting'
+import { apiBaseUrl } from '@/utils/http'
+import {
+  defaultAuthSettings, defaultMailSettings, defaultOAuthGroup, defaultOAuthSettings, EMAIL_PATTERN, incompleteProviders, mailReady, OAUTH_PROVIDERS,
+  oauthCallbackUrl, oauthConfigured, URL_PATTERN, waitingForMail,
+} from '@/model/system-setting'
+import type { OAuthProviderId, OAuthSettings } from '@/model/system-setting'
+import AuthProviderIcon from '@/views/auth/components/AuthProviderIcon.vue'
 
 defineOptions({ name: 'SettingsHome' })
 
@@ -111,8 +158,41 @@ const testing = ref(false)
 const testTo = ref('')
 const auth = ref(defaultAuthSettings())
 const mail = ref(defaultMailSettings())
+const oauth = ref(defaultOAuthGroup())
 const authRef = ref()
 const mailRef = ref()
+const siteRef = ref()
+// Where the browser reaches the server; the callback address uses it while no site address is set.
+const origin = apiBaseUrl()
+
+type OAuthField = 'clientId' | 'clientSecret' | 'name' | 'issuer' | 'authorizationUrl' | 'tokenUrl' | 'userinfoUrl' | 'scopes'
+const CLIENT_FIELDS: OAuthField[] = ['clientId', 'clientSecret']
+const OIDC_FIELDS: OAuthField[] = [...CLIENT_FIELDS, 'name', 'issuer', 'authorizationUrl', 'tokenUrl', 'userinfoUrl', 'scopes']
+const fields = (id: OAuthProviderId) => id === 'oidc' ? OIDC_FIELDS : CLIENT_FIELDS
+const callback = (id: OAuthProviderId) => oauthCallbackUrl(auth.value.siteUrl, origin, id)
+
+function placeholder(id: OAuthProviderId, field: OAuthField) {
+  if (field === 'clientSecret') return oauth.value[id].secretSet ? t('settings.oauth.secretKept') : ''
+  if (field === 'name') return 'SSO'
+  if (field.endsWith('Url') || field === 'issuer') return 'https://'
+  return ''
+}
+
+function status(id: OAuthProviderId) {
+  const settings = oauth.value[id]
+  if (!settings.enabled) return { key: 'off', variant: 'default' } as const
+  return oauthConfigured(id, settings) ? { key: 'on', variant: 'success' } as const : { key: 'incomplete', variant: 'warning' } as const
+}
+
+async function copy(text: string) {
+  try {
+    await navigator.clipboard.writeText(text)
+    MfMessage.success(t('settings.oauth.copied'))
+  }
+  catch {
+    MfMessage.error(t('settings.oauth.copyFailed'))
+  }
+}
 
 const ready = computed(() => mailReady(mail.value))
 const waiting = computed(() => waitingForMail(auth.value, mail.value))
@@ -123,6 +203,9 @@ const optionalUrl = (value: unknown) => !String(value || '').trim() || URL_PATTE
 function apply(data: any) {
   auth.value = { ...defaultAuthSettings(), ...(data?.auth || {}) }
   mail.value = { ...defaultMailSettings(), ...(data?.mail || {}), password: '' }
+  const group = defaultOAuthGroup()
+  for (const id of OAUTH_PROVIDERS) group[id] = { ...defaultOAuthSettings(), ...(data?.oauth?.[id] || {}) as Partial<OAuthSettings>, clientSecret: '' }
+  oauth.value = group
 }
 
 async function load() {
@@ -135,13 +218,18 @@ async function load() {
 
 async function save() {
   try {
-    await Promise.all([authRef.value?.validate(), mailRef.value?.validate()])
+    await Promise.all([authRef.value?.validate(), mailRef.value?.validate(), siteRef.value?.validate()])
   }
   catch {
     return
   }
+  const incomplete = incompleteProviders(oauth.value)
+  if (incomplete.length) {
+    MfMessage.error(t('settings.oauth.incompleteSave', { providers: incomplete.map(id => t(`settings.oauth.${id}`)).join('、') }))
+    return
+  }
   saving.value = true
-  const response = await SystemSettingService.save(auth.value, mail.value)
+  const response = await SystemSettingService.save(auth.value, mail.value, oauth.value)
   saving.value = false
   if (!response.status) { MfMessage.error(response.message); return }
   apply(response.data)

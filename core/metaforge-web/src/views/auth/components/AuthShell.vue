@@ -35,14 +35,14 @@
           </div>
 
           <!-- Sign-in and sign-up are tabs; sign-up only while registration is open. -->
-          <nav v-if="tab !== 'reset'" class="mt-8 grid border-b border-line" :class="registration ? 'grid-cols-2' : 'grid-cols-1'">
+          <nav v-if="tab === 'signin' || tab === 'signup'" class="mt-8 grid border-b border-line" :class="registration ? 'grid-cols-2' : 'grid-cols-1'">
             <router-link v-for="item in tabs" :key="item" :to="{ path: `/auth/${item}`, query: redirectQuery }" replace
                          class="-mb-px border-b-2 pb-3 text-center text-lg font-semibold no-underline transition-colors"
                          :class="item === tab ? 'border-primary text-primary' : 'border-transparent text-content-secondary hover:text-content'">
               {{ $t(`auth.tab.${item}`) }}
             </router-link>
           </nav>
-          <h2 v-else class="m-0 mt-8 border-b border-line pb-3 text-center text-lg font-semibold text-primary">{{ $t('auth.reset.title') }}</h2>
+          <h2 v-else class="m-0 mt-8 border-b border-line pb-3 text-center text-lg font-semibold text-primary">{{ $t(tab === 'reset' ? 'auth.reset.title' : 'auth.oauth.title') }}</h2>
 
           <div class="mt-7">
             <div v-if="!options" class="flex items-center justify-center py-16"><MfSpinner/></div>
@@ -63,8 +63,8 @@ import AuthLanguage from './AuthLanguage.vue'
 import { useAuthOptions } from '@/composables/useAuthOptions'
 import { useRouteRedirect } from '@/composables/useRouteRedirect'
 
-/** The sign-in, sign-up and reset pages: brand panel on the left, the card with the form on the right. */
-const props = defineProps<{ tab: 'signin' | 'signup' | 'reset' }>()
+/** The sign-in, sign-up, reset and third-party callback pages: brand panel on the left, the card with the form on the right. */
+const props = defineProps<{ tab: 'signin' | 'signup' | 'reset' | 'oauth' }>()
 const FEATURES = ['sources', 'convert', 'transfer', 'plugins'] as const
 
 // Refreshed on every visit, so a change in system settings shows without a reload.
