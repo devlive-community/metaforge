@@ -683,6 +683,14 @@ public interface PluginService
                     catch (SQLException ignored) {
                         decimalDigits = 0;
                     }
+                    // JDBC 4.1 column; drivers such as MonetDB's do not return it
+                    String autoincrement;
+                    try {
+                        autoincrement = resultSet.getString("IS_AUTOINCREMENT");
+                    }
+                    catch (SQLException ignored) {
+                        autoincrement = "NO";
+                    }
                     rows.add(Lists.newArrayList(
                             "column",
                             resultSet.getString("COLUMN_NAME"),
@@ -693,7 +701,7 @@ public interface PluginService
                             resultSet.getInt("ORDINAL_POSITION"),
                             "",
                             columnSize,
-                            resultSet.getString("IS_AUTOINCREMENT"),
+                            autoincrement,
                             decimalDigits));
                 }
             }
