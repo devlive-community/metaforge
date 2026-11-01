@@ -1,10 +1,6 @@
 package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.model.ManagementDetail;
-import org.devlive.metaforge.spi.model.ManagementEntry;
-import org.devlive.metaforge.spi.model.ManagementPage;
-import org.devlive.metaforge.spi.model.ManagementRequest;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.Assert;
@@ -17,7 +13,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.devlive.metaforge.test.e2e.PluginE2E.assumeDocker;
@@ -29,7 +24,7 @@ import static org.devlive.metaforge.test.e2e.PluginE2E.ok;
 /**
  * Runs the Redis plugin through MetaForge's Redis JDBC driver against every Redis release line it
  * documents as verified. Data is written with plain Redis commands, as other clients write it, then
- * read back with SQL and through the key browser that draws the source's tree.
+ * read back with SQL and listed as databases, tables and columns like any other source.
  */
 @RunWith(Parameterized.class)
 public class RedisE2ETest
@@ -83,20 +78,14 @@ public class RedisE2ETest
             // A pattern that matches nothing is an empty result with its columns, not an error.
             Assert.assertTrue(ok("select none", service.execute(configure, "SELECT * FROM `missing:*`")).getColumns().isEmpty());
 
-            ManagementPage namespaces = service.managementNamespaces(configure, new ManagementRequest());
-            Assert.assertEquals("0", namespaces.getNamespace());
-            ManagementRequest browse = new ManagementRequest();
-            browse.setNamespace("0");
-            Map<String, ManagementEntry> keys = service.managementList(configure, browse).getEntries().stream()
-                    .collect(Collectors.toMap(ManagementEntry::getName, entry -> entry));
-            Assert.assertEquals(keys.keySet().toString(), "list", keys.get("test:list").getType());
-            Assert.assertEquals("hash", keys.get("test:hash").getType());
-
-            ManagementRequest open = new ManagementRequest();
-            open.setNamespace("0");
-            open.setKey(keys.get("test:list").getId());
-            ManagementDetail detail = service.managementDetail(configure, open);
-            Assert.assertEquals(List.of("a", "b", "c"), detail.getRows().stream().map(row -> row.get("value")).collect(Collectors.toList()));
+            // Browsed like MySQL: databases, keys as tables, key/type/value as columns, and the workbench's qualified SELECT.
+            Assert.assertTrue(column(ok("databases", service.getDatabases(configure)), "object_name").containsAll(List.of("0", "1", "15")));
+            Assert.assertEquals(List.of("test:hash", "test:list", "test:string"), column(ok("tables", service.getTables(configure, "0")), "object_name"));
+            Assert.assertTrue(column(ok("tables of db 1", service.getTables(configure, "1")), "object_name").isEmpty());
+            Assert.assertEquals(List.of("key", "type", "value"), column(ok("columns", service.getColumns(configure, "0", "test:list")), "object_name"));
+            Response scoped = ok("workbench select", service.execute(configure, "SELECT * FROM `0`.`test:list` LIMIT 100"));
+            Assert.assertEquals(List.of("test:list"), column(scoped, "key"));
+            Assert.assertEquals(1, ok("limit", service.execute(configure, "SELECT `key` FROM `test:*` LIMIT 1")).getColumns().size());
         }
     }
 }
