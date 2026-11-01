@@ -148,17 +148,6 @@ public class DatabaseExportTest
     {
         executed.add(sql);
         List<Object> rows = new ArrayList<>();
-        if (sql.contains("information_schema.COLUMNS")) {
-            rows.add(List.of("chat", "id", "bigint"));
-            rows.add(List.of("chat", "title", "varchar(64)"));
-            rows.add(List.of("logs", "id", "bigint"));
-            return Response.builder().isSuccessful(true).headers(List.of("TABLE_NAME", "COLUMN_NAME", "COLUMN_TYPE")).columns(rows).build();
-        }
-        if (sql.startsWith("SHOW CREATE TABLE")) {
-            String table = sql.contains("`chat`") ? "chat" : "logs";
-            rows.add(List.of(table, "CREATE TABLE `" + table + "` (\n  `id` bigint NOT NULL,\n  KEY `idx` (`id`)\n)"));
-            return Response.builder().isSuccessful(true).headers(List.of("Table", "Create Table")).columns(rows).build();
-        }
         if (sql.startsWith("SELECT COUNT(*)")) {
             rows.add(List.of(3));
             return Response.builder().isSuccessful(true).headers(List.of("COUNT(*)")).columns(rows).build();
@@ -171,6 +160,20 @@ public class DatabaseExportTest
             rows.add(List.of(id, "t" + id));
         }
         return Response.builder().isSuccessful(true).headers(List.of("id", "title")).columns(rows).build();
+    }
+
+    /** chat has id and title, logs has id, listed as every plugin lists columns. */
+    private static Response columns(String table)
+    {
+        List<Object> rows = new ArrayList<>();
+        if ("chat".equals(table)) {
+            rows.add(List.of("column", "id", "bigint", "NO", "", "", "NO"));
+            rows.add(List.of("column", "title", "varchar(64)", "YES", "", "", "NO"));
+        }
+        else if ("logs".equals(table)) {
+            rows.add(List.of("column", "id", "bigint", "NO", "", "", "NO"));
+        }
+        return Response.builder().isSuccessful(true).headers(List.of("type_name", "object_name", "object_data_type", "object_nullable", "object_default_value", "object_comment", "object_autoincrement")).columns(rows).build();
     }
 
     private DatabaseExportService service()
@@ -191,6 +194,18 @@ public class DatabaseExportTest
             public Response execute(RuntimeConfigure configure, String content)
             {
                 return answer(content);
+            }
+
+            @Override
+            public Response getColumns(RuntimeConfigure configure, String database, String table)
+            {
+                return columns(table);
+            }
+
+            @Override
+            public Response getTableDdl(RuntimeConfigure configure, String database, String table, String kind)
+            {
+                return Response.builder().isSuccessful(true).content("CREATE TABLE `" + table + "` (\n  `id` bigint NOT NULL,\n  KEY `idx` (`id`)\n)").build();
             }
         };
         SourceEntity entity = new SourceEntity();

@@ -6,6 +6,7 @@ import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.service.body.TableCompareBody;
+import org.devlive.metaforge.service.common.SourceColumns;
 import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.service.TableCompareService;
@@ -161,24 +162,9 @@ public class TableCompareServiceImpl
     /** The columns every plugin lists through getColumns, so any source with column:read can be compared. */
     private static List<StructureDiff.Column> columns(Source source, String database, String table)
     {
-        Response response = source.service.getColumns(source.raw, database, table);
-        List<String> headers = response == null || response.getHeaders() == null ? List.of() : response.getHeaders();
-        int kind = headers.indexOf("type_name");
-        int name = headers.indexOf("object_name");
-        int type = headers.indexOf("object_data_type");
-        int nullable = headers.indexOf("object_nullable");
-        int fallback = headers.indexOf("object_default_value");
-        int comment = headers.indexOf("object_comment");
-        List<StructureDiff.Column> columns = new ArrayList<>();
-        if (name >= 0) {
-            for (List<Object> row : rows(response)) {
-                if (kind >= 0 && !"column".equalsIgnoreCase(text(row.get(kind)))) {
-                    continue;
-                }
-                columns.add(new StructureDiff.Column(text(row.get(name)), type >= 0 ? text(row.get(type)) : "", nullable >= 0 && "YES".equalsIgnoreCase(text(row.get(nullable))),
-                        fallback >= 0 && row.get(fallback) != null ? text(row.get(fallback)) : null, comment >= 0 ? text(row.get(comment)) : ""));
-            }
-        }
+        List<StructureDiff.Column> columns = SourceColumns.of(source.service, source.raw, database, table).stream()
+                .map(column -> new StructureDiff.Column(column.getName(), column.getType(), column.isNullable(), column.getDefaultValue(), column.getComment()))
+                .collect(Collectors.toList());
         if (columns.isEmpty()) {
             throw new IllegalArgumentException("Table " + database + "." + table + " has no columns or does not exist");
         }

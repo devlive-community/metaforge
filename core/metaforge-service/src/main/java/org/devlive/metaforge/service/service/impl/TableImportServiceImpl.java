@@ -13,6 +13,7 @@ import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.plugin.PluginType;
+import org.devlive.metaforge.service.common.SourceColumns;
 import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.importer.ImportPlan;
 import org.devlive.metaforge.service.importer.ImportStatements;
@@ -38,6 +39,7 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -347,7 +349,21 @@ public class TableImportServiceImpl
     {
         private PluginService service;
         private RuntimeConfigure configure;
-        private Map<String, List<List<Object>>> columns;
+        private String database;
+        /** table -> [name, type, nullable, default, extra] per column, read through the plugin when a table is first checked. */
+        private final Map<String, List<List<Object>>> columns = new HashMap<>();
+
+        /** The table's columns; null when it does not exist. */
+        List<List<Object>> columns(String table)
+        {
+            List<List<Object>> found = columns.computeIfAbsent(table, name -> {
+                List<List<Object>> rows = new ArrayList<>();
+                SourceColumns.of(service, configure, database, name).forEach(column -> rows.add(Arrays.asList(column.getName(), column.getType(),
+                        column.isNullable() ? "YES" : "NO", column.getDefaultValue(), column.isAutoIncrement() ? "auto_increment" : "")));
+                return rows;
+            });
+            return found.isEmpty() ? null : found;
+        }
     }
 
     private Optional<Session> session(ImportPlan plan, String code, String database)
@@ -385,17 +401,7 @@ public class TableImportServiceImpl
             return CommonResponse.failure("Source does not support " + missing.get());
         }
         target.configure = entity.get().toConfigure("NoneConvert", pluginManager, plugin.get());
-        Response response = target.service.execute(target.configure, "SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE, IS_NULLABLE, COLUMN_DEFAULT, EXTRA"
-                + " FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = " + target.service.sqlLiteral(database) + " ORDER BY TABLE_NAME, ORDINAL_POSITION");
-        target.columns = new HashMap<>();
-        if (response != null && Boolean.TRUE.equals(response.getIsSuccessful()) && response.getColumns() != null) {
-            for (Object row : response.getColumns()) {
-                if (row instanceof List) {
-                    List<?> values = (List<?>) row;
-                    target.columns.computeIfAbsent(String.valueOf(values.get(0)), key -> new ArrayList<>()).add(new ArrayList<>(values.subList(1, values.size())));
-                }
-            }
-        }
+        target.database = database;
         return CommonResponse.success(target);
     }
 
@@ -477,7 +483,7 @@ public class TableImportServiceImpl
     private static void validate(ImportTable source, ImportPlan.TablePlan table, Target target, List<Map<String, Object>> messages)
     {
         String name = table.getTarget() == null ? "" : table.getTarget().trim();
-        List<List<Object>> columns = target.columns.get(name);
+        List<List<Object>> columns = name.isEmpty() ? null : target.columns(name);
         if (name.isEmpty()) {
             messages.add(message("error", "targetMissing", ""));
             return;

@@ -15,6 +15,7 @@ import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.plugin.PluginType;
+import org.devlive.metaforge.service.common.SourceColumns;
 import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.exporter.ExportPlan;
 import org.devlive.metaforge.service.exporter.ExportStatements;
@@ -138,12 +139,24 @@ public class DatabaseExportServiceImpl
         private SourceEntity entity;
         private Plugin plugin;
         private ExportStatements statements;
-        /** table -> column -> type, in column order. */
-        private Map<String, Map<String, String>> columns;
+        private String database;
+        /** table -> column -> type, in column order, read through the plugin when a table is first needed. */
+        private final Map<String, Map<String, String>> columns = new ConcurrentHashMap<>();
 
         RuntimeConfigure raw()
         {
             return entity.toConfigure(RAW, pluginManager, plugin);
+        }
+
+        /** The table's columns and types; null when it does not exist. */
+        Map<String, String> columns(String table)
+        {
+            Map<String, String> found = columns.computeIfAbsent(table, name -> {
+                Map<String, String> types = new LinkedHashMap<>();
+                SourceColumns.of(service, raw(), database, name).forEach(column -> types.put(column.getName(), column.getType().toUpperCase(Locale.ROOT)));
+                return types;
+            });
+            return found.isEmpty() ? null : found;
         }
     }
 
@@ -168,16 +181,7 @@ public class DatabaseExportServiceImpl
             return CommonResponse.failure("Source does not support table:statement");
         }
         target.statements = new ExportStatements(target.service::sqlIdentifier, target.service::sqlLiteral);
-        Response response = target.service.execute(target.raw(), "SELECT TABLE_NAME, COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = "
-                + target.service.sqlLiteral(database) + " ORDER BY TABLE_NAME, ORDINAL_POSITION");
-        if (response == null || !Boolean.TRUE.equals(response.getIsSuccessful())) {
-            return CommonResponse.failure(response == null ? "Reading the columns failed" : response.getMessage());
-        }
-        target.columns = new LinkedHashMap<>();
-        for (Object row : response.getColumns()) {
-            List<String> values = values(row, 3);
-            target.columns.computeIfAbsent(values.get(0), table -> new LinkedHashMap<>()).put(values.get(1), values.get(2).toUpperCase(Locale.ROOT));
-        }
+        target.database = database;
         return CommonResponse.success(target);
     }
 
@@ -206,7 +210,7 @@ public class DatabaseExportServiceImpl
     private static List<String> problems(Target target, ExportPlan.TablePlan table)
     {
         List<String> problems = new ArrayList<>();
-        Map<String, String> columns = target.columns.get(table.getName());
+        Map<String, String> columns = target.columns(table.getName());
         if (columns == null) {
             problems.add("Table " + table.getName() + " does not exist");
             return problems;
@@ -285,7 +289,7 @@ public class DatabaseExportServiceImpl
     private static File write(ConvertService converter, ExportPlan plan, Target target, String database, ExportPlan.TablePlan table, Response rows, File directory)
             throws IOException
     {
-        Map<String, String> types = target.columns.getOrDefault(table.getName(), Map.of());
+        Map<String, String> types = Optional.ofNullable(target.columns(table.getName())).orElse(Map.of());
         ConvertRequest request = new ConvertRequest();
         request.setName(table.getName());
         request.setPath(directory.getAbsolutePath());
@@ -469,11 +473,12 @@ public class DatabaseExportServiceImpl
         RuntimeConfigure configure = target.raw();
         try {
             if (plan.includesStructure()) {
-                Response create = target.service.execute(configure, "SHOW CREATE TABLE " + target.statements.target(database, table.getName()));
-                if (create == null || !Boolean.TRUE.equals(create.getIsSuccessful()) || create.getColumns().isEmpty()) {
+                // The plugin builds the CREATE statement, as the DDL tab shows it.
+                Response create = target.service.getTableDdl(configure, database, table.getName(), "create");
+                if (create == null || !Boolean.TRUE.equals(create.getIsSuccessful()) || create.getContent() == null) {
                     throw new IOException(create == null ? "Reading the structure failed" : create.getMessage());
                 }
-                String statement = values(create.getColumns().get(0), 2).get(1);
+                String statement = create.getContent();
                 schemas.put(table.getName(), target.statements.schema(database, table.getName(), statement, plan.getStructure()));
             }
             Response total = target.service.execute(configure, target.statements.count(database, table));
