@@ -16,6 +16,12 @@ const createAuthRoute = (router: Router) => {
                 path: 'signup',
                 meta: { title: 'user.common.signup' },
                 component: () => import('@/views/auth/signup/AuthSignup.vue')
+            },
+            {
+                name: 'reset',
+                path: 'reset',
+                meta: { title: 'auth.reset.title' },
+                component: () => import('@/views/auth/reset/AuthReset.vue')
             }
         ]
     })

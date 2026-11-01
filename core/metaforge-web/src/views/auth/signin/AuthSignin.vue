@@ -1,190 +1,89 @@
 <template>
-  <BaseLayout>
-    <div class="h-screen flex items-center justify-center">
-      <div class="w-full max-w-md px-4 mx-auto">
-        <MfCard class="w-full">
-          <template #header>
-            <div class='flex items-center justify-center'>
-              <img src="/static/images/logo.png" alt="MetaForge" width="56" height="56" class="dc-brand-logo"/>
-            </div>
-          </template>
+  <AuthShell tab="signin">
+    <template #default="{ options }">
+      <MfForm ref="formRef" :model="form" layout="vertical" @finish="onSubmit(options)">
+        <MfFormItem name="username" :rules="[{ required: true, message: $t(options.emailSignin ? 'auth.field.accountRequired' : 'auth.field.usernameRequired') }, { max: 255 }]">
+          <MfInput v-model="form.username" size="lg" :placeholder="$t(options.emailSignin ? 'auth.field.account' : 'auth.field.username')">
+            <template #prefix><User :size="17"/></template>
+          </MfInput>
+        </MfFormItem>
+        <MfFormItem name="password" :rules="[{ required: true, message: $t('auth.field.passwordRequired') }]">
+          <MfInput v-model="form.password" size="lg" show-password :placeholder="$t('auth.field.password')">
+            <template #prefix><Lock :size="17"/></template>
+          </MfInput>
+        </MfFormItem>
+        <MfFormItem v-if="options.captcha" name="captcha" :rules="[{ required: true, message: $t('auth.field.captchaRequired') }]">
+          <AuthCaptcha v-model="form.captcha" :image="captcha.image.value" :loading="captcha.loading.value" @refresh="captcha.refresh"/>
+        </MfFormItem>
 
-          <div class="text-center text-content-secondary mb-2">
-            {{ $t('user.auth.signinTip') }}
-          </div>
+        <div v-if="options.rememberMe || options.passwordReset" class="flex items-center justify-between gap-3">
+          <MfCheckbox v-if="options.rememberMe" v-model="form.remember">{{ $t('auth.signin.remember', { days: options.rememberDays }) }}</MfCheckbox>
+          <span v-else/>
+          <router-link v-if="options.passwordReset" :to="{ path: '/auth/reset', query: redirectQuery }" class="shrink-0 text-sm font-medium text-primary no-underline hover:underline">
+            {{ $t('auth.signin.forgot') }}
+          </router-link>
+        </div>
 
-          <div class="px-6 py-8 relative">
-            <div v-if="loading" class="flex items-center justify-center py-8">
-              <MfSpinner size="lg" label="Loading..."/>
-            </div>
-            <MfForm v-else
-                    ref="formRef"
-                    :model="formState"
-                    layout="vertical"
-                    @finish="onSubmit"
-                    @finish-failed="onError">
-              <MfFormItem name="username"
-                          :label="$t('user.common.username')"
-                          :rules="[
-                            { required: true, message: $t('user.auth.usernameTip') },
-                            { min: 3, message: $t('user.auth.usernameSizeTip') },
-                            { max: 20, message: $t('user.auth.usernameSizeTip') }
-                      ]">
-                <MfInput v-model="formState.username"
-                         :placeholder="$t('user.auth.usernameTip')"/>
-              </MfFormItem>
-
-              <MfFormItem name="password"
-                          :label="$t('user.common.password')"
-                          :rules="[
-                            { required: true, message: $t('user.auth.passwordTip') },
-                            { min: 6, message: $t('user.auth.passwordSizeTip') },
-                            { max: 20, message: $t('user.auth.passwordSizeTip') }
-                      ]">
-                <MfInput v-model="formState.password"
-                         type="password"
-                         show-password
-                         :placeholder="$t('user.auth.passwordTip')"/>
-              </MfFormItem>
-
-              <MfFormItem v-if="showCaptcha"
-                          name="captcha"
-                          :label="$t('user.common.captcha')"
-                          :rules="[
-                            { required: true, message: $t('user.auth.captchaTip') },
-                            { min: 1, message: $t('user.auth.captchaSizeTip') },
-                            { max: 6, message: $t('user.auth.captchaSizeTip') }
-                      ]">
-                <div class="flex items-center gap-2">
-                  <MfInput v-model="formState.captcha"
-                           :placeholder="$t('user.auth.captchaTip')"/>
-                  <MfButton variant="ghost"
-                            class="px-0!"
-                            :loading="captchaLoading"
-                            :disabled="captchaLoading"
-                            @click="initCaptcha">
-                    <img v-if="!captchaLoading" style="min-width: 120px; height: 100%;" :src="'data:image/png;base64,' + captchaImage"/>
-                  </MfButton>
-                </div>
-              </MfFormItem>
-
-              <MfSpace direction="vertical" fill>
-                <MfButton variant="primary"
-                          type="submit"
-                          block
-                          :disabled="submitting"
-                          :loading="submitting">
-                  {{ $t('user.common.signin') }}
-                </MfButton>
-
-                <MfDivider class="text-sm py-2">
-                  {{ $t('user.auth.notUserTip') }}
-                </MfDivider>
-
-                <MfButton block @click="$router.push({ path: '/auth/signup', query: redirectQuery })">
-                  {{ $t('user.common.signup') }}
-                </MfButton>
-              </MfSpace>
-            </MfForm>
-          </div>
-        </MfCard>
-      </div>
-    </div>
-  </BaseLayout>
+        <MfButton variant="primary" type="submit" size="lg" block :loading="submitting">{{ $t('auth.signin.submit') }}</MfButton>
+      </MfForm>
+    </template>
+  </AuthShell>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { MfMessage } from 'metaforge-ui'
+import { Lock, User } from '@lucide/vue'
 import { useUserStore } from '@/stores/user'
 import UserService from '@/services/user'
-import CaptchaService from '@/services/captcha'
 import CommonUtils from '@/utils/common'
 import { useRouteRedirect } from '@/composables/useRouteRedirect'
-import BaseLayout from '@/views/layouts/base/BaseLayout.vue'
-
-interface Props
-{
-  username: string
-  password: string
-  timestamp: number
-  captcha: number
-}
+import { useAuthCaptcha } from '@/composables/useAuthCaptcha'
+import { useAuthOptions } from '@/composables/useAuthOptions'
+import type { AuthOptions } from '@/model/system-setting'
+import AuthShell from '../components/AuthShell.vue'
+import AuthCaptcha from '../components/AuthCaptcha.vue'
 
 defineOptions({ name: 'AuthSignin' })
 
 const userStore = useUserStore()
 // 登录成功回到被拦截前的原地址（未登录访问受保护页、登录过期都会带上 redirect）。
-const { query: redirectQuery, restore: restoreRedirect } = useRouteRedirect()
-
+const { query: redirectQuery, restore } = useRouteRedirect()
+const { options } = useAuthOptions()
+const captcha = useAuthCaptcha()
 const formRef = ref()
-const formState = ref<Props>({} as Props)
+const form = ref({ username: '', password: '', captcha: '', remember: false })
 const submitting = ref(false)
-const loading = ref(false)
-const showCaptcha = ref(false)
-const captchaImage = ref<string | null>(null)
-const captchaLoading = ref(false)
 
-const initCaptcha = () => {
-  captchaLoading.value = true
-  formState.value.timestamp = Date.parse(new Date().toString())
-  CaptchaService.getCaptcha(formState.value.timestamp)
-                .then(response => {
-                  if (response.data !== false) {
-                    showCaptcha.value = true
-                    captchaImage.value = response.data.image
-                  }
-                })
-                .finally(() => {
-                  captchaLoading.value = false
-                  loading.value = false
-                })
-}
+// A captcha image is fetched only when the captcha is on.
+watch(() => options.value?.captcha, enabled => { if (enabled) captcha.refresh() }, { immediate: true })
 
-const onError = (error: any) => {
-  const names = (error?.errorFields || []).map((field: any) => (Array.isArray(field.name) ? field.name.join('.') : field.name))
-  MfMessage.error(`Validation error field: [ ${ names.join(', ') } ]`)
-}
-
-const onSubmit = async () => {
+async function onSubmit(current: AuthOptions) {
+  if (submitting.value) return
+  submitting.value = true
   try {
-    submitting.value = true
-    const loginResponse = await UserService.signin(formState.value as any)
-
-    if (loginResponse.status) {
-      localStorage.setItem(CommonUtils.token, JSON.stringify(loginResponse.data))
-      userStore.userInfo = loginResponse.data
-
-      // 获取用户信息和菜单
-      const menuResponse = await UserService.getMenus()
-      if (menuResponse.status) {
-        userStore.updateMenu(menuResponse.data)
-        // 更新路由并跳转
-        await restoreRedirect()
-      }
-      else {
-        if (!menuResponse.status) {
-          MfMessage.error(menuResponse.message)
-        }
-        userStore.logout()
-      }
+    const response = await UserService.signin({
+      username: form.value.username.trim(), password: form.value.password, captcha: current.captcha ? Number(form.value.captcha) : undefined,
+      timestamp: current.captcha ? captcha.timestamp.value : undefined, remember: current.rememberMe && form.value.remember,
+    })
+    if (!response.status) {
+      MfMessage.error(response.message)
+      if (current.captcha) { form.value.captcha = ''; captcha.refresh() }
+      return
     }
-    else {
-      MfMessage.error(loginResponse.message)
-      initCaptcha()
+    localStorage.setItem(CommonUtils.token, JSON.stringify(response.data))
+    userStore.userInfo = response.data
+    const menus = await UserService.getMenus()
+    if (!menus.status) {
+      MfMessage.error(menus.message)
+      userStore.logout()
+      return
     }
-  }
-  catch (error) {
-    console.error('Login error:', error)
-    MfMessage.error('Login failed')
-    initCaptcha()
+    userStore.updateMenu(menus.data)
+    await restore()
   }
   finally {
     submitting.value = false
   }
 }
-
-// created 等价：setup 阶段立即初始化验证码
-loading.value = true
-initCaptcha()
 </script>
