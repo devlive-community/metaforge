@@ -1419,8 +1419,6 @@
   "query.tip.notPresetToken": "暂无可用的 Token，请到个人中心配置 Token",
   "query.tip.pageShow": "打开 / 关闭分页",
   "query.tip.smallTips": "小技巧：按住键盘 Shift 鼠标选择数据行数会自动复制选中行内容",
-  "query.tree.keyCopied": "已复制该键的查询语句",
-  "query.tree.more": "加载更多",
   "query.tree.search": "搜索库、表、字段",
   "query.workspace.resizeLeft": "调整查询左侧面板宽度",
   "query.workspace.resizeRight": "调整查询右侧面板宽度",

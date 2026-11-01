@@ -1419,8 +1419,6 @@
   "query.tip.notPresetToken": "No available tokens. Please configure tokens in your profile.",
   "query.tip.pageShow": "Toggle Pagination",
   "query.tip.smallTips": "Tip: Hold the Shift key and use the mouse to select rows; the selected rows will be copied automatically.",
-  "query.tree.keyCopied": "Copied a query for this key",
-  "query.tree.more": "Load more",
   "query.tree.search": "Search databases, tables, columns",
   "query.workspace.resizeLeft": "Resize query sidebar",
   "query.workspace.resizeRight": "Resize query side panel",
