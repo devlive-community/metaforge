@@ -222,6 +222,7 @@ nav:
       - /reference/connectors/cratedb/home.md
       - /reference/connectors/mysql/home.md
       - /reference/connectors/postgresql/home.md
+      - /reference/connectors/iotdb/home.md
       - /reference/connectors/trino/home.md
       - /reference/connectors/elasticsearch8x/home.md
       - /reference/connectors/oracle/home.md
