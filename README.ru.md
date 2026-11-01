@@ -4,16 +4,14 @@
 
 # MetaForge
 
+**Интегрированное программное обеспечение для преобразования, интеграции и визуализации данных**
+
 ---
 
-![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FEdurtIO%2Fmetaforge.git&countColor=%23263759&style=flat&labelStyle=none)
-[![](https://tokei.rs/b1/github/EdurtIO/metaforge)](https://github.com/EdurtIO/metaforge)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![version](https://img.shields.io/github/v/release/EdurtIO/metaforge.svg)
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-![GitHub Release Date](https://img.shields.io/github/release-date/EdurtIO/metaforge?style=flat-square)
-
-![Docker Automated build](https://img.shields.io/docker/automated/devliveorg/metaforge)
+[![Docker Automated build](https://img.shields.io/docker/automated/devliveorg/metaforge)](https://hub.docker.com/r/devliveorg/metaforge)
 ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/devliveorg/metaforge?style=flat-square)
 ![Docker Pulls](https://img.shields.io/docker/pulls/devliveorg/metaforge?style=flat-square)
 
@@ -23,35 +21,124 @@
 
 </div>
 
-### Что такое MetaForge?
+## Что такое MetaForge?
 
 ---
 
-MetaForge — это интегрированное программное обеспечение для преобразования, интеграции и визуализации данных. Поддержка нескольких источников данных, типов файлов, баз данных, связанных с большими данными, реляционных баз данных, баз данных NoSQL и многого другого. С помощью программного обеспечения может быть реализовано управление несколькими источниками данных, а также могут выполняться различные операции с данными в источнике, могут быть построены диаграммы данных, могут быть обнаружены источники данных и могут быть выполнены другие функции.
+MetaForge — это интегрированное программное обеспечение для преобразования, интеграции и визуализации данных. Оно поддерживает самые разные источники данных — реляционные СУБД, NoSQL-базы данных, big data движки, очереди сообщений и файловые системы — и позволяет управлять множеством источников из единой консоли, запрашивать и преобразовывать данные, строить наборы данных, диаграммы и представления мониторинга.
 
-| Имя пользователя | пароль      |
-|:----------------:|:------------|
-|    `metaforge`     | `123456789` |
-|     `admin`      | `12345678`  |
-
-### просьба
+## Возможности
 
 ---
 
-> Обязательный к прочтению пользователь: обязательно клонируйте код локально и выполните следующую команду
+- **Управление источниками данных** — подключение, проверка и управление 50+ источниками из единой консоли
+- **SQL-консоль** — редактор в стиле IDE с подсветкой синтаксиса, форматированием, историей выполнения и экспортом
+- **Наборы данных** — создание переиспользуемых наборов из таблиц или произвольных запросов, предпросмотр данных и метаданные столбцов
+- **Визуализация** — дашборды с перетаскиванием: таблицы, круговые диаграммы и другие типы графиков
+- **Отчёты** — планирование и совместный доступ к отчётам
+- **Рабочие процессы** — объединение задач обработки данных в повторяемые workflow
+- **Файловое хранилище** — чтение и запись файлов через Aliyun OSS, Amazon S3, HDFS, локальное хранилище и другие
+- **Уведомления** — DingTalk, электронная почта и другие каналы для событий задач и системы
+- **AI-ассистент** — общайтесь со своими данными через настроенных AI-провайдеров
+- **Плагинная архитектура** — каждый коннектор, конвертер и хранилище являются подключаемыми плагинами
+- **Администрирование** — пользователи, роли, меню и конфигурация среды выполнения с тонкой настройкой прав
+
+## Требования
+
+---
+
+| Зависимость | Версия                            |
+|:------------|:----------------------------------|
+| JDK         | 21                                |
+| Maven       | 3.9+ (в комплекте `./mvnw`)       |
+| Node.js     | 20                                |
+| pnpm        | 9.13.2                            |
+
+## Быстрый старт
+
+---
+
+> Обязательно к прочтению: после клонирования кода обязательно выполните следующие команды
 
 ```bash
 cp configure/git-hook/* .git/hooks
 chmod 700 .git/hooks/*
 ```
 
+### Запуск бэкенда (разработка)
+
+Запустите главный класс `org.devlive.metaforge.server.MetaForge` (модуль `core/metaforge-server`) в своей IDE.
+Сервер доступен на [http://localhost:9096](http://localhost:9096). При первом запуске мастер установки поможет выбрать
+базу метаданных (по умолчанию встроенная H2, также MySQL / PostgreSQL / SQL Server / Oracle) и создать
+учётную запись администратора.
+
+### Запуск фронтенда (разработка)
+
+```bash
+pnpm install
+pnpm --filter metaforge-web dev
+```
+
+Веб-консоль доступна на [http://localhost:3001](http://localhost:3001) и проксирует API-запросы к бэкенду.
+
+### Сборка для продакшена
+
+```bash
+# Фронтенд
+pnpm --filter metaforge-web build
+
+# Бэкенд + дистрибутив (сервер отдаёт собранный фронтенд
+# из core/metaforge-web/dist; архив попадает в dist/)
+./mvnw -T1C clean package -DskipTests
+```
+
+## Docker
+
+---
+
+```bash
+docker pull devliveorg/metaforge:latest
+docker run -d --name metaforge -p 9096:9096 devliveorg/metaforge:latest
+```
+
+Либо распакуйте собранный локально дистрибутив (`dist/metaforge-server-2026.0.0-bin.tar.gz`) и запустите `bin/startup.sh`.
+
+## Структура проекта
+
+---
+
+```
+metaforge
+├── client                        # Консольный клиент
+├── configure                     # Конфигурация по умолчанию и манифесты плагинов
+├── core
+│   ├── metaforge-captcha         # Генерация капчи
+│   ├── metaforge-common          # Общие утилиты и перечисления
+│   ├── metaforge-condor          # Интеграция планировщика
+│   ├── metaforge-server          # Сервер Spring Boot (точка входа REST API)
+│   ├── metaforge-service         # Доменные сервисы и хранение данных
+│   ├── metaforge-security        # Конфигурация безопасности
+│   ├── metaforge-sql             # Конструкторы SQL-запросов
+│   ├── metaforge-spi             # Контракты plugin SPI
+│   ├── metaforge-web             # Веб-консоль Vue 3 + Tailwind
+├── convert                       # Конвертеры данных (JSON, CSV, XML, ...)
+├── driver                        # Драйверы баз данных (Redis, MongoDB, ...)
+├── executor                      # Движки выполнения
+├── fs                            # Плагины файловых хранилищ (OSS, S3, локальное, ...)
+├── lib                           # Общие библиотеки (HTTP-клиент, логирование, shell)
+├── notify                        # Каналы уведомлений (DingTalk, ...)
+├── parser                        # SQL-парсеры (MySQL, Trino, ...)
+├── plugin                        # Плагины источников данных (50+ коннекторов)
+└── shaded                        # Shaded сторонние интеграции
+```
+
 ## Поддерживаемые коннекторы
 
 ---
 
-MetaForge может запрашивать данные из любого хранилища данных или движка данных (ClickHouse, MySQL, Presto и т.д.), использующего SQL.
+MetaForge может запрашивать данные из любого SQL-хранилища или движка данных (ClickHouse, MySQL, Presto и др.).
 
-Ниже приведены некоторые из основных поддерживаемых решений для баз данных.
+Ниже представлены некоторые из основных поддерживаемых решений для баз данных:
 
 <div style="display: flex; flex-wrap: wrap; gap: 20px; justify-content: center;">
  <a href="https://clickhouse.com"><img src="docs/assets/plugin/clickhouse.svg" alt="ClickHouse" height="60"/></a>
@@ -105,25 +192,19 @@ MetaForge может запрашивать данные из любого хр�
  <a href="https://dolphindb.com/"><img src="docs/assets/plugin/dolphindb.svg" alt="DolphinDB" height="60"/></a>
 </div>
 
-## Архитектура системы
+## Документация
 
 ---
 
-<img src="docs/assets/architecture.jpg" width="100%" />
-
-## Атлас вкладов
-
----
-
-[![Star History Chart](https://star-history.dera.page/svg?repos=devlive-community/metaforge&type=Timeline)](https://star-history.dera.page/#devlive-community/metaforge&Timeline)
+[Расширенная документация по MetaForge](https://metaforge.devlive.org)
 
 ## Присоединяйтесь к нам
 
 ---
 
-Вид [Issues 950](https://github.com/devlive-community/metaforge/issues/950)
+Посетите [Issues 950](https://github.com/devlive-community/metaforge/issues/950)
 
-## Признание
+## Благодарности
 
 ---
 
@@ -131,13 +212,13 @@ MetaForge может запрашивать данные из любого хр�
 [![App Store](https://img.shields.io/badge/App%20Store-Rainbond-brightgreen?style=flat-square)](https://www.rainbond.com/)
 [![Vue 3](https://img.shields.io/badge/UI-Vue%203%20%2B%20Tailwind-brightgreen?style=flat-square)](https://vuejs.org/)
 
-## Установка и настройка
+## История звёзд
 
 ---
 
-[Расширенная документация по MetaForge](https://metaforge.devlive.org)
+[![Star History Chart](https://star-history.dera.page/svg?repos=devlive-community/metaforge&type=Timeline)](https://star-history.dera.page/#devlive-community/metaforge&Timeline)
 
-## Участников
+## Участники
 
 ---
 

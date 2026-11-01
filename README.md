@@ -27,11 +27,6 @@
 
 MetaForge is integrated software for data transformation, integration, and visualization. It supports a wide variety of data sources — relational databases, NoSQL databases, big data engines, message queues and file systems — and lets you manage multiple data sources, query and transform data, build datasets, and create charts and monitoring views.
 
-| Username    | Password    |
-|:-----------:|:-----------:|
-| `metaforge` | `123456789` |
-| `admin`     | `12345678`  |
-
 ## Features
 
 ---
