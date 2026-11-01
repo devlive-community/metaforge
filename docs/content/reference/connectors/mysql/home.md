@@ -61,12 +61,24 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `MySQLE2ETest` verifies each version below in a container: the version check, then databases, tables and columns created, read, changed and dropped with SQL, and scripts applied as one transaction.
 
-    - [x] 5.x
-    - [x] 6.x
-    - [x] 7.x
+    - [x] 8.0
+    - [x] 8.4
+    - [x] 9.4
 
 !!!
+
+#### SQL and concepts
+
+---
+
+- A script of several statements runs as one transaction and is rolled back when any statement fails.
+
+| MetaForge | MySQL | SQL |
+|:--|:--|:--|
+| Database | Database (schema) | `CREATE DATABASE` / `ALTER DATABASE` / `DROP DATABASE` |
+| Table | Table | `CREATE TABLE` / `ALTER TABLE` / `DROP TABLE` |
+| Column | Column | `ALTER TABLE ... ADD / MODIFY / DROP COLUMN` |

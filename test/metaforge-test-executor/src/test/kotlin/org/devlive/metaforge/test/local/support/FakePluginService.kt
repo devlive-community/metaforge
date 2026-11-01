@@ -2,7 +2,6 @@ package org.devlive.metaforge.test.local.support
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.PluginType
 import org.devlive.metaforge.spi.adapter.BatchWriter
 import org.devlive.metaforge.spi.adapter.RowCallback
 import org.devlive.metaforge.spi.model.RuntimeConfigure
@@ -62,8 +61,6 @@ class FakePluginService(
     var throwAtRow: Int = -1
 
     override fun supportsStreaming(): Boolean = streaming
-
-    override fun type(): PluginType = if (streaming) PluginType.JDBC else PluginType.HTTP
 
     override fun executeStream(configure: RuntimeConfigure, content: String, fetchSize: Int, callback: RowCallback)
     {

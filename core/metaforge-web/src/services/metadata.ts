@@ -38,6 +38,12 @@ class MetadataService
         return new HttpUtils().get(`/api/v1/source-management/${ encodeURIComponent(code) }/capabilities`)
     }
 
+    /** Capabilities of several sources in one request, keyed by source code. */
+    getCapabilitiesOf(codes: string[]): Promise<ResponseModel>
+    {
+        return new HttpUtils().post('/api/v1/source-management/capabilities', codes)
+    }
+
     getEngines(code: string): Promise<ResponseModel>
     {
         return new HttpUtils().get(`${ DEFAULT_PATH }/${ code }/engines`)
@@ -53,10 +59,46 @@ class MetadataService
         return new HttpUtils().get(`${ DEFAULT_PATH }/${ code }/databases`)
     }
 
+    /** Tables, columns and foreign keys of the database for its ER diagram. */
+    getDatabaseEr(code: string, database: string): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH }/${ code }/${ database }/er`)
+    }
+
     /** Base tables of the database with engine, rows, data and index bytes and times. */
     getDatabaseTables(code: string, database: string): Promise<ResponseModel>
     {
         return new HttpUtils().get(`${ DEFAULT_PATH }/${ code }/${ database }/database-tables`)
+    }
+
+    /** Column differences between two tables of the source. */
+    compareStructure(code: string, configure: any): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${ DEFAULT_PATH }/${ code }/compare/structure`, configure)
+    }
+
+    /** Row differences between two tables of the source, paired by key. */
+    compareData(code: string, configure: any): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${ DEFAULT_PATH }/${ code }/compare/data`, configure)
+    }
+
+    /** Sync statements or a CSV report of a comparison, as a file. */
+    compareExport(code: string, configure: any)
+    {
+        return new HttpUtils().download(`${ DEFAULT_PATH }/${ code }/compare/export`, configure)
+    }
+
+    /** The first rows of an export as the file would hold them, and the table's row count. */
+    previewExport(code: string, database: string, table: string, configure: any): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${ DEFAULT_PATH }/${ code }/${ database }/${ table }/export-preview`, configure)
+    }
+
+    /** The export file (a ZIP when compressing), or the failure message. */
+    exportFile(code: string, database: string, table: string, configure: any)
+    {
+        return new HttpUtils().download(`${ DEFAULT_PATH }/${ code }/${ database }/${ table }/export-file`, configure)
     }
 
     /** Changes the database's default character set and collation; `preview` returns the statement only. */
@@ -153,11 +195,6 @@ class MetadataService
     updateData(code: string, database: string, table: string, configure: any): Promise<ResponseModel>
     {
         return new HttpUtils().put(`${ DEFAULT_PATH }/${ code }/${ database }/${ table }/update-data`, configure)
-    }
-
-    exportData(code: string, database: string, table: string, configure: any): Promise<ResponseModel>
-    {
-        return new HttpUtils().post(`${ DEFAULT_PATH }/${ code }/${ database }/${ table }/export-data`, configure)
     }
 
     createColumn(code: string, database: string, table: string, configure: any): Promise<ResponseModel>

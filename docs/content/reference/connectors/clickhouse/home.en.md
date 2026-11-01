@@ -32,7 +32,7 @@ MetaForge declares the configuration fields inside the plugin class by default (
     |:------:|:---------------------------------:|:-------------:|
     | `Name` | :check{20,#3CA34F}:  |       -       |
     | `Host` | :check{20,#3CA34F}: |  `127.0.0.1`  |
-    | `Port` | :check{20,#3CA34F}: |     `9000`    |
+    | `Port` | :check{20,#3CA34F}: |     `8123`    |
 
 === "Authorization"
 
@@ -57,10 +57,26 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `ClickHouseE2ETest` verifies each version below in a container: the version check, then databases, tables and columns created, read, changed and dropped with SQL.
 
-- [x] 19.x
-- [x] 20.x
-- [x] 21.x
+    - [x] 24.8
+    - [x] 25.8
+    - [x] 26.3
+    - [x] 26.8
+
+!!!
+
+#### SQL and concepts
+
+---
+
+- Connects with the official JDBC driver `clickhouse-jdbc` 0.11.0 over HTTP, default port `8123`.
+- The former "ClickHouse HTTP" plugin is merged into this one; existing sources switch to it on upgrade.
+
+| MetaForge | ClickHouse | SQL |
+|:--|:--|:--|
+| Database | Database | `CREATE DATABASE` / `DROP DATABASE` |
+| Table | Table | `CREATE TABLE ... ENGINE = MergeTree ORDER BY ...` / `DROP TABLE` |
+| Column | Column | `ALTER TABLE ... ADD / MODIFY / DROP COLUMN` |

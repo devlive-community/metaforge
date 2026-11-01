@@ -1,0 +1,11 @@
+{
+  "kind": "key-value",
+  "capabilities": [
+    "namespace:list",
+    "key:list",
+    "key:read",
+    "tab:keys",
+    "tab:sql",
+    "query:execute"
+  ]
+}

@@ -1,71 +1,42 @@
 package org.devlive.metaforge.plugin;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
-import org.apache.commons.lang3.ObjectUtils;
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.connection.HttpConfigure;
-import org.devlive.metaforge.spi.connection.HttpConnection;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
-@Slf4j
-@SuppressFBWarnings(value = {"EI_EXPOSE_REP"})
+/** GreptimeDB through the MySQL JDBC driver on its MySQL protocol port; its information_schema describes databases, tables and columns. */
 public class GreptimeDBService
         implements PluginService
 {
-    private HttpConfigure configure;
-    private HttpConnection connection;
-    private Response response;
-
     @Override
-    public String validator()
+    public String driver()
     {
-        return "SELECT 1";
+        return "com.mysql.cj.jdbc.Driver";
     }
 
     @Override
-    public void connect(RuntimeConfigure configure)
+    public String connectType()
     {
-        try {
-            this.response = new Response();
-            this.configure = new HttpConfigure();
-            BeanUtils.copyProperties(this.configure, configure);
-            this.connection = new HttpConnection(this.configure, this.response);
-        }
-        catch (Exception ex) {
-            this.response.setIsConnected(Boolean.FALSE);
-            this.response.setMessage(ex.getMessage());
-        }
+        return "mysql";
     }
 
     @Override
-    public Response execute(String content)
+    public Response getTables(RuntimeConfigure configure, String database)
     {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            log.info("Execute greptimedb plugin logic started");
-            this.response = this.connection.getResponse();
-            GreptimeDBAdapter processor = new GreptimeDBAdapter(this.connection);
-            this.response = processor.handlerExecute(content);
-            log.info("Execute greptimedb plugin logic end");
-        }
-        this.destroy();
-        return this.response;
+        String sql = "SELECT CASE WHEN table_type = 'VIEW' THEN 'view' ELSE 'table' END AS type_name, table_name AS object_name, '' AS object_comment\n" +
+                "FROM information_schema.tables\n" +
+                "WHERE table_schema = '{0}'\n" +
+                "ORDER BY table_name";
+        return this.execute(configure, sql.replace("{0}", database.replace("'", "''")));
     }
 
     @Override
-    public Response execute(RuntimeConfigure configure, String content)
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
     {
-        connect(configure);
-        return execute(content);
-    }
-
-    @Override
-    public void destroy()
-    {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            this.connection.destroy();
-        }
+        String sql = "SELECT 'column' AS type_name, column_name AS object_name, data_type AS object_data_type, is_nullable AS object_nullable,\n" +
+                "    column_default AS object_default_value, '' AS object_comment, 0 AS object_position, semantic_type AS object_definition\n" +
+                "FROM information_schema.columns\n" +
+                "WHERE table_schema = '{0}' AND table_name = '{1}'";
+        return this.execute(configure, sql.replace("{0}", database.replace("'", "''")).replace("{1}", table.replace("'", "''")));
     }
 }

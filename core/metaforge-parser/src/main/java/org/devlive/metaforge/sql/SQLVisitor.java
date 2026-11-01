@@ -20,6 +20,7 @@ import org.devlive.metaforge.sql.parser.SqlBaseBaseVisitor;
 import org.devlive.metaforge.sql.parser.SqlBaseParser;
 import org.devlive.metaforge.sql.processor.ExpressionProcessor;
 import org.devlive.metaforge.sql.processor.ShowProcessor;
+import org.devlive.metaforge.sql.statement.AlterTableStatement;
 import org.devlive.metaforge.sql.statement.CreateDatabaseStatement;
 import org.devlive.metaforge.sql.statement.CreateTableStatement;
 import org.devlive.metaforge.sql.statement.DeleteStatement;
@@ -547,8 +548,45 @@ public class SQLVisitor
     @Override
     public SQLStatement visitAlterStatement(SqlBaseParser.AlterStatementContext ctx)
     {
-        // TODO: Implement alter statement parsing
-        return null;
+        if (ctx.alterTableStatement() == null) {
+            return null;
+        }
+        SqlBaseParser.AlterTableStatementContext alter = ctx.alterTableStatement();
+        List<AlterTableStatement.Action> actions = new ArrayList<>();
+        for (SqlBaseParser.AlterSpecificationContext spec : alter.alterSpecification()) {
+            AlterTableStatement.ActionType type;
+            ColumnElement column = null;
+            String columnName = null;
+            String newName = null;
+            if (spec.ADD() != null && spec.columnDefinition() != null) {
+                type = AlterTableStatement.ActionType.ADD_COLUMN;
+                column = processColumnDefinition(spec.columnDefinition());
+                columnName = column.getColumnName();
+            }
+            else if (spec.MODIFY() != null && spec.columnDefinition() != null) {
+                type = AlterTableStatement.ActionType.MODIFY_COLUMN;
+                column = processColumnDefinition(spec.columnDefinition());
+                columnName = column.getColumnName();
+            }
+            else if (spec.DROP() != null && spec.COLUMN() != null && spec.columnName().size() == 1) {
+                type = AlterTableStatement.ActionType.DROP_COLUMN;
+                columnName = spec.columnName(0).getText();
+            }
+            else if (spec.RENAME() != null && spec.columnName().size() == 2) {
+                type = AlterTableStatement.ActionType.RENAME_COLUMN;
+                columnName = spec.columnName(0).getText();
+                newName = spec.columnName(1).getText();
+            }
+            else if (spec.RENAME() != null && spec.tableName() != null) {
+                type = AlterTableStatement.ActionType.RENAME_TABLE;
+                newName = spec.tableName().getText();
+            }
+            else {
+                type = AlterTableStatement.ActionType.OTHER;
+            }
+            actions.add(new AlterTableStatement.Action(type, column, columnName, newName));
+        }
+        return new AlterTableStatement(alter.tableName().getText(), actions);
     }
 
     @Override
@@ -794,15 +832,17 @@ public class SQLVisitor
     {
         LimitClause limit = new LimitClause();
 
-        if (ctx.INTEGER_VALUE().size() > 1) {
+        // LIMIT count OFFSET offset, or MySQL's LIMIT offset, count
+        if (ctx.OFFSET() != null) {
+            limit.setLimit(Long.parseLong(ctx.INTEGER_VALUE(0).getText()));
+            limit.setOffset(Long.parseLong(ctx.INTEGER_VALUE(1).getText()));
+        }
+        else if (ctx.INTEGER_VALUE().size() > 1) {
             limit.setOffset(Long.parseLong(ctx.INTEGER_VALUE(0).getText()));
             limit.setLimit(Long.parseLong(ctx.INTEGER_VALUE(1).getText()));
         }
         else {
             limit.setLimit(Long.parseLong(ctx.INTEGER_VALUE(0).getText()));
-            if (ctx.OFFSET() != null) {
-                limit.setOffset(Long.parseLong(ctx.INTEGER_VALUE(1).getText()));
-            }
         }
 
         return limit;

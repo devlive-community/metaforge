@@ -25,20 +25,47 @@ Support Time: `2023-04-17`
 
     If your QuestDB service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.
 
-=== "Configure"
+::: tabs
+    === "Configure"
+        | Field  |      Required       | Default Value |
+        |:------:|:-------------------:|:-------------:|
+        | `Name` | :check{20,#3CA34F}: |      \-       |
+        | `Host` | :check{20,#3CA34F}: |  `127.0.0.1`  |
+        | `Port` | :check{20,#3CA34F}: |    `8812`     |
+    === "Authorization"
+        |   Field    |    Required     | Default Value |
+        |:----------:|:---------------:|:-------------:|
+        | `Username` | :x{20,#ff0000}: |   `admin`     |
+        | `Password` | :x{20,#ff0000}: |      \-       |
+    === "Advanced"
+        |   Field    |    Required     | Default Value |
+        |:----------:|:---------------:|:-------------:|
+        | `Database` | :x{20,#ff0000}: |    `qdb`      |
+:::
 
-    | Field  |             Required              | Default Value |
-    |:------:|:---------------------------------:|:-------------:|
-    | `Name` | :check{20,#3CA34F}:  |       -       |
-    | `Host` | :check{20,#3CA34F}: |  `127.0.0.1`  |
-    | `Port` | :check{20,#3CA34F}: |    `9000`     |
+- Connects with the PostgreSQL JDBC driver to QuestDB's PostgreSQL wire port (default `8812`, default account `admin` / `quest`) instead of HTTP (port `9000`); existing sources need port `8812` and the account.
 
 #### Version (Validation)
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `QuestDBE2ETest` verifies each version below in a container: the version check, then tables and columns created, read, changed and dropped with SQL.
 
-- [x] 7.x
+    - [x] 8.3
+    - [x] 9.1
+
+!!!
+
+#### SQL and concepts
+
+---
+
+| MetaForge | QuestDB | SQL |
+|:--|:--|:--|
+| Database | The server's single database `qdb` | Can not be created or dropped |
+| Table | Table | `CREATE TABLE ... TIMESTAMP(ts) PARTITION BY DAY` / `DROP TABLE`; listed by `tables()` |
+| Column | Column | `ALTER TABLE ... ADD COLUMN` / `RENAME COLUMN` / `DROP COLUMN`; described by `table_columns()` |
+
+- WAL tables (the default for partitioned tables) apply schema changes in the background; refresh shortly after a change to see it.

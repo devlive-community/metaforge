@@ -14,10 +14,6 @@
     <artifactId>metaforge-plugin-kafka</artifactId>
     <description>MetaForge - Plugin - Apache Kafka</description>
 
-    <properties>
-        <kafka.version>3.6.1</kafka.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
@@ -30,13 +26,20 @@
         </dependency>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
-            <artifactId>metaforge-parser</artifactId>
-            <scope>provided</scope>
+            <artifactId>metaforge-driver-kafka</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka-clients</artifactId>
-            <version>${kafka.version}</version>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-test-e2e</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>kafka</artifactId>
+            <version>${testcontainers.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -10,12 +10,12 @@
         <template v-for="(step, index) in steps" :key="step.titleKey">
           <div class="flex items-center gap-3">
             <span class="inline-flex size-9 shrink-0 items-center justify-center rounded-mf-full text-sm font-semibold"
-                  :class="currentStep >= index + 1 ? 'bg-primary text-on-primary' : 'border border-line bg-surface text-content-tertiary'">
-              <Check v-if="currentStep > index + 1" :size="15"/>
+                  :class="currentStep >= step.number ? 'bg-primary text-on-primary' : 'border border-line bg-surface text-content-tertiary'">
+              <Check v-if="currentStep > step.number" :size="15"/>
               <template v-else>{{ index + 1 }}</template>
             </span>
             <div class="leading-tight">
-              <div class="text-sm font-semibold" :class="currentStep >= index + 1 ? 'text-content' : 'text-content-tertiary'">{{ $t(step.titleKey) }}</div>
+              <div class="text-sm font-semibold" :class="currentStep >= step.number ? 'text-content' : 'text-content-tertiary'">{{ $t(step.titleKey) }}</div>
               <div class="mt-0.5 text-xs text-content-tertiary">{{ $t(step.descKey) }}</div>
             </div>
           </div>
@@ -48,22 +48,25 @@
           </div>
         </section>
 
-        <section class="rounded-mf-lg border border-line bg-surface p-4">
+        <!-- Each table option shows only when the plugin declares it: engine:list, table:options, table:auto-increment. -->
+        <section v-if="canEngine || canOptions || canAutoIncrement" class="rounded-mf-lg border border-line bg-surface p-4">
           <h3 class="m-0 mb-3 text-base font-semibold text-content">{{ $t('source.create.optionsCard') }}</h3>
           <div class="flex flex-col gap-3">
-            <MfFormItem :label="$t('source.create.engine')">
+            <MfFormItem v-if="canEngine" :label="$t('source.create.engine')">
               <MfSelect v-model="formState.engine" :options="engineOptions"/>
             </MfFormItem>
-            <MfFormItem :label="$t('source.structure.charset')">
-              <MfSelect v-model="options.charset" :options="charsetOptions"/>
-            </MfFormItem>
-            <MfFormItem :label="$t('source.common.collation')">
-              <MfSelect v-model="options.collate" :options="collateOptions"/>
-            </MfFormItem>
-            <MfFormItem :label="$t('source.create.rowFormat')">
-              <MfSelect v-model="options.rowFormat" :options="rowFormatOptions"/>
-            </MfFormItem>
-            <MfFormItem :label="$t('source.create.autoIncStart')">
+            <template v-if="canOptions">
+              <MfFormItem :label="$t('source.structure.charset')">
+                <MfSelect v-model="options.charset" :options="charsetOptions"/>
+              </MfFormItem>
+              <MfFormItem :label="$t('source.common.collation')">
+                <MfSelect v-model="options.collate" :options="collateOptions"/>
+              </MfFormItem>
+              <MfFormItem :label="$t('source.create.rowFormat')">
+                <MfSelect v-model="options.rowFormat" :options="rowFormatOptions"/>
+              </MfFormItem>
+            </template>
+            <MfFormItem v-if="canAutoIncrement" :label="$t('source.create.autoIncStart')">
               <MfInput v-model="options.autoIncrement" placeholder="1"/>
             </MfFormItem>
           </div>
@@ -110,7 +113,8 @@
             <template #cell-type="{ index }">
               <MfFormItem :name="`columns.${index}.type`"
                           :rules="[{ required: true, message: $t('source.validator.columnType.required') }]">
-                <MfSelect v-model="formState.columns[index].type" size="sm" :options="dataTypeOptions"/>
+                <MfSelect v-if="canTypes" v-model="formState.columns[index].type" size="sm" :options="dataTypeOptions"/>
+                <MfInput v-else v-model="formState.columns[index].type" size="sm" :aria-label="$t('source.structure.type')"/>
               </MfFormItem>
             </template>
             <template #cell-length="{ index }">
@@ -235,7 +239,7 @@
 
     <template #footer>
       <div class="flex w-full flex-wrap items-center justify-end gap-2">
-        <MfCheckbox v-if="currentStep === 4" v-model="advanced.continueIndex" class="mr-2">{{ $t('source.create.optContinueIndex') }}</MfCheckbox>
+        <MfCheckbox v-if="currentStep === 4 && canIndexes && can('tab:indexes')" v-model="advanced.continueIndex" class="mr-2">{{ $t('source.create.optContinueIndex') }}</MfCheckbox>
         <MfButton v-if="currentStep > 1" @click="onPrev">{{ $t('source.create.prev') }}</MfButton>
         <MfButton @click="onCancel">{{ $t('common.cancel') }}</MfButton>
         <MfButton v-if="currentStep < 4" variant="primary" :disabled="loading" @click="onNext">
@@ -252,7 +256,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref } from 'vue'
+import { computed, inject, nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { useTableCreateIndexes, type TableCreateIndexRow as IndexRow } from '@/composables/useTableCreateIndexes'
@@ -288,7 +292,6 @@ const loading = ref(false)
 const saving = ref(false)
 const engines = ref<any[]>([])
 const dataTypes = ref<any[]>([])
-const enginesFallback = ['InnoDB', 'MyISAM', 'MEMORY', 'ARCHIVE']
 const sourceCode = route.params.source as string
 const code = sourceCode
 
@@ -329,24 +332,37 @@ const toggleRow = (index: number, checked: boolean) => {
   selectedRows.value = next
 }
 
-const steps = [
-  { titleKey: 'source.create.step1', descKey: 'source.create.step1Desc' },
-  { titleKey: 'source.create.step2', descKey: 'source.create.step2Desc' },
-  { titleKey: 'source.create.step3', descKey: 'source.create.step3Desc' },
-  { titleKey: 'source.create.step4', descKey: 'source.create.step4Desc' }
-]
-const currentStep = ref(1)
+// What the dialog offers follows the source plugin's declared capabilities.
+const can = inject<(capability: string) => boolean>('metadataCan', () => false)
+const canEngine = computed(() => can('engine:list'))
+const canOptions = computed(() => can('table:options'))
+const canAutoIncrement = computed(() => can('table:auto-increment'))
+const canTypes = computed(() => can('datatype:list'))
+const canIndexes = computed(() => can('index:create'))
 
-const indexTabs = [
+// The index step exists only for sources that create indexes; step numbers stay fixed.
+const steps = computed(() => [
+  { number: 1, titleKey: 'source.create.step1', descKey: 'source.create.step1Desc' },
+  { number: 2, titleKey: 'source.create.step2', descKey: 'source.create.step2Desc' },
+  ...(canIndexes.value ? [{ number: 3, titleKey: 'source.create.step3', descKey: 'source.create.step3Desc' }] : []),
+  { number: 4, titleKey: 'source.create.step4', descKey: 'source.create.step4Desc' }
+])
+const currentStep = ref(1)
+const stepAfter = (step: number, direction: 1 | -1) => {
+  const numbers = steps.value.map(item => item.number)
+  return numbers[Math.min(numbers.length - 1, Math.max(0, numbers.indexOf(step) + direction))]
+}
+
+const indexTabs = computed(() => ([
   { key: 'primary', labelKey: 'source.create.tabPrimary' },
   { key: 'normal', labelKey: 'source.create.tabNormal' },
   { key: 'unique', labelKey: 'source.create.tabUnique' },
   { key: 'foreign', labelKey: 'source.create.tabForeign' },
   { key: 'check', labelKey: 'source.create.tabCheck' }
-] as const
+] as const).filter(tab => tab.key !== 'foreign' || can('foreign-key:create')))
 
 const engineOptions = computed(() => {
-  const list = engines.value.length ? engines.value : enginesFallback
+  const list = engines.value
   return list.map((engine: any) => ({ label: typeof engine === 'string' ? engine : engine.name || String(engine), value: typeof engine === 'string' ? engine : engine.name || String(engine) }))
 })
 const dataTypeOptions = computed(() => dataTypes.value.map((dataType: any) => ({ label: dataType, value: dataType })))
@@ -376,7 +392,7 @@ const fieldColumns = [
   { title: t('source.common.defaultValue'), dataIndex: 'defaultValue', width: 140 },
   { title: t('source.structure.nullable'), dataIndex: 'nullable', width: 60 },
   { title: t('source.create.primary'), dataIndex: 'primaryKey', width: 60 },
-  { title: t('source.create.autoIncCol'), dataIndex: 'autoIncrement', width: 60 },
+  ...(canAutoIncrement.value ? [{ title: t('source.create.autoIncCol'), dataIndex: 'autoIncrement', width: 60 }] : []),
   { title: t('source.create.uniqueCol'), dataIndex: 'unique', width: 60 },
   { title: t('source.structure.comment'), dataIndex: 'comment', width: 150 },
   { title: t('common.action'), dataIndex: 'action', fixed: 'right' as const }
@@ -395,11 +411,11 @@ const indexColumns = [
 const buildDefinition = () => ({
   name: formState.value.name?.trim(),
   comment: formState.value.comment || undefined,
-  engine: formState.value.engine,
-  charset: options.value.charset,
-  collate: options.value.collate,
-  format: options.value.rowFormat,
-  autoIncrement: Number(options.value.autoIncrement) || 0,
+  engine: canEngine.value ? formState.value.engine : undefined,
+  charset: canOptions.value ? options.value.charset : undefined,
+  collate: canOptions.value ? options.value.collate : undefined,
+  format: canOptions.value ? options.value.rowFormat : undefined,
+  autoIncrement: canAutoIncrement.value ? Number(options.value.autoIncrement) || 0 : 0,
   columns: formState.value.columns
       .filter((column: any) => column.name?.trim())
       .map((column: any) => ({
@@ -409,10 +425,10 @@ const buildDefinition = () => ({
         defaultValue: column.defaultValue || undefined,
         nullable: !!column.nullable,
         primaryKey: !!column.primaryKey,
-        autoIncrement: !!column.autoIncrement,
+        autoIncrement: canAutoIncrement.value && !!column.autoIncrement,
         comment: column.comment || undefined
       })),
-  indexes: indexDefinitions.value
+  indexes: canIndexes.value ? indexDefinitions.value : []
 })
 
 const { sqlContent, sqlLoading, sqlError, previewContext, updateSqlContent, retryPreview } = useTableCreatePreview({
@@ -527,12 +543,12 @@ const onNext = async () => {
     return
   }
   if (currentStep.value < 4) {
-    currentStep.value += 1
+    currentStep.value = stepAfter(currentStep.value, 1)
   }
 }
 
 const onPrev = () => {
-  currentStep.value = Math.max(1, currentStep.value - 1)
+  currentStep.value = stepAfter(currentStep.value, -1)
 }
 
 const onCancel = () => {
@@ -560,15 +576,15 @@ const onSubmit = () => {
 }
 
 loading.value = true
-HttpUtils.all([MetadataService.getEngines(code), MetadataService.getDataTypes(code)])
+HttpUtils.all([canEngine.value ? MetadataService.getEngines(code) : Promise.resolve(null), canTypes.value ? MetadataService.getDataTypes(code) : Promise.resolve(null)])
          .then(HttpUtils.spread((...responses: any[]) => {
            const [enginesResponse, dataTypesResponse] = responses
 
-           if (enginesResponse.status && enginesResponse.data && enginesResponse.data.isSuccessful) {
+           if (enginesResponse?.status && enginesResponse.data && enginesResponse.data.isSuccessful) {
              engines.value = enginesResponse.data.columns
            }
 
-           if (dataTypesResponse.status && dataTypesResponse.data && dataTypesResponse.data.isSuccessful) {
+           if (dataTypesResponse?.status && dataTypesResponse.data && dataTypesResponse.data.isSuccessful) {
              dataTypes.value = dataTypesResponse.data.columns
            }
          }))

@@ -252,7 +252,7 @@ Add `META-INF` and `services` directory under `resources` source directory
 Create the `org.devlive.metaforge.spi.PluginModule` file, as follows
 
 ```java
-org.devlive.metaforge.plugin.http.questdb.QuestDBPluginModule
+org.devlive.metaforge.plugin.QuestDBPluginModule
 ```
 
 The content of this file is the plugin loading module we defined.
@@ -261,3 +261,75 @@ The content of this file is the plugin loading module we defined.
 
     The unit test of the plug-in can refer to the published plug-in for testing
 !!!
+
+### Management capabilities
+
+Every page, tab, dialog, drawer, side panel and button of source management (console, data import, data export, data compare, ER diagram) is controlled by one management capability. A plugin declares the capabilities it implements in `<ServiceClass>.capabilities.json` next to its service class, for example `src/main/resources/org/devlive/metaforge/plugin/MySQLService.capabilities.json`:
+
+```json
+{
+  "kind": "relational",
+  "capabilities": ["query:execute", "database:list", "table:list", "column:read", "tab:structure", "tab:sql"]
+}
+```
+
+- `kind` chooses the workspace layout: `relational`, `key-value`, `document`, `storage`, `graph` or `unknown`.
+- A plugin without a declaration offers no management: the source list hides its Manage entry and the related pages do not open.
+- Declare only what the plugin implements; the server refuses every operation the plugin did not declare.
+- Every plugin reaches its source through SQL, so a plugin that declares capabilities always declares `query:execute`.
+- An unknown capability or kind fails when the plugin loads; a subclass without its own file uses its parent's declaration.
+- A new management feature first registers its capability in `ManagementCapability`, then plugins declare it, and every surface of the feature checks it.
+
+| Capability | Controls |
+|---|---|
+| `query:execute` | Run SQL in the query console and the SQL tab |
+| `namespace:list` | Namespace list of the native browser (Redis databases, buckets) |
+| `key:list` | Key list of the native browser |
+| `key:read` | Key detail panel |
+| `object:list` | Object list of the storage browser |
+| `object:read` | Object detail panel |
+| `object:download` | Object download button |
+| `database:list` | Database selector of the workbench header and the database list of the side tree |
+| `database:info` | Database overview page |
+| `database:alter` | Edit database properties button and drawer |
+| `engine:list` | Engine select of the create table dialog and engine choices of the table properties drawer |
+| `datatype:list` | Type selects of the create table dialog and the column editors (free text otherwise) |
+| `table:list` | Table tree of the side panel and its search |
+| `table:info` | Table header facts and the table properties tab |
+| `table:read` | Data preview tab, data compare and the sample data DDL |
+| `table:statement` | DDL tab, the DDL quick menu and structure sync SQL |
+| `table:create` | New table entries (side tree, more actions, database overview) and new tables of an import |
+| `table:alter` | Edit table properties button and drawer |
+| `table:drop` | Drop table entries and dialog |
+| `table:truncate` | Truncate table entries and dialog, and empty-then-import |
+| `table:export` | Export data entries, dialog and the data export page |
+| `table:auto-increment` | Auto increment start of the create table dialog and the auto increment switches of the column editors |
+| `table:options` | Charset, collation and row format of the create table dialog |
+| `column:read` | Column structure, structure compare and the data compare entry |
+| `column:create` | Add and insert column buttons and the column drawer |
+| `column:modify` | Edit column button and drawer |
+| `column:drop` | Drop column button and dialog |
+| `column:reorder` | Column drag sorting and the order dialog |
+| `index:read` | Index list |
+| `index:create` | New index button and drawer, and the index step of the create table dialog |
+| `index:drop` | Drop index button and dialog |
+| `foreign-key:read` | Foreign key list |
+| `foreign-key:create` | New foreign key button and drawer, and the foreign key tab of the create table dialog |
+| `foreign-key:drop` | Drop foreign key button and dialog |
+| `trigger:read` | Trigger list |
+| `trigger:create` | New and copy trigger buttons and the trigger drawer |
+| `trigger:drop` | Drop trigger button and dialog |
+| `data:insert` | Add row in the data preview and the data import page |
+| `data:modify` | Edit row in the data preview |
+| `data:delete` | Delete rows in the data preview |
+| `tab:structure` | Column structure tab |
+| `tab:data` | Data preview tab |
+| `tab:sql` | SQL tab |
+| `tab:indexes` | Indexes tab |
+| `tab:foreignkeys` | Foreign keys tab |
+| `tab:triggers` | Triggers tab |
+| `tab:info` | Table properties tab |
+| `tab:statement` | DDL tab |
+| `tab:er-diagram` | Table ER tab and the database ER page |
+| `tab:keys` | Key browser tab |
+| `tab:objects` | Object browser tab |

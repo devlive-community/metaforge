@@ -1,72 +1,54 @@
 package org.devlive.metaforge.plugin
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.PluginService
-import org.devlive.metaforge.spi.adapter.Adapter
-import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
-import org.devlive.metaforge.spi.parser.SqlParser
-import org.apache.commons.beanutils.BeanUtils
-import org.apache.commons.lang3.ObjectUtils
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory.getLogger
+import org.devlive.metaforge.spi.model.RuntimeConfigure
 
-@SuppressFBWarnings(value = ["EI_EXPOSE_REP"])
+/**
+ * HDFS through MetaForge's HDFS JDBC driver: a database is a directory under the root, a table a
+ * directory inside it, and a table's rows its entries with fixed attribute columns. Databases,
+ * tables and columns come from the driver's JDBC metadata.
+ */
 class HdfsService : PluginService
 {
-    private val log: Logger = getLogger(HdfsService::class.java)
-
-    private var configure: RuntimeConfigure? = null
-    private var connection: HdfsConnection? = null
-    private var response: Response? = null
-
-    override fun validator(): String
+    override fun driver(): String
     {
-        return "SHOW DATABASES"
+        return "org.devlive.metaforge.HdfsDriver"
     }
 
-    override fun connect(configure: RuntimeConfigure?)
+    override fun connectType(): String
     {
-        try
-        {
-            this.response = Response()
-            this.configure = RuntimeConfigure()
-            BeanUtils.copyProperties(this.configure, configure)
-            this.connection = HdfsConnection(this.configure !!, this.response !!)
-        }
-        catch (ex: Exception)
-        {
-            this.response?.isConnected = false
-            this.response?.message = ex.message
-        }
+        return "hdfs"
     }
 
-    override fun execute(content: String?): Response
+    /** jdbc:hdfs://namenode:port with the custom options as Hadoop configuration; the user goes as user=. */
+    override fun url(configure: RuntimeConfigure): String
     {
-        if (ObjectUtils.isNotEmpty(connection))
+        if (configure.url.isPresent)
         {
-            log.info("Execute hdfs plugin logic started")
-            response = connection !!.response
-            val processor: Adapter = HdfsAdapter(connection, SqlParser(content))
-            response = processor.handlerExecute(content)
-            log.info("Execute hdfs plugin logic end")
+            return configure.url.get()
         }
-        destroy()
-        return response !!
+        val options = LinkedHashMap<String, Any>()
+        configure.env.ifPresent { options.putAll(it) }
+        configure.username.filter { it.isNotEmpty() }.ifPresent { options["user"] = it }
+        val host = configure.host
+        val address = if (configure.port != null && ! host.contains(":")) "$host:${configure.port}" else host
+        val query = options.entries.joinToString("&") { "${it.key}=${it.value}" }
+        return "jdbc:hdfs://$address" + if (query.isEmpty()) "" else "?$query"
     }
 
-    override fun execute(configure: RuntimeConfigure?, content: String?): Response
+    override fun getDatabases(configure: RuntimeConfigure): Response
     {
-        connect(configure)
-        return execute(content)
+        return metadataDatabases(configure)
     }
 
-    override fun destroy()
+    override fun getTables(configure: RuntimeConfigure, database: String): Response
     {
-        if (ObjectUtils.isNotEmpty(this.connection))
-        {
-            this.connection?.destroy()
-            this.connection = null
-        }
+        return metadataTables(configure, database)
+    }
+
+    override fun getColumns(configure: RuntimeConfigure, database: String, table: String): Response
+    {
+        return metadataColumns(configure, database, table)
     }
 }

@@ -154,6 +154,14 @@ const createDefaultRouter = (router: Router) => {
                 component: () => import('@/views/pages/tools/CompareHome.vue')
             },
             {
+                path: 'er',
+                meta: {
+                    title: 'navigation.erDiagram',
+                    isRoot: false
+                },
+                component: () => import('@/views/pages/tools/DatabaseEr.vue')
+            },
+            {
                 path: 'history',
                 meta: {
                     title: 'common.history',

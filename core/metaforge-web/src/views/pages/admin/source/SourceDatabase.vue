@@ -120,6 +120,7 @@ import { ArrowRight, Boxes, Clock, Columns3, Database, Download, Eye, FileText, 
 import TableCreate from './components/TableCreate.vue'
 import SourceDatabasePropertiesEditor from './components/SourceDatabasePropertiesEditor.vue'
 import { formatBytes } from '@/model/source-table-properties'
+import { pageCapabilitiesMet } from '@/model/source-manage'
 import { ringArcs, type SpaceKey } from '@/model/source-database'
 import { useSourceDatabase } from '@/composables/useSourceDatabase'
 
@@ -186,7 +187,7 @@ const tableColumns = computed(() => [
 const quickActions = computed(() => [
   ...(can('table:create') ? [{ key: 'create' as const, icon: Plus }] : []),
   ...(can('tab:sql') ? [{ key: 'sql' as const, icon: SquareTerminal }] : []),
-  { key: 'export' as const, icon: Download },
-  { key: 'import' as const, icon: Upload },
+  ...(pageCapabilitiesMet('/export', can) ? [{ key: 'export' as const, icon: Download }] : []),
+  ...(pageCapabilitiesMet('/import', can) ? [{ key: 'import' as const, icon: Upload }] : []),
 ])
 </script>

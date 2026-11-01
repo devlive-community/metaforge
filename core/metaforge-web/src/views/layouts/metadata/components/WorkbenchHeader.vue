@@ -1,7 +1,8 @@
 <template>
   <!-- 白底铺满整行：底色在宽屏下从两侧透出来 -->
   <div class="dc-header__bar">
-    <div class="flex h-14 w-full items-center justify-between gap-4 px-5">
+    <!-- Same side spacing as the common header (.container). -->
+    <div class="container flex h-14 w-full items-center justify-between gap-4">
       <div class="dc-header__navigation flex min-w-0 flex-1 items-center gap-4">
         <!-- 数据源插件 Logo + 数据源名（省略 + tooltip） + 数据库选择器 -->
         <MfTooltip :content="sourceName" placement="bottom">
@@ -17,59 +18,17 @@
                   :options="databaseOptions" :placeholder="$t('source.common.database')"/>
 
         <nav class="dc-workbench-nav flex min-w-0 items-center gap-1">
-          <router-link v-for="item in navItems" :key="item.path" :to="item.path"
+          <router-link v-for="item in navItems" :key="item.path" :to="item.to || item.path"
                        class="dc-header__nav-link inline-flex items-center gap-1.5 whitespace-nowrap h-14 border-b-2 px-2.5 text-sm font-medium transition-colors"
                        :class="isNavActive(item.path) ? 'border-primary text-primary' : 'border-transparent text-content-secondary hover:text-content'">
             <component :size="15" :is="item.icon"/>
             {{ item.label }}
           </router-link>
 
-          <MfDropdown trigger="click" placement="bottomRight">
-            <button type="button"
-                    class="inline-flex items-center gap-1.5 whitespace-nowrap border-b-2 border-transparent px-2.5 py-0 text-sm font-medium text-content-secondary transition-colors hover:text-content">
-              <Ellipsis :size="15"/>
-              {{ $t('common.moreNav') }}
-              <ChevronDown :size="12"/>
-            </button>
-            <template #overlay>
-              <MfMenu>
-                <MfMenuItem v-for="item in moreNavItems" :key_="item.path">
-                  <router-link :to="item.path" class="flex items-center gap-2">
-                    <component :size="15" v-if="item.icon" :is="item.icon"/>
-                    <span>{{ item.label }}</span>
-                  </router-link>
-                </MfMenuItem>
-              </MfMenu>
-            </template>
-          </MfDropdown>
         </nav>
       </div>
 
         <MfSpace :size="16" :wrap="false" class="dc-header__actions shrink-0">
-          <!-- 全局搜索：在当前数据源内检索数据表 -->
-          <div v-if="can('table:list')" ref="searchRoot" class="relative" @focusin="searchFocused = true" @focusout="onSearchBlur">
-            <MfInput ref="searchInputRef"
-                     v-model="searchText"
-                     class="dc-header__search"
-                     :placeholder="$t('common.searchPlaceholder')">
-              <template #prefix>
-                <Search :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
-              </template>
-
-            </MfInput>
-
-            <div v-if="searchFocused && searchResults.length > 0"
-                 class="absolute right-0 top-full z-50 mt-1 flex max-h-80 w-80 flex-col gap-1 overflow-y-auto rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg">
-              <button v-for="item in searchResults" :key="`${ item.database }_${ item.table }`" type="button"
-                      class="flex w-full items-center gap-2 rounded-mf-md px-2.5 py-1.5 text-left text-sm transition-colors hover:bg-surface-hover"
-                      @mousedown.prevent="onSearchPick(item)">
-                <Database :size="13" class="shrink-0 text-content-tertiary"/>
-                <span class="shrink-0 text-xs text-content-tertiary">{{ item.database }}</span>
-                <span class="min-w-0 flex-1 truncate font-mono text-content">{{ item.table }}</span>
-              </button>
-            </div>
-          </div>
-
           <div v-if="userInfo" class="flex items-center">
             <MfPopover trigger="click" placement="bottomRight">
               <template #content>
@@ -122,10 +81,6 @@
                class="dc-header__icon-action" :aria-label="$t('common.feedback')">
               <CircleHelp :size="18" />
             </a>
-          </MfTooltip>
-
-          <MfTooltip :content="$t('user.common.setting')">
-            <router-link to="/account/profile" class="dc-header__icon-action" :aria-label="$t('user.common.setting')"><Settings :size="18"/></router-link>
           </MfTooltip>
 
           <!-- User Info -->
@@ -181,11 +136,10 @@
 </template>
 
 <script setup lang="ts">
-import { Bell, ChevronDown, CircleHelp, Database, Ellipsis, LogOut, Search, Settings } from '@lucide/vue'
+import { Bell, CircleHelp, Database, LogOut, Settings } from '@lucide/vue'
 import { useWorkbenchHeader } from '@/composables/useWorkbenchHeader'
 defineOptions({ name: 'WorkbenchHeader' })
-const { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems, isNavActive, moreNavItems,
-  searchFocused, searchRoot, searchText, searchInputRef, onSearchBlur, searchResults, onSearchPick, userInfo,
+const { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems, isNavActive, userInfo,
   messages, onNotifyScroll, handleNotificationClick, isLoggedIn, logout } = useWorkbenchHeader()
 </script>
 
@@ -238,10 +192,6 @@ const { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems,
     outline-offset: 2px;
 }
 
-.dc-header__search {
-    width: clamp(170px, 17.5vw, 268px);
-}
-
 :deep(.dc-header__menu) {
     flex-wrap: wrap;
 }
@@ -253,20 +203,7 @@ const { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems,
     .dc-header__navigation { gap: 12px; }
     .dc-source-name { max-width: 110px; font-size: 18px; }
     .dc-header__nav-link { padding-inline: 7px; font-size: 12px; }
-    .dc-header__search { width: 180px; }
-}
-
-.dc-header__kbd {
-    display: inline-flex;
-    align-items: center;
-    padding: 0 5px;
-    border: 1px solid var(--dc-border);
-    border-radius: 4px;
-    font-size: 11px;
-    line-height: 16px;
-    color: var(--dc-text-secondary);
-    background: var(--dc-bg);
-}
+    }
 
 .dc-header__avatar {
     background: var(--dc-gradient-avatar);
@@ -275,7 +212,6 @@ const { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems,
 }
 @media (max-width: 1050px) {
     .dc-source-name { max-width: 80px; font-size: 16px; }
-    .dc-header__search { width: 150px; }
-    .dc-header__navigation { gap: 8px; }
+        .dc-header__navigation { gap: 8px; }
 }
 </style>

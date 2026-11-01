@@ -19,6 +19,14 @@ export const TRANSITION = 'transition-[color,background-color,border-color,box-s
 
 export const DISABLED = 'disabled:pointer-events-none disabled:opacity-50'
 
+/**
+ * Whether a caller's class sets the width (w-48, w-[12rem], !w-60, md:w-72 ...). Fields fill their
+ * container by default; that default must give way, or w-full would win over the caller's width.
+ */
+export function hasWidthClass(value: unknown): boolean {
+    return /(^|\s)([\w-]+:)*!?w-/.test(typeof value === 'string' ? value : Array.isArray(value) ? value.join(' ') : '')
+}
+
 export interface MfSelectOption {
     label: string
     value: string | number

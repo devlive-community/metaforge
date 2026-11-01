@@ -8,6 +8,7 @@ import SetupService from '@/services/setup'
 import { TokenUtils } from '@/utils/token'
 import { interimLocation, trackPendingNavigation } from '@/composables/useRouteRedirect'
 import { pageAccess } from './navigation'
+import { workbenchGuard } from './workbench'
 
 const routes: Array<RouteRecordRaw> = []
 
@@ -85,5 +86,8 @@ router.beforeEach(async (_to, _from, _next) => {
         else _next(access)
     }
 })
+
+// Runs after the checks above have let the navigation through.
+router.beforeEach(workbenchGuard)
 
 export default router

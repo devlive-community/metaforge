@@ -21,7 +21,7 @@
       </MfFormItem>
       <div class="grid grid-cols-2 gap-3">
         <MfCheckbox v-model="form.nullable" :disabled="saving || indexOnly || form.autoIncrement">{{ $t('source.structure.nullable') }}</MfCheckbox>
-        <MfCheckbox v-model="form.autoIncrement" :disabled="saving || indexOnly">{{ $t('source.prototype.autoIncrement') }}</MfCheckbox>
+        <MfCheckbox v-if="can('table:auto-increment')" v-model="form.autoIncrement" :disabled="saving || indexOnly">{{ $t('source.prototype.autoIncrement') }}</MfCheckbox>
       </div>
       <MfFormItem name="defaultValue" :label="$t('source.common.defaultValue')">
         <div class="grid w-full grid-cols-2 gap-3">
@@ -69,10 +69,12 @@
 </template>
 
 <script setup lang="ts">
-import { getCurrentInstance, watch } from 'vue'
+import { getCurrentInstance, inject, watch } from 'vue'
 import { ChevronDown, ListFilter } from '@lucide/vue'
 import type { SourceColumn, SourceColumnForm } from '@/model/source-column'
 const form = defineModel<SourceColumnForm>({ required: true })
+// Auto increment shows only for sources whose plugin declares table:auto-increment.
+const can = inject<(capability: string) => boolean>('metadataCan', () => false)
 const props = defineProps<{
   open: boolean; width: number; canCreateIndex: boolean; mode: 'add' | 'edit' | 'insert'; anchor: string | null; more: boolean; saving: boolean;
   indexOnly: boolean; container: HTMLElement | null; issues: Record<string, string>; columns: SourceColumn[];

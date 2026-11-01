@@ -6,7 +6,9 @@ import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.common.view.EntityView;
 import org.devlive.metaforge.service.converter.DynamicJsonViewHttpMessageConverter;
 import org.devlive.metaforge.service.service.MetadataService;
+import org.devlive.metaforge.service.service.TableExportService;
 import org.devlive.metaforge.spi.model.ManagementCapabilities;
+import org.devlive.metaforge.spi.model.ManagementCapability;
 import org.devlive.metaforge.spi.model.ManagementEntry;
 import org.devlive.metaforge.spi.model.ManagementPage;
 import org.junit.jupiter.api.Test;
@@ -15,7 +17,9 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.hamcrest.Matchers.hasItem;
 import static org.mockito.ArgumentMatchers.any;
@@ -33,7 +37,7 @@ public class SourceManagementControllerTest
 {
     private final MetadataService service = mock(MetadataService.class);
     private final ObjectMapper mapper = new ObjectMapper().disable(MapperFeature.DEFAULT_VIEW_INCLUSION);
-    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SourceManagementController(service), new MetadataController(service))
+    private final MockMvc mvc = MockMvcBuilders.standaloneSetup(new SourceManagementController(service), new SourceCapabilitiesController(service), new MetadataController(service, mock(TableExportService.class)))
             .setControllerAdvice(new DynamicJsonViewHttpMessageConverter(mapper))
             .setMessageConverters(new MappingJackson2HttpMessageConverter(mapper)).build();
 
@@ -41,12 +45,26 @@ public class SourceManagementControllerTest
     public void capabilitiesAreSerializedForUsersAndNeverMatchTheDatabaseRoute()
             throws Exception
     {
-        when(service.getCapabilities("source-code")).thenReturn(CommonResponse.success(ManagementCapabilities.forJdbc("mysql")));
+        when(service.getCapabilities("source-code")).thenReturn(CommonResponse.success(new ManagementCapabilities("relational", ManagementCapability.keys())));
         mvc.perform(get("/api/v1/source-management/source-code/capabilities").requestAttr("JSON_VIEW", EntityView.UserView.class))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.status").value(true))
                 .andExpect(jsonPath("$.data.kind").value("relational"))
                 .andExpect(jsonPath("$.data.capabilities", hasItem("column:modify")));
         verify(service, never()).getDatabase("source-code", "capabilities");
+    }
+
+    @Test
+    public void severalSourcesAreAnsweredInOneRequest()
+            throws Exception
+    {
+        when(service.getCapabilities(List.of("mysql-code", "redis-code"))).thenReturn(CommonResponse.success(Map.of(
+                "mysql-code", new ManagementCapabilities("relational", Set.of("query:execute", "table:list")),
+                "redis-code", ManagementCapabilities.none())));
+        mvc.perform(post("/api/v1/source-management/capabilities").requestAttr("JSON_VIEW", EntityView.UserView.class)
+                        .contentType(MediaType.APPLICATION_JSON).content("[\"mysql-code\",\"redis-code\"]"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.mysql-code.capabilities", hasItem("table:list")))
+                .andExpect(jsonPath("$.data.redis-code.capabilities").isEmpty());
     }
 
     @Test

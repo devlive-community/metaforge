@@ -1,0 +1,7 @@
+{
+  "kind": "graph",
+  "capabilities": [
+    "query:execute",
+    "tab:sql"
+  ]
+}

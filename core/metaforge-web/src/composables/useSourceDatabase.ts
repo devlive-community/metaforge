@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import MetadataService from '@/services/metadata'
 import SourceService from '@/services/source'
-import { sourceManageLocation } from '@/model/source-manage'
+import { importLocation, sourceManageLocation } from '@/model/source-manage'
 import { mapDatabaseOverview, mapDatabaseTables, spaceSegments, type DatabaseOverview, type DatabaseTable } from '@/model/source-database'
 import { defaultCollation, mapCollations, type Collation } from '@/model/source-table-properties'
 import { useWorkspaceLoading } from './useWorkspaceLoading'
@@ -90,7 +90,8 @@ export function useSourceDatabase() {
     const [source, database] = location()
     if (action === 'create') tableCreateVisible.value = true
     else if (action === 'sql') router.push(sourceManageLocation({ source, database, tab: 'sql' }))
-    else router.push({ path: action === 'export' ? '/export' : '/import', query: { source, database } })
+    else if (action === 'import') router.push(importLocation({ source, database }))
+    else router.push({ path: '/export', query: { source, database } })
   }
   function onTableCreated() {
     tableCreateVisible.value = false

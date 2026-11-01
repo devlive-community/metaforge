@@ -1,0 +1,11 @@
+{
+  "kind": "relational",
+  "capabilities": [
+    "query:execute",
+    "database:list",
+    "table:list",
+    "column:read",
+    "tab:structure",
+    "tab:sql"
+  ]
+}

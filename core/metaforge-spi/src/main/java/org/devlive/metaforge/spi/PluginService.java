@@ -7,13 +7,13 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang3.StringUtils;
+import org.devlive.metaforge.convert.ConvertFilter;
+import org.devlive.metaforge.convert.model.ConvertRequest;
 import org.devlive.metaforge.plugin.Service;
 import org.devlive.metaforge.spi.adapter.Adapter;
 import org.devlive.metaforge.spi.adapter.BatchWriter;
-import org.devlive.metaforge.spi.adapter.HttpAdapter;
 import org.devlive.metaforge.spi.adapter.JdbcAdapter;
 import org.devlive.metaforge.spi.adapter.JdbcStreamAdapter;
-import org.devlive.metaforge.spi.adapter.NativeAdapter;
 import org.devlive.metaforge.spi.adapter.RowCallback;
 import org.devlive.metaforge.spi.connection.Connection;
 import org.devlive.metaforge.spi.connection.JdbcConnection;
@@ -55,6 +55,7 @@ import org.slf4j.LoggerFactory;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -68,9 +69,10 @@ public interface PluginService
     ThreadLocal<Connection> local = new ThreadLocal<>();
     Logger log = LoggerFactory.getLogger(PluginService.class);
 
+    /** What the source management pages offer for this plugin, declared in its capabilities file. */
     default ManagementCapabilities managementCapabilities()
     {
-        return ManagementCapabilities.forJdbc(connectType());
+        return ManagementCapabilities.declaredBy(getClass());
     }
 
     default ManagementPage managementNamespaces(RuntimeConfigure configure, ManagementRequest request)
@@ -207,16 +209,7 @@ public interface PluginService
         response.setContent(content);
         if (connection != null) {
             log.info("Execute [ {} ] plugin started", this.name());
-            Adapter adapter;
-            if (type().equals(PluginType.JDBC)) {
-                adapter = new JdbcAdapter(connection);
-            }
-            else if (type().equals(PluginType.NATIVE)) {
-                adapter = new NativeAdapter(connection);
-            }
-            else {
-                adapter = new HttpAdapter(connection);
-            }
+            Adapter adapter = new JdbcAdapter(connection);
             response = adapter.handlerExecute(content);
             log.info("Execute [ {} ] plugin end", this.name());
         }
@@ -359,6 +352,7 @@ public interface PluginService
                     }
                 }
             }
+            response.setColumns(formatRows(configure, response, rows));
             response.setIsConnected(true);
             response.setIsSuccessful(true);
         }
@@ -372,6 +366,25 @@ public interface PluginService
             destroy();
         }
         return response;
+    }
+
+    /**
+     * Rows read from JDBC metadata, in the format the source's queries return (JSON objects by
+     * default), so callers read both alike.
+     */
+    private List<Object> formatRows(RuntimeConfigure configure, Response response, List<Object> rows)
+    {
+        if (configure.getPluginManager() == null) {
+            return rows;
+        }
+        return ConvertFilter.filter(configure.getPluginManager(), configure.getFormat())
+                .map(service -> {
+                    ConvertRequest request = new ConvertRequest();
+                    request.setHeaders(new ArrayList<Object>(response.getHeaders()));
+                    request.setColumns(rows);
+                    return service.format(request).getColumns();
+                })
+                .orElse(rows);
     }
 
     /**
@@ -489,6 +502,7 @@ public interface PluginService
                     rows.add(Lists.newArrayList(typeName, resultSet.getString("TABLE_NAME"), comment == null ? "" : comment));
                 }
             }
+            response.setColumns(formatRows(configure, response, rows));
             response.setIsConnected(true);
             response.setIsSuccessful(true);
         }
@@ -708,6 +722,7 @@ public interface PluginService
                             0, "NO", 0));
                 }
             }
+            response.setColumns(formatRows(configure, response, rows));
             response.setIsConnected(true);
             response.setIsSuccessful(true);
         }
@@ -760,7 +775,12 @@ public interface PluginService
         catch (Exception ignored) {
             // drivers without index metadata simply report an empty list
         }
-        response.setColumns(rows);
+        finally {
+            destroy();
+        }
+        response.setColumns(formatRows(configure, response, rows));
+        response.setIsConnected(true);
+        response.setIsSuccessful(true);
         return response;
     }
 
@@ -797,7 +817,12 @@ public interface PluginService
         catch (Exception ignored) {
             // drivers without foreign key metadata simply report an empty list
         }
-        response.setColumns(rows);
+        finally {
+            destroy();
+        }
+        response.setColumns(formatRows(configure, response, rows));
+        response.setIsConnected(true);
+        response.setIsSuccessful(true);
         return response;
     }
 
@@ -1308,6 +1333,54 @@ public interface PluginService
                 + ") t ON t.TABLE_SCHEMA = s.SCHEMA_NAME\n"
                 + "WHERE s.SCHEMA_NAME = " + schema;
         return this.execute(configure, sql);
+    }
+
+    /**
+     * 整库 ER | Everything an entity-relationship diagram of the database needs, as rows of three
+     * kinds (object_type): table (name and comment), column (table, name, type, nullability,
+     * primary key flag, comment, position) and foreign_key (table, constraint, column, referenced
+     * table and column, position within the key). Base tables only; a failing query is reported in
+     * the message while the other kinds are still returned.
+     */
+    default Response getDatabaseEr(RuntimeConfigure configure, String database)
+    {
+        String schema = sqlLiteral(database);
+        List<String> queries = Lists.newArrayList(
+                "SELECT 'table' AS object_type, TABLE_NAME AS table_name, TABLE_NAME AS object_name, '' AS data_type, '' AS nullable, 0 AS is_primary,\n"
+                        + "    TABLE_COMMENT AS object_comment, '' AS reference_table, '' AS reference_column, 0 AS position\n"
+                        + "FROM information_schema.TABLES WHERE TABLE_SCHEMA = " + schema + " AND TABLE_TYPE = 'BASE TABLE'",
+                "SELECT 'column' AS object_type, c.TABLE_NAME AS table_name, c.COLUMN_NAME AS object_name, c.COLUMN_TYPE AS data_type, c.IS_NULLABLE AS nullable,\n"
+                        + "    IF(c.COLUMN_KEY = 'PRI', 1, 0) AS is_primary, c.COLUMN_COMMENT AS object_comment, '' AS reference_table, '' AS reference_column,\n"
+                        + "    c.ORDINAL_POSITION AS position\n"
+                        + "FROM information_schema.COLUMNS c JOIN information_schema.TABLES t\n"
+                        + "    ON t.TABLE_SCHEMA = c.TABLE_SCHEMA AND t.TABLE_NAME = c.TABLE_NAME AND t.TABLE_TYPE = 'BASE TABLE'\n"
+                        + "WHERE c.TABLE_SCHEMA = " + schema,
+                "SELECT 'foreign_key' AS object_type, TABLE_NAME AS table_name, CONSTRAINT_NAME AS object_name, COLUMN_NAME AS data_type, '' AS nullable,\n"
+                        + "    0 AS is_primary, '' AS object_comment, REFERENCED_TABLE_NAME AS reference_table, REFERENCED_COLUMN_NAME AS reference_column,\n"
+                        + "    ORDINAL_POSITION AS position\n"
+                        + "FROM information_schema.KEY_COLUMN_USAGE\n"
+                        + "WHERE TABLE_SCHEMA = " + schema + " AND REFERENCED_TABLE_SCHEMA = " + schema + " AND REFERENCED_TABLE_NAME IS NOT NULL");
+        Response response = Response.builder()
+                .isSuccessful(true)
+                .isConnected(true)
+                .headers(Lists.newArrayList("object_type", "table_name", "object_name", "data_type", "nullable", "is_primary", "object_comment",
+                        "reference_table", "reference_column", "position"))
+                .columns(Lists.newArrayList())
+                .build();
+        List<String> failures = Lists.newArrayList();
+        for (String query : queries) {
+            Response part = this.execute(configure, query);
+            if (part != null && Boolean.TRUE.equals(part.getIsSuccessful()) && part.getColumns() != null) {
+                response.getColumns().addAll(part.getColumns());
+            }
+            else if (part != null && part.getMessage() != null) {
+                failures.add(part.getMessage());
+            }
+        }
+        if (!failures.isEmpty()) {
+            response.setMessage(String.join("; ", failures));
+        }
+        return response;
     }
 
     /**

@@ -1,165 +1,75 @@
 <template>
-  <div class="mx-auto max-w-4xl">
-    <div class="mb-5">
-      <h1 class="m-0 text-xl font-semibold text-content">{{ $t('tools.import.title') }}</h1>
-      <p class="mb-0 mt-1 text-sm text-content-secondary">{{ $t('tools.import.desc') }}</p>
-    </div>
-
-    <div class="rounded-mf-lg border border-line bg-surface p-5">
-      <div class="grid grid-cols-3 gap-3">
-        <div>
-          <label class="mb-1 block text-sm font-medium text-content-secondary">{{ $t('source.common.name') }} <span class="text-danger">*</span></label>
-          <MfSelect v-model="sourceCode" :options="sourceOptions" @update:model-value="onSourceChange"/>
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-content-secondary">{{ $t('source.common.database') }} <span class="text-danger">*</span></label>
-          <MfSelect v-model="databaseName" :options="databaseOptions" @update:model-value="onDatabaseChange"/>
-        </div>
-        <div>
-          <label class="mb-1 block text-sm font-medium text-content-secondary">{{ $t('source.common.tableName') }} <span class="text-danger">*</span></label>
-          <MfSelect v-model="tableName" :options="tableOptions"/>
+  <div class="flex h-full min-h-0 flex-col overflow-hidden rounded-mf-lg bg-surface/95">
+    <header class="flex shrink-0 flex-wrap items-center justify-between gap-4 border-b border-line px-6 py-4">
+      <div class="flex min-w-0 items-center gap-4">
+        <span class="inline-flex size-12 shrink-0 items-center justify-center rounded-mf-lg bg-primary/10 text-primary"><ArrowUpFromLine :size="24"/></span>
+        <div class="min-w-0">
+          <h1 class="m-0 text-xl font-semibold text-content">{{ $t('navigation.dataImport') }}</h1>
+          <p class="m-0 mt-0.5 text-sm text-content-tertiary">{{ $t('import.subtitle') }}</p>
         </div>
       </div>
-
-      <div class="mt-4">
-        <label class="mb-1 block text-sm font-medium text-content-secondary">{{ $t('common.content') }}</label>
-        <AceEditor :value="pasteText" height="160px" @update:value="pasteText = $event"/>
-        <div class="mt-2 flex items-center justify-between">
-          <span class="text-xs text-content-tertiary">{{ $t('tools.import.pasteTip') }}</span>
-          <label class="cursor-pointer text-xs text-primary hover:underline">
-            {{ $t('function.import.chooseFile') }}
-            <input type="file" accept=".json,.csv,.tsv,.txt" class="hidden" @change="onPickFile"/>
-          </label>
-        </div>
+      <div class="flex shrink-0 items-center gap-3 text-sm">
+        <span class="text-content-secondary">{{ $t('import.targetDatabase') }}</span>
+        <span class="inline-flex items-center gap-1.5 rounded-mf-md border border-line px-3 py-1.5 font-semibold text-content"><Database :size="15"/>{{ context.database || '-' }}</span>
+        <MfTag v-if="context.database" size="sm" variant="success"><span class="mr-1 inline-block size-1.5 rounded-full bg-success"/>{{ $t('import.connected') }}</MfTag>
       </div>
+    </header>
 
-      <template v-if="document.rows.length > 0">
-        <div class="mb-2 mt-5 text-sm font-medium text-content">{{ $t('tools.import.preview') }}</div>
-        <MfTable :columns="previewHeaders" :data-source="previewRows" row-key="__index">
-          <template #cell-length="{ record }">
-            <span class="font-mono text-xs">{{ record.__row?.join(' | ') }}</span>
-          </template>
-        </MfTable>
+    <!-- Steps: done ones can be revisited. -->
+    <nav class="flex shrink-0 items-center gap-3 overflow-x-auto border-b border-line px-6 py-4" :aria-label="$t('navigation.dataImport')">
+      <template v-for="(key, index) in IMPORT_STEPS" :key="key">
+        <button type="button" class="flex shrink-0 items-center gap-3 text-left disabled:cursor-default" :disabled="index >= step || running" @click="goTo(index)">
+          <span class="inline-flex size-8 shrink-0 items-center justify-center rounded-full text-sm font-semibold"
+                :class="index < step ? 'bg-primary/15 text-primary' : index === step ? 'bg-primary text-on-primary' : 'bg-surface-hover text-content-tertiary'">
+            <Check v-if="index < step" :size="16"/><template v-else>{{ index + 1 }}</template>
+          </span>
+          <span class="flex flex-col">
+            <span class="whitespace-nowrap text-sm font-semibold" :class="index <= step ? 'text-primary' : 'text-content-secondary'">{{ $t(`import.step.${key}`) }}</span>
+            <span class="whitespace-nowrap text-xs text-content-tertiary">{{ $t(`import.stepHint.${key}`) }}</span>
+          </span>
+        </button>
+        <span v-if="index < IMPORT_STEPS.length - 1" class="h-px min-w-8 flex-1 bg-line"/>
       </template>
+    </nav>
 
-      <div class="mt-5 flex justify-end">
-        <MfButton variant="primary" :loading="importing" :disabled="!canImport" @click="onImport">
-          <Upload :size="14"/>
-          {{ $t('tools.import.execute') }}
-        </MfButton>
+    <main class="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+      <MfEmpty v-if="!context.database" class="h-full" variant="initial" :title="$t('import.chooseDatabase')"/>
+      <template v-else>
+        <h2 class="m-0 text-lg font-semibold text-content">{{ $t('import.stepTitle', { index: step + 1, title: $t(`import.stepHeading.${IMPORT_STEPS[step]}`) }) }}</h2>
+        <p class="m-0 mb-4 mt-1 text-sm text-content-tertiary">{{ $t(`import.stepDescription.${IMPORT_STEPS[step]}`) }}</p>
+        <ImportStepFile v-if="step === 0" :wizard="wizard"/>
+        <ImportStepTables v-else-if="step === 1" :wizard="wizard"/>
+        <ImportStepMapping v-else-if="step === 2" :wizard="wizard"/>
+        <ImportStepSettings v-else-if="step === 3" :wizard="wizard"/>
+        <ImportStepPreview v-else :wizard="wizard"/>
+      </template>
+    </main>
+
+    <footer class="flex shrink-0 items-center justify-between gap-3 border-t border-line px-6 py-3">
+      <div class="flex min-w-0 items-center gap-4">
+        <MfButton :disabled="running" @click="back">{{ $t('import.cancel') }}</MfButton>
+        <span class="truncate text-xs text-content-tertiary">{{ $t('import.current', { database: context.database || '-', type: analysis?.file.dialect || sourceType || '-' }) }}</span>
       </div>
-    </div>
+      <div class="flex shrink-0 items-center gap-2">
+        <MfButton v-if="step > 0" :disabled="running || !!job" @click="previous"><ArrowLeft :size="15"/>{{ $t('import.previous') }}</MfButton>
+        <MfButton v-if="step < IMPORT_STEPS.length - 1" variant="primary" :disabled="!canNext" @click="next">{{ $t('import.next') }}<ArrowRight :size="15"/></MfButton>
+        <MfButton v-else-if="!job" variant="primary" :loading="starting" :disabled="!canStart" @click="start"><Play :size="15"/>{{ $t('import.start') }}</MfButton>
+        <MfButton v-else variant="primary" :disabled="running" @click="back">{{ $t('import.finish') }}</MfButton>
+      </div>
+    </footer>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from 'vue'
-import { useI18n } from 'vue-i18n'
-import { useSourceCascade } from '@/composables/useSourceCascade'
-import { MfMessage } from 'metaforge-ui'
-import { Upload } from '@lucide/vue'
-import { FilterModel } from '@/model/filter'
-import SourceService from '@/services/source'
-import MetadataService from '@/services/metadata'
-import { parseFunctionDocument } from '@/views/pages/system/function/importParse'
-import AceEditor from '@/views/components/editor/AceEditor.vue'
+import { ArrowLeft, ArrowRight, ArrowUpFromLine, Check, Database, Play } from '@lucide/vue'
+import { IMPORT_STEPS, useImportWizard } from '@/composables/useImportWizard'
+import ImportStepFile from './import/ImportStepFile.vue'
+import ImportStepTables from './import/ImportStepTables.vue'
+import ImportStepMapping from './import/ImportStepMapping.vue'
+import ImportStepSettings from './import/ImportStepSettings.vue'
+import ImportStepPreview from './import/ImportStepPreview.vue'
 
 defineOptions({ name: 'ImportHome' })
-
-const { t } = useI18n()
-
-const { sourceCode, databaseName, tableName, sourceOptions, databaseOptions, tableOptions } = useSourceCascade()
-const pasteText = ref('')
-const document = ref<{ columns: string[]; rows: string[][] }>({ columns: [], rows: [] })
-const importing = ref(false)
-
-const canImport = computed(() => !!(sourceCode.value && databaseName.value && tableName.value && document.value.rows.length > 0))
-const previewHeaders = computed(() => document.value.columns.map(column => ({ title: column, key: column, width: 140 })))
-const previewRows = computed(() => document.value.rows.slice(0, 5).map((row, index) => ({
-  __index: index + 1,
-  __row: row,
-  ...Object.fromEntries(document.value.columns.map((column, columnIndex) => [column, row[columnIndex]]))
-})))
-
-const loadDatabases = () => {
-  databaseName.value = ''
-  tableOptions.value = []
-  databaseOptions.value = []
-  if (!sourceCode.value) return
-  MetadataService.getDatabaseBySource(sourceCode.value)
-                 .then(response => {
-                   if (response.status) {
-                     databaseOptions.value = (response.data?.columns || [])
-                         .map((item: any) => ({ label: item.object_name || item.schema_name, value: item.object_name || item.schema_name }))
-                         .filter((item: any) => item.value)
-                   }
-                 })
-}
-
-const loadTables = () => {
-  tableName.value = ''
-  tableOptions.value = []
-  if (!sourceCode.value || !databaseName.value) return
-  MetadataService.getTablesByDatabase(sourceCode.value, databaseName.value)
-                 .then(response => {
-                   if (response.status) {
-                     tableOptions.value = (response.data?.columns || [])
-                         .filter((item: any) => item.type_name === 'table')
-                         .map((item: any) => ({ label: item.object_name, value: item.object_name }))
-                   }
-                 })
-}
-
-const onSourceChange = () => loadDatabases()
-const onDatabaseChange = () => loadTables()
-
-const applyDocument = (text: string) => {
-  try {
-    document.value = parseFunctionDocument(text)
-  }
-  catch {
-    MfMessage.error(t('function.import.parseFailed'))
-  }
-}
-
-const onPickFile = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  if (file) {
-    file.text().then(text => applyDocument(text))
-  }
-  input.value = ''
-}
-
-const onImport = () => {
-  importing.value = true
-  const rows = document.value.rows.map(row => Object.fromEntries(document.value.columns.map((column, index) => [column, row[index] ?? null])))
-  MetadataService.insertData(sourceCode.value, databaseName.value, tableName.value, {
-    preview: false,
-    rows
-  })
-                 .then(response => {
-                   if (response.status && response.data?.isSuccessful) {
-                     MfMessage.success(t('tools.import.success').replace('{count}', String(rows.length)))
-                     pasteText.value = ''
-                     document.value = { columns: [], rows: [] }
-                   }
-                   else {
-                     MfMessage.error(response.data?.message || response.message)
-                   }
-                 })
-                 .finally(() => (importing.value = false))
-}
-
-watch(pasteText, value => {
-  if (value.trim()) applyDocument(value)
-})
-
-SourceService.getAll(new FilterModel())
-             .then(response => {
-               if (response.status) {
-                 sourceOptions.value = (response.data.content || [])
-                     .map((item: any) => ({ label: item.name, value: item.code }))
-               }
-             })
+const wizard = useImportWizard()
+const { context, step, analysis, sourceType, job, running, starting, canNext, canStart, next, previous, goTo, back, start } = wizard
 </script>

@@ -14,10 +14,6 @@
     <artifactId>metaforge-plugin-zookeeper</artifactId>
     <description>MetaForge - Plugin - Apache Zookeeper</description>
 
-    <properties>
-        <zookeeper.version>0.11</zookeeper.version>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
@@ -26,17 +22,14 @@
         </dependency>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
-            <artifactId>metaforge-common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.101tec</groupId>
-            <artifactId>zkclient</artifactId>
-            <version>${zookeeper.version}</version>
+            <artifactId>metaforge-driver-zookeeper</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
-            <artifactId>metaforge-parser</artifactId>
-            <scope>provided</scope>
+            <artifactId>metaforge-test-e2e</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

@@ -1,0 +1,4 @@
+{
+  "kind": "relational",
+  "capabilities": ["query:execute", "table:teleport"]
+}

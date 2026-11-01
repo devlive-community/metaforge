@@ -24,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,6 +106,23 @@ public class MetadataServiceImpl
                         .map(plugin -> CommonResponse.success(plugin.getService(PluginService.class).managementCapabilities()))
                         .orElseGet(() -> CommonResponse.<ManagementCapabilities>failure(String.format("Plugin [ %s ] not found", entity.getType()))))
                 .orElseGet(() -> CommonResponse.failure(String.format("Resource [ %s ] not found", code)));
+    }
+
+    @Override
+    public CommonResponse<Map<String, ManagementCapabilities>> getCapabilities(List<String> codes)
+    {
+        Map<String, ManagementCapabilities> capabilities = new LinkedHashMap<>();
+        // Sources of one plugin share its declaration, so each plugin is asked once.
+        Map<String, ManagementCapabilities> byType = new HashMap<>();
+        for (String code : codes == null ? List.<String>of() : codes) {
+            ManagementCapabilities value = repository.findByCode(code)
+                    .map(entity -> byType.computeIfAbsent(entity.getType(), type -> pluginManager.getPlugin(type)
+                            .map(plugin -> plugin.getService(PluginService.class).managementCapabilities())
+                            .orElseGet(ManagementCapabilities::none)))
+                    .orElseGet(ManagementCapabilities::none);
+            capabilities.put(code, value);
+        }
+        return CommonResponse.success(capabilities);
     }
 
     @Override
@@ -207,6 +225,12 @@ public class MetadataServiceImpl
     public CommonResponse<Response> getDatabaseTables(String code, String database)
     {
         return withPlugin(code, List.of("database:info"), (service, configure) -> service.getDatabaseTables(configure, database));
+    }
+
+    @Override
+    public CommonResponse<Response> getDatabaseEr(String code, String database)
+    {
+        return withPlugin(code, List.of("database:info", "tab:er-diagram"), (service, configure) -> service.getDatabaseEr(configure, database));
     }
 
     @Override

@@ -58,7 +58,8 @@
 
               <template #overlay>
                 <MfMenu>
-                  <MfMenuItem v-if="(loginUserCode === record.user.code) && record.available" key_="manager">
+                  <!-- Sources whose plugin declares no management capability have no manage entry at all. -->
+                  <MfMenuItem v-if="manageable(record) && (loginUserCode === record.user.code) && record.available" key_="manager">
                     <router-link :to="sourceManageLocation({ source: String(record.code) })" target="_blank">
                       <div class="flex items-center space-x-2">
                         <Settings :size="15" />
@@ -66,7 +67,7 @@
                       </div>
                     </router-link>
                   </MfMenuItem>
-                  <MfMenuItem v-else key_="manager" disabled>
+                  <MfMenuItem v-else-if="manageable(record)" key_="manager" disabled>
                     <div class="flex items-center space-x-2">
                       <Settings :size="15" />
                       <span>{{ $t('source.common.manager') }}</span>
@@ -111,8 +112,9 @@
 </template>
 
 <script setup lang="ts">
-import { sourceManageLocation } from '@/model/source-manage'
-import { onMounted, ref } from 'vue'
+import { canManageSource, sourceManageLocation } from '@/model/source-manage'
+import { onMounted, ref, watch } from 'vue'
+import { useSourceCapabilitiesStore } from '@/stores/source-capabilities'
 import Common from '@/utils/common'
 import { useHeaders } from '@/views/pages/admin/source/SourceUtils'
 import { SourceModel } from '@/model/source'
@@ -150,6 +152,11 @@ const {
     onPageChange,
     onSizeChange
   } = usePagedList<any>(filter => SourceService.getAll(filter))
+
+// Whether a source can be managed comes from its plugin's declared capabilities, asked for the whole page at once.
+const capabilityStore = useSourceCapabilitiesStore()
+const manageable = (record: any) => canManageSource(capabilityStore.capabilitiesOf(String(record.code)))
+watch(data, rows => { capabilityStore.loadMany((rows || []).map((row: any) => String(row.code || ''))) }, { immediate: true })
 
 const visibleInfo = (opened: boolean, value: SourceModel | null) => {
   dataInfoVisible.value = opened

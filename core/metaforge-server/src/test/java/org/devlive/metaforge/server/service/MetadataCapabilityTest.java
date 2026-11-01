@@ -11,11 +11,13 @@ import org.devlive.metaforge.service.service.impl.MetadataServiceImpl;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.generator.definition.TableDefinition;
 import org.devlive.metaforge.spi.model.ManagementCapabilities;
+import org.devlive.metaforge.spi.model.ManagementCapability;
 import org.devlive.metaforge.spi.model.ManagementPage;
 import org.devlive.metaforge.spi.model.ManagementRequest;
 import org.devlive.metaforge.spi.model.Response;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -29,6 +31,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -47,7 +50,7 @@ public class MetadataCapabilityTest
         when(repository.findByCode("source-code")).thenReturn(Optional.of(source));
         when(manager.getPlugin("Redis")).thenReturn(Optional.of(plugin));
         when(plugin.getService(PluginService.class)).thenReturn(adapter);
-        when(adapter.managementCapabilities()).thenReturn(ManagementCapabilities.forJdbc("redis"));
+        when(adapter.managementCapabilities()).thenReturn(new ManagementCapabilities("key-value", Set.of("query:execute", "tab:sql")));
         MetadataServiceImpl service = new MetadataServiceImpl(manager, repository, mock(SourceDdlHistoryRepository.class));
 
         CommonResponse<ManagementCapabilities> result = service.getCapabilities("source-code");
@@ -63,6 +66,31 @@ public class MetadataCapabilityTest
         verify(adapter, never()).createTable(any(), any());
         verify(adapter, never()).previewCreateTable(any(), any(), anyString());
         verify(adapter, never()).getColumns(any(), any(), any());
+    }
+
+    @Test
+    public void severalSourcesAskEachPluginOnceAndUnknownSourcesManageNothing()
+    {
+        SourceRepository repository = mock(SourceRepository.class);
+        PluginManager manager = mock(PluginManager.class);
+        Plugin plugin = mock(Plugin.class);
+        PluginService adapter = mock(PluginService.class);
+        SourceEntity first = new SourceEntity();
+        first.setType("MySQL");
+        SourceEntity second = new SourceEntity();
+        second.setType("MySQL");
+        when(repository.findByCode("first")).thenReturn(Optional.of(first));
+        when(repository.findByCode("second")).thenReturn(Optional.of(second));
+        when(manager.getPlugin("MySQL")).thenReturn(Optional.of(plugin));
+        when(plugin.getService(PluginService.class)).thenReturn(adapter);
+        when(adapter.managementCapabilities()).thenReturn(new ManagementCapabilities("relational", Set.of("query:execute", "table:list")));
+        MetadataServiceImpl service = new MetadataServiceImpl(manager, repository, mock(SourceDdlHistoryRepository.class));
+
+        Map<String, ManagementCapabilities> result = service.getCapabilities(List.of("first", "second", "missing")).getData();
+        assertEquals(List.of("first", "second", "missing"), List.copyOf(result.keySet()));
+        assertTrue(result.get("second").supports("table:list"));
+        assertTrue(result.get("missing").getCapabilities().isEmpty());
+        verify(adapter, times(1)).managementCapabilities();
     }
 
     @Test
@@ -123,7 +151,7 @@ public class MetadataCapabilityTest
         when(repository.findByCode("source-code")).thenReturn(Optional.of(source));
         when(manager.getPlugin("MySQL")).thenReturn(Optional.of(plugin));
         when(plugin.getService(PluginService.class)).thenReturn(adapter);
-        when(adapter.managementCapabilities()).thenReturn(ManagementCapabilities.forJdbc("mysql"));
+        when(adapter.managementCapabilities()).thenReturn(new ManagementCapabilities("relational", ManagementCapability.keys()));
         when(adapter.getTableDdl(any(), eq("app"), eq("user"), eq("indexes"))).thenReturn(Response.builder().isSuccessful(true).content("ALTER TABLE x;").build());
         when(adapter.getTableDdl(any(), eq("app"), eq("user"), eq("create"))).thenReturn(Response.builder().isSuccessful(false).message("denied").build());
         MetadataServiceImpl service = new MetadataServiceImpl(manager, repository, history);
@@ -148,7 +176,7 @@ public class MetadataCapabilityTest
         when(repository.findByCode("source-code")).thenReturn(Optional.of(source));
         when(manager.getPlugin("MySQL")).thenReturn(Optional.of(plugin));
         when(plugin.getService(PluginService.class)).thenReturn(adapter);
-        when(adapter.managementCapabilities()).thenReturn(ManagementCapabilities.forJdbc("mysql"));
+        when(adapter.managementCapabilities()).thenReturn(new ManagementCapabilities("relational", ManagementCapability.keys()));
         TableDefinition definition = TableDefinition.create("app", "users");
         when(adapter.previewCreateTable(any(), eq(definition), anyString()))
                 .thenAnswer(invocation -> Response.builder().isSuccessful(true).content(invocation.<String>getArgument(2) + " SQL").build());
@@ -174,7 +202,7 @@ public class MetadataCapabilityTest
         when(repository.findByCode("source-code")).thenReturn(Optional.of(source));
         when(manager.getPlugin("MySQL")).thenReturn(Optional.of(plugin));
         when(plugin.getService(PluginService.class)).thenReturn(adapter);
-        when(adapter.managementCapabilities()).thenReturn(ManagementCapabilities.forJdbc("mysql"));
+        when(adapter.managementCapabilities()).thenReturn(new ManagementCapabilities("relational", ManagementCapability.keys()));
         when(adapter.previewCreateTable(any(), any(), anyString())).thenReturn(Response.builder().isSuccessful(false).message("preview denied").build());
         CommonResponse<Map<String, String>> result = new MetadataServiceImpl(manager, repository, mock(SourceDdlHistoryRepository.class))
                 .previewCreateTableBatch("source-code", TableDefinition.create("app", "users"));

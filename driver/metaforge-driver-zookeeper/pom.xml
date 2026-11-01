@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.devlive.metaforge</groupId>
+        <artifactId>metaforge</artifactId>
+        <version>2026.0.0</version>
+        <relativePath>../../pom.xml</relativePath>
+    </parent>
+
+    <name>metaforge-driver-zookeeper</name>
+    <artifactId>metaforge-driver-zookeeper</artifactId>
+    <description>MetaForge - Driver - ZooKeeper: znodes as databases, tables and columns over JDBC</description>
+
+    <properties>
+        <zookeeper-client.version>3.9.5</zookeeper-client.version>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-driver-sql</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.zookeeper</groupId>
+            <artifactId>zookeeper</artifactId>
+            <version>${zookeeper-client.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-classic</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>ch.qos.logback</groupId>
+                    <artifactId>logback-core</artifactId>
+                </exclusion>
+                <!-- The client connects over NIO; TLS through netty is not offered by the driver. -->
+                <exclusion>
+                    <groupId>io.netty</groupId>
+                    <artifactId>netty-tcnative-boringssl-static</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+    </dependencies>
+</project>

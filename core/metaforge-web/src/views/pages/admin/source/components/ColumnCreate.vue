@@ -29,10 +29,11 @@
           <MfFormItem :name="`columns.${index}.type`"
                       :label="$t('source.common.columnType')"
                       :rules="[{ required: true, message: $t('source.validator.columnType.required') }]">
-            <MfSelect v-model="formState.columns[index].type"
+            <MfSelect v-if="can('datatype:list')" v-model="formState.columns[index].type"
                       :options="dataTypeOptions"
                       :placeholder="$t('source.placeholder.columnType')"
                       :loading="loading"/>
+            <MfInput v-else v-model="formState.columns[index].type" :placeholder="$t('source.placeholder.columnType')"/>
           </MfFormItem>
 
           <MfFormItem :name="`columns.${index}.length`"
@@ -57,7 +58,7 @@
             <MfSwitch v-model="formState.columns[index].primaryKey"/>
           </MfFormItem>
 
-          <MfFormItem :name="`columns.${index}.autoIncrement`" :label="$t('source.common.columnAutoIncrement')">
+          <MfFormItem v-if="can('table:auto-increment')" :name="`columns.${index}.autoIncrement`" :label="$t('source.common.columnAutoIncrement')">
             <MfSwitch v-model="formState.columns[index].autoIncrement"/>
           </MfFormItem>
 
@@ -83,7 +84,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, inject, ref } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
@@ -95,6 +96,8 @@ defineOptions({ name: 'ColumnCreate' })
 const props = withDefaults(defineProps<{ isVisible?: boolean }>(), { isVisible: false })
 const emit = defineEmits<{ (e: 'close', value: boolean): void }>()
 
+// Type choices and auto increment follow the source plugin's declared capabilities.
+const can = inject<(capability: string) => boolean>('metadataCan', () => false)
 const route = useRoute()
 const { t } = useI18n()
 
@@ -158,14 +161,16 @@ const onSubmit = () => {
 }
 
 const code = route.params.source as string
-loading.value = true
-MetadataService.getDataTypes(code)
-               .then((response) => {
-                 if (response.status && response.data && response.data.isSuccessful) {
-                   dataTypes.value = response.data.columns
-                 }
-               })
-               .finally(() => (loading.value = false))
+if (can('datatype:list')) {
+  loading.value = true
+  MetadataService.getDataTypes(code)
+                 .then((response) => {
+                   if (response.status && response.data && response.data.isSuccessful) {
+                     dataTypes.value = response.data.columns
+                   }
+                 })
+                 .finally(() => (loading.value = false))
+}
 
 onAdd()
 </script>

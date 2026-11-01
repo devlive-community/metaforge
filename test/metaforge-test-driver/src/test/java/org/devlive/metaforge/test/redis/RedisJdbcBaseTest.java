@@ -84,7 +84,7 @@ public abstract class RedisJdbcBaseTest
     private void initializeJdbcConnection()
             throws Exception
     {
-        Class.forName("org.devlive.metaforge.driver.RedisJdbcDriver");
+        Class.forName("org.devlive.metaforge.RedisDriver");
         Properties props = new Properties();
         props.setProperty("database", "0");
 

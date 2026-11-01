@@ -32,7 +32,7 @@ ClickHouse® 是一个面向列的数据库管理系统（DBMS），用于在线
         |:------:|:---------------------------------:|:-------------:|
         | `Name` | :check{20,#3CA34F}:  |       \-       |
         | `Host` | :check{20,#3CA34F}: |  `127.0.0.1`  |
-        | `Port` | :check{20,#3CA34F}: |     `9000`    |
+        | `Port` | :check{20,#3CA34F}: |     `8123`    |
     === "授权"
         |   Field    |        Required         | Default Value |
         |:----------:|:-----------------------:|:-------------:|
@@ -53,12 +53,26 @@ ClickHouse® 是一个面向列的数据库管理系统（DBMS），用于在线
 
 ---
 
-!!! warning
+!!! note
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
+    以下版本由插件的 e2e 测试 `ClickHouseE2ETest` 在容器中逐一验证：版本检查，以及用 SQL 创建、读取、修改、删除数据库、表和列。
 
-    - [x] 19.x
-    - [x] 20.x
-    - [x] 21.x
+    - [x] 24.8
+    - [x] 25.8
+    - [x] 26.3
+    - [x] 26.8
 
 !!!
+
+#### SQL 与概念
+
+---
+
+- 通过官方 JDBC 驱动 `clickhouse-jdbc` 0.11.0 的 HTTP 接口连接，默认端口 `8123`。
+- 原「ClickHouse HTTP」插件已合并到本插件，已有数据源升级后自动切换到本插件。
+
+| MetaForge | ClickHouse | SQL |
+|:--|:--|:--|
+| 数据库 | Database | `CREATE DATABASE` / `DROP DATABASE` |
+| 表 | Table | `CREATE TABLE ... ENGINE = MergeTree ORDER BY ...` / `DROP TABLE` |
+| 列 | Column | `ALTER TABLE ... ADD / MODIFY / DROP COLUMN` |

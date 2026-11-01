@@ -29,21 +29,45 @@ QuestDB 是一个开源时间序列数据库，用于高吞吐量摄取和快速
 
 ::: tabs
     === "配置"
-        | Field  |             Required              | Default Value |
-        |:------:|:---------------------------------:|:-------------:|
-        | `Name` | :check{20,#3CA34F}:  |       \-       |
+        | Field  |      Required       | Default Value |
+        |:------:|:-------------------:|:-------------:|
+        | `Name` | :check{20,#3CA34F}: |      \-       |
         | `Host` | :check{20,#3CA34F}: |  `127.0.0.1`  |
-        | `Port` | :check{20,#3CA34F}: |    `9000`     |
+        | `Port` | :check{20,#3CA34F}: |    `8812`     |
+    === "授权"
+        |   Field    |    Required     | Default Value |
+        |:----------:|:---------------:|:-------------:|
+        | `Username` | :x{20,#ff0000}: |   `admin`     |
+        | `Password` | :x{20,#ff0000}: |      \-       |
+    === "高级"
+        |   Field    |    Required     | Default Value |
+        |:----------:|:---------------:|:-------------:|
+        | `Database` | :x{20,#ff0000}: |    `qdb`      |
 :::
+
+- 通过 PostgreSQL JDBC 驱动连接 QuestDB 的 PostgreSQL 协议端口（默认 `8812`，默认账号 `admin` / `quest`），不再使用 HTTP（端口 `9000`）方式；已有数据源需要把端口改为 `8812` 并填写账号。
 
 #### 版本（验证）
 
 ---
 
-!!! warning
+!!! note
 
-    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
+    以下版本由插件的 e2e 测试 `QuestDBE2ETest` 在容器中逐一验证：版本检查，以及用 SQL 创建、读取、修改、删除表和列。
 
-    - [x] 7.x
+    - [x] 8.3
+    - [x] 9.1
 
 !!!
+
+#### SQL 与概念
+
+---
+
+| MetaForge | QuestDB | SQL |
+|:--|:--|:--|
+| 数据库 | 服务器唯一的数据库 `qdb` | 不能创建或删除 |
+| 表 | Table | `CREATE TABLE ... TIMESTAMP(ts) PARTITION BY DAY` / `DROP TABLE`，表列表来自 `tables()` |
+| 列 | Column | `ALTER TABLE ... ADD COLUMN` / `RENAME COLUMN` / `DROP COLUMN`，列结构来自 `table_columns()` |
+
+- WAL 表（分区表默认）的结构变更在后台应用，执行后稍等片刻再刷新即可看到。

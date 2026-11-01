@@ -24,7 +24,7 @@ MetaForge MongoDB Driver 适用于所有 MetaForge 版本。
 
 `VERSION` 可以在 Maven 中央仓库中找到。
 
-驱动名称：`org.devlive.metaforge.driver.MongoJdbcDriver`
+驱动名称：`org.devlive.metaforge.MongoDriver`
 
 支持的连接语法：
 
@@ -37,7 +37,7 @@ MetaForge MongoDB Driver 适用于所有 MetaForge 版本。
 - 授权用户
 
 ```java
-Class.forName("org.devlive.metaforge.driver.MongoJdbcDriver");
+Class.forName("org.devlive.metaforge.MongoDriver");
 Properties props = new Properties();
 props.setProperty("database", "xxxx");
 props.setProperty("user", "xxxx");
@@ -50,7 +50,7 @@ connection = DriverManager.getConnection(jdbcUrl, props);
 - 非授权用户
 
 ```java
-Class.forName("org.devlive.metaforge.driver.MongoJdbcDriver");
+Class.forName("org.devlive.metaforge.MongoDriver");
 String jdbcUrl = String.format("jdbc:mongodb://%s:%d", "127.0.0.1", 27017);
 connection = DriverManager.getConnection(jdbcUrl);
 ```
