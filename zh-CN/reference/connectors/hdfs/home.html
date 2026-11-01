@@ -1894,6 +1894,31 @@
         
             <li class="relative">
                 
+                    <a href="/zh-CN/reference/connectors/cratedb/home.html"
+                       class="group block">
+                        
+                        <div class="relative flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2
+                                hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/40
+                               rounded-md transition-all duration-200 ease-in-out">
+
+                            
+
+                            <span class="flex flex-grow items-center space-x-4 text-xs sm:text-sm md:text-base whitespace-nowrap">
+                                <span>CrateDB</span>
+                                
+
+
+                            </span>
+
+                            
+                        </div>
+                        
+                    </a>
+                
+            </li>
+        
+            <li class="relative">
+                
                     <a href="/zh-CN/reference/connectors/mysql/home.html"
                        class="group block">
                         
@@ -2875,18 +2900,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <span>5 分钟阅读</span>
+        <span>10 分钟阅读</span>
         
             <span class="mx-1">•</span>
             <span>
                 
-                    33 字
                 
                 
-                    +
-                
-                
-                    986 词
+                    1634 词
                 
             </span>
         
@@ -2916,9 +2937,9 @@
     
         <div class="space-y-4"></div>
     
-        <h4 id="Environment">
+        <h4 id="Driver">
             
-        <span class="leading-7">Environment</span>
+        <span class="leading-7">Driver</span>
     
         </h4>
     
@@ -2926,237 +2947,230 @@
     
         <div class="space-y-4"></div>
     
-        <div class="rounded-lg my-2 overflow-hidden border border-purple-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-purple-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Note</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-purple-700">
-                    
-        <div class="space-y-4"></div>
+        <span class="leading-7">MetaForge reaches HDFS only through JDBC, with its own driver </span>
     
-        <span class="leading-7">If you need to use this data source, you need to upgrade the MetaForge service to >= </span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.HdfsDriver</code>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">1.9.x</code>
+        <span class="leading-7"> (module </span>
     
-                </div>
-            </div>
-        </div>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-driver-hdfs</code>
+    
+        <span class="leading-7">, built on </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-parser</code>
+    
+        <span class="leading-7"> and the Hadoop 3.4 client).</span>
     
         <div class="space-y-4"></div>
     
-        <span class="leading-7">Support Time: </span>
+        <ul class="my-4 pl-8 list-disc">
+            <li class="mb-2 text-gray-700">
+        <span class="leading-7">URL: </span>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">2023-04-27</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">jdbc:hdfs://namenode:8020[?root=/&user=hadoop&httpPort=9870&dfs.nameservices=...]</code>
+    </li><li class="mb-2 text-gray-700">
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Host</code>
     
-        <div class="space-y-4"></div>
+        <span class="leading-7"> / </span>
     
-        <h4 id="Configure">
-            
-        <span class="leading-7">Configure</span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Port</code>
     
-        </h4>
+        <span class="leading-7"> are the NameNode's RPC address; </span>
     
-        <hr class="my-4 h-0.5 border-0 bg-gray-200 dark:bg-gray-700"/>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Username</code>
     
-        <div class="space-y-4"></div>
+        <span class="leading-7"> is the HDFS user. Custom options are Hadoop configuration (for HA or Kerberos settings); </span>
     
-        <div class="rounded-lg my-2 overflow-hidden border border-purple-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-purple-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Note</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-purple-700">
-                    
-        <div class="space-y-4"></div>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">root</code>
     
-        <span class="leading-7">If your HDFS service version requires other special configurations, please refer to modifying the configuration file and restarting the MetaForge service.</span>
+        <span class="leading-7"> (default </span>
     
-                </div>
-            </div>
-        </div>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">/</code>
     
-        <div class="space-y-4"></div>
+        <span class="leading-7">) is where databases live and </span>
     
-        <div class="w-full">
-            <div class="border-b border-gray-200">
-                <nav class="flex space-x-4" role="tablist" aria-label="Tabs">
-                    
-        <button role="tab"
-            class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200
-                   border-blue-500 text-blue-600
-                   focus:outline-none"
-            onclick="switchTab(event, 'tabgroup-hgttfpkoz', 0)"
-            aria-selected="true"
-            aria-controls="tabgroup-hgttfpkoz-panel-0"
-            id="tabgroup-hgttfpkoz-tab-0">
-            Configure
-        </button>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">httpPort</code>
     
-        <button role="tab"
-            class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200
-                   border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300
-                   focus:outline-none"
-            onclick="switchTab(event, 'tabgroup-hgttfpkoz', 1)"
-            aria-selected="false"
-            aria-controls="tabgroup-hgttfpkoz-panel-1"
-            id="tabgroup-hgttfpkoz-tab-1">
-            Advanced
-        </button>
+        <span class="leading-7"> (default </span>
     
-                </nav>
-            </div>
-            <div class="mt-2">
-                
-        <div class="p-4 "
-            role="tabpanel"
-            aria-labelledby="tabgroup-hgttfpkoz-tab-0"
-            id="tabgroup-hgttfpkoz-panel-0">
-            
-        <div class="space-y-4">
-            <div class="relative overflow-x-auto shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg">
-                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">Field</span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">9870</code>
     
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">Required</span>
+        <span class="leading-7">) the NameNode web port used for its version.</span>
+    </li><li class="mb-2 text-gray-700">
+        <span class="leading-7">The uploaded </span>
     
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">Default Value</span>
-    
-                                </th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Name</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: 20px; height: 20px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="check"
-                class="relative"
-                style="width: 20px; height: 20px; color: #3CA34F;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="leading-7">-</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    
-        </div>
-    
-        <div class="p-4 hidden"
-            role="tabpanel"
-            aria-labelledby="tabgroup-hgttfpkoz-tab-1"
-            id="tabgroup-hgttfpkoz-panel-1">
-            
-        <div class="space-y-4">
-            <div class="relative overflow-x-auto shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg">
-                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">Field</span>
-    
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">Required</span>
-    
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">Description</span>
-    
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">Default Value</span>
-    
-                                </th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">file</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: 20px; height: 20px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="check"
-                class="relative"
-                style="width: 20px; height: 20px; color: #3CA34F;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">core-site.xml</code>
     
-        <span class="leading-7"> </span>
-    <br />
-        <span class="leading-7"> </span>
+        <span class="leading-7"> / </span>
     
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">hdfs-site.xml</code>
     
+        <span class="leading-7"> of earlier versions are replaced by custom options.</span>
+    </li>
+        </ul>
+    
+        <div class="space-y-4"></div>
+    
+        <h4 id="Concepts">
+            
+        <span class="leading-7">Concepts</span>
+    
+        </h4>
+    
+        <hr class="my-4 h-0.5 border-0 bg-gray-200 dark:bg-gray-700"/>
+    
+        <div class="space-y-4"></div>
+    
+        <div class="space-y-4">
+            <div class="relative overflow-x-auto shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            
+                                <th scope="col" class="px-3.5 py-1 text-left">
+                                    
+        <span class="leading-7">MetaForge</span>
+    
+                                </th>
+                            
+                                <th scope="col" class="px-3.5 py-1 text-left">
+                                    
+        <span class="leading-7">HDFS</span>
+    
+                                </th>
+                            
+                                <th scope="col" class="px-3.5 py-1 text-left">
+                                    
+        <span class="leading-7">Example</span>
+    
+                                </th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">Database</span>
+    
                                     </td>
                                 
-                                    <td class="px-3 py-1.5 text-center">
+                                    <td class="px-3 py-1.5 text-left">
                                         
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">[]</code>
+        <span class="leading-7">A directory under </span>
     
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">root</code>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">/warehouse</code>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">Table</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">A directory inside the database</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">/warehouse/logs</code>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">Row</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">A file or directory inside the table</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">/warehouse/logs/a.log</code>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">Column</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">Fixed: </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">name</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">type</code>
+    
+        <span class="leading-7"> (file / directory), </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">size</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">replication</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">block_size</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">owner</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">group</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">permission</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">modified</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">accessed</code>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
                                     </td>
                                 
                             </tr>
@@ -3166,41 +3180,62 @@
             </div>
         </div>
     
-        </div>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">group</code>
     
-            </div>
+        <span class="leading-7"> is an SQL keyword: write </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">`group`</code>
+    
+        <span class="leading-7">.</span>
+    
+        <div class="space-y-4"></div>
+    
+        <h4 id="SupportedSQL">
             
-        <script>
-            function switchTab(event, tabGroupId, selectedIndex) {
-                // 获取当前 tab 组的所有按钮和面板
-                const tabButtons = event.target.parentElement.children;
-                const tabPanels = document.querySelectorAll('[id^="' + tabGroupId + '-panel-"]');
-                
-                // 更新所有 tab 按钮的状态
-                Array.from(tabButtons).forEach((button, index) => {
-                    if (index === selectedIndex) {
-                        button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                        button.classList.add('border-blue-500', 'text-blue-600');
-                        button.setAttribute('aria-selected', 'true');
-                    } else {
-                        button.classList.remove('border-blue-500', 'text-blue-600');
-                        button.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                        button.setAttribute('aria-selected', 'false');
-                    }
-                });
-                
-                // 更新所有面板的显示状态
-                tabPanels.forEach((panel, index) => {
-                    if (index === selectedIndex) {
-                        panel.classList.remove('hidden');
-                    } else {
-                        panel.classList.add('hidden');
-                    }
-                });
-            }
-        </script>
+        <span class="leading-7">Supported SQL</span>
     
+        </h4>
+    
+        <hr class="my-4 h-0.5 border-0 bg-gray-200 dark:bg-gray-700"/>
+    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
+            
+            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">sql</div>
+            
+        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
+            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </button>
+    
+            <div class="!overflow-x-auto !flex">
+                
+                <div class="!flex-1">
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-sql"><span class="token keyword">SHOW</span> <span class="token keyword">DATABASES</span><span class="token punctuation">;</span>  <span class="token keyword">SHOW</span> <span class="token keyword">TABLES</span> <span class="token keyword">FROM</span> warehouse<span class="token punctuation">;</span>  <span class="token keyword">SHOW</span> <span class="token keyword">COLUMNS</span> <span class="token keyword">FROM</span> logs <span class="token keyword">FROM</span> warehouse<span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> version<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>                                            <span class="token comment">-- the NameNode's Hadoop version</span>
+
+<span class="token keyword">CREATE</span> <span class="token keyword">DATABASE</span> warehouse<span class="token punctuation">;</span>                                   <span class="token comment">-- mkdir /warehouse</span>
+<span class="token keyword">DROP</span> <span class="token keyword">DATABASE</span> warehouse<span class="token punctuation">;</span>                                     <span class="token comment">-- rm -r /warehouse</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> warehouse<span class="token punctuation">.</span>logs <span class="token punctuation">(</span>name <span class="token keyword">VARCHAR</span><span class="token punctuation">)</span><span class="token punctuation">;</span>                  <span class="token comment">-- mkdir /warehouse/logs (columns are fixed)</span>
+<span class="token keyword">DROP</span> <span class="token keyword">TABLE</span> warehouse<span class="token punctuation">.</span>logs<span class="token punctuation">;</span>                                   <span class="token comment">-- rm -r /warehouse/logs</span>
+
+<span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> warehouse<span class="token punctuation">.</span>logs <span class="token punctuation">(</span>name<span class="token punctuation">,</span> <span class="token keyword">type</span><span class="token punctuation">)</span> <span class="token keyword">VALUES</span> <span class="token punctuation">(</span><span class="token string">'a.log'</span><span class="token punctuation">,</span> <span class="token string">'file'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">(</span><span class="token string">'archive'</span><span class="token punctuation">,</span> <span class="token string">'directory'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>   <span class="token comment">-- empty file, directory</span>
+<span class="token keyword">UPDATE</span> warehouse<span class="token punctuation">.</span>logs <span class="token keyword">SET</span> name <span class="token operator">=</span> <span class="token string">'b.log'</span> <span class="token keyword">WHERE</span> name <span class="token operator">=</span> <span class="token string">'a.log'</span><span class="token punctuation">;</span>                                 <span class="token comment">-- rename</span>
+<span class="token keyword">UPDATE</span> warehouse<span class="token punctuation">.</span>logs <span class="token keyword">SET</span> permission <span class="token operator">=</span> <span class="token string">'640'</span><span class="token punctuation">,</span> owner <span class="token operator">=</span> <span class="token string">'etl'</span><span class="token punctuation">,</span> <span class="token identifier"><span class="token punctuation">`</span>group<span class="token punctuation">`</span></span> <span class="token operator">=</span> <span class="token string">'hadoop'</span> <span class="token keyword">WHERE</span> name <span class="token operator">=</span> <span class="token string">'b.log'</span><span class="token punctuation">;</span>
+<span class="token keyword">DELETE</span> <span class="token keyword">FROM</span> warehouse<span class="token punctuation">.</span>logs <span class="token keyword">WHERE</span> <span class="token keyword">type</span> <span class="token operator">=</span> <span class="token string">'directory'</span><span class="token punctuation">;</span>                                           <span class="token comment">-- rm -r</span>
+<span class="token keyword">SELECT</span> name<span class="token punctuation">,</span> size<span class="token punctuation">,</span> modified <span class="token keyword">FROM</span> warehouse<span class="token punctuation">.</span>logs <span class="token keyword">WHERE</span> size <span class="token operator">></span> <span class="token number">0</span> <span class="token keyword">ORDER</span> <span class="token keyword">BY</span> modified <span class="token keyword">DESC</span> <span class="token keyword">LIMIT</span> <span class="token number">20</span><span class="token punctuation">;</span></code></pre>
+                </div>
+            </div>
         </div>
+        <div class="space-y-4"></div>
+    
+        <span class="leading-7">Only NameNode operations are used, so file contents are neither read nor written; </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">ALTER TABLE</code>
+    
+        <span class="leading-7"> is refused because the columns are fixed.</span>
     
         <div class="space-y-4"></div>
     
@@ -3214,28 +3249,23 @@
     
         <div class="space-y-4"></div>
     
-        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
+        <div class="rounded-lg my-2 overflow-hidden border border-purple-200">
         
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
+        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-purple-50">
+               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+               <h3 class="text-sm font-medium text-gray-900 mb-2">Note</h3>
            </div>
                    
             <div class="w-full px-5 py-3">
-                <div class="text-sm text-yellow-700">
+                <div class="text-sm text-purple-700">
                     
         <div class="space-y-4"></div>
     
-        <span class="leading-7">The online service has not been tested yet, if you have detailed test results, please submit </span>
+        <span class="leading-7">The plugin's e2e test </span>
     
-        <a class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200 cursor-pointer"
-           href="https://github.com/EdurtIO/metaforge/issues/new/choose"
-           target="_self"
-           title="">
-            issues
-        </a>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">HdfsE2ETest</code>
     
-        <span class="leading-7"> to us</span>
+        <span class="leading-7"> verifies each version below in a container: the version check, then directories created, listed, changed and dropped as databases, tables and rows with SQL.</span>
     
         <div class="space-y-4"></div>
     
@@ -3253,7 +3283,22 @@
               </svg>
             </span>
           </label>
-          <span class="text-gray-500"><code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">3.x</code></span>
+          <span class="text-gray-500"><span class="leading-7">3.3</span></span>
+        </div>
+    </li><li class="mb-2 flex items-start">
+        <div class="inline-flex items-center space-x-2">
+          <label class="flex items-center cursor-pointer relative">
+            <input type="checkbox" 
+                   checked 
+                   class="peer h-5 w-5 cursor-pointer transition-all appearance-none rounded shadow hover:shadow-md border border-slate-300 checked:bg-blue-600 checked:border-blue-600" 
+                   disabled/>
+            <span class="absolute text-white opacity-0 peer-checked:opacity-100 top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" stroke="currentColor" stroke-width="1">
+                <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+              </svg>
+            </span>
+          </label>
+          <span class="text-gray-500"><span class="leading-7">3.4</span></span>
         </div>
     </li>
         </ul>
@@ -3280,7 +3325,7 @@
                 <line x1="3" y1="12" y2="12" x2="9"/>
                 <line x1="15" y1="12" y2="12" x2="21"/>
             </svg>
-            <span>提交于 2026年10月31日 00:33</span>
+            <span>提交于 2026年11月1日 01:51</span>
         </div>
 
         <!-- 最后修改时间 -->
@@ -3292,7 +3337,7 @@
                 <path d="M3 3v5h5"/>
                 <path d="M12 7v5l4 2"/>
             </svg>
-            <span>修改于 2026年10月31日 00:33</span>
+            <span>修改于 2026年11月1日 01:51</span>
         </div>
 
         <!-- Hash 链接 -->
@@ -3305,11 +3350,11 @@
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <a href="https://github.com/devlive-community/metaforge/commit/a484adc463fab0bc36cf5d6f9fd1f85892ee8f56"
+                <a href="https://github.com/devlive-community/metaforge/commit/602c12d15787013c5c0ee0f8232430ef20d594b1"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="hover:text-blue-600 dark:hover:text-blue-400">
-                    首次提交 (a484adc4)
+                    首次提交 (602c12d1)
                 </a>
             </div>
 
@@ -3321,11 +3366,11 @@
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <a href="https://github.com/devlive-community/metaforge/commit/a484adc463fab0bc36cf5d6f9fd1f85892ee8f56"
+                <a href="https://github.com/devlive-community/metaforge/commit/602c12d15787013c5c0ee0f8232430ef20d594b1"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="hover:text-blue-600 dark:hover:text-blue-400">
-                    末次提交 (a484adc4)
+                    末次提交 (602c12d1)
                 </a>
             </div>
         
@@ -3438,22 +3483,33 @@
                         
                     
                         <div class="pl-12 inline-block min-w-full">
-                            <a href="#Environment"
+                            <a href="#Driver"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="Environment">
+                               data-slug="Driver">
                                 
-        <span class="leading-7">Environment</span>
+        <span class="leading-7">Driver</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-12 inline-block min-w-full">
-                            <a href="#Configure"
+                            <a href="#Concepts"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="Configure">
+                               data-slug="Concepts">
                                 
-        <span class="leading-7">Configure</span>
+        <span class="leading-7">Concepts</span>
+    
+                            </a>
+                        </div>
+                        
+                    
+                        <div class="pl-12 inline-block min-w-full">
+                            <a href="#SupportedSQL"
+                               class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                               data-slug="SupportedSQL">
+                                
+        <span class="leading-7">Supported SQL</span>
     
                             </a>
                         </div>
@@ -3517,22 +3573,33 @@
                     
                 
                     <div class="pl-12 inline-block min-w-full">
-                        <a href="#Environment"
+                        <a href="#Driver"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="Environment">
+                           data-slug="Driver">
                             
-        <span class="leading-7">Environment</span>
+        <span class="leading-7">Driver</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-12 inline-block min-w-full">
-                        <a href="#Configure"
+                        <a href="#Concepts"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="Configure">
+                           data-slug="Concepts">
                             
-        <span class="leading-7">Configure</span>
+        <span class="leading-7">Concepts</span>
+    
+                        </a>
+                    </div>
+                    
+                
+                    <div class="pl-12 inline-block min-w-full">
+                        <a href="#SupportedSQL"
+                           class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                           data-slug="SupportedSQL">
+                            
+        <span class="leading-7">Supported SQL</span>
     
                         </a>
                     </div>

@@ -1894,6 +1894,31 @@
         
             <li class="relative">
                 
+                    <a href="/zh-CN/reference/connectors/cratedb/home.html"
+                       class="group block">
+                        
+                        <div class="relative flex items-center px-2 sm:px-3 md:px-4 py-1.5 sm:py-2
+                                hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800/40
+                               rounded-md transition-all duration-200 ease-in-out">
+
+                            
+
+                            <span class="flex flex-grow items-center space-x-4 text-xs sm:text-sm md:text-base whitespace-nowrap">
+                                <span>CrateDB</span>
+                                
+
+
+                            </span>
+
+                            
+                        </div>
+                        
+                    </a>
+                
+            </li>
+        
+            <li class="relative">
+                
                     <a href="/zh-CN/reference/connectors/mysql/home.html"
                        class="group block">
                         
@@ -2875,18 +2900,18 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <span>10 分钟阅读</span>
+        <span>5 分钟阅读</span>
         
             <span class="mx-1">•</span>
             <span>
                 
-                    162 字
+                    150 字
                 
                 
                     +
                 
                 
-                    1183 词
+                    907 词
                 
             </span>
         
@@ -2916,9 +2941,207 @@
     
         <div class="space-y-4"></div>
     
-        <h4 id="huan-jing">
+        <h4 id="qu-dong">
             
-        <span class="leading-7">环境</span>
+        <span class="leading-7">驱动</span>
+    
+        </h4>
+    
+        <hr class="my-4 h-0.5 border-0 bg-gray-200 dark:bg-gray-700"/>
+    
+        <div class="space-y-4"></div>
+    
+        <span class="leading-7">MetaForge 只通过 JDBC 访问 ScyllaDB，使用 CQL 的 JDBC 驱动 </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">com.ing.data.cassandra.jdbc.CassandraDriver</code>
+    
+        <span class="leading-7">（cassandra-jdbc-wrapper 5.0）。</span>
+    
+        <div class="space-y-4"></div>
+    
+        <ul class="my-4 pl-8 list-disc">
+            <li class="mb-2 text-gray-700">
+        <span class="leading-7">URL：</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">jdbc:cassandra://host:9042/keyspace?localdatacenter=datacenter1</code>
+    
+        <span class="leading-7">；本地数据中心默认 </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">datacenter1</code>
+    
+        <span class="leading-7">，在自定义参数里用 </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">localdatacenter</code>
+    
+        <span class="leading-7"> 修改。</span>
+    </li><li class="mb-2 text-gray-700">
+        <span class="leading-7">原来「数据库」字段填写的数据中心改为在自定义参数中填写，「数据库」现在是 keyspace。</span>
+    </li>
+        </ul>
+    
+        <div class="space-y-4"></div>
+    
+        <h4 id="gai-nian">
+            
+        <span class="leading-7">概念</span>
+    
+        </h4>
+    
+        <hr class="my-4 h-0.5 border-0 bg-gray-200 dark:bg-gray-700"/>
+    
+        <div class="space-y-4"></div>
+    
+        <div class="space-y-4">
+            <div class="relative overflow-x-auto shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            
+                                <th scope="col" class="px-3.5 py-1 text-left">
+                                    
+        <span class="leading-7">MetaForge</span>
+    
+                                </th>
+                            
+                                <th scope="col" class="px-3.5 py-1 text-left">
+                                    
+        <span class="leading-7">ScyllaDB</span>
+    
+                                </th>
+                            
+                                <th scope="col" class="px-3.5 py-1 text-left">
+                                    
+        <span class="leading-7">SQL（CQL）</span>
+    
+                                </th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">数据库</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">Keyspace</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">CREATE KEYSPACE</code>
+    
+        <span class="leading-7"> / </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">ALTER KEYSPACE</code>
+    
+        <span class="leading-7"> / </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">DROP KEYSPACE</code>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">表</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">Table</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">CREATE TABLE</code>
+    
+        <span class="leading-7"> / </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">ALTER TABLE</code>
+    
+        <span class="leading-7"> / </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">DROP TABLE</code>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">列</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <span class="leading-7">Column</span>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">ALTER TABLE ... ADD</code>
+    
+        <span class="leading-7"> / </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">DROP</code>
+    
+        <span class="leading-7">（主键列不能修改）</span>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
+            
+            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">sql</div>
+            
+        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
+            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </button>
+    
+            <div class="!overflow-x-auto !flex">
+                
+                <div class="!flex-1">
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-sql"><span class="token keyword">CREATE</span> KEYSPACE app <span class="token keyword">WITH</span> <span class="token keyword">replication</span> <span class="token operator">=</span> {<span class="token string">'class'</span>: <span class="token string">'SimpleStrategy'</span><span class="token punctuation">,</span> <span class="token string">'replication_factor'</span>: <span class="token number">1</span>}<span class="token punctuation">;</span>
+<span class="token keyword">CREATE</span> <span class="token keyword">TABLE</span> app<span class="token punctuation">.</span>users <span class="token punctuation">(</span>id <span class="token keyword">int</span> <span class="token keyword">PRIMARY</span> <span class="token keyword">KEY</span><span class="token punctuation">,</span> name <span class="token keyword">text</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> app<span class="token punctuation">.</span>users <span class="token keyword">ADD</span> age <span class="token keyword">int</span><span class="token punctuation">;</span>
+<span class="token keyword">ALTER</span> <span class="token keyword">TABLE</span> app<span class="token punctuation">.</span>users <span class="token keyword">DROP</span> age<span class="token punctuation">;</span>
+<span class="token keyword">INSERT</span> <span class="token keyword">INTO</span> app<span class="token punctuation">.</span>users <span class="token punctuation">(</span>id<span class="token punctuation">,</span> name<span class="token punctuation">)</span> <span class="token keyword">VALUES</span> <span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span> <span class="token string">'ann'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> name <span class="token keyword">FROM</span> app<span class="token punctuation">.</span>users <span class="token keyword">WHERE</span> id <span class="token operator">=</span> <span class="token number">1</span><span class="token punctuation">;</span>
+<span class="token keyword">SELECT</span> version <span class="token keyword">AS</span> version <span class="token keyword">FROM</span> system<span class="token punctuation">.</span>versions<span class="token punctuation">;</span></code></pre>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-4"></div>
+    
+        <h4 id="ban-ben-yan-zheng">
+            
+        <span class="leading-7">版本（验证）</span>
     
         </h4>
     
@@ -2938,449 +3161,11 @@
                     
         <div class="space-y-4"></div>
     
-        <span class="leading-7">如果需要使用此数据源，则需要将 MetaForge 服务升级到 >= </span>
+        <span class="leading-7">以下版本由插件的 e2e 测试 </span>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">2024.01.1</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">ScyllaDBE2ETest</code>
     
-                </div>
-            </div>
-        </div>
-    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">支持时间: </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">2024-01-12</code>
-    
-        <div class="space-y-4"></div>
-    
-        <h4 id="pei-zhi">
-            
-        <span class="leading-7">配置</span>
-    
-        </h4>
-    
-        <hr class="my-4 h-0.5 border-0 bg-gray-200 dark:bg-gray-700"/>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="w-full">
-            <div class="border-b border-gray-200">
-                <nav class="flex space-x-4" role="tablist" aria-label="Tabs">
-                    
-        <button role="tab"
-            class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200
-                   border-blue-500 text-blue-600
-                   focus:outline-none"
-            onclick="switchTab(event, 'tabgroup-2lrs35txh', 0)"
-            aria-selected="true"
-            aria-controls="tabgroup-2lrs35txh-panel-0"
-            id="tabgroup-2lrs35txh-tab-0">
-            配置
-        </button>
-    
-        <button role="tab"
-            class="px-4 py-2 text-sm font-medium border-b-2 transition-colors duration-200
-                   border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300
-                   focus:outline-none"
-            onclick="switchTab(event, 'tabgroup-2lrs35txh', 1)"
-            aria-selected="false"
-            aria-controls="tabgroup-2lrs35txh-panel-1"
-            id="tabgroup-2lrs35txh-tab-1">
-            高级
-        </button>
-    
-                </nav>
-            </div>
-            <div class="mt-2">
-                
-        <div class="p-4 "
-            role="tabpanel"
-            aria-labelledby="tabgroup-2lrs35txh-tab-0"
-            id="tabgroup-2lrs35txh-panel-0">
-            
-        <div class="space-y-4">
-            <div class="relative overflow-x-auto shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg">
-                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">属性</span>
-    
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">是否必要</span>
-    
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">默认值</span>
-    
-                                </th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Name</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: 20px; height: 20px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="check"
-                class="relative"
-                style="width: 20px; height: 20px; color: #3CA34F;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <ul class="my-4 pl-8 list-disc">
-            <li class="mb-2 text-gray-700"></li>
-        </ul>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Host</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: 20px; height: 20px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="check"
-                class="relative"
-                style="width: 20px; height: 20px; color: #3CA34F;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">127.0.0.1</code>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Port</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: 20px; height: 20px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="check"
-                class="relative"
-                style="width: 20px; height: 20px; color: #3CA34F;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">9042</code>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    
-        </div>
-    
-        <div class="p-4 hidden"
-            role="tabpanel"
-            aria-labelledby="tabgroup-2lrs35txh-tab-1"
-            id="tabgroup-2lrs35txh-panel-1">
-            
-        <div class="space-y-4">
-            <div class="relative overflow-x-auto shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg">
-                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">属性</span>
-    
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">是否必要</span>
-    
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">默认值</span>
-    
-                                </th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Database</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: 20px; height: 20px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="check"
-                class="relative"
-                style="width: 20px; height: 20px; color: #3CA34F;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere"> </code>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    
-        </div>
-    
-            </div>
-            
-        <script>
-            function switchTab(event, tabGroupId, selectedIndex) {
-                // 获取当前 tab 组的所有按钮和面板
-                const tabButtons = event.target.parentElement.children;
-                const tabPanels = document.querySelectorAll('[id^="' + tabGroupId + '-panel-"]');
-                
-                // 更新所有 tab 按钮的状态
-                Array.from(tabButtons).forEach((button, index) => {
-                    if (index === selectedIndex) {
-                        button.classList.remove('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                        button.classList.add('border-blue-500', 'text-blue-600');
-                        button.setAttribute('aria-selected', 'true');
-                    } else {
-                        button.classList.remove('border-blue-500', 'text-blue-600');
-                        button.classList.add('border-transparent', 'text-gray-500', 'hover:text-gray-700', 'hover:border-gray-300');
-                        button.setAttribute('aria-selected', 'false');
-                    }
-                });
-                
-                // 更新所有面板的显示状态
-                tabPanels.forEach((panel, index) => {
-                    if (index === selectedIndex) {
-                        panel.classList.remove('hidden');
-                    } else {
-                        panel.classList.add('hidden');
-                    }
-                });
-            }
-        </script>
-    
-        </div>
-    
-        <div class="space-y-4"></div>
-    
-        <h4 id="gong-neng">
-            
-        <span class="leading-7">功能</span>
-    
-        </h4>
-    
-        <hr class="my-4 h-0.5 border-0 bg-gray-200 dark:bg-gray-700"/>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="space-y-4">
-            <div class="relative overflow-x-auto shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg">
-                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
-                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-                        <tr>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">功能</span>
-    
-                                </th>
-                            
-                                <th scope="col" class="px-3.5 py-1 text-center">
-                                    
-        <span class="leading-7">支持</span>
-    
-                                </th>
-                            
-                        </tr>
-                    </thead>
-                    <tbody>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="leading-7">即席查询</span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: px; height: px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="check"
-                class="relative"
-                style="width: px; height: px; color: currentColor;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="leading-7">数据集</span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: px; height: px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="check"
-                class="relative"
-                style="width: px; height: px; color: currentColor;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="leading-7">流水线</span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: px; height: px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="x"
-                class="relative"
-                style="width: px; height: px; color: currentColor;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="leading-7">元数据管理</span>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-center">
-                                        
-        <span class="inline-flex items-center justify-center relative top-[3px]" style="width: px; height: px;">
-            <span class="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded"></span>
-            <i data-lucide="x"
-                class="relative"
-                style="width: px; height: px; color: currentColor;">
-            </i>
-        </span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    
-        <div class="space-y-4"></div>
-    
-        <h4 id="ban-ben">
-            
-        <span class="leading-7">版本</span>
-    
-        </h4>
-    
-        <hr class="my-4 h-0.5 border-0 bg-gray-200 dark:bg-gray-700"/>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-yellow-700">
-                    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">在线服务尚未测试，如果您有详细的测试结果，请提交 </span>
-    
-        <a class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200 cursor-pointer"
-           href="https://github.com/EdurtIO/metaforge/issues/new/choose"
-           target="_self"
-           title="">
-            issues
-        </a>
+        <span class="leading-7"> 在容器中逐一验证：版本检查，以及用 CQL 创建、读取、修改、删除 keyspace、表和列。</span>
     
         <div class="space-y-4"></div>
     
@@ -3398,7 +3183,7 @@
               </svg>
             </span>
           </label>
-          <span class="text-gray-500"><code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">all</code></span>
+          <span class="text-gray-500"><span class="leading-7">2026.1</span></span>
         </div>
     </li>
         </ul>
@@ -3425,7 +3210,7 @@
                 <line x1="3" y1="12" y2="12" x2="9"/>
                 <line x1="15" y1="12" y2="12" x2="21"/>
             </svg>
-            <span>提交于 2026年10月31日 00:33</span>
+            <span>提交于 2026年11月1日 01:51</span>
         </div>
 
         <!-- 最后修改时间 -->
@@ -3437,7 +3222,7 @@
                 <path d="M3 3v5h5"/>
                 <path d="M12 7v5l4 2"/>
             </svg>
-            <span>修改于 2026年10月31日 00:33</span>
+            <span>修改于 2026年11月1日 01:51</span>
         </div>
 
         <!-- Hash 链接 -->
@@ -3450,11 +3235,11 @@
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <a href="https://github.com/devlive-community/metaforge/commit/a484adc463fab0bc36cf5d6f9fd1f85892ee8f56"
+                <a href="https://github.com/devlive-community/metaforge/commit/602c12d15787013c5c0ee0f8232430ef20d594b1"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="hover:text-blue-600 dark:hover:text-blue-400">
-                    首次提交 (a484adc4)
+                    首次提交 (602c12d1)
                 </a>
             </div>
 
@@ -3466,11 +3251,11 @@
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <a href="https://github.com/devlive-community/metaforge/commit/a484adc463fab0bc36cf5d6f9fd1f85892ee8f56"
+                <a href="https://github.com/devlive-community/metaforge/commit/602c12d15787013c5c0ee0f8232430ef20d594b1"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="hover:text-blue-600 dark:hover:text-blue-400">
-                    末次提交 (a484adc4)
+                    末次提交 (602c12d1)
                 </a>
             </div>
         
@@ -3583,44 +3368,33 @@
                         
                     
                         <div class="pl-12 inline-block min-w-full">
-                            <a href="#huan-jing"
+                            <a href="#qu-dong"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="huan-jing">
+                               data-slug="qu-dong">
                                 
-        <span class="leading-7">环境</span>
+        <span class="leading-7">驱动</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-12 inline-block min-w-full">
-                            <a href="#pei-zhi"
+                            <a href="#gai-nian"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="pei-zhi">
+                               data-slug="gai-nian">
                                 
-        <span class="leading-7">配置</span>
+        <span class="leading-7">概念</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-12 inline-block min-w-full">
-                            <a href="#gong-neng"
+                            <a href="#ban-ben-yan-zheng"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="gong-neng">
+                               data-slug="ban-ben-yan-zheng">
                                 
-        <span class="leading-7">功能</span>
-    
-                            </a>
-                        </div>
-                        
-                    
-                        <div class="pl-12 inline-block min-w-full">
-                            <a href="#ban-ben"
-                               class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="ban-ben">
-                                
-        <span class="leading-7">版本</span>
+        <span class="leading-7">版本（验证）</span>
     
                             </a>
                         </div>
@@ -3673,44 +3447,33 @@
                     
                 
                     <div class="pl-12 inline-block min-w-full">
-                        <a href="#huan-jing"
+                        <a href="#qu-dong"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="huan-jing">
+                           data-slug="qu-dong">
                             
-        <span class="leading-7">环境</span>
+        <span class="leading-7">驱动</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-12 inline-block min-w-full">
-                        <a href="#pei-zhi"
+                        <a href="#gai-nian"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="pei-zhi">
+                           data-slug="gai-nian">
                             
-        <span class="leading-7">配置</span>
+        <span class="leading-7">概念</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-12 inline-block min-w-full">
-                        <a href="#gong-neng"
+                        <a href="#ban-ben-yan-zheng"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="gong-neng">
+                           data-slug="ban-ben-yan-zheng">
                             
-        <span class="leading-7">功能</span>
-    
-                        </a>
-                    </div>
-                    
-                
-                    <div class="pl-12 inline-block min-w-full">
-                        <a href="#ban-ben"
-                           class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="ban-ben">
-                            
-        <span class="leading-7">版本</span>
+        <span class="leading-7">版本（验证）</span>
     
                         </a>
                     </div>

@@ -176,6 +176,11 @@
         <priority>0.5</priority>
     </url>
     <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/cratedb/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
         <loc>https://metaforge.devlive.org/en/reference/connectors/mysql/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
@@ -862,6 +867,11 @@
     </url>
     <url>
         <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/clickhouse/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/cratedb/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
