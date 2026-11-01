@@ -30,12 +30,6 @@ public class ClickHouseService
     }
 
     @Override
-    public Boolean isSupportMeta()
-    {
-        return true;
-    }
-
-    @Override
     public Response getEngines()
     {
         return Response.builder()

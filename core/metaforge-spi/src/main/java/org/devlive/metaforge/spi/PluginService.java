@@ -125,16 +125,6 @@ public interface PluginService
         return "metaforge";
     }
 
-    /**
-     * 是否支持元数据管理
-     *
-     * @return 是否支持
-     */
-    default Boolean isSupportMeta()
-    {
-        return false;
-    }
-
     default void connect(RuntimeConfigure configure)
     {
         Response response = new Response();

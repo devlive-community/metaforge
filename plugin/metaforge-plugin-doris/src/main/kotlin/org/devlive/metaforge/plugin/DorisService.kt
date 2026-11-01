@@ -19,11 +19,6 @@ class DorisService : PluginService
         return "com.mysql.cj.jdbc.Driver"
     }
 
-    override fun isSupportMeta(): Boolean
-    {
-        return true
-    }
-
     override fun getTables(configure: RuntimeConfigure?, database: String?): Response
     {
         val sql = """SELECT
