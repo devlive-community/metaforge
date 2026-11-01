@@ -222,6 +222,7 @@ nav:
       - /reference/connectors/cratedb/home.md
       - /reference/connectors/mysql/home.md
       - /reference/connectors/postgresql/home.md
+      - /reference/connectors/ignite/home.md
       - /reference/connectors/dm/home.md
       - /reference/connectors/tdengine/home.md
       - /reference/connectors/iotdb/home.md
