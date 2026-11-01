@@ -52,6 +52,10 @@ public class RedisSelectParser
             }
         }
 
+        if (select.getLimitClause() != null && select.getLimitClause().getLimit() > 0) {
+            this.limit = select.getLimitClause().getLimit();
+        }
+
         if (select.getWhereClause() != null) {
             this.filter = new HashMap<>();
             parseWhereExpression(select.getWhereClause());

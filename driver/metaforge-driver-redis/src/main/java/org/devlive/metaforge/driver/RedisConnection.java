@@ -1,6 +1,8 @@
 package org.devlive.metaforge.driver;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.devlive.metaforge.driver.sql.SqlSourceConnection;
+import org.devlive.metaforge.driver.sql.SqlSourceDatabaseMetaData;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.StringCodec;
@@ -18,7 +20,6 @@ import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 @SuppressFBWarnings(value = {"CT_CONSTRUCTOR_THROW", "NP_NONNULL_RETURN_VIOLATION"})
@@ -39,45 +41,83 @@ public class RedisConnection
 
     private final RedissonClient client;
     private final int database;
+    private final String url;
+    private final Properties info;
+    /** Clients of the other databases a statement or the metadata asked for, opened on first use. */
+    private final Map<Integer, RedissonClient> others = new ConcurrentHashMap<>();
     private boolean isClosed = false;
 
     public RedisConnection(String url, Properties info)
             throws SQLException
     {
+        this.url = url;
+        // A copy: databases opened later use the settings the connection was made with.
+        this.info = new Properties();
+        this.info.putAll(info);
+        this.database = isCluster(url) ? 0 : database(url, this.info);
         try {
-            String username = info.getProperty("user");
-            String password = info.getProperty("password");
-            Config config = new Config();
-            // Values are plain strings, as redis-cli and other clients write them, not Redisson's binary encoding.
-            config.setCodec(StringCodec.INSTANCE);
-            if (isCluster(url)) {
-                // jdbc:redis-cluster://host1:port1,host2:port2 as the released cluster driver took it
-                this.database = 0;
-                ClusterServersConfig cluster = config.useClusterServers().addNodeAddress(addresses(url).toArray(new String[0]));
-                if (password != null) {
-                    cluster.setPassword(password);
-                }
-                if (username != null && password != null) {
-                    cluster.setUsername(username);
-                }
-            }
-            else {
-                this.database = database(url, info);
-                SingleServerConfig single = config.useSingleServer().setAddress(addresses(url).get(0)).setDatabase(database);
-                if (password != null) {
-                    single.setPassword(password);
-                }
-                if (username != null && password != null) {
-                    single.setUsername(username);
-                }
-            }
-
-            this.client = Redisson.create(config);
+            this.client = Redisson.create(config(database));
             client.getKeys().count();
         }
         catch (Exception e) {
             throw new SQLException("Failed to connect to Redis: " + e.getMessage(), e);
         }
+    }
+
+    private Config config(int number)
+    {
+        String username = info.getProperty("user");
+        String password = info.getProperty("password");
+        Config config = new Config();
+        // Values are plain strings, as redis-cli and other clients write them, not Redisson's binary encoding.
+        config.setCodec(StringCodec.INSTANCE);
+        if (isCluster(url)) {
+            // jdbc:redis-cluster://host1:port1,host2:port2 as the released cluster driver took it
+            ClusterServersConfig cluster = config.useClusterServers().addNodeAddress(addresses(url).toArray(new String[0]));
+            if (password != null) {
+                cluster.setPassword(password);
+            }
+            if (username != null && password != null) {
+                cluster.setUsername(username);
+            }
+        }
+        else {
+            SingleServerConfig single = config.useSingleServer().setAddress(addresses(url).get(0)).setDatabase(number);
+            if (password != null) {
+                single.setPassword(password);
+            }
+            if (username != null && password != null) {
+                single.setUsername(username);
+            }
+        }
+        return config;
+    }
+
+    /** The client of a database: this connection's own, or one opened for another database. */
+    public RedissonClient getClient(int number)
+            throws SQLException
+    {
+        if (number == database) {
+            return client;
+        }
+        if (isCluster(url)) {
+            throw new SQLException("A Redis cluster has only database 0");
+        }
+        try {
+            return others.computeIfAbsent(number, key -> {
+                Config config = config(key);
+                config.setThreads(2).setNettyThreads(2);
+                return Redisson.create(config);
+            });
+        }
+        catch (RuntimeException e) {
+            throw new SQLException("Failed to open Redis database " + number + ": " + e.getMessage(), e);
+        }
+    }
+
+    public boolean isCluster()
+    {
+        return isCluster(url);
     }
 
     static boolean isCluster(String url)
@@ -182,6 +222,8 @@ public class RedisConnection
     {
         if (!isClosed) {
             client.shutdown();
+            others.values().forEach(RedissonClient::shutdown);
+            others.clear();
             isClosed = true;
         }
     }
@@ -197,7 +239,8 @@ public class RedisConnection
     public DatabaseMetaData getMetaData()
             throws SQLException
     {
-        throw new SQLFeatureNotSupportedException("Method not supported");
+        // Databases 0..n, their keys as tables and key, type and value as columns, as every MetaForge driver describes a source.
+        return new SqlSourceDatabaseMetaData(new SqlSourceConnection(new RedisSqlSource(this), url, String.valueOf(database), info.getProperty("user")));
     }
 
     @Override

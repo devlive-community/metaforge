@@ -20,6 +20,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2", "NP_NULL_PARAM_DEREF"})
@@ -65,19 +67,23 @@ public class RedisStatement
     /** SELECT version(): the server's redis_version from INFO server. */
     private ResultSet handleServerInfo()
     {
-        String version = "";
-        for (Map<String, Object> line : RedisCommands.run(connection.getClient(), "INFO server")) {
-            for (String part : String.valueOf(line.get(RedisCommands.COLUMN)).split("\\r?\\n")) {
-                if (part.startsWith("redis_version:")) {
-                    version = part.substring("redis_version:".length()).trim();
-                }
-            }
-        }
         Map<String, Object> row = new LinkedHashMap<>();
-        row.put("version", version);
+        row.put("version", serverVersion(connection.getClient()));
         List<Map<String, Object>> rows = new ArrayList<>();
         rows.add(row);
         return new RedisResultSet(rows);
+    }
+
+    static String serverVersion(RedissonClient client)
+    {
+        for (Map<String, Object> line : RedisCommands.run(client, "INFO server")) {
+            for (String part : String.valueOf(line.get(RedisCommands.COLUMN)).split("\\r?\\n")) {
+                if (part.startsWith("redis_version:")) {
+                    return part.substring("redis_version:".length()).trim();
+                }
+            }
+        }
+        return "";
     }
 
     /**
@@ -88,8 +94,17 @@ public class RedisStatement
     private ResultSet executeSelectStatement(RedisParser parser)
             throws SQLException
     {
+        // The workbench qualifies the key with its database: `2`.`user:1`.
+        String collection = parser.getCollection();
         RedissonClient client = connection.getClient();
-        String collection = unquote(parser.getCollection());
+        Matcher qualified = collection == null ? null : QUALIFIED.matcher(collection.trim());
+        if (qualified != null && qualified.matches()) {
+            client = connection.getClient(Integer.parseInt(qualified.group(1)));
+            collection = qualified.group(2).replace("``", "`");
+        }
+        else {
+            collection = unquote(collection);
+        }
         Iterable<String> keys;
         if (collection == null || collection.isEmpty() || collection.equals("*")) {
             keys = client.getKeys().getKeys();
@@ -107,11 +122,15 @@ public class RedisStatement
 
         List<String> columns = columns(parser.getFields());
         List<Map<String, Object>> rows = new ArrayList<>();
+        long limit = parser.getLimit() == null ? Long.MAX_VALUE : parser.getLimit();
         for (String key : keys) {
+            if (rows.size() >= limit) {
+                break;
+            }
             Map<String, Object> all = new LinkedHashMap<>();
             all.put("key", key);
-            all.put("type", getKeyType(client, key));
-            all.put("value", getKeyValue(client, key));
+            all.put("type", keyType(client, key));
+            all.put("value", keyValue(client, key));
             Map<String, Object> row = new LinkedHashMap<>();
             columns.forEach(column -> row.put(column, all.get(column)));
             rows.add(row);
@@ -119,7 +138,8 @@ public class RedisStatement
         return new RedisResultSet(columns, rows);
     }
 
-    private static final List<String> COLUMNS = List.of("key", "type", "value");
+    private static final List<String> COLUMNS = RedisSqlSource.COLUMNS;
+    private static final Pattern QUALIFIED = Pattern.compile("^`(\\d+)`\\.`((?:[^`]|``)+)`$");
 
     private static List<String> columns(List<String> fields)
             throws SQLException
@@ -155,13 +175,13 @@ public class RedisStatement
         return trimmed;
     }
 
-    private String getKeyType(RedissonClient client, String key)
+    static String keyType(RedissonClient client, String key)
     {
         RType type = client.getKeys().getType(key);
         return type != null ? type.name() : "NONE";
     }
 
-    private Object getKeyValue(RedissonClient client, String key)
+    static Object keyValue(RedissonClient client, String key)
     {
         RType type = client.getKeys().getType(key);
         if (type == null) {
