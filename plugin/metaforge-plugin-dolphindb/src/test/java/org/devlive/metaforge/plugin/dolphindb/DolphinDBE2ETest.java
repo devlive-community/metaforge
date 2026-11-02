@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.devlive.metaforge.test.e2e.PluginE2E.assumeDocker;
+import static org.devlive.metaforge.test.e2e.PluginE2E.assumeImageSupportsHost;
 import static org.devlive.metaforge.test.e2e.PluginE2E.column;
 import static org.devlive.metaforge.test.e2e.PluginE2E.configure;
 import static org.devlive.metaforge.test.e2e.PluginE2E.first;
@@ -50,7 +51,9 @@ public class DolphinDBE2ETest
     @Test
     public void databasesTablesAndColumnsAreListedAndRead() throws Exception
     {
-        try (GenericContainer<?> container = new GenericContainer<>("dolphindb/dolphindb:" + version)
+        String image = "dolphindb/dolphindb:" + version;
+        assumeImageSupportsHost(image);
+        try (GenericContainer<?> container = new GenericContainer<>(image)
                 .withExposedPorts(8848)
                 .waitingFor(Wait.forHttp("/").forPort(8848).withStartupTimeout(Duration.ofMinutes(3)))) {
             container.start();

@@ -2,6 +2,7 @@ package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
+import org.devlive.metaforge.test.e2e.PluginE2E;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -14,6 +15,7 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.devlive.metaforge.test.e2e.PluginE2E.assumeDocker;
+import static org.devlive.metaforge.test.e2e.PluginE2E.assumeImageSupportsHost;
 import static org.devlive.metaforge.test.e2e.PluginE2E.column;
 import static org.devlive.metaforge.test.e2e.PluginE2E.configure;
 import static org.devlive.metaforge.test.e2e.PluginE2E.first;
@@ -49,7 +51,10 @@ public class IgniteE2ETest
     @Test
     public void tablesAndColumnsAreListedAndRead()
     {
-        try (GenericContainer<?> container = new GenericContainer<>("apacheignite/ignite:" + version + "-arm64")
+        // Apache Ignite publishes one image tag per CPU architecture.
+        String image = "apacheignite/ignite:" + version + ("arm64".equals(PluginE2E.hostArchitecture()) ? "-arm64" : "");
+        assumeImageSupportsHost(image);
+        try (GenericContainer<?> container = new GenericContainer<>(image)
                 .withExposedPorts(10800)
                 .waitingFor(Wait.forLogMessage(".*Topology snapshot.*", 1).withStartupTimeout(Duration.ofMinutes(3)))) {
             container.start();

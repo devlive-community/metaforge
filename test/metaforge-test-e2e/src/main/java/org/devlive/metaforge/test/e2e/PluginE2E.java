@@ -64,7 +64,7 @@ public final class PluginE2E
     {
         assumeDocker();
         DockerClient client = DockerClientFactory.instance().client();
-        String host = normalizeArchitecture(client.infoCmd().exec().getArchitecture());
+        String host = hostArchitecture();
         String imageArch;
         try {
             String reference = new RemoteDockerImage(DockerImageName.parse(image)).get();
@@ -76,6 +76,12 @@ public final class PluginE2E
         }
         Assume.assumeTrue("Image " + image + " is " + imageArch + " while the Docker host is " + host
                 + ", skipping the emulated start", host.equals(imageArch));
+    }
+
+    /** The Docker host CPU architecture, normalized to amd64 / arm64 naming. */
+    public static String hostArchitecture()
+    {
+        return normalizeArchitecture(DockerClientFactory.instance().client().infoCmd().exec().getArchitecture());
     }
 
     private static String normalizeArchitecture(String architecture)
