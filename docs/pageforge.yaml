@@ -222,6 +222,7 @@ nav:
       - /reference/connectors/cratedb/home.md
       - /reference/connectors/mysql/home.md
       - /reference/connectors/postgresql/home.md
+      - /reference/connectors/kyuubi/home.md
       - /reference/connectors/db2/home.md
       - /reference/connectors/oceanbase/home.md
       - /reference/connectors/sqlserver/home.md
