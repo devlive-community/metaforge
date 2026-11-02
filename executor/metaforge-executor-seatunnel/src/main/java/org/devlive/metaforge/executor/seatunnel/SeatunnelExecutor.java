@@ -4,8 +4,13 @@ import org.devlive.metaforge.executor.ExecutorPlugin;
 import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
 import org.devlive.metaforge.plugin.configure.RuntimeConfigureFieldType;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 public class SeatunnelExecutor
         extends ExecutorPlugin
@@ -57,5 +62,23 @@ public class SeatunnelExecutor
                         false
                 )
         );
+    }
+
+    /** SeaTunnel runs from its installation: the home directory and the launcher under {home}/bin must exist. */
+    @Override
+    public List<String> testRuntimeConfigures(Map<String, String> values)
+    {
+        List<String> problems = new ArrayList<>(super.testRuntimeConfigures(values));
+        String home = values.getOrDefault("home", "");
+        if (home.trim().isEmpty() || !Files.isDirectory(Paths.get(home.trim()))) {
+            problems.add("The SeaTunnel home " + home + " is not a directory on the server");
+            return problems;
+        }
+        String script = values.getOrDefault("startScript", "");
+        Path launcher = Paths.get(home.trim(), "bin", script.trim());
+        if (script.trim().isEmpty() || !Files.isRegularFile(launcher)) {
+            problems.add("The launcher " + launcher + " does not exist");
+        }
+        return problems;
     }
 }

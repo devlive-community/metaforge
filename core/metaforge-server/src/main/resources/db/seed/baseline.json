@@ -279,20 +279,6 @@
       "isNew": true
     },
     {
-      "code": "RUNTIME_CONFIGURE",
-      "name": "管理员 - 系统 - 运行时配置",
-      "description": "管理员：管理员权限用户可以访问\\n位置：顶部管理一级子菜单",
-      "url": "/admin/configure",
-      "group": null,
-      "sorted": 6,
-      "type": "VIEW",
-      "parent": "SYSTEM",
-      "active": true,
-      "i18nKey": "configure.runtime.title",
-      "icon": "Settings2",
-      "isNew": false
-    },
-    {
       "code": "SYSTEM_SETTINGS",
       "name": "管理员 - 系统 - 系统设置",
       "description": "管理员：管理员权限用户可以访问\\n位置：顶部管理一级子菜单",
@@ -340,7 +326,6 @@
       "DATASET",
       "STORE",
       "b6669c359a7d41e581d906446366daf3",
-      "RUNTIME_CONFIGURE",
       "SYSTEM_SETTINGS"
     ],
     "USER": [

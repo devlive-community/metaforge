@@ -232,6 +232,38 @@ public abstract class Plugin
     }
 
     /**
+     * 检查一组运行时配置能否使用，返回发现的问题（空表示可用）。默认只检查数字与开关能否解析，
+     * 需要外部资源（安装目录、脚本等）的插件覆写以检查它们。
+     *
+     * Checks whether the runtime values work and returns the problems found, empty when they do.
+     * The default only checks that numbers and switches parse; plugins that rely on outside
+     * resources (an installation directory, a script) override it to check those too.
+     */
+    public java.util.List<String> testRuntimeConfigures(java.util.Map<String, String> values)
+    {
+        java.util.List<String> problems = new java.util.ArrayList<>();
+        for (org.devlive.metaforge.plugin.configure.RuntimeConfigureField field : runtimeConfigures()) {
+            String value = values.get(field.getName());
+            if (value == null || value.trim().isEmpty()) {
+                continue;
+            }
+            if (field.getType() == org.devlive.metaforge.plugin.configure.RuntimeConfigureFieldType.NUMBER) {
+                try {
+                    Double.parseDouble(value.trim());
+                }
+                catch (NumberFormatException e) {
+                    problems.add(field.getName() + " is not a number: " + value);
+                }
+            }
+            else if (field.getType() == org.devlive.metaforge.plugin.configure.RuntimeConfigureFieldType.BOOLEAN
+                    && !"true".equalsIgnoreCase(value.trim()) && !"false".equalsIgnoreCase(value.trim())) {
+                problems.add(field.getName() + " is not true or false: " + value);
+            }
+        }
+        return problems;
+    }
+
+    /**
      * 声明该插件的数据源表单配置字段（字段名 / 类型 / 必填 / 默认值 / 分组 / pipelines 等）。
      * 连接器插件默认返回通用 JDBC 字段（原 default.yaml 语义），转换等其余类型返回 null。
      * 连接器插件应覆写本方法以提供专属配置。

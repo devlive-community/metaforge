@@ -49,6 +49,29 @@ public class SystemSettingController
         return service.testMail(body.getMail(), body.getTo());
     }
 
+    /** Writes and deletes a probe file with the storage as it is in the form. */
+    @PostMapping(value = "fs/test")
+    public CommonResponse<Boolean> testFs(@RequestBody FsSettings fs)
+    {
+        return service.testFs(fs);
+    }
+
+    /** Tries an executor's or the dataset target's runtime values as they are in the form. */
+    @PostMapping(value = "runtime/test")
+    public CommonResponse<String> testRuntime(@RequestBody RuntimeTestBody body)
+    {
+        return service.testRuntime(body.getCategory(), body.getName(), body.getValues());
+    }
+
+    @Data
+    @NoArgsConstructor
+    public static class RuntimeTestBody
+    {
+        private String category;
+        private String name;
+        private Map<String, String> values;
+    }
+
     @Data
     @NoArgsConstructor
     public static class SettingsBody

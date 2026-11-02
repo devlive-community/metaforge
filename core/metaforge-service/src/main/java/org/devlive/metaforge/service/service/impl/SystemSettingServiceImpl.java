@@ -4,9 +4,14 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.common.response.CommonResponse;
+import org.devlive.metaforge.fs.FsRequest;
+import org.devlive.metaforge.fs.FsResponse;
+import org.devlive.metaforge.fs.FsService;
+import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.plugin.PluginType;
+import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.initializer.FsConfigure;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.service.RuntimeConfigureService;
@@ -18,14 +23,23 @@ import org.devlive.metaforge.service.settings.MailSettings;
 import org.devlive.metaforge.service.settings.OAuthProvider;
 import org.devlive.metaforge.service.settings.OAuthSettings;
 import org.devlive.metaforge.service.settings.SystemSettingSchema;
+import org.devlive.metaforge.spi.PluginService;
+import org.devlive.metaforge.spi.model.Response;
 import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -177,6 +191,80 @@ public class SystemSettingServiceImpl
             }
         }
         return CommonResponse.success(settings());
+    }
+
+    @Override
+    public CommonResponse<Boolean> testFs(FsSettings fs)
+    {
+        FsSettings storage = fs == null ? fs() : keepSecret(fs);
+        if (!storage.configured()) {
+            return CommonResponse.failure("Set the access key, the secret key, the endpoint and the bucket of " + storage.getType());
+        }
+        Optional<Plugin> plugin = pluginManager.getPlugin(storage.getType());
+        if (plugin.isEmpty()) {
+            return CommonResponse.failure("The file system plugin " + storage.getType() + " is not installed");
+        }
+        FsService service = plugin.get().getService(FsService.class);
+        String endpoint = storage.local() ? String.join(File.separator, initializer.getDataHome(), "test") : storage.getEndpoint();
+        String file = String.join("/", "metaforge-test", UUID.randomUUID() + ".txt");
+        try (InputStream probe = new ByteArrayInputStream("MetaForge storage test".getBytes(StandardCharsets.UTF_8))) {
+            FsResponse written = service.writer(FsRequest.builder().access(storage.getAccess()).secret(storage.getSecret()).endpoint(endpoint)
+                    .bucket(storage.getBucket()).stream(probe).fileName(file).build());
+            if (written == null || !written.isSuccessful()) {
+                return CommonResponse.failure("Writing a test file failed: " + (written == null ? "no response" : written.getMessage()));
+            }
+            try {
+                service.delete(FsRequest.builder().access(storage.getAccess()).secret(storage.getSecret()).endpoint(endpoint)
+                        .bucket(storage.getBucket()).fileName(file).build());
+            }
+            catch (RuntimeException e) {
+                // The write is what was tested; a store that can not delete keeps the small probe file.
+                log.warn("Removing the storage test file {} failed", file, e);
+            }
+            return CommonResponse.success(Boolean.TRUE);
+        }
+        catch (IOException | RuntimeException e) {
+            log.warn("Storage test with {} failed", storage.getType(), e);
+            return CommonResponse.failure("Writing a test file failed: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public CommonResponse<String> testRuntime(String category, String name, Map<String, String> values)
+    {
+        Map<String, String> given = values == null ? Map.of() : values;
+        if (RuntimeConfigureService.CATEGORY_EXECUTOR.equals(category)) {
+            Optional<Plugin> executor = pluginManager.getPluginInfos().stream()
+                    .filter(meta -> meta.getType() == PluginType.EXECUTOR && meta.getName().equals(name) && meta.getInstance() instanceof Plugin)
+                    .map(meta -> (Plugin) meta.getInstance())
+                    .findFirst();
+            if (executor.isEmpty()) {
+                return CommonResponse.failure("The executor " + name + " is not installed");
+            }
+            List<String> problems = executor.get().testRuntimeConfigures(given);
+            return problems.isEmpty() ? CommonResponse.success(name) : CommonResponse.failure(String.join("; ", problems));
+        }
+        if (RuntimeConfigureService.CATEGORY_DATASET.equals(category)) {
+            String type = given.getOrDefault("type", "");
+            Optional<Plugin> target = pluginManager.getPlugin(type);
+            if (target.isEmpty()) {
+                return CommonResponse.failure("The dataset target plugin " + type + " is not installed");
+            }
+            try {
+                PluginService service = target.get().getService(PluginService.class);
+                SourceEntity entity = SourceEntity.builder().host(given.get("host")).port(Integer.valueOf(given.getOrDefault("port", "0").trim()))
+                        .username(given.get("username")).password(given.get("password")).database(given.get("database")).build();
+                Response response = service.execute(entity.toConfigure(pluginManager, target.get()), service.validator());
+                if (response == null || !Boolean.TRUE.equals(response.getIsSuccessful())) {
+                    return CommonResponse.failure("Connecting to the dataset target failed: " + (response == null ? "no response" : response.getMessage()));
+                }
+                return CommonResponse.success(type);
+            }
+            catch (RuntimeException e) {
+                return CommonResponse.failure("Connecting to the dataset target failed: " + e.getMessage());
+            }
+        }
+        return CommonResponse.failure("Unknown runtime settings " + category);
     }
 
     @Override

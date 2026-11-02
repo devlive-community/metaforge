@@ -40,6 +40,18 @@ public interface SystemSettingService
      */
     CommonResponse<Map<String, Object>> save(AuthSettings auth, MailSettings mail, Map<String, OAuthSettings> oauth, FsSettings fs);
 
+    /** Writes and deletes a probe file with the given storage, an empty secret meaning the saved one. */
+    CommonResponse<Boolean> testFs(FsSettings fs);
+
+    /**
+     * Tries runtime settings before they are saved: an executor plugin checks its values, and the
+     * dataset target connects with them.
+     *
+     * @param category EXECUTOR or DATASET
+     * @param name the executor plugin's name, or the dataset target's
+     */
+    CommonResponse<String> testRuntime(String category, String name, Map<String, String> values);
+
     /** Sends a test mail with the saved server, or with the given one when it is passed. */
     CommonResponse<Boolean> testMail(MailSettings mail, String to);
 }
