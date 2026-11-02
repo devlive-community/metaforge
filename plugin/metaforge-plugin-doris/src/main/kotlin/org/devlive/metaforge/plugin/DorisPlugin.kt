@@ -34,7 +34,7 @@ class DorisPlugin : Plugin()
                                 .required(true)
                                 .min(1L)
                                 .max(65535L)
-                                .value(9093)
+                                .value(9030)
                                 .message("port is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()
