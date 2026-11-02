@@ -1,12 +1,18 @@
 package org.devlive.metaforge.service.service.impl;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.common.response.CommonResponse;
+import org.devlive.metaforge.plugin.PluginManager;
+import org.devlive.metaforge.plugin.PluginMetadata;
+import org.devlive.metaforge.plugin.PluginType;
+import org.devlive.metaforge.service.initializer.FsConfigure;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.service.RuntimeConfigureService;
 import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.service.settings.AuthSettings;
+import org.devlive.metaforge.service.settings.FsSettings;
 import org.devlive.metaforge.service.settings.MailService;
 import org.devlive.metaforge.service.settings.MailSettings;
 import org.devlive.metaforge.service.settings.OAuthProvider;
@@ -18,22 +24,62 @@ import javax.mail.MessagingException;
 
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
+@SuppressFBWarnings(value = {"EI_EXPOSE_REP2"}, justification = "Spring beans are shared on purpose")
 public class SystemSettingServiceImpl
         implements SystemSettingService
 {
     private final RuntimeConfigureService configures;
     private final InitializerConfigure initializer;
     private final MailService mailService;
+    private final PluginManager pluginManager;
+    /** Read on every upload and query result, so kept until the settings are saved again. */
+    private volatile FsSettings fs;
 
-    public SystemSettingServiceImpl(RuntimeConfigureService configures, InitializerConfigure initializer, MailService mailService)
+    public SystemSettingServiceImpl(RuntimeConfigureService configures, InitializerConfigure initializer, MailService mailService, PluginManager pluginManager)
     {
         this.configures = configures;
         this.initializer = initializer;
         this.mailService = mailService;
+        this.pluginManager = pluginManager;
+    }
+
+    @Override
+    public FsSettings fs()
+    {
+        FsSettings cached = fs;
+        // A copy, so a caller can not change the settings everyone else reads.
+        if (cached != null) {
+            return cached.toBuilder().build();
+        }
+        FsConfigure defaults = initializer.getFsConfigure() == null ? new FsConfigure() : initializer.getFsConfigure();
+        fs = FsSettings.from(configures.getEffective(SystemSettingSchema.CATEGORY, SystemSettingSchema.FS,
+                SystemSettingSchema.fs(defaults.getType(), defaults.getAccess(), defaults.getSecret(), defaults.getEndpoint(), defaults.getBucket())));
+        return fs.toBuilder().build();
+    }
+
+    /** The installed file system plugins an administrator can choose from. */
+    private List<String> fsTypes()
+    {
+        return pluginManager.getPluginInfos().stream()
+                .filter(plugin -> plugin.getType() == PluginType.FILESYSTEM)
+                .map(PluginMetadata::getName)
+                .distinct()
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    private FsSettings keepSecret(FsSettings fs)
+    {
+        if (StringUtils.isNotEmpty(fs.getSecret())) {
+            return fs;
+        }
+        return fs.toBuilder().secret(fs().getSecret()).build();
     }
 
     @Override
@@ -66,11 +112,13 @@ public class SystemSettingServiceImpl
             oauth.put(provider.getId(), oauth(provider).masked());
         }
         result.put("oauth", oauth);
+        result.put("fs", fs().masked());
+        result.put("fsTypes", fsTypes());
         return result;
     }
 
     @Override
-    public CommonResponse<Map<String, Object>> save(AuthSettings auth, MailSettings mail, Map<String, OAuthSettings> oauth)
+    public CommonResponse<Map<String, Object>> save(AuthSettings auth, MailSettings mail, Map<String, OAuthSettings> oauth, FsSettings fs)
     {
         if (auth == null || mail == null) {
             return CommonResponse.failure("The sign-in and mail settings are required");
@@ -95,6 +143,15 @@ public class SystemSettingServiceImpl
                 providers.put(provider, value);
             }
         }
+        FsSettings storage = fs == null ? null : keepSecret(fs);
+        if (storage != null) {
+            if (!fsTypes().contains(storage.getType())) {
+                return CommonResponse.failure("The file system plugin " + storage.getType() + " is not installed");
+            }
+            if (!storage.configured()) {
+                return CommonResponse.failure("Set the access key, the secret key, the endpoint and the bucket of " + storage.getType());
+            }
+        }
         MailSettings saved = keepPassword(mail);
         CommonResponse<?> authSaved = configures.save(SystemSettingSchema.CATEGORY, SystemSettingSchema.AUTH, auth.toMap(), "Sign-in and registration");
         if (!Boolean.TRUE.equals(authSaved.getStatus())) {
@@ -110,6 +167,13 @@ public class SystemSettingServiceImpl
                     provider.getLabel() + " sign-in");
             if (!Boolean.TRUE.equals(providerSaved.getStatus())) {
                 return CommonResponse.failure(String.valueOf(providerSaved.getMessage()));
+            }
+        }
+        if (storage != null) {
+            CommonResponse<?> fsSaved = configures.save(SystemSettingSchema.CATEGORY, SystemSettingSchema.FS, storage.toMap(), "File storage");
+            fs = null;
+            if (!Boolean.TRUE.equals(fsSaved.getStatus())) {
+                return CommonResponse.failure(String.valueOf(fsSaved.getMessage()));
             }
         }
         return CommonResponse.success(settings());

@@ -20,6 +20,7 @@ import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.PluginAuditRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.PluginAuditService;
+import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.spi.model.Response;
 import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcOperations;
@@ -44,14 +45,16 @@ import java.util.stream.Collectors;
 public class PluginAuditServiceImpl
         implements PluginAuditService
 {
+    private final SystemSettingService systemSettings;
     private final PluginAuditRepository pluginAuditRepository;
     private final InitializerConfigure initializer;
     private final PluginManager pluginManager;
     private final NamedParameterJdbcOperations jdbc;
 
     public PluginAuditServiceImpl(PluginAuditRepository pluginAuditRepository, InitializerConfigure initializer, PluginManager pluginManager,
-            NamedParameterJdbcOperations jdbc)
+            NamedParameterJdbcOperations jdbc, SystemSettingService systemSettings)
     {
+        this.systemSettings = systemSettings;
         this.jdbc = jdbc;
         this.pluginAuditRepository = pluginAuditRepository;
         this.initializer = initializer;
@@ -125,18 +128,18 @@ public class PluginAuditServiceImpl
                 .map(value -> {
                     Response response = new Response();
                     FsRequest fsRequest = FsRequest.builder()
-                            .access(initializer.getFsConfigure().getAccess())
-                            .secret(initializer.getFsConfigure().getSecret())
+                            .access(systemSettings.fs().getAccess())
+                            .secret(systemSettings.fs().getSecret())
                             .endpoint(value.getHome())
-                            .bucket(initializer.getFsConfigure().getBucket())
+                            .bucket(systemSettings.fs().getBucket())
                             .fileName("result")
                             .build();
                     // If it is OSS third-party storage, rebuild the default directory
-                    if (!initializer.getFsConfigure().getType().equals("LocalFs")) {
-                        fsRequest.setEndpoint(initializer.getFsConfigure().getEndpoint());
+                    if (!systemSettings.fs().getType().equals("LocalFs")) {
+                        fsRequest.setEndpoint(systemSettings.fs().getEndpoint());
                         fsRequest.setFileName(String.join(File.separator, value.getUser().getCode(), DateUtils.formatYMD(), String.join(File.separator, "adhoc", code), "result"));
                     }
-                    pluginManager.getPlugin(initializer.getFsConfigure().getType())
+                    pluginManager.getPlugin(systemSettings.fs().getType())
                             .ifPresent(plugin -> {
                                 FsService fsService = plugin.getService(FsService.class);
                                 FsResponse fsResponse = fsService.reader(fsRequest);

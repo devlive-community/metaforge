@@ -2,6 +2,7 @@ package org.devlive.metaforge.service.service;
 
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.settings.AuthSettings;
+import org.devlive.metaforge.service.settings.FsSettings;
 import org.devlive.metaforge.service.settings.MailSettings;
 import org.devlive.metaforge.service.settings.OAuthProvider;
 import org.devlive.metaforge.service.settings.OAuthSettings;
@@ -17,6 +18,9 @@ public interface SystemSettingService
 
     OAuthSettings oauth(OAuthProvider provider);
 
+    /** Where uploads and query results are stored. */
+    FsSettings fs();
+
     /** Every group for the settings page, the mail password and client secrets left out. */
     Map<String, Object> settings();
 
@@ -25,7 +29,16 @@ public interface SystemSettingService
      *
      * @param oauth the providers by id (github, google, oidc); providers left out, or all of them when null, stay as they are
      */
-    CommonResponse<Map<String, Object>> save(AuthSettings auth, MailSettings mail, Map<String, OAuthSettings> oauth);
+    default CommonResponse<Map<String, Object>> save(AuthSettings auth, MailSettings mail, Map<String, OAuthSettings> oauth)
+    {
+        return save(auth, mail, oauth, null);
+    }
+
+    /**
+     * Saves the groups as {@link #save(AuthSettings, MailSettings, Map)} does, and file storage when
+     * it is passed; an empty secret keeps the stored one.
+     */
+    CommonResponse<Map<String, Object>> save(AuthSettings auth, MailSettings mail, Map<String, OAuthSettings> oauth, FsSettings fs);
 
     /** Sends a test mail with the saved server, or with the given one when it is passed. */
     CommonResponse<Boolean> testMail(MailSettings mail, String to);

@@ -22,6 +22,7 @@ public final class SystemSettingSchema
     public static final String CATEGORY = "SYSTEM";
     public static final String AUTH = "AUTH";
     public static final String MAIL = "MAIL";
+    public static final String FS = "FS";
 
     private SystemSettingSchema()
     {}
@@ -39,6 +40,17 @@ public final class SystemSettingSchema
                 new RuntimeConfigureField("termsUrl", RuntimeConfigureFieldType.STRING, "", "Terms of service shown on sign-up"),
                 new RuntimeConfigureField("privacyUrl", RuntimeConfigureFieldType.STRING, "", "Privacy policy shown on sign-up"),
                 new RuntimeConfigureField("siteUrl", RuntimeConfigureFieldType.STRING, "", "Address MetaForge is opened at, for third-party sign-in callbacks"));
+    }
+
+    /** File storage; the metaforge.fs.* properties are the defaults until it is saved here. */
+    public static List<RuntimeConfigureField> fs(String type, String access, String secret, String endpoint, String bucket)
+    {
+        return Arrays.asList(
+                new RuntimeConfigureField("type", RuntimeConfigureFieldType.STRING, StringUtils.isBlank(type) ? FsSettings.LOCAL : type, "File system plugin"),
+                new RuntimeConfigureField("access", RuntimeConfigureFieldType.STRING, StringUtils.defaultString(access), "Access key"),
+                new RuntimeConfigureField("secret", RuntimeConfigureFieldType.PASSWORD, StringUtils.defaultString(secret), "Secret key"),
+                new RuntimeConfigureField("endpoint", RuntimeConfigureFieldType.STRING, StringUtils.defaultString(endpoint), "Endpoint or domain"),
+                new RuntimeConfigureField("bucket", RuntimeConfigureFieldType.STRING, StringUtils.defaultString(bucket), "Bucket"));
     }
 
     public static List<RuntimeConfigureField> mail()

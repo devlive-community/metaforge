@@ -111,7 +111,7 @@ public class MenuAccessRepositoryTest
     {
         UserRepository users = mock(UserRepository.class);
         RoleRepository roles = mock(RoleRepository.class);
-        UserServiceImpl service = new UserServiceImpl(users, roles, null, menus, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        UserServiceImpl service = new UserServiceImpl(users, roles, null, menus, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         UserDetailsService principal = new UserDetailsService(10L, "OWNER", "owner", "", List.of(), null);
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(principal, "", principal.getAuthorities()));
         List<TreeRecord> tree = service.getMenus().getData();

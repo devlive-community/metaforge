@@ -43,6 +43,7 @@ import org.devlive.metaforge.service.repository.jdbc.MenuAccessRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.security.UserDetailsServiceImpl;
 import org.devlive.metaforge.service.service.JwtService;
+import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.service.service.UserService;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
@@ -83,6 +84,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl
         implements UserService
 {
+    private final SystemSettingService systemSettings;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final SourceRepository sourceRepository;
@@ -101,8 +103,9 @@ public class UserServiceImpl
     private final HttpServletRequest request;
     private final UserDetailsServiceImpl userDetailsService;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, LinkRepository linkRepository, NotificationRepository notificationRepository, PluginAuditRepository pluginAuditRepository, ScheduledHistoryRepository scheduledHistoryRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request, UserDetailsServiceImpl userDetailsService)
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, LinkRepository linkRepository, NotificationRepository notificationRepository, PluginAuditRepository pluginAuditRepository, ScheduledHistoryRepository scheduledHistoryRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request, UserDetailsServiceImpl userDetailsService, SystemSettingService systemSettings)
     {
+        this.systemSettings = systemSettings;
         this.userRepository = userRepository;
         this.linkRepository = linkRepository;
         this.notificationRepository = notificationRepository;
@@ -446,17 +449,17 @@ public class UserServiceImpl
     public CommonResponse<AvatarEntity> uploadAvatar(UploadBody configure)
     {
         AvatarEntity entity = AvatarEntity.builder()
-                .type(initializer.getFsConfigure().getType())
+                .type(systemSettings.fs().getType())
                 .build();
         try {
             FsRequest fsRequest = getFsRequest(configure.getFile(), configure);
-            pluginManager.getPlugin(initializer.getFsConfigure().getType())
+            pluginManager.getPlugin(systemSettings.fs().getType())
                     .ifPresent(plugin -> {
                         FsService fsService = plugin.getService(FsService.class);
                         FsResponse response = fsService.writer(fsRequest);
                         entity.setPath(response.getRemote());
                         entity.setLocal(response.getRemote());
-                        if (initializer.getFsConfigure().getType().startsWith("Local")) {
+                        if (systemSettings.fs().getType().startsWith("Local")) {
                             entity.setPath(getAccess(entity));
                         }
 
@@ -499,10 +502,10 @@ public class UserServiceImpl
             throws IOException
     {
         return FsRequest.builder()
-                .access(initializer.getFsConfigure().getAccess())
-                .secret(initializer.getFsConfigure().getSecret())
+                .access(systemSettings.fs().getAccess())
+                .secret(systemSettings.fs().getSecret())
                 .endpoint(getHome(configure))
-                .bucket(initializer.getFsConfigure().getBucket())
+                .bucket(systemSettings.fs().getBucket())
                 .stream(file.getInputStream())
                 .fileName("avatar.png")
                 .build();
@@ -510,8 +513,8 @@ public class UserServiceImpl
 
     private String getHome(UploadBody configure)
     {
-        if (!initializer.getFsConfigure().getType().startsWith("Local")) {
-            return initializer.getFsConfigure().getEndpoint();
+        if (!systemSettings.fs().getType().startsWith("Local")) {
+            return systemSettings.fs().getEndpoint();
         }
         return String.join(
                 "/",

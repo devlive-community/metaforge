@@ -1,6 +1,10 @@
 package org.devlive.metaforge.server.auth;
 
 import org.devlive.metaforge.common.response.CommonResponse;
+import org.devlive.metaforge.plugin.PluginManager;
+import org.devlive.metaforge.service.settings.FsSettings;
+import org.devlive.metaforge.plugin.PluginType;
+import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.service.body.AuthBody;
 import org.devlive.metaforge.service.body.EmailCodeBody;
 import org.devlive.metaforge.service.body.PasswordResetBody;
@@ -24,6 +28,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import javax.mail.MessagingException;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -221,7 +226,7 @@ public class AuthSettingsTest
         when(configures.getEffective(eq("SYSTEM"), eq("MAIL"), any())).thenReturn(MAIL.toMap());
         when(configures.getEffective(eq("SYSTEM"), eq("AUTH"), any())).thenReturn(Map.of("registration", "true"));
         when(configures.save(anyString(), anyString(), anyMap(), any())).thenReturn(CommonResponse.success(null));
-        SystemSettingServiceImpl system = new SystemSettingServiceImpl(configures, initializer, mail);
+        SystemSettingServiceImpl system = new SystemSettingServiceImpl(configures, initializer, mail, mock(PluginManager.class));
 
         MailSettings shown = (MailSettings) system.settings().get("mail");
         assertEquals("", shown.getPassword());
@@ -234,4 +239,37 @@ public class AuthSettingsTest
         assertEquals("secret", values.getValue().get("password"));
         assertEquals("smtp.other.com", values.getValue().get("host"));
     }
+
+    @Test
+    public void fileStorageKeepsItsSecretAndOnlyTakesInstalledCompletePlugins()
+    {
+        RuntimeConfigureService configures = mock(RuntimeConfigureService.class);
+        InitializerConfigure initializer = mock(InitializerConfigure.class);
+        PluginManager plugins = mock(PluginManager.class);
+        when(plugins.getPluginInfos()).thenReturn(List.of(PluginMetadata.builder().name("LocalFs").type(PluginType.FILESYSTEM).build(),
+                PluginMetadata.builder().name("AmazonS3Fs").type(PluginType.FILESYSTEM).build(),
+                PluginMetadata.builder().name("MySQL").type(PluginType.CONNECTOR).build()));
+        when(configures.getEffective(anyString(), anyString(), any())).thenReturn(Map.of());
+        when(configures.getEffective(eq("SYSTEM"), eq("FS"), any())).thenReturn(Map.of("type", "AmazonS3Fs", "access", "key", "secret", "stored", "endpoint", "s3.example.com", "bucket", "files"));
+        when(configures.save(anyString(), anyString(), anyMap(), any())).thenReturn(CommonResponse.success(null));
+        SystemSettingServiceImpl system = new SystemSettingServiceImpl(configures, initializer, mail, plugins);
+
+        FsSettings shown = (FsSettings) system.settings().get("fs");
+        assertEquals("", shown.getSecret());
+        assertTrue(shown.isSecretSet());
+        assertEquals(List.of("AmazonS3Fs", "LocalFs"), system.settings().get("fsTypes"));
+
+        FsSettings edited = system.fs().toBuilder().secret("").bucket("archive").build();
+        assertTrue(system.save(auth().build(), new MailSettings(), null, edited).getStatus());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, String>> values = ArgumentCaptor.forClass(Map.class);
+        verify(configures).save(eq("SYSTEM"), eq("FS"), values.capture(), any());
+        assertEquals("stored", values.getValue().get("secret"));
+        assertEquals("archive", values.getValue().get("bucket"));
+
+        assertFalse(system.save(auth().build(), new MailSettings(), null, FsSettings.builder().type("QiniuFs").build()).getStatus());
+        assertFalse(system.save(auth().build(), new MailSettings(), null, edited.toBuilder().bucket("").build()).getStatus());
+        assertTrue(system.save(auth().build(), new MailSettings(), null, FsSettings.builder().type("LocalFs").build()).getStatus());
+    }
+
 }

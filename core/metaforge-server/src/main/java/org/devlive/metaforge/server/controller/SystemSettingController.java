@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.service.settings.AuthSettings;
+import org.devlive.metaforge.service.settings.FsSettings;
 import org.devlive.metaforge.service.settings.MailSettings;
 import org.devlive.metaforge.service.settings.OAuthSettings;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,7 +40,7 @@ public class SystemSettingController
     @PutMapping
     public CommonResponse<Map<String, Object>> save(@RequestBody SettingsBody body)
     {
-        return service.save(body.getAuth(), body.getMail(), body.getOauth());
+        return service.save(body.getAuth(), body.getMail(), body.getOauth(), body.getFs());
     }
 
     @PostMapping(value = "mail/test")
@@ -56,6 +57,8 @@ public class SystemSettingController
         private MailSettings mail;
         /** Third-party sign-in providers by id; left out to keep them as they are. */
         private Map<String, OAuthSettings> oauth;
+        /** File storage; left out to keep it as it is. */
+        private FsSettings fs;
     }
 
     /** Tests the server as it is in the form, before it is saved. */

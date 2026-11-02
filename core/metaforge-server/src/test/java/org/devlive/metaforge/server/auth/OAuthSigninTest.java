@@ -1,6 +1,7 @@
 package org.devlive.metaforge.server.auth;
 
 import org.devlive.metaforge.common.response.CommonResponse;
+import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.entity.UserOAuthEntity;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
@@ -309,7 +310,7 @@ public class OAuthSigninTest
         when(configures.getEffective(anyString(), anyString(), any())).thenReturn(Map.of());
         when(configures.getEffective(eq("SYSTEM"), eq("OAUTH_GITHUB"), any())).thenReturn(GITHUB.toMap(OAuthProvider.GITHUB));
         when(configures.save(anyString(), anyString(), anyMap(), any())).thenReturn(CommonResponse.success(null));
-        SystemSettingServiceImpl system = new SystemSettingServiceImpl(configures, mock(InitializerConfigure.class), mock(MailService.class));
+        SystemSettingServiceImpl system = new SystemSettingServiceImpl(configures, mock(InitializerConfigure.class), mock(MailService.class), mock(PluginManager.class));
 
         @SuppressWarnings("unchecked")
         Map<String, OAuthSettings> shown = (Map<String, OAuthSettings>) system.settings().get("oauth");
