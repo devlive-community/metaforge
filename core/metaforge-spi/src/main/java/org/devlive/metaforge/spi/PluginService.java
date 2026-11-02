@@ -705,20 +705,25 @@ public interface PluginService
                             decimalDigits));
                 }
             }
+            // Primary keys are extra detail; servers such as Kyuubi's Spark engine do not support the lookup
+            List<String> primaryColumns = Lists.newArrayList();
             try (ResultSet resultSet = metaData.getPrimaryKeys(null, database, table)) {
-                List<String> primaryColumns = Lists.newArrayList();
                 while (resultSet.next()) {
                     primaryColumns.add(resultSet.getString("COLUMN_NAME"));
                 }
-                for (String primaryColumn : primaryColumns) {
-                    rows.add(Lists.newArrayList(
-                            "primary",
-                            primaryColumn,
-                            "", "", "", "",
-                            0,
-                            "PRIMARY KEY on (" + String.join(", ", primaryColumns) + ")",
-                            0, "NO", 0));
-                }
+            }
+            catch (SQLException ex) {
+                log.warn("Primary keys of {}.{} are not available: {}", database, table, ex.getMessage());
+                primaryColumns.clear();
+            }
+            for (String primaryColumn : primaryColumns) {
+                rows.add(Lists.newArrayList(
+                        "primary",
+                        primaryColumn,
+                        "", "", "", "",
+                        0,
+                        "PRIMARY KEY on (" + String.join(", ", primaryColumns) + ")",
+                        0, "NO", 0));
             }
             response.setColumns(formatRows(configure, response, rows));
             response.setIsConnected(true);
