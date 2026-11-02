@@ -15,11 +15,14 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ScheduledFuture
 
 /**
- * MetaForge 执行器：在 MetaForge 进程内把“源查询结果”搬运到“目标表”，支持流式与回退两种同步策略、
- * 以及按 taskName 的运行时停止。
+ * MetaForge 执行器：在 MetaForge 进程内把“源查询结果”搬运到“目标表”，按 taskName 支持运行时停止与超时。
  *
- * 编排职责保留在这里；具体搬运逻辑委托给 [SyncStrategy]（[StreamingSyncStrategy] / [LegacySyncStrategy]），
- * 活跃任务与取消线程池委托给 [TaskRegistry]，值/字面量转换委托给 [ValueCodec]。
+ * 一次任务分阶段执行：PREPARE（解析参数）→ PRECOUNT（可选，统计总行数）→ PLAN（规划分片）→
+ * TRANSFER（经 [Channel] 读写流水线搬运）。源端读取由 [SourceReader] 完成（流式或全量回退），
+ * 指标由 [MetricsCollector] 采集、[MetricsPublisher] 定时上报；活跃任务与后台线程委托给 [TaskRegistry]。
+ *
+ * Runs a sync in stages (PREPARE, optional PRECOUNT, PLAN, TRANSFER) through a [Channel] pipeline,
+ * with metrics collected by [MetricsCollector] and reported on a timer by [MetricsPublisher].
  */
 @SuppressFBWarnings(value = ["RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
 class MetaForgeExecutorService : ExecutorService
@@ -32,8 +35,11 @@ class MetaForgeExecutorService : ExecutorService
         val loggerExecutor: LoggerExecutor<*>? = newTaskLogger(request)
         val taskLog: Logger = loggerExecutor?.getLogger() ?: log
         val handle = TaskHandle()
-        val metrics = SyncMetrics(request.metricsListener)
         handle.taskLog = taskLog
+        val options = request.options
+        val metrics = MetricsCollector()
+        val publisher = MetricsPublisher(metrics, request.metricsListener, taskLog)
+        val stages = StageTracker(metrics)
         if (request.taskName.isNotBlank())
         {
             TaskRegistry.register(request.taskName, handle)
@@ -52,9 +58,14 @@ class MetaForgeExecutorService : ExecutorService
             {
                 null
             }
+        // 指标按时间定时上报，与读写线程解耦 / metrics are reported on a timer, off the read/write threads
+        val metricsInterval = (options["metricsIntervalMs"]?.toLongOrNull() ?: DEFAULT_METRICS_INTERVAL_MS)
+            .coerceAtLeast(MIN_METRICS_INTERVAL_MS)
+        val metricsFuture: ScheduledFuture<*> = TaskRegistry.scheduleMetrics(metricsInterval) { publisher.tick() }
         try
         {
             taskLog.info("MetaForge executor task starting: task={} user={}", request.taskName, request.userName)
+            stages.begin(STAGE_PREPARE)
 
             val input = request.input
             val output = request.output
@@ -74,75 +85,99 @@ class MetaForgeExecutorService : ExecutorService
             }
 
             // MetaForge 专属可调项从 options 读取（调用方把 executor 的 effective 配置塞进 options）
-            val options = request.options
             val fetchSize = (options["fetchSize"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_FETCH_SIZE
             val batchSize = (options["batchSize"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_BATCH_SIZE
+            val queueCapacity = (options["queueCapacity"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_QUEUE_CAPACITY
             val preCountEnabled = options["preCount"]?.toBoolean() ?: false
 
             taskLog.info(
-                    "Resolved input plugin={} output plugin={} streaming={}/{} fetchSize={} batchSize={} preCount={}",
+                    "Resolved input plugin={} output plugin={} streaming={}/{} fetchSize={} batchSize={} queueCapacity={} preCount={}",
                     inputPlugin.name(), outputPlugin.name(),
                     inputPlugin.supportsStreaming(), outputPlugin.supportsStreaming(),
-                    fetchSize, batchSize, preCountEnabled
+                    fetchSize, batchSize, queueCapacity, preCountEnabled
             )
             taskLog.info("Source query: {}", query)
 
+            // 目标端必须支持批量写入。全部插件经 JDBC 转换后都满足；这里显式兜底，
+            // 避免历史上“双端非流式”时静默拼接 INSERT 字符串（存在注入与类型/转义隐患）。
+            if (!outputPlugin.supportsStreaming())
+            {
+                throw IllegalStateException(
+                    "Output plugin '${outputPlugin.name()}' does not support batch write (supportsStreaming=false); " +
+                            "the MetaForge executor no longer falls back to hand-built SQL. Use a JDBC/streaming-capable target."
+                )
+            }
+            stages.end(STAGE_PREPARE)
+
             // 可选：先跑 SELECT COUNT(*) 拿到源端总行数，作为进度分母
             // Optional: pre-count to populate the total row count used for progress percentage
-            val totalCount: Long = if (preCountEnabled) preCount(inputPlugin, inputConfigure, query, taskLog) else -1L
-            if (totalCount >= 0)
+            var totalKnown = false
+            if (preCountEnabled)
             {
-                taskLog.info("Pre-count: source total rows = {}", totalCount)
+                stages.begin(STAGE_PRECOUNT)
+                val totalCount = preCount(inputPlugin, inputConfigure, query, taskLog)
+                stages.end(STAGE_PRECOUNT)
+                if (totalCount >= 0)
+                {
+                    totalKnown = true
+                    taskLog.info("Pre-count: source total rows = {}", totalCount)
+                    metrics.setTotal(totalCount, TotalSource.PRECOUNT)
+                }
                 // 立即上报一次，让上层马上知道总行数
-                metrics.setTotal(totalCount, TotalSource.PRECOUNT)
-                metrics.publish(0L)
+                publisher.tick()
+            }
+            else
+            {
+                metrics.skipStage(STAGE_PRECOUNT)
             }
 
-            val context = SyncContext(
-                inputPlugin, inputConfigure, query, fetchSize,
-                outputPlugin, outputConfigure, database, table,
-                originColumns,
-                originColumns.map { it.name },
-                originColumns.map { it.original },
-                batchSize, taskLog, totalCount, metrics, handle
-            )
-
-            val strategy: SyncStrategy =
-                if (inputPlugin.supportsStreaming() && outputPlugin.supportsStreaming())
+            // 目前整段查询作为单个分片 / the whole query is one split for now
+            stages.begin(STAGE_PLAN)
+            val sourceKeys = originColumns.map { it.original }
+            val reader: SourceReader =
+                if (inputPlugin.supportsStreaming())
                 {
-                    StreamingSyncStrategy()
+                    StreamingSourceReader(inputPlugin, inputConfigure, query, fetchSize, sourceKeys, handle, taskLog)
                 }
                 else
                 {
-                    LegacySyncStrategy()
+                    MaterializedSourceReader(inputPlugin, inputConfigure, query, sourceKeys, metrics, totalKnown, taskLog)
                 }
+            metrics.channels = 1
+            metrics.queueCapacity = queueCapacity
+            stages.end(STAGE_PLAN)
 
-            val written = strategy.sync(context)
+            stages.begin(STAGE_TRANSFER)
+            taskLog.info("Transfer start: target=`{}`.`{}` columns={} batchSize={} queueCapacity={}",
+                database, table, originColumns.size, batchSize, queueCapacity)
+            val writer = outputPlugin.openBatchWriter(outputConfigure, database, table, originColumns.map { it.name }, batchSize)
+            val channel = Channel(1, request.taskName, batchSize, queueCapacity, metrics, handle.cancellation, taskLog)
+            val written = channel.run(reader, writer)
+            stages.end(STAGE_TRANSFER)
 
             response.count = if (written > Int.MAX_VALUE.toLong()) Int.MAX_VALUE else written.toInt()
             response.successful = true
             response.state = RunState.SUCCESS
-            // 最终上报一次：进度 100%
-            response.metrics = metrics.publish(written, finished = true)
             taskLog.info("MetaForge executor task completed: rows={} state=SUCCESS", written)
         }
         catch (ex: TaskCancelledException)
         {
+            stages.fail("CANCELLED")
             applyCancelled(response, handle, request, ex.processed, taskLog)
-            response.metrics = metrics.publish(ex.processed)
         }
         catch (ex: Exception)
         {
-            // 正常情况下取消都会被策略归一成 TaskCancelledException（见上）。
+            // 正常情况下取消都会被通道归一成 TaskCancelledException（见上）。
             // 这里只兜底“取消发生在写入循环之外”（如 openBatchWriter / 全量读取阶段就被取消）：
             // 此时尚无已提交行数，count 记 0。
             if (handle.cancellation.isCancelled)
             {
+                stages.fail("CANCELLED")
                 applyCancelled(response, handle, request, 0L, taskLog)
-                response.metrics = metrics.publish(0L)
             }
             else
             {
+                stages.fail("FAILED")
                 taskLog.error("MetaForge executor failed", ex)
                 response.successful = false
                 response.state = RunState.FAILURE
@@ -151,6 +186,9 @@ class MetaForgeExecutorService : ExecutorService
         }
         finally
         {
+            metricsFuture.cancel(false)
+            // 最终上报一次：成功时进度 100%；之后不再有定时上报
+            response.metrics = publisher.close(response.successful)
             // 任务已结束：撤掉尚未触发的超时看门狗，避免事后误触发
             timeoutFuture?.cancel(false)
             if (request.taskName.isNotBlank())
@@ -307,5 +345,13 @@ class MetaForgeExecutorService : ExecutorService
     {
         private const val DEFAULT_FETCH_SIZE = 1000
         private const val DEFAULT_BATCH_SIZE = 1000
+        private const val DEFAULT_QUEUE_CAPACITY = 4
+        private const val DEFAULT_METRICS_INTERVAL_MS = 1000L
+        private const val MIN_METRICS_INTERVAL_MS = 200L
+
+        const val STAGE_PREPARE = "PREPARE"
+        const val STAGE_PRECOUNT = "PRECOUNT"
+        const val STAGE_PLAN = "PLAN"
+        const val STAGE_TRANSFER = "TRANSFER"
     }
 }

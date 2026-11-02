@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.common.RunState
 import org.devlive.metaforge.executor.configure.ExecutorConfigure
+import org.devlive.metaforge.executor.configure.ExecutorMetrics
 import org.devlive.metaforge.executor.configure.ExecutorMetricsListener
 import org.devlive.metaforge.executor.configure.TotalSource
 import org.devlive.metaforge.executor.configure.ExecutorRequest
@@ -114,6 +115,93 @@ class MetaForgeExecutorCharacterizationTest
         assertEquals(TotalSource.PRECOUNT, metrics.totalSource)
         assertEquals(100.0, metrics.progress, 0.0)
         assertEquals(0L, metrics.etaSeconds)
+    }
+
+    @Test
+    fun readerKeepsReadingWhileTheWriterIsBusy()
+    {
+        // 慢目标：每批 flush 前 sleep。读写分线程后，读取方应能领先写入方若干批（受队列容量限制）
+        val source = FakePluginService(
+            streaming = true,
+            headers = listOf("id", "name"),
+            streamRows = (1..100).map { listOf<Any?>(it, "row-$it") }
+        )
+        val sink = FakePluginService(streaming = true, flushDelayMs = 40)
+        val snapshots = CopyOnWriteArrayList<ExecutorMetrics>()
+        val request = buildRequest(
+            source, sink,
+            originColumns = linkedSetOf(OriginColumn("id", "id"), OriginColumn("name", "name"))
+        ).apply {
+            options = mapOf("batchSize" to "10", "queueCapacity" to "2", "metricsIntervalMs" to "200")
+            metricsListener = ExecutorMetricsListener { snapshots.add(it) }
+        }
+
+        val response = MetaForgeExecutorService().start(request)
+
+        assertTrue(response.successful)
+        assertEquals(100, sink.committedRows.size)
+        assertEquals((1..100).map { listOf<Any?>(it, "row-$it") }, sink.committedRows.toList())
+        // 某个时刻读取方领先：已读 - 已提交 >= 两批（一批在写、一批在队列里）
+        assertTrue(snapshots.any { it.rowsRead - it.rowsWritten >= 20 })
+        val last = response.metrics!!
+        assertEquals(last, snapshots.last())
+        assertEquals(100L, last.rowsRead)
+        assertEquals(100L, last.rowsWritten)
+        assertEquals(10L, last.batchesCommitted)
+        assertEquals(2, last.queueCapacity)
+        assertEquals(0, last.queueDepth)
+        // 字节按值估算：Int 4 字节 + "row-N" 的 UTF-8 长度
+        val expectedBytes = (1..100).sumOf { 4L + "row-$it".length }
+        assertEquals(expectedBytes, last.bytesRead)
+        assertEquals(expectedBytes, last.bytesWritten)
+        assertTrue("readers waited on the slow target", last.readerWaitMs > 0)
+        assertEquals(
+            listOf("PREPARE" to "DONE", "PRECOUNT" to "SKIPPED", "PLAN" to "DONE", "TRANSFER" to "DONE"),
+            last.stages.map { it.name to it.state }
+        )
+    }
+
+    @Test
+    fun aFailingWriterFailsTheTaskWithoutHanging()
+    {
+        // 目标端写入出错（列数不符）：读取方不能卡在满队列上，任务以 FAILURE 结束
+        val source = FakePluginService(
+            streaming = true,
+            headers = listOf("id"),
+            streamRows = (1..1000).map { listOf<Any?>(it) }
+        )
+        val sink = object : org.devlive.metaforge.spi.PluginService
+        {
+            override fun supportsStreaming(): Boolean = true
+
+            override fun openBatchWriter(
+                configure: RuntimeConfigure, database: String, table: String, columns: List<String>, batchSize: Int
+            ): org.devlive.metaforge.spi.adapter.BatchWriter = object : org.devlive.metaforge.spi.adapter.BatchWriter
+            {
+                override fun addRow(row: List<*>)
+                {
+                    throw IllegalStateException("Add batch row failed: disk full")
+                }
+
+                override fun writtenCount(): Long = 0
+
+                override fun close() {}
+            }
+        }
+        val request = buildRequest(
+            source, FakePluginService(streaming = true),
+            originColumns = linkedSetOf(OriginColumn("id", "id"))
+        ).apply {
+            output.plugin = sink
+            options = mapOf("batchSize" to "10", "queueCapacity" to "1")
+        }
+
+        val response = MetaForgeExecutorService().start(request)
+
+        assertFalse(response.successful)
+        assertEquals(RunState.FAILURE, response.state)
+        assertTrue(response.message!!.contains("disk full"))
+        assertEquals("FAILED", response.metrics!!.stages.last { it.name == "TRANSFER" }.state)
     }
 
     @Test

@@ -105,8 +105,11 @@ import static java.util.Objects.requireNonNull;
 public class DataSetServiceImpl
         implements DataSetService
 {
-    // 同步期间每 SIZE_REFRESH_EVERY 次进度回调才刷一次 totalSize（查 ClickHouse system.parts 较重）
+    // 同步期间每 SIZE_REFRESH_EVERY 次指标落库才刷一次 totalSize（查 ClickHouse system.parts 较重）
     private static final int SIZE_REFRESH_EVERY = 10;
+
+    // 同步完成后刷新表元数据（行数、大小）的服务端阶段 / service-side stage that refreshes table metadata after a sync
+    private static final String SYNC_STAGE_FINALIZE = "FINALIZE";
 
     public final DataSetColumnRepository columnRepository;
     private final DataSetRepository repository;
@@ -1397,13 +1400,22 @@ public class DataSetServiceImpl
                                                                         : (response.getSuccessful() ? RunState.SUCCESS : RunState.FAILURE);
                                                                 // 只有成功才刷新表元数据，刷新完成后才算成功；STOPPED / TIMEOUT / FAILURE 直接落终态
                                                                 if (finalState == RunState.SUCCESS) {
-                                                                    this.flushTableMetadata(
-                                                                            entity,
-                                                                            outputPlugin,
-                                                                            database,
-                                                                            requireNonNull(output.getOriginConfigure()),
-                                                                            outPlugin
-                                                                    );
+                                                                    long finalizeStart = System.currentTimeMillis();
+                                                                    syncJobManager.stage(job, SYNC_STAGE_FINALIZE, "RUNNING", 0);
+                                                                    try {
+                                                                        this.flushTableMetadata(
+                                                                                entity,
+                                                                                outputPlugin,
+                                                                                database,
+                                                                                requireNonNull(output.getOriginConfigure()),
+                                                                                outPlugin
+                                                                        );
+                                                                    }
+                                                                    catch (RuntimeException ex) {
+                                                                        syncJobManager.stage(job, SYNC_STAGE_FINALIZE, "FAILED", System.currentTimeMillis() - finalizeStart);
+                                                                        throw ex;
+                                                                    }
+                                                                    syncJobManager.stage(job, SYNC_STAGE_FINALIZE, "DONE", System.currentTimeMillis() - finalizeStart);
                                                                 }
                                                                 job.transition(finalState, response.getMessage());
                                                             });

@@ -33,7 +33,9 @@ class FakePluginService(
     private val headers: List<String> = emptyList(),
     private val streamRows: List<List<Any?>> = emptyList(),
     private val types: List<String> = headers.map { "VARCHAR" },
-    private val executeHandler: ((String) -> Response)? = null
+    private val executeHandler: ((String) -> Response)? = null,
+    /** 汇端：每次 flush 前的延迟，模拟慢目标 / sink: delay before each flush, to model a slow target */
+    private val flushDelayMs: Long = 0
 ) : PluginService
 {
     /** 汇端：真正“落库”的行，按写入顺序（已投影为目标列顺序） */
@@ -86,7 +88,7 @@ class FakePluginService(
         batchSize: Int
     ): BatchWriter
     {
-        val writer = CapturingBatchWriter(columns, batchSize, committedRows)
+        val writer = CapturingBatchWriter(columns, batchSize, committedRows, flushDelayMs)
         batchWriters.add(writer)
         return writer
     }
@@ -142,7 +144,8 @@ class FakePluginService(
 class CapturingBatchWriter(
     private val columns: List<String>,
     private val batchSize: Int,
-    private val sink: MutableList<List<Any?>>
+    private val sink: MutableList<List<Any?>>,
+    private val flushDelayMs: Long = 0
 ) : BatchWriter
 {
     private val buffer: MutableList<List<Any?>> = ArrayList()
@@ -176,6 +179,10 @@ class CapturingBatchWriter(
 
     private fun flush()
     {
+        if (flushDelayMs > 0)
+        {
+            Thread.sleep(flushDelayMs)
+        }
         sink.addAll(buffer)
         committed += buffer.size
         buffer.clear()

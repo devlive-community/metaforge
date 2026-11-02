@@ -29,6 +29,13 @@ class MetaForgeExecutor : ExecutorPlugin()
                     true
             ),
             RuntimeConfigureField(
+                    "queueCapacity",
+                    RuntimeConfigureFieldType.NUMBER,
+                    "4",
+                    "Batches buffered between the source reader and the target writer; reading pauses when the buffer is full.",
+                    true
+            ),
+            RuntimeConfigureField(
                     "preCount",
                     RuntimeConfigureFieldType.BOOLEAN,
                     "false",

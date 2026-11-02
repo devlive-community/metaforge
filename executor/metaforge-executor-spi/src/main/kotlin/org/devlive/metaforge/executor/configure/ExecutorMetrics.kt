@@ -4,10 +4,11 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 
 /**
  * 一次同步任务在某一时刻的指标快照，由执行器周期性上报，也随最终结果一起返回。
- * 计数类字段累计；速率为全程平均值（行/秒、字节/秒）；未知量用 -1 表示。
+ * 计数类字段累计；无前缀的速率是最近几秒的瞬时值，avg 前缀为全程平均；未知量用 -1 表示。
  *
  * A point-in-time metrics snapshot of a sync task, reported periodically and with the final result.
- * Counters are cumulative, rates are run averages (per second), and unknown values are -1.
+ * Counters are cumulative; plain rates cover the last few seconds and avg rates the whole run;
+ * unknown values are -1.
  */
 @SuppressFBWarnings(value = ["EI_EXPOSE_REP", "EI_EXPOSE_REP2"])
 data class ExecutorMetrics(
@@ -37,8 +38,51 @@ data class ExecutorMetrics(
     var writeRowsPerSecond: Double = 0.0,
     var readBytesPerSecond: Double = 0.0,
     var writeBytesPerSecond: Double = 0.0,
+    var avgReadRowsPerSecond: Double = 0.0,
+    var avgWriteRowsPerSecond: Double = 0.0,
+    /** 写入速率峰值（按采样窗口）/ peak write rate over the sampling windows */
+    var peakWriteRowsPerSecond: Double = 0.0,
+    /** 已提交的批次数 / committed batches */
+    var batchesCommitted: Long = 0,
+    /** 每批写入平均耗时（毫秒）/ average write time per batch in ms */
+    var avgBatchMs: Double = 0.0,
+    /** 并行通道数 / parallel channels */
+    var channels: Int = 1,
+    /** 读写之间排队的批次数与容量 / batches waiting between reader and writer, and the capacity */
+    var queueDepth: Int = 0,
+    var queueCapacity: Int = 0,
+    /** 读取方因队列满而等待的累计毫秒（目标端慢）/ ms readers waited on a full queue (slow target) */
+    var readerWaitMs: Long = 0,
+    /** 写入方因队列空而等待的累计毫秒（源端慢）/ ms writers waited on an empty queue (slow source) */
+    var writerWaitMs: Long = 0,
+    /** 最近窗口的瓶颈 / the bottleneck over the last window */
+    var bottleneck: Bottleneck = Bottleneck.NONE,
     /** 各阶段进度 / per-stage progress */
-    var stages: MutableList<StageMetrics> = mutableListOf()
+    var stages: MutableList<StageMetrics> = mutableListOf(),
+    /** 最近的速率采样，按时间先后 / recent rate samples, oldest first */
+    var series: MutableList<MetricsSample> = mutableListOf()
+)
+
+enum class Bottleneck
+{
+    NONE,
+
+    /** 写入方在等数据：源端读取慢 / writers wait for rows: the source is the limit */
+    SOURCE,
+
+    /** 读取方在等队列：目标端写入慢 / readers wait for room: the target is the limit */
+    TARGET,
+
+    /** 限流生效中 / the rate limit is holding readers back */
+    THROTTLE
+}
+
+/** 一个速率采样点 / one rate sample */
+data class MetricsSample(
+    /** 距任务开始的毫秒数 / ms since the task started */
+    var at: Long = 0,
+    var readRowsPerSecond: Double = 0.0,
+    var writeRowsPerSecond: Double = 0.0
 )
 
 enum class TotalSource

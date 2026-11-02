@@ -54,6 +54,18 @@ internal object TaskRegistry
         cancelExecutor.submit(block)
     }
 
+    // 指标定时上报：动作是采样 + 回调监听方，监听方可能落库，所以与超时调度分开
+    private val metricsScheduler: java.util.concurrent.ScheduledExecutorService =
+            Executors.newScheduledThreadPool(2) { r ->
+                val t = Thread(r, "metaforge-executor-metrics")
+                t.isDaemon = true
+                t
+            }
+
+    /** 按固定间隔上报指标；任务结束时取消返回的 future。 */
+    fun scheduleMetrics(intervalMs: Long, block: () -> Unit): ScheduledFuture<*> =
+            metricsScheduler.scheduleWithFixedDelay(block, intervalMs, intervalMs, TimeUnit.MILLISECONDS)
+
     /** 安排一次性超时触发；返回的 future 供任务正常结束时取消，避免事后误触发。 */
     fun scheduleTimeout(seconds: Long, block: () -> Unit): ScheduledFuture<*> =
             timeoutScheduler.schedule(block, seconds, TimeUnit.SECONDS)

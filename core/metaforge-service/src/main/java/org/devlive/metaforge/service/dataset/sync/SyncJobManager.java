@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.executor.common.RunState;
 import org.devlive.metaforge.executor.common.RunStateMachine;
 import org.devlive.metaforge.executor.configure.ExecutorMetrics;
+import org.devlive.metaforge.executor.configure.StageMetrics;
 import org.devlive.metaforge.service.configure.DatasetTargetSchema;
 import org.devlive.metaforge.service.entity.DatasetHistoryEntity;
 import org.devlive.metaforge.service.repository.DatasetHistoryRepository;
@@ -154,6 +155,26 @@ public class SyncJobManager
         }
         job.update(history -> applyMetrics(history, metrics));
         return true;
+    }
+
+    /**
+     * 在执行器上报的指标里登记一个服务端阶段（如刷新表元数据）并立即落库。
+     * Record a service-side stage (such as the table metadata refresh) in the job metrics and save it.
+     */
+    public void stage(SyncJob job, String name, String state, long elapsedMs)
+    {
+        ExecutorMetrics metrics = job.getMetrics() == null ? new ExecutorMetrics() : job.getMetrics();
+        StageMetrics stage = metrics.getStages().stream()
+                .filter(item -> name.equals(item.getName()))
+                .findFirst()
+                .orElseGet(() -> {
+                    StageMetrics created = new StageMetrics(name, state, System.currentTimeMillis(), 0);
+                    metrics.getStages().add(created);
+                    return created;
+                });
+        stage.setState(state);
+        stage.setElapsedMs(elapsedMs);
+        onMetrics(job, metrics, true);
     }
 
     /** 运行中取内存视图，已结束取落库结果 / live view while running, the persisted row afterwards */
