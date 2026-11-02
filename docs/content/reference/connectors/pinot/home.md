@@ -44,14 +44,15 @@ Apache Pinot 是一个实时分布式 OLAP 数据存储，专为低延迟、高�
         | `Password` | :check{20,#3CA34F}: |       \-       |
 :::
 
-#### 版本 (验证)
+#### 版本（验证）
 
 ---
 
-!!! warning
+!!! note
 
-    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
+    插件的 e2e 测试 `PinotE2ETest` 在容器中逐一验证以下版本：batch 快速启动的数据表连同字段被列出，并用 SQL 查询。若 broker 以宿主不可达的地址注册，在自定义参数中加入 `brokers=<host>:<port>` 直连 broker。
 
-    - [x] `0.8.x`
+    - [x] 1.4
+    - [x] 1.5
 
 !!!
