@@ -14,6 +14,7 @@ import java.time.Duration;
 import java.util.List;
 
 import static org.devlive.metaforge.test.e2e.PluginE2E.assumeDocker;
+import static org.devlive.metaforge.test.e2e.PluginE2E.assumeImageSupportsHost;
 import static org.devlive.metaforge.test.e2e.PluginE2E.column;
 import static org.devlive.metaforge.test.e2e.PluginE2E.configure;
 import static org.devlive.metaforge.test.e2e.PluginE2E.first;
@@ -22,11 +23,14 @@ import static org.devlive.metaforge.test.e2e.PluginE2E.ok;
 /**
  * Runs the DM (Dameng) plugin through the DM JDBC driver against the DM release it documents as
  * verified: a schema, table and columns created with SQL are listed as a database, table and
- * columns, and their rows read back. DM 8 is the only release line with a container image.
+ * columns, and their rows read back. DM 8 is the only release line with a container image, and it
+ * is published for arm64 only, so the test skips on amd64 hosts where DM would run emulated.
  */
 @RunWith(Parameterized.class)
 public class DmE2ETest
 {
+    private static final String IMAGE = "hanyf/damengdb:8-kylin10-ubuntu";
+
     @Parameterized.Parameters(name = "DM {0}")
     public static List<String> versions()
     {
@@ -44,12 +48,13 @@ public class DmE2ETest
     public static void docker()
     {
         assumeDocker();
+        assumeImageSupportsHost(IMAGE);
     }
 
     @Test
     public void schemasTablesAndColumnsAreListedAndRead()
     {
-        try (GenericContainer<?> container = new GenericContainer<>("hanyf/damengdb:" + version + "-kylin10-ubuntu")
+        try (GenericContainer<?> container = new GenericContainer<>(IMAGE)
                 .withExposedPorts(5236)
                 .waitingFor(Wait.forLogMessage(".*DM Database is OK.*", 1).withStartupTimeout(Duration.ofMinutes(5)))) {
             container.start();

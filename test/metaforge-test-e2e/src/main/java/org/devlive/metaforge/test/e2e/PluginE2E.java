@@ -1,6 +1,7 @@
 package org.devlive.metaforge.test.e2e;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.dockerjava.api.DockerClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.convert.ConvertService;
 import org.devlive.metaforge.convert.json.JsonConvertService;
@@ -14,6 +15,8 @@ import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.testcontainers.DockerClientFactory;
+import org.testcontainers.images.RemoteDockerImage;
+import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -50,6 +53,40 @@ public final class PluginE2E
             available = false;
         }
         Assume.assumeTrue("Docker is not available, skipping container tests", available);
+    }
+
+    /**
+     * Skips the calling test when the image does not exist for the host CPU architecture. Emulated
+     * databases (arm64-only images on amd64 runners, and the reverse) start orders of magnitude
+     * slower or crash outright, which would otherwise fail the suite after a long wait.
+     */
+    public static void assumeImageSupportsHost(String image)
+    {
+        assumeDocker();
+        DockerClient client = DockerClientFactory.instance().client();
+        String host = normalizeArchitecture(client.infoCmd().exec().getArchitecture());
+        String imageArch;
+        try {
+            String reference = new RemoteDockerImage(DockerImageName.parse(image)).get();
+            imageArch = normalizeArchitecture(client.inspectImageCmd(reference).exec().getArch());
+        }
+        catch (Throwable error) {
+            Assume.assumeNoException("Image " + image + " could not be pulled, skipping", error);
+            return;
+        }
+        Assume.assumeTrue("Image " + image + " is " + imageArch + " while the Docker host is " + host
+                + ", skipping the emulated start", host.equals(imageArch));
+    }
+
+    private static String normalizeArchitecture(String architecture)
+    {
+        if ("x86_64".equals(architecture)) {
+            return "amd64";
+        }
+        if ("aarch64".equals(architecture)) {
+            return "arm64";
+        }
+        return architecture;
     }
 
     /** A connection to a container's mapped port, formatting rows as JSON objects keyed by column. */
