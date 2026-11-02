@@ -136,6 +136,31 @@
             </div>
           </div>
         </div>
+        <div v-show="tab === 'fs'" class="flex flex-col gap-4">
+          <MfForm ref="fsRef" :model="fs" layout="vertical">
+            <MfFormItem name="type" :label="$t('settings.fs.type')" :rules="[{ required: true, message: $t('settings.fs.typeRequired') }]">
+              <MfSelect v-model="fs.type" class="w-80" :options="fsTypes.map(value => ({ label: fsName(value), value }))"/>
+            </MfFormItem>
+            <MfAlert v-if="fsLocal(fs)" variant="info" :title="$t('settings.fs.localHint')"/>
+            <template v-else>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <MfFormItem name="access" :label="$t('settings.fs.access')" :rules="[{ validator: objectField('access') }]">
+                  <MfInput v-model="fs.access"/>
+                </MfFormItem>
+                <MfFormItem name="secret" :label="$t('settings.fs.secret')" :rules="[{ validator: value => fs.secretSet || objectField('secret')(value) }]">
+                  <MfInput v-model="fs.secret" show-password :placeholder="fs.secretSet ? $t('settings.fs.secretKept') : ''"/>
+                </MfFormItem>
+                <MfFormItem name="endpoint" :label="$t('settings.fs.endpoint')" :rules="[{ validator: objectField('endpoint') }]">
+                  <MfInput v-model="fs.endpoint" :placeholder="$t('settings.fs.endpointPlaceholder')"/>
+                </MfFormItem>
+                <MfFormItem name="bucket" :label="$t('settings.fs.bucket')" :rules="[{ validator: objectField('bucket') }]">
+                  <MfInput v-model="fs.bucket"/>
+                </MfFormItem>
+              </div>
+            </template>
+            <p class="m-0 text-xs text-content-tertiary">{{ $t('settings.fs.usageHint') }}</p>
+          </MfForm>
+        </div>
       </div>
     </section>
   </div>
@@ -146,12 +171,12 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { Copy, KeyRound, Mail, Save, Send, ShieldCheck, SlidersHorizontal } from '@lucide/vue'
+import { Copy, HardDrive, KeyRound, Mail, Save, Send, ShieldCheck, SlidersHorizontal } from '@lucide/vue'
 import SystemSettingService from '@/services/system-setting'
 import { apiBaseUrl } from '@/utils/http'
 import {
-  defaultAuthSettings, defaultMailSettings, defaultOAuthGroup, defaultOAuthSettings, EMAIL_PATTERN, incompleteProviders, mailReady, OAUTH_PROVIDERS,
-  oauthCallbackUrl, oauthConfigured, URL_PATTERN, waitingForMail,
+  defaultAuthSettings, defaultFsSettings, defaultMailSettings, defaultOAuthGroup, defaultOAuthSettings, EMAIL_PATTERN, fsLocal, incompleteProviders, mailReady,
+  OAUTH_PROVIDERS, oauthCallbackUrl, oauthConfigured, URL_PATTERN, waitingForMail,
 } from '@/model/system-setting'
 import type { OAuthProviderId, OAuthSettings } from '@/model/system-setting'
 import AuthProviderIcon from '@/views/auth/components/AuthProviderIcon.vue'
@@ -164,8 +189,8 @@ const MAIL_FEATURES: readonly string[] = ['emailVerification', 'passwordReset']
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-type Tab = 'auth' | 'mail' | 'oauth'
-const TABS: Tab[] = ['auth', 'mail', 'oauth']
+type Tab = 'auth' | 'mail' | 'oauth' | 'fs'
+const TABS: Tab[] = ['auth', 'mail', 'oauth', 'fs']
 // The tab is kept in ?tab= so a refresh stays on it.
 const tab = computed<Tab>(() => TABS.includes(route.query.tab as Tab) ? route.query.tab as Tab : 'auth')
 const select = (key: Tab) => { if (key !== tab.value) router.replace({ query: { ...route.query, tab: key } }) }
@@ -179,6 +204,14 @@ const oauth = ref(defaultOAuthGroup())
 const authRef = ref()
 const mailRef = ref()
 const siteRef = ref()
+const fs = ref(defaultFsSettings())
+const fsTypes = ref<string[]>([])
+const fsRef = ref()
+const FS_NAMES = ['LocalFs', 'AliOssFs', 'AmazonS3Fs', 'MinIOFs', 'QiniuFs', 'TencentCosFs']
+// Known plugins get a readable name; any other installed one shows its plugin name.
+const fsName = (type: string) => FS_NAMES.includes(type) ? t(`settings.fs.name.${ type }`) : type
+// An object store needs its account, endpoint and bucket.
+const objectField = (field: 'access' | 'secret' | 'endpoint' | 'bucket') => (value: unknown) => !!String(value || '').trim() || t(`settings.fs.${ field }Required`)
 // Where the browser reaches the server; the callback address uses it while no site address is set.
 const origin = apiBaseUrl()
 
@@ -216,6 +249,7 @@ const tabs = computed(() => [
   { key: 'auth' as const, icon: ShieldCheck, status: t('settings.tabStatus.auth', { count: SWITCHES.filter(key => auth.value[key]).length }) },
   { key: 'mail' as const, icon: Mail, status: t(ready.value ? 'settings.mail.ready' : 'settings.mail.notReady') },
   { key: 'oauth' as const, icon: KeyRound, status: t('settings.tabStatus.oauth', { count: OAUTH_PROVIDERS.filter(id => oauth.value[id].enabled).length }) },
+  { key: 'fs' as const, icon: HardDrive, status: fsName(fs.value.type) },
 ])
 const waiting = computed(() => waitingForMail(auth.value, mail.value))
 // The mail server is required once a feature that sends mail is on.
@@ -228,6 +262,8 @@ function apply(data: any) {
   const group = defaultOAuthGroup()
   for (const id of OAUTH_PROVIDERS) group[id] = { ...defaultOAuthSettings(), ...(data?.oauth?.[id] || {}) as Partial<OAuthSettings>, clientSecret: '' }
   oauth.value = group
+  fs.value = { ...defaultFsSettings(), ...(data?.fs || {}), secret: '' }
+  fsTypes.value = Array.isArray(data?.fsTypes) && data.fsTypes.length ? data.fsTypes : [fs.value.type]
 }
 
 async function load() {
@@ -240,7 +276,7 @@ async function load() {
 
 async function save() {
   // Checked in tab order; a failing group is brought forward so its errors can be seen.
-  for (const [key, form] of [['auth', authRef], ['mail', mailRef], ['oauth', siteRef]] as const) {
+  for (const [key, form] of [['auth', authRef], ['mail', mailRef], ['oauth', siteRef], ['fs', fsRef]] as const) {
     try {
       await form.value?.validate()
     }
@@ -256,7 +292,7 @@ async function save() {
     return
   }
   saving.value = true
-  const response = await SystemSettingService.save(auth.value, mail.value, oauth.value)
+  const response = await SystemSettingService.save(auth.value, mail.value, oauth.value, fs.value)
   saving.value = false
   if (!response.status) { MfMessage.error(response.message); return }
   apply(response.data)

@@ -114,3 +114,17 @@ export const knownProviders = (providers: unknown): OAuthOption[] => Array.isArr
   : []
 
 export const oauthError = (value: unknown): OAuthError => (OAUTH_ERRORS as readonly unknown[]).includes(value) ? value as OAuthError : 'failed'
+
+/** Where uploads and query results are stored: an installed file system plugin and, for object stores, its account. */
+export interface FsSettings {
+  type: string
+  access: string
+  secret: string
+  endpoint: string
+  bucket: string
+  secretSet?: boolean
+}
+
+export const FS_LOCAL = 'LocalFs'
+export const defaultFsSettings = (): FsSettings => ({ type: FS_LOCAL, access: '', secret: '', endpoint: '', bucket: '', secretSet: false })
+export const fsLocal = (fs: Pick<FsSettings, 'type'>) => !fs.type || fs.type.startsWith('Local')
