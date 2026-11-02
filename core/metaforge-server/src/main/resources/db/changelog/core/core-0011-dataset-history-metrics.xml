@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sync history keeps read / written / skipped / failed counters, the attempt number, the final metrics and the state transitions. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0011-dataset-history-metrics" author="metaforge">
+        <addColumn tableName="metaforge_dataset_history">
+            <column name="rows_read" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="rows_written" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="rows_skipped" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="rows_failed" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="bytes_read" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="bytes_written" type="BIGINT" defaultValueNumeric="0"/>
+            <column name="attempt" type="INT" defaultValueNumeric="1"/>
+            <column name="metrics" type="${text}"/>
+            <column name="transitions" type="${text}"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

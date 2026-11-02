@@ -22,13 +22,17 @@ public interface DataSetService
 
     CommonResponse<List<DataSetColumnEntity>> getColumnsByCode(String code);
 
-    CommonResponse<DataSetEntity> syncData(String code);
+    /**
+     * 提交一次同步，返回新建的同步历史（进入排队）。数据集已有排队或运行中的同步时失败。
+     * Submit a sync and return the new, queued history row; fails while the dataset already has one queued or running.
+     */
+    CommonResponse<DatasetHistoryEntity> syncData(String code);
 
     /**
      * 同步并允许调用方临时覆盖一组 tunable 字段；非 tunable 的字段会被忽略。
      * Trigger sync with optional per-invocation overrides; only tunable fields are honored.
      */
-    CommonResponse<DataSetEntity> syncData(String code, java.util.Map<String, String> overrides);
+    CommonResponse<DatasetHistoryEntity> syncData(String code, java.util.Map<String, String> overrides);
 
     /**
      * 返回当前 executor 的可调字段（tunable=true），defaultValue 已替换为该数据集对应 executor 的 effective 值，
@@ -54,8 +58,14 @@ public interface DataSetService
     CommonResponse<List<String>> getHistoryLog(Long id);
 
     /**
-     * 停止正在运行的同步任务。仅对 state=RUNNING 且当前进程持有该 taskName 的任务生效
-     * Stop a running sync task. Effective only when state=RUNNING and the task is held by this process
+     * 取消同步：排队中的直接取消；运行中的请求执行器停止（仅对当前进程持有的任务生效）
+     * Cancel a sync: a queued one is cancelled at once, a running one is asked to stop (only on the node running it)
      */
     CommonResponse<Boolean> stopHistory(Long id);
+
+    /**
+     * 一次同步的实时指标、状态与状态转换；已结束的返回落库的最终结果
+     * Live metrics, state and transitions of one sync; the persisted final result once it has finished
+     */
+    CommonResponse<org.devlive.metaforge.service.dataset.sync.SyncMetricsView> getHistoryMetrics(Long id);
 }

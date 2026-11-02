@@ -5,7 +5,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.common.RunState
 import org.devlive.metaforge.executor.configure.ExecutorConfigure
-import org.devlive.metaforge.executor.configure.ExecutorProgressListener
+import org.devlive.metaforge.executor.configure.ExecutorMetricsListener
+import org.devlive.metaforge.executor.configure.TotalSource
 import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.OriginColumn
 import org.devlive.metaforge.executor.metaforge.MetaForgeExecutorService
@@ -96,7 +97,7 @@ class MetaForgeExecutorCharacterizationTest
             originColumns = linkedSetOf(OriginColumn("id", "id"))
         ).apply {
             options = mapOf("preCount" to "true")
-            progressListener = ExecutorProgressListener { processed, total -> progress.add(processed to total) }
+            metricsListener = ExecutorMetricsListener { m -> progress.add(m.rowsWritten to m.totalRows) }
         }
 
         val response = MetaForgeExecutorService().start(request)
@@ -106,6 +107,13 @@ class MetaForgeExecutorCharacterizationTest
         // 第一条进度应是 pre-count 后上报的 (0, 42)，最后一条应带上相同 total=42
         assertEquals(0L to 42L, progress.first())
         assertEquals(42L, progress.last().second)
+        // 最终指标随结果返回：读写行数、总量来源与 100% 进度
+        val metrics = response.metrics!!
+        assertEquals(2L, metrics.rowsRead)
+        assertEquals(2L, metrics.rowsWritten)
+        assertEquals(TotalSource.PRECOUNT, metrics.totalSource)
+        assertEquals(100.0, metrics.progress, 0.0)
+        assertEquals(0L, metrics.etaSeconds)
     }
 
     @Test

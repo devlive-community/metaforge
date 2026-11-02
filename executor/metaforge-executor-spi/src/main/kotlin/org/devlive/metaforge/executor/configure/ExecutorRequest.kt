@@ -6,7 +6,7 @@ import org.devlive.metaforge.plugin.PluginManager
 /**
  * 执行器请求。字段分两类：
  * - 【所有执行器通用】taskName / userName / input / output / workHome / timeout /
- *   transform / pluginManager / progressListener
+ *   transform / pluginManager / metricsListener
  * - 【各执行器专属】统一放进 [options]（字符串 KV），由各执行器自行解析，例如：
  *     Local:     fetchSize / batchSize / preCount
  *     Seatunnel: home / startScript / way / mode / engine
@@ -27,7 +27,7 @@ data class ExecutorRequest @JvmOverloads constructor(
     var timeout: Long = 600,
     var transform: ExecutorConfigure? = null,
     var options: Map<String, String> = emptyMap(),
-    var progressListener: ExecutorProgressListener? = null,
+    var metricsListener: ExecutorMetricsListener? = null,
     var pluginManager: PluginManager? = null
 )
 {

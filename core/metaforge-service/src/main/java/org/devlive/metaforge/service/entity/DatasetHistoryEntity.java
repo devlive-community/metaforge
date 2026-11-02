@@ -46,6 +46,36 @@ public class DatasetHistoryEntity
     @Column("progress")
     private BigDecimal progress;
 
+    @Column("rows_read")
+    private Long rowsRead;
+
+    @Column("rows_written")
+    private Long rowsWritten;
+
+    @Column("rows_skipped")
+    private Long rowsSkipped;
+
+    @Column("rows_failed")
+    private Long rowsFailed;
+
+    @Column("bytes_read")
+    private Long bytesRead;
+
+    @Column("bytes_written")
+    private Long bytesWritten;
+
+    /** 第几次尝试，从 1 开始 / attempt number, starting at 1 */
+    @Column("attempt")
+    private Integer attempt;
+
+    /** 最近一次（结束时为最终）指标快照 JSON / latest (final once finished) metrics snapshot as JSON */
+    @Column("metrics")
+    private String metrics;
+
+    /** 状态转换记录 JSON 数组 / state transitions as a JSON array */
+    @Column("transitions")
+    private String transitions;
+
     @Column("task_name")
     private String taskName;
 

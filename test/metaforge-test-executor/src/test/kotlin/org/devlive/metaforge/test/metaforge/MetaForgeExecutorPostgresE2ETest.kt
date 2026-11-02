@@ -3,7 +3,7 @@ package org.devlive.metaforge.test.metaforge
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.common.RunState
 import org.devlive.metaforge.executor.configure.ExecutorConfigure
-import org.devlive.metaforge.executor.configure.ExecutorProgressListener
+import org.devlive.metaforge.executor.configure.ExecutorMetricsListener
 import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.ExecutorResponse
 import org.devlive.metaforge.executor.configure.OriginColumn
@@ -132,7 +132,7 @@ class MetaForgeExecutorPostgresE2ETest
             )
         ).apply {
             options = mapOf("preCount" to "true")
-            progressListener = ExecutorProgressListener { processed, total -> progress.add(processed to total) }
+            metricsListener = ExecutorMetricsListener { m -> progress.add(m.rowsWritten to m.totalRows) }
         }
 
         val response = MetaForgeExecutorService().start(request)

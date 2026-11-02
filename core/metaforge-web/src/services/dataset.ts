@@ -86,14 +86,25 @@ export class DatasetService
     }
 
     /**
-     * Stop a running sync task identified by the given history record id.
+     * Cancel a sync: a queued one is cancelled at once, a running one is asked to stop.
      *
-     * @param {number} id - the dataset history id (must be RUNNING)
-     * @return {Promise<ResponseModel>} success when the cancel flag has been set
+     * @param {number} id - the dataset history id (queued or running)
+     * @return {Promise<ResponseModel>} success when the sync was cancelled or asked to stop
      */
     stopHistory(id: number): Promise<ResponseModel>
     {
         return new HttpUtils().put(`${ DEFAULT_PATH }/history/stop/${ id }`)
+    }
+
+    /**
+     * Live metrics, state and transitions of one sync; the final result once it has finished.
+     *
+     * @param {number} id - the dataset history id
+     * @return {Promise<ResponseModel>} the metrics view
+     */
+    getHistoryMetrics(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH }/history/metrics/${ id }`)
     }
 
     /**

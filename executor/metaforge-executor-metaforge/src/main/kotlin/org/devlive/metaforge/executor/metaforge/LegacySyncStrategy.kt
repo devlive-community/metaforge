@@ -2,6 +2,7 @@ package org.devlive.metaforge.executor.metaforge
 
 import com.fasterxml.jackson.databind.node.ObjectNode
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+import org.devlive.metaforge.executor.configure.TotalSource
 
 /**
  * 回退路径：源端不支持流式（executeStream 不可用）时，先用 execute() 全量读取，
@@ -26,7 +27,7 @@ internal class LegacySyncStrategy : SyncStrategy
         val batchSize = context.batchSize
         val taskLog = context.taskLog
         val totalCount = context.totalCount
-        val progressListener = context.progressListener
+        val metrics = context.metrics
         val token = context.handle.cancellation
 
         taskLog.info("Legacy sync start: target=`{}`.`{}` batchSize={}", database, table, batchSize)
@@ -50,7 +51,10 @@ internal class LegacySyncStrategy : SyncStrategy
         val rows = inputResult.columns ?: return 0L
         taskLog.info("Legacy sync: source materialized {} rows", rows.size)
         // 全量路径已经能拿到精确总数，覆盖 pre-count 的估算
-        val effectiveTotal = if (totalCount >= 0) totalCount else rows.size.toLong()
+        if (totalCount < 0)
+        {
+            metrics.setTotal(rows.size.toLong(), TotalSource.MATERIALIZED)
+        }
 
         val targetColumns = context.targetColumns
         val sourceKeys = context.sourceKeys
@@ -70,10 +74,11 @@ internal class LegacySyncStrategy : SyncStrategy
                 }
                 w.addRow(projected)
                 read ++
+                metrics.recordRead()
                 if (read % PROGRESS_INTERVAL == 0L)
                 {
                     taskLog.info("Legacy sync progress: read={} committed={}", read, w.writtenCount())
-                    progressListener?.onProgress(w.writtenCount(), effectiveTotal)
+                    metrics.publish(w.writtenCount())
                 }
             }
         }

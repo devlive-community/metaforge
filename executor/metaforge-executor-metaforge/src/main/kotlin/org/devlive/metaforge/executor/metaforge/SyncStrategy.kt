@@ -1,7 +1,6 @@
 package org.devlive.metaforge.executor.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
-import org.devlive.metaforge.executor.configure.ExecutorProgressListener
 import org.devlive.metaforge.executor.configure.OriginColumn
 import org.devlive.metaforge.spi.PluginService
 import org.devlive.metaforge.spi.adapter.BatchWriter
@@ -73,7 +72,7 @@ internal class SyncContext(
     val batchSize: Int,
     val taskLog: Logger,
     val totalCount: Long,
-    val progressListener: ExecutorProgressListener?,
+    val metrics: SyncMetrics,
     val handle: TaskHandle
 )
 

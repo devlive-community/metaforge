@@ -36,4 +36,5 @@
     <include file="core/core-0008-user-oauth.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0009-runtime-settings-in-system-settings.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0010-metaforge-executor.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0011-dataset-history-metrics.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

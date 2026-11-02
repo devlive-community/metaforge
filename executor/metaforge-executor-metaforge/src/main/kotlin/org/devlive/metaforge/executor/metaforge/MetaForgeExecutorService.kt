@@ -5,6 +5,7 @@ import org.devlive.metaforge.executor.ExecutorService
 import org.devlive.metaforge.executor.common.RunState
 import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.ExecutorResponse
+import org.devlive.metaforge.executor.configure.TotalSource
 import org.devlive.metaforge.lib.logger.LoggerExecutor
 import org.devlive.metaforge.lib.logger.logback.LogbackExecutor
 import org.devlive.metaforge.spi.PluginService
@@ -31,6 +32,7 @@ class MetaForgeExecutorService : ExecutorService
         val loggerExecutor: LoggerExecutor<*>? = newTaskLogger(request)
         val taskLog: Logger = loggerExecutor?.getLogger() ?: log
         val handle = TaskHandle()
+        val metrics = SyncMetrics(request.metricsListener)
         handle.taskLog = taskLog
         if (request.taskName.isNotBlank())
         {
@@ -76,7 +78,6 @@ class MetaForgeExecutorService : ExecutorService
             val fetchSize = (options["fetchSize"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_FETCH_SIZE
             val batchSize = (options["batchSize"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_BATCH_SIZE
             val preCountEnabled = options["preCount"]?.toBoolean() ?: false
-            val progressListener = request.progressListener
 
             taskLog.info(
                     "Resolved input plugin={} output plugin={} streaming={}/{} fetchSize={} batchSize={} preCount={}",
@@ -92,8 +93,9 @@ class MetaForgeExecutorService : ExecutorService
             if (totalCount >= 0)
             {
                 taskLog.info("Pre-count: source total rows = {}", totalCount)
-                // 报告 0 进度，让上层立即知道 total
-                progressListener?.onProgress(0L, totalCount)
+                // 立即上报一次，让上层马上知道总行数
+                metrics.setTotal(totalCount, TotalSource.PRECOUNT)
+                metrics.publish(0L)
             }
 
             val context = SyncContext(
@@ -102,7 +104,7 @@ class MetaForgeExecutorService : ExecutorService
                 originColumns,
                 originColumns.map { it.name },
                 originColumns.map { it.original },
-                batchSize, taskLog, totalCount, progressListener, handle
+                batchSize, taskLog, totalCount, metrics, handle
             )
 
             val strategy: SyncStrategy =
@@ -120,13 +122,14 @@ class MetaForgeExecutorService : ExecutorService
             response.count = if (written > Int.MAX_VALUE.toLong()) Int.MAX_VALUE else written.toInt()
             response.successful = true
             response.state = RunState.SUCCESS
-            // 最终上报一次：确保 100%
-            progressListener?.onProgress(written, if (totalCount >= 0) totalCount else written)
+            // 最终上报一次：进度 100%
+            response.metrics = metrics.publish(written, finished = true)
             taskLog.info("MetaForge executor task completed: rows={} state=SUCCESS", written)
         }
         catch (ex: TaskCancelledException)
         {
             applyCancelled(response, handle, request, ex.processed, taskLog)
+            response.metrics = metrics.publish(ex.processed)
         }
         catch (ex: Exception)
         {
@@ -136,6 +139,7 @@ class MetaForgeExecutorService : ExecutorService
             if (handle.cancellation.isCancelled)
             {
                 applyCancelled(response, handle, request, 0L, taskLog)
+                response.metrics = metrics.publish(0L)
             }
             else
             {

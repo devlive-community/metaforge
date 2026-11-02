@@ -29,7 +29,7 @@ internal class StreamingSyncStrategy : SyncStrategy
         val batchSize = context.batchSize
         val taskLog = context.taskLog
         val totalCount = context.totalCount
-        val progressListener = context.progressListener
+        val metrics = context.metrics
         val token = context.handle.cancellation
 
         taskLog.info(
@@ -73,6 +73,7 @@ internal class StreamingSyncStrategy : SyncStrategy
                     }
                     w.addRow(projected)
                     read ++
+                    metrics.recordRead()
                     if (read % PROGRESS_INTERVAL == 0L)
                     {
                         val seconds = (System.nanoTime() - startNanos) / 1_000_000_000.0
@@ -81,7 +82,7 @@ internal class StreamingSyncStrategy : SyncStrategy
                                 "Streaming sync progress: read={} committed={} elapsed={}s rps={}",
                                 read, w.writtenCount(), "%.1f".format(seconds), rps
                         )
-                        progressListener?.onProgress(w.writtenCount(), totalCount)
+                        metrics.publish(w.writtenCount())
                     }
                 }
             })

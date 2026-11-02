@@ -154,7 +154,7 @@ const onLoggerClose = () => {
   loggerInfo.value = null
 }
 
-const isStoppable = (row: any): boolean => row?.state === 'RUNNING' || row?.state === 'CREATED'
+const isStoppable = (row: any): boolean => ['CREATED', 'QUEUE', 'RUNNING', 'PAUSING'].includes(row?.state)
 
 const hasMessage = (row: any): boolean => !!row?.message && (row?.state === 'FAILURE' || row?.state === 'INTERRUPTED')
 

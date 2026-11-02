@@ -6,6 +6,7 @@ import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.adhoc.Adhoc;
 import org.devlive.metaforge.service.dataset.DatasetVirtualColumns;
+import org.devlive.metaforge.service.dataset.sync.SyncMetricsView;
 import org.devlive.metaforge.service.entity.DataSetColumnEntity;
 import org.devlive.metaforge.service.entity.DataSetEntity;
 import org.devlive.metaforge.service.entity.DatasetHistoryEntity;
@@ -102,7 +103,7 @@ public class DataSetController
     }
 
     @PutMapping(value = "syncData/{code}")
-    public CommonResponse<DataSetEntity> syncData(@PathVariable String code,
+    public CommonResponse<DatasetHistoryEntity> syncData(@PathVariable String code,
             @RequestBody(required = false) java.util.Map<String, String> overrides)
     {
         return service.syncData(code, overrides);
@@ -144,6 +145,12 @@ public class DataSetController
     public CommonResponse<Boolean> historyStop(@PathVariable Long id)
     {
         return this.service.stopHistory(id);
+    }
+
+    @GetMapping(value = "history/metrics/{id}")
+    public CommonResponse<SyncMetricsView> historyMetrics(@PathVariable Long id)
+    {
+        return this.service.getHistoryMetrics(id);
     }
 
     @GetMapping(value = "getActuators")
