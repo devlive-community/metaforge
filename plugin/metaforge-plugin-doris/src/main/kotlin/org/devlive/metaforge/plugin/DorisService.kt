@@ -9,6 +9,12 @@ import org.devlive.metaforge.spi.model.Response
 @SuppressFBWarnings(value = ["NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE"])
 class DorisService : PluginService
 {
+    override fun validator(): String
+    {
+        // version() answers the MySQL version Doris emulates; the version comment names Doris' own, e.g. "Doris version doris-2.1.0-rc11-..."
+        return "SELECT REPLACE(LOWER(@@version_comment), 'doris version doris-', '') AS version"
+    }
+
     override fun connectType(): String
     {
         return "mysql"
