@@ -2,14 +2,18 @@ package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.connection.JdbcUrlGuard;
+import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class YDBService
         implements PluginService
 {
+    // YQL schema statements; the driver runs anything else as a data query, which rejects them
+    private static final Pattern SCHEME_STATEMENT = Pattern.compile("^\\s*(CREATE|ALTER|DROP)\\s", Pattern.CASE_INSENSITIVE);
     @Override
     public String connectType()
     {
@@ -50,5 +54,15 @@ public class YDBService
             url.append("?").append(String.join("&", parameters));
         }
         return url.toString();
+    }
+
+    /** Runs schema statements as scheme queries, with the driver's --jdbc:SCHEME hint, unless the statement names a mode itself. */
+    @Override
+    public Response execute(RuntimeConfigure configure, String content)
+    {
+        if (content != null && !content.contains("--jdbc:") && SCHEME_STATEMENT.matcher(content).find()) {
+            return PluginService.super.execute(configure, "--jdbc:SCHEME\n" + content);
+        }
+        return PluginService.super.execute(configure, content);
     }
 }
