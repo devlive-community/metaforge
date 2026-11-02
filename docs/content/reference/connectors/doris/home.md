@@ -49,8 +49,11 @@ status: new
 
 ---
 
-!!! warning
+!!! note
 
-    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
+    插件的 e2e 测试 `DorisE2ETest` 在容器中逐一验证以下版本：版本检查后，用 SQL 创建的数据库、数据表和字段被列出，并读回其中的数据。
+
+    - [x] 2.1
+    - [x] 4.1
 
 !!!
