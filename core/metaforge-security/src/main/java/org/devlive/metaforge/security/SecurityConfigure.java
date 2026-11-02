@@ -64,11 +64,12 @@ public class SecurityConfigure
     protected void configure(HttpSecurity http)
             throws Exception
     {
+        // /assets/** is the web UI's build output (scripts, styles, images); browsers fetch CSS images without a token.
         http.cors().and().csrf().disable()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
-                .antMatchers("/", "/**/*.js", "/**/*.css", "/api/auth/**", "/fonts/**", "/static/**", "/h2-console/**", "/api/v1/captcha", "/api/v1/table/dataDownload/**", "/upload/**", "/api/v1/setup/**")
+                .antMatchers("/", "/**/*.js", "/**/*.css", "/assets/**", "/api/auth/**", "/fonts/**", "/static/**", "/h2-console/**", "/api/v1/captcha", "/api/v1/table/dataDownload/**", "/upload/**", "/api/v1/setup/**")
                 .permitAll()
                 .requestMatchers(new AdminApiRequestMatcher())
                 .hasAuthority("ADMIN")
