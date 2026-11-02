@@ -63,7 +63,11 @@
           </span>
         </div>
 
-        <div class="dc-src__grid">
+        <!-- Plugins still loading: the spinner holds the grid's full height so nothing jumps when they arrive. -->
+        <div v-if="loading && plugins.length === 0" class="dc-src__grid-loading flex items-center justify-center">
+          <MfSpinner size="md"/>
+        </div>
+        <div v-else class="dc-src__grid">
           <div v-for="src in filteredSources"
                :key="src.name"
                class="dc-src__grid-item"
@@ -789,6 +793,10 @@ handleInitialize()
     font-size: 12px;
     color: var(--dc-text-primary);
     text-align: center;
+}
+
+.dc-src__grid-loading {
+    height: 440px;
 }
 
 .dc-src__grid-empty {
