@@ -38,6 +38,10 @@ public class YDBService
             url.append("/").append(database);
         });
         List<String> parameters = new ArrayList<>();
+        // The driver leaves autocommit off, and each query runs on its own connection, so writes would never be committed
+        if (configure.getEnv().map(env -> !env.containsKey("autoCommit")).orElse(true)) {
+            parameters.add("autoCommit=true");
+        }
         configure.getEnv().ifPresent(env -> env.forEach((key, value) -> {
             JdbcUrlGuard.validateParameter(key, String.valueOf(value));
             parameters.add(key + "=" + value);
