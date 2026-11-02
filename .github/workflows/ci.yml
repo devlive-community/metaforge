@@ -97,8 +97,19 @@ jobs:
       # The root pom has no Surefire pin; Maven's default (2.12.4) cannot run
       # JUnit 5 and silently executes zero tests. Invoke Surefire explicitly
       # until the root pom pins the plugin version.
+      #
+      # Install first (skipping test execution) so downstream modules resolve
+      # packaged artifacts: the shaded drivers only exist after the package
+      # phase, and a bare test-compile would leave their plugin tests with a
+      # driver-less classpath.
+      - name: Build and install all modules
+        run: >
+          ./mvnw -B clean install
+          -DskipTests -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
+          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+
       - name: Run the JUnit 5 suite
         run: >
-          ./mvnw -B test-compile org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
+          ./mvnw -B org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
           -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
           -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
