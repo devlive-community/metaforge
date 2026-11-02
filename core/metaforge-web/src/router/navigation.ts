@@ -22,6 +22,9 @@ export function pageAccess(to: { fullPath: string; meta: Record<string, unknown>
 }
 
 /** Normalize stale menu caches until the current catalogue is fetched from the server. */
+/** Pages folded into others (runtime settings live in System settings); menu rows still pointing at one are dropped. */
+const RETIRED_PAGES = new Set(['/admin/configure'])
+
 export function normalizeNavigation(menus: unknown, user: { roles?: unknown } | null | undefined): any[] {
     if (!Array.isArray(menus)) return []
     return menus.flatMap(menu => {
@@ -30,6 +33,7 @@ export function normalizeNavigation(menus: unknown, user: { roles?: unknown } | 
         const originalChildren = Array.isArray(menu.children) ? menu.children : []
         const development = (menu.code === 'MANAGEMENT' && (original === '/admin' || menu.i18nKey === 'common.admin')) || (!menu.code && original === '/admin' && originalChildren.some((child: any) => /^\/admin\/(query|source|dataset|workflow|snippet|history|report)(?:\/|$)/i.test(child?.url)))
         const url = development ? '/workspace' : canonicalPagePath(original)
+        if (RETIRED_PAGES.has(url)) return []
         if (/^\/admin(?:[/?#]|$)/.test(url) && !isAdministrator(user)) return []
         const children = originalChildren.length ? normalizeNavigation(originalChildren, user) : undefined
         if (originalChildren.length && children?.length === 0) return []

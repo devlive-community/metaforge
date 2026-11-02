@@ -102,3 +102,12 @@ test('cached menus keep business links, hide admin links from users and retain l
     const customized = [{ code: 'MANAGEMENT', url: '/workspace', i18nKey: 'common.source', children: [{ url: '/source' }] }]
     assert.equal(normalizeNavigation(customized, user)[0].i18nKey, 'common.source')
 })
+
+test('menu rows of retired pages are dropped even from a cached menu', () => {
+    const menus = normalizeNavigation([{ code: 'SYSTEM', url: '/admin', i18nKey: 'common.system', children: [
+        { code: 'USERS', url: '/admin/user' },
+        { code: 'RUNTIME_CONFIGURE', url: '/admin/configure', i18nKey: 'configure.runtime.title' },
+        { code: 'SYSTEM_SETTINGS', url: '/admin/settings' },
+    ] }], admin)
+    assert.deepEqual(menus[0].children.map(menu => menu.code), ['USERS', 'SYSTEM_SETTINGS'])
+})
