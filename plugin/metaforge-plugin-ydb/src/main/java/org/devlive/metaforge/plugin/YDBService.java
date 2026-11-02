@@ -65,4 +65,25 @@ public class YDBService
         }
         return PluginService.super.execute(configure, content);
     }
+
+    // The driver reports no schemas or catalogs: a connection opens one database, whose tables and columns are looked up without a schema
+    @Override
+    public Response getDatabases(RuntimeConfigure configure)
+    {
+        String database = configure.getDatabase().orElse("local");
+        JdbcUrlGuard.validateDatabase(database);
+        return PluginService.super.execute(configure, "SELECT '" + database + "' AS object_name, 'DATABASE' AS object_type, '' AS object_comment");
+    }
+
+    @Override
+    public Response getTables(RuntimeConfigure configure, String database)
+    {
+        return metadataTables(configure, null);
+    }
+
+    @Override
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
+    {
+        return metadataColumns(configure, null, table);
+    }
 }
