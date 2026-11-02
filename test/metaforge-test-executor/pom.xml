@@ -39,7 +39,7 @@
         </dependency>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
-            <artifactId>metaforge-executor-local</artifactId>
+            <artifactId>metaforge-executor-metaforge</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

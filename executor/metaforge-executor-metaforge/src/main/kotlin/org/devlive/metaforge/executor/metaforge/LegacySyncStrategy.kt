@@ -1,4 +1,4 @@
-package org.devlive.metaforge.executor.local
+package org.devlive.metaforge.executor.metaforge
 
 import com.fasterxml.jackson.databind.node.ObjectNode
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
@@ -37,7 +37,7 @@ internal class LegacySyncStrategy : SyncStrategy
         {
             throw IllegalStateException(
                 "Output plugin '${outputPlugin.name()}' does not support batch write (supportsStreaming=false); " +
-                        "the local executor no longer falls back to hand-built SQL. Use a JDBC/streaming-capable target."
+                        "the MetaForge executor no longer falls back to hand-built SQL. Use a JDBC/streaming-capable target."
             )
         }
 

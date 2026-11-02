@@ -1,4 +1,4 @@
-package org.devlive.metaforge.test.local
+package org.devlive.metaforge.test.metaforge
 
 import com.google.common.collect.Sets
 import org.devlive.metaforge.executor.ExecutorService
@@ -17,7 +17,7 @@ import org.junit.Test
 import java.nio.file.Path
 import java.util.*
 
-class LocalExecutorServiceTest
+class MetaForgeExecutorServiceTest
 {
     companion object
     {
@@ -32,13 +32,13 @@ class LocalExecutorServiceTest
     }
 
     private val pluginManager: PluginManager
-    private val pluginName = "Local"
+    private val pluginName = "MetaForge"
 
     init
     {
         val projectRoot = PluginPathUtils.findProjectRoot()
         val config = PluginConfigure.builder()
-            .pluginsDir(projectRoot.resolve("executor/metaforge-executor-local"))
+            .pluginsDir(projectRoot.resolve("executor/metaforge-executor-metaforge"))
             .build()
 
         pluginManager = PluginManager(config).apply { start() }

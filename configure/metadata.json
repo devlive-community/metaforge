@@ -846,9 +846,9 @@
       "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-none/2026.0.0/metaforge-convert-none-2026.0.0-bin.tar.gz"
     },
     {
-      "key": "metaforge-executor-local",
-      "label": "Local Executor",
-      "description": "A local execution plugin for MetaForge.",
+      "key": "metaforge-executor-metaforge",
+      "label": "MetaForge Executor",
+      "description": "The built-in MetaForge executor for data sync and migration.",
       "i18nFormat": true,
       "type": "Executor",
       "version": "2026.0.0",
@@ -858,7 +858,7 @@
       "supportVersion": [
         "ALL"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-local/2026.0.0/metaforge-executor-local-2026.0.0-bin.tar.gz"
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-metaforge/2026.0.0/metaforge-executor-metaforge-2026.0.0-bin.tar.gz"
     },
     {
       "key": "metaforge-executor-seatunnel",

@@ -1,4 +1,4 @@
-package org.devlive.metaforge.executor.local
+package org.devlive.metaforge.executor.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.adapter.BatchWriter

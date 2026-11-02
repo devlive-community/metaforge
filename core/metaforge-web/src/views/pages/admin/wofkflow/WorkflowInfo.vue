@@ -85,7 +85,7 @@ const workflowState = ref<any | null>(null)
 const installedExecutors = ref<any[]>([])
 const formState = ref({
   code: null as string | null,
-  executor: 'Local',
+  executor: 'MetaForge',
   name: '',
   configure: null as any
 })
@@ -127,7 +127,7 @@ const handleInitialize = () => {
                if (workflow.status && workflow.data) {
                  workflowState.value = workflow.data.configure
                  // Update form state with existing workflow data
-                 formState.value.executor = workflow.data.executor || 'Local'
+                 formState.value.executor = workflow.data.executor || 'MetaForge'
                  formState.value.name = workflow.data.name || ''
                  formState.value.configure = workflow.data.configure || null
                  formState.value.code = workflow.data.code || null

@@ -1,4 +1,4 @@
-package org.devlive.metaforge.test.local.support
+package org.devlive.metaforge.test.metaforge.support
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.spi.PluginService
@@ -13,10 +13,10 @@ import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * 纯内存的 PluginService 假实现，专门用于 LocalExecutorService 的特性测试（characterization test）。
+ * 纯内存的 PluginService 假实现，专门用于 MetaForgeExecutorService 的特性测试（characterization test）。
  * 不连接任何真实数据库，把流式读、批量写、execute()、以及 JDBC Statement.cancel() 全部做成可控 / 可观测。
  *
- * A network-free fake PluginService used to pin down the current behaviour of LocalExecutorService.
+ * A network-free fake PluginService used to pin down the current behaviour of MetaForgeExecutorService.
  * Streaming reads, batch writes, execute() and JDBC Statement.cancel() are all controllable and observable.
  *
  * 作为“源端”（source）时使用：
@@ -103,7 +103,7 @@ class FakePluginService(
 
     /**
      * 用动态代理造一个只实现了 isClosed()/cancel() 的假 Statement，
-     * 其余方法返回各自类型的零值，够 LocalExecutorService.stop() 使用。
+     * 其余方法返回各自类型的零值，够 MetaForgeExecutorService.stop() 使用。
      */
     private fun newFakeStatement(): Statement
     {

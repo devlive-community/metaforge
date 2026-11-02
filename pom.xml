@@ -84,7 +84,7 @@
         <module>plugin/metaforge-plugin-mongo-community</module>
         <module>plugin/metaforge-plugin-dolphindb</module>
         <module>executor/metaforge-executor-spi</module>
-        <module>executor/metaforge-executor-local</module>
+        <module>executor/metaforge-executor-metaforge</module>
         <module>executor/metaforge-executor-seatunnel</module>
         <module>fs/metaforge-fs-spi</module>
         <module>fs/metaforge-fs-local</module>

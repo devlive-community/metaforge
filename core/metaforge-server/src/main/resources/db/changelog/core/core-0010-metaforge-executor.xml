@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- The built-in Local executor is renamed to MetaForge: datasets, workflows and its runtime settings follow the new name. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0010-metaforge-executor" author="metaforge">
+        <update tableName="metaforge_dataset">
+            <column name="executor" value="MetaForge"/>
+            <where>executor IN ('Local', 'LocalExecutor')</where>
+        </update>
+        <update tableName="metaforge_workflow">
+            <column name="executor" value="MetaForge"/>
+            <where>executor IN ('Local', 'LocalExecutor')</where>
+        </update>
+        <dropDefaultValue tableName="metaforge_dataset" columnName="executor"/>
+        <addDefaultValue tableName="metaforge_dataset" columnName="executor" defaultValue="MetaForge"/>
+    </changeSet>
+
+    <!-- A MetaForge row can only have been seeded alongside the saved Local row; the saved settings win. -->
+    <changeSet id="core-0010-metaforge-executor-settings-dedupe" author="metaforge">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM metaforge_configure WHERE category = 'EXECUTOR' AND name = 'Local'</sqlCheck>
+            </not>
+        </preConditions>
+        <delete tableName="metaforge_configure">
+            <where>category = 'EXECUTOR' AND name = 'MetaForge'</where>
+        </delete>
+    </changeSet>
+
+    <changeSet id="core-0010-metaforge-executor-settings" author="metaforge">
+        <update tableName="metaforge_configure">
+            <column name="name" value="MetaForge"/>
+            <where>category = 'EXECUTOR' AND name = 'Local'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

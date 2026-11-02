@@ -42,13 +42,13 @@ const settle = () => new Promise(resolve=>setImmediate(resolve))
 const success = data => ({status:true,data})
 const field = { id:42, name:'record_id',aliasName:'ID',original:'id',comment:'',defaultValue:null,type:'NUMBER',mode:'DIMENSION',position:0,nullable:false,length:0,orderByKey:true,partitionKey:false,primaryKey:false,samplingKey:false,virtualColumn:false,customColumn:false }
 function handler(name,...args) {
-  if (name==='plugin.getPlugins') return success([{type:'EXECUTOR',name:'Local'},{type:'SCHEDULER',name:'Default'}])
+  if (name==='plugin.getPlugins') return success([{type:'EXECUTOR',name:'MetaForge'},{type:'SCHEDULER',name:'Default'}])
   if (name==='source.getByCode') return success({id:1,code:args[0],name:'Source '+args[0],type:'MySQL'})
   if (name==='metadata.getDatabaseBySource') return success({isSuccessful:true,columns:[{object_name:'analytics'}]})
   if (name==='metadata.getTablesByDatabase') return success({isSuccessful:true,columns:[{object_name:'orders'}]})
   if (name==='metadata.queryTable') return success({isSuccessful:true,content:'SELECT * FROM orders'})
   if (name==='execute.execute') return success({isSuccessful:true,headers:['id'],columns:[]})
-  if (name==='dataset.getByCode') return success({id:7,code:'DATASET',name:'Saved dataset',query:'select id from orders',source:{id:1,code:'A',name:'Source A',type:'MySQL'},executor:'Local',syncMode:'MANUAL'})
+  if (name==='dataset.getByCode') return success({id:7,code:'DATASET',name:'Saved dataset',query:'select id from orders',source:{id:1,code:'A',name:'Source A',type:'MySQL'},executor:'MetaForge',syncMode:'MANUAL'})
   if (name==='dataset.getColumnsByCode') return success([{...field}])
   return success({})
 }

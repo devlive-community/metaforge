@@ -1276,7 +1276,7 @@ public class DataSetServiceImpl
                                                                     log.warn("Serialize effective executor configure failed: {}", ex.getMessage());
                                                                 }
                                                                 historyRepository.save(history);
-                                                                // timeout 由各 executor 自己的配置决定：LocalExecutor schema 默认 0（不限时），
+                                                                // timeout 由各 executor 自己的配置决定：MetaForgeExecutor schema 默认 0（不限时），
                                                                 // 未声明该字段的 executor（如 Seatunnel）回退到 600 秒，保持原有行为
                                                                 int timeout = parseIntOrDefault(executorCfg.get("timeout"), 600);
                                                                 ExecutorRequest request = new ExecutorRequest(
@@ -1289,7 +1289,7 @@ public class DataSetServiceImpl
                                                                 request.setTimeout(timeout);
                                                                 request.setPluginManager(this.pluginManager);
                                                                 // 把该 executor 的 effective 配置整体作为 options，各执行器各取所需：
-                                                                // Local 读 fetchSize/batchSize/preCount；Seatunnel 读 home/startScript/way/mode/engine
+                                                                // MetaForge 读 fetchSize/batchSize/preCount；Seatunnel 读 home/startScript/way/mode/engine
                                                                 request.setOptions(executorCfg);
 
                                                                 // 进度回调：每个 batch 写完后更新 metaforge_dataset_history 以及数据集自身的 totalRows / totalSize

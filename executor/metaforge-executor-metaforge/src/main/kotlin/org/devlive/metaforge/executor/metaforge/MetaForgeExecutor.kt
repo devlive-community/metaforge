@@ -1,10 +1,17 @@
-package org.devlive.metaforge.executor.local
+package org.devlive.metaforge.executor.metaforge
 
 import org.devlive.metaforge.executor.ExecutorPlugin
 import org.devlive.metaforge.plugin.configure.RuntimeConfigureField
 import org.devlive.metaforge.plugin.configure.RuntimeConfigureFieldType
 
-class LocalExecutor : ExecutorPlugin()
+/**
+ * MetaForge 内置执行器插件：在 MetaForge 进程内完成数据同步与迁移。
+ * 插件名由 [ExecutorPlugin] 按类名推导为 "MetaForge"（旧名 "Local" 由 PluginManager 别名兼容）。
+ *
+ * Built-in MetaForge executor for in-process data sync and migration. Its name derives to "MetaForge";
+ * the former name "Local" still resolves through the PluginManager alias.
+ */
+class MetaForgeExecutor : ExecutorPlugin()
 {
     override fun runtimeConfigures(): List<RuntimeConfigureField> = listOf(
             RuntimeConfigureField(

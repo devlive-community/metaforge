@@ -1,4 +1,4 @@
-package org.devlive.metaforge.test.local.support
+package org.devlive.metaforge.test.metaforge.support
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
@@ -19,7 +19,7 @@ import java.sql.ResultSet
  * 与 [FakePluginService] 不同：这里 executeStream / openBatchWriter / execute 都打真实 JDBC——
  * 真实的流式 ResultSet 读取、真实的 PreparedStatement 批量写、真实的 Statement.cancel()。
  * 它绕开 metaforge 自己的 JdbcConnection/PluginClassLoader 封装（那部分由 driver/plugin 测试模块覆盖），
- * 从而稳定地验证 LocalExecutorService 在真实源/目标库之间的搬运正确性。
+ * 从而稳定地验证 MetaForgeExecutorService 在真实源/目标库之间的搬运正确性。
  */
 @SuppressFBWarnings(value = [
     "BC_BAD_CAST_TO_ABSTRACT_COLLECTION",

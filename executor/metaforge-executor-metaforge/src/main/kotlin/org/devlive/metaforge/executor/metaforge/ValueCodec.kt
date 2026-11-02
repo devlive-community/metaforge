@@ -1,12 +1,12 @@
-package org.devlive.metaforge.executor.local
+package org.devlive.metaforge.executor.metaforge
 
 import com.fasterxml.jackson.databind.JsonNode
 
 /**
  * JsonNode -> JDBC 值的转换工具。
- * 从 LocalExecutorService 原样抽出，纯函数、无状态，供 legacy BatchWriter 路径按列取真实类型值。
+ * 从 MetaForgeExecutorService 原样抽出，纯函数、无状态，供 legacy BatchWriter 路径按列取真实类型值。
  *
- * Extracted from LocalExecutorService: a pure, stateless JsonNode -> JDBC value conversion used by
+ * Extracted from MetaForgeExecutorService: a pure, stateless JsonNode -> JDBC value conversion used by
  * the legacy BatchWriter path.
  */
 internal object ValueCodec

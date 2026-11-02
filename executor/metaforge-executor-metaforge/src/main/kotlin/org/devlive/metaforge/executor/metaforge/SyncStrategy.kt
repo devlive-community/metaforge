@@ -1,4 +1,4 @@
-package org.devlive.metaforge.executor.local
+package org.devlive.metaforge.executor.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.configure.ExecutorProgressListener
@@ -51,7 +51,7 @@ internal fun <T> BatchWriter.runCancelable(token: CancellationToken, block: (Bat
 }
 
 /**
- * 一次同步任务所需的全部上下文。由 LocalExecutorService.start() 组装，交给具体 [SyncStrategy]。
+ * 一次同步任务所需的全部上下文。由 MetaForgeExecutorService.start() 组装，交给具体 [SyncStrategy]。
  * 把原先 runStreaming / runLegacy 的一长串形参收敛到这里，行为不变，只是不再逐个透传。
  *
  * targetColumns / sourceKeys 是从 [originColumns] 预先派生的（name / original），

@@ -1,4 +1,4 @@
-package org.devlive.metaforge.executor.local
+package org.devlive.metaforge.executor.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import java.util.concurrent.ConcurrentHashMap
@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
  *
  * 多个并发 sync 共享同一实例（Kotlin object 单例），用 taskName 唯一索引；
  * stop() 通过 taskName 查到 handle 后设置取消标志位。
- * 之前这些是 LocalExecutorService 的 companion static 成员——为了让不同 LocalExecutorService
+ * 之前这些是 MetaForgeExecutorService 的 companion static 成员——为了让不同 MetaForgeExecutorService
  * 实例之间的 stop() 仍能互相找到任务，这里必须保持“单例、跨实例共享”的语义，故用 object。
  *
  * Statement.cancel() 可能会阻塞（驱动会新开连接发 KILL），放到独立线程跑避免拖住调用方。
@@ -23,7 +23,7 @@ internal object TaskRegistry
 
     private val cancelExecutor: java.util.concurrent.ExecutorService =
             Executors.newCachedThreadPool { r ->
-                val t = Thread(r, "local-executor-cancel")
+                val t = Thread(r, "metaforge-executor-cancel")
                 t.isDaemon = true
                 t
             }
@@ -31,7 +31,7 @@ internal object TaskRegistry
     // 单线程调度器：仅负责“到点触发超时取消”，动作本身很轻（设标志位 + 提交 cancel 到 cancelExecutor）
     private val timeoutScheduler: java.util.concurrent.ScheduledExecutorService =
             Executors.newSingleThreadScheduledExecutor { r ->
-                val t = Thread(r, "local-executor-timeout")
+                val t = Thread(r, "metaforge-executor-timeout")
                 t.isDaemon = true
                 t
             }

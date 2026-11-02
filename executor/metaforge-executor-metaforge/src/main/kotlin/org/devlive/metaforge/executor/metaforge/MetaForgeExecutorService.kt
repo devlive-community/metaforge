@@ -1,4 +1,4 @@
-package org.devlive.metaforge.executor.local
+package org.devlive.metaforge.executor.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.ExecutorService
@@ -14,16 +14,16 @@ import org.slf4j.LoggerFactory
 import java.util.concurrent.ScheduledFuture
 
 /**
- * 本地执行器：在 MetaForge 进程内把“源查询结果”搬运到“目标表”，支持流式与回退两种同步策略、
+ * MetaForge 执行器：在 MetaForge 进程内把“源查询结果”搬运到“目标表”，支持流式与回退两种同步策略、
  * 以及按 taskName 的运行时停止。
  *
  * 编排职责保留在这里；具体搬运逻辑委托给 [SyncStrategy]（[StreamingSyncStrategy] / [LegacySyncStrategy]），
  * 活跃任务与取消线程池委托给 [TaskRegistry]，值/字面量转换委托给 [ValueCodec]。
  */
 @SuppressFBWarnings(value = ["RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
-class LocalExecutorService : ExecutorService
+class MetaForgeExecutorService : ExecutorService
 {
-    private val log = LoggerFactory.getLogger(LocalExecutorService::class.java)
+    private val log = LoggerFactory.getLogger(MetaForgeExecutorService::class.java)
 
     override fun start(request: ExecutorRequest): ExecutorResponse
     {
@@ -52,7 +52,7 @@ class LocalExecutorService : ExecutorService
             }
         try
         {
-            taskLog.info("Local executor task starting: task={} user={}", request.taskName, request.userName)
+            taskLog.info("MetaForge executor task starting: task={} user={}", request.taskName, request.userName)
 
             val input = request.input
             val output = request.output
@@ -71,7 +71,7 @@ class LocalExecutorService : ExecutorService
                 throw IllegalArgumentException("Input column mapping is empty")
             }
 
-            // Local 专属可调项从 options 读取（调用方把 executor 的 effective 配置塞进 options）
+            // MetaForge 专属可调项从 options 读取（调用方把 executor 的 effective 配置塞进 options）
             val options = request.options
             val fetchSize = (options["fetchSize"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_FETCH_SIZE
             val batchSize = (options["batchSize"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_BATCH_SIZE
@@ -122,7 +122,7 @@ class LocalExecutorService : ExecutorService
             response.state = RunState.SUCCESS
             // 最终上报一次：确保 100%
             progressListener?.onProgress(written, if (totalCount >= 0) totalCount else written)
-            taskLog.info("Local executor task completed: rows={} state=SUCCESS", written)
+            taskLog.info("MetaForge executor task completed: rows={} state=SUCCESS", written)
         }
         catch (ex: TaskCancelledException)
         {
@@ -139,7 +139,7 @@ class LocalExecutorService : ExecutorService
             }
             else
             {
-                taskLog.error("Local executor failed", ex)
+                taskLog.error("MetaForge executor failed", ex)
                 response.successful = false
                 response.state = RunState.FAILURE
                 response.message = ex.message
@@ -248,14 +248,14 @@ class LocalExecutorService : ExecutorService
         response.successful = false
         if (handle.cancellation.reason == CancelReason.TIMEOUT)
         {
-            taskLog.warn("Local executor task timed out: rows={} task={}", processed, request.taskName)
+            taskLog.warn("MetaForge executor task timed out: rows={} task={}", processed, request.taskName)
             response.state = RunState.TIMEOUT
             response.timeout = true
             response.message = "Timed out after ${request.timeout}s"
         }
         else
         {
-            taskLog.warn("Local executor task stopped by user: rows={} task={}", processed, request.taskName)
+            taskLog.warn("MetaForge executor task stopped by user: rows={} task={}", processed, request.taskName)
             response.state = RunState.STOPPED
             response.message = "Stopped by user"
         }

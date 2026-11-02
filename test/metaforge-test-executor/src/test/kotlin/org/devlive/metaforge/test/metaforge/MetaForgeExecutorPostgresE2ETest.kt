@@ -1,4 +1,4 @@
-package org.devlive.metaforge.test.local
+package org.devlive.metaforge.test.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.common.RunState
@@ -7,9 +7,9 @@ import org.devlive.metaforge.executor.configure.ExecutorProgressListener
 import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.ExecutorResponse
 import org.devlive.metaforge.executor.configure.OriginColumn
-import org.devlive.metaforge.executor.local.LocalExecutorService
+import org.devlive.metaforge.executor.metaforge.MetaForgeExecutorService
 import org.devlive.metaforge.spi.model.RuntimeConfigure
-import org.devlive.metaforge.test.local.support.JdbcPluginService
+import org.devlive.metaforge.test.metaforge.support.JdbcPluginService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -28,14 +28,14 @@ import java.util.concurrent.atomic.AtomicReference
 
 /**
  * 真实数据库端到端测试：用 PostgreSQL 容器作为【源】和【目标】，
- * 通过 [JdbcPluginService]（真实 JDBC）驱动 [LocalExecutorService] 完成一次真正的 source -> target 同步，
+ * 通过 [JdbcPluginService]（真实 JDBC）驱动 [MetaForgeExecutorService] 完成一次真正的 source -> target 同步，
  * 然后直接查目标表核对落库数据。覆盖：流式搬运 + 投影/改名 + NULL/数值类型、preCount 总数、真实 stop 取消。
  *
  * 需要本机可用的 Docker。容器由 @BeforeClass/@AfterClass 管理，整个测试类只起停一次；
  * Docker 不可用时优雅跳过。
  */
 @SuppressFBWarnings(value = ["OBL_UNSATISFIED_OBLIGATION", "OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE"])
-class LocalExecutorPostgresE2ETest
+class MetaForgeExecutorPostgresE2ETest
 {
     companion object
     {
@@ -99,7 +99,7 @@ class LocalExecutorPostgresE2ETest
             )
         )
 
-        val response = LocalExecutorService().start(request)
+        val response = MetaForgeExecutorService().start(request)
 
         assertTrue(response.successful)
         assertEquals(RunState.SUCCESS, response.state)
@@ -135,7 +135,7 @@ class LocalExecutorPostgresE2ETest
             progressListener = ExecutorProgressListener { processed, total -> progress.add(processed to total) }
         }
 
-        val response = LocalExecutorService().start(request)
+        val response = MetaForgeExecutorService().start(request)
 
         assertTrue(response.successful)
         assertEquals(250, response.count)
@@ -161,7 +161,7 @@ class LocalExecutorPostgresE2ETest
             taskName = taskName
         )
 
-        val executor = LocalExecutorService()
+        val executor = MetaForgeExecutorService()
         val responseRef = AtomicReference<ExecutorResponse>()
         val worker = Thread { responseRef.set(executor.start(request)) }
         worker.start()

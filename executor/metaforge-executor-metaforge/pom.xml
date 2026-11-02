@@ -8,9 +8,9 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <name>metaforge-executor-local</name>
-    <artifactId>metaforge-executor-local</artifactId>
-    <description>MetaForge - Executor - Local</description>
+    <name>metaforge-executor-metaforge</name>
+    <artifactId>metaforge-executor-metaforge</artifactId>
+    <description>MetaForge - Executor - MetaForge</description>
 
     <dependencies>
         <dependency>

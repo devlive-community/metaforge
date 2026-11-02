@@ -1,4 +1,4 @@
-package org.devlive.metaforge.test.local
+package org.devlive.metaforge.test.metaforge
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -8,10 +8,10 @@ import org.devlive.metaforge.executor.configure.ExecutorConfigure
 import org.devlive.metaforge.executor.configure.ExecutorProgressListener
 import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.OriginColumn
-import org.devlive.metaforge.executor.local.LocalExecutorService
+import org.devlive.metaforge.executor.metaforge.MetaForgeExecutorService
 import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.spi.model.Response
-import org.devlive.metaforge.test.local.support.FakePluginService
+import org.devlive.metaforge.test.metaforge.support.FakePluginService
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -20,7 +20,7 @@ import org.junit.Test
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * LocalExecutorService 的“特性测试”（characterization test）：
+ * MetaForgeExecutorService 的“特性测试”（characterization test）：
  * 只依赖内存 fake，不连任何数据库，用来在重构前锁定当前可观测行为。
  *
  * 注意：这里断言的是【当前实际行为】。Phase 2 已把“取消时上报已提交行数”落地，
@@ -28,7 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList
  * 断言的每次变更都应对应一次有意为之、可见的行为调整。
  */
 @SuppressFBWarnings(value = ["BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
-class LocalExecutorCharacterizationTest
+class MetaForgeExecutorCharacterizationTest
 {
     private val mapper = ObjectMapper()
 
@@ -60,7 +60,7 @@ class LocalExecutorCharacterizationTest
             )
         )
 
-        val response = LocalExecutorService().start(request)
+        val response = MetaForgeExecutorService().start(request)
 
         assertTrue(response.successful)
         assertEquals(RunState.SUCCESS, response.state)
@@ -99,7 +99,7 @@ class LocalExecutorCharacterizationTest
             progressListener = ExecutorProgressListener { processed, total -> progress.add(processed to total) }
         }
 
-        val response = LocalExecutorService().start(request)
+        val response = MetaForgeExecutorService().start(request)
 
         assertTrue(response.successful)
         assertEquals(2, response.count)
@@ -111,7 +111,7 @@ class LocalExecutorCharacterizationTest
     @Test
     fun streamingStopMidStreamViaCancelledFlag()
     {
-        val service = LocalExecutorService()
+        val service = MetaForgeExecutorService()
         val source = FakePluginService(
             streaming = true,
             headers = listOf("id"),
@@ -146,7 +146,7 @@ class LocalExecutorCharacterizationTest
     {
         // 模拟“驱动在 cancel 后让 rs.next() 直接返回 false（不抛异常）”：
         // 所有行都回调完了才 stop，靠循环后的二次 cancelled 检查兜底
-        val service = LocalExecutorService()
+        val service = MetaForgeExecutorService()
         val source = FakePluginService(
             streaming = true,
             headers = listOf("id"),
@@ -173,7 +173,7 @@ class LocalExecutorCharacterizationTest
     fun streamingDriverAbortAfterCancelIsReportedAsStopped()
     {
         // 第三条 cancel 检测路径：cancel 后底层 fetch 抛 SQLException，走 catch(Exception)+cancelled 逆判定
-        val service = LocalExecutorService()
+        val service = MetaForgeExecutorService()
         val source = FakePluginService(
             streaming = true,
             headers = listOf("id"),
@@ -218,7 +218,7 @@ class LocalExecutorCharacterizationTest
             timeout = 1L
         }
 
-        val response = LocalExecutorService().start(request)
+        val response = MetaForgeExecutorService().start(request)
 
         assertFalse(response.successful)
         assertEquals(RunState.TIMEOUT, response.state)
@@ -250,7 +250,7 @@ class LocalExecutorCharacterizationTest
             )
         )
 
-        val response = LocalExecutorService().start(request)
+        val response = MetaForgeExecutorService().start(request)
 
         assertTrue(response.successful)
         assertEquals(RunState.SUCCESS, response.state)
@@ -279,7 +279,7 @@ class LocalExecutorCharacterizationTest
             originColumns = linkedSetOf(OriginColumn("uid", "id"))
         )
 
-        val response = LocalExecutorService().start(request)
+        val response = MetaForgeExecutorService().start(request)
 
         assertFalse(response.successful)
         assertEquals(RunState.FAILURE, response.state)
@@ -308,7 +308,7 @@ class LocalExecutorCharacterizationTest
             originColumns = linkedSetOf(OriginColumn("id", "id"))
         )
 
-        val response = LocalExecutorService().start(request)
+        val response = MetaForgeExecutorService().start(request)
 
         assertFalse(response.successful)
         assertEquals(RunState.FAILURE, response.state)

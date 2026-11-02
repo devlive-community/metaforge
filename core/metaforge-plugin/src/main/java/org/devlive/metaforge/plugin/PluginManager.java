@@ -78,6 +78,13 @@ public class PluginManager
     // Default version
     private static final String DEFAULT_VERSION = "1.0.0";
 
+    // 已改名插件的旧名称 → 新名称，仅在按旧名称找不到插件时使用
+    // Former plugin names to their current names, used only when nothing is registered under the former name
+    private static final Map<String, String> RENAMED_PLUGINS = Map.of(
+            "Local", "MetaForge",
+            "LocalExecutor", "MetaForge"
+    );
+
     // 插件监视器
     // Plugin watcher
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -862,7 +869,11 @@ public class PluginManager
     // Get plugin by name
     public Optional<Plugin> getPlugin(String name)
     {
-        return Optional.ofNullable(plugins.get(name))
+        PluginMetadata metadata = plugins.get(name);
+        if (metadata == null && name != null && RENAMED_PLUGINS.containsKey(name)) {
+            metadata = plugins.get(RENAMED_PLUGINS.get(name));
+        }
+        return Optional.ofNullable(metadata)
                 .map(info -> (Plugin) info.getInstance());
     }
 
