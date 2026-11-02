@@ -6,7 +6,8 @@ class PinotService : PluginService
 {
     override fun validator(): String
     {
-        return "select * from billing limit 10"
+        // Pinot SQL has no version function; select a constant, which needs no table
+        return "SELECT '-' AS version"
     }
 
     override fun connectType(): String
