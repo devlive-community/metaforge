@@ -1,6 +1,6 @@
 <template>
 
-    <DataTable filterable :filter-fields="tableFilters" :title="$t('workflow.text.list')"
+    <DataTable filterable :filter-fields="tableFilters"
                :columns="headers"
                :data-source="data"
                :loading="loading"

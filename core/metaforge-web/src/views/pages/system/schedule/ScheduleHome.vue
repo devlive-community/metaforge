@@ -2,7 +2,7 @@
 
     <MfAlert v-if="notice" :variant="notice.variant" :title="notice.message" closable @close="notice = null" class="mb-3"/>
 
-    <DataTable filterable :filter-fields="tableFilters" :title="$t('schedule.common.list')"
+    <DataTable filterable :filter-fields="tableFilters"
                :columns="headers"
                :data-source="data"
                :loading="loading"
