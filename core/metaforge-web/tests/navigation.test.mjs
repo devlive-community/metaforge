@@ -38,7 +38,7 @@ test('business and account pages are available at root paths without admin requi
 })
 
 test('management pages require ADMIN and the account route does not collide with admin users', async () => {
-    for (const path of ['/admin/user', '/admin/role', '/admin/menu', '/admin/schedule', '/admin/function', '/admin/configure']) {
+    for (const path of ['/admin/user', '/admin/role', '/admin/menu', '/admin/schedule', '/admin/function', '/admin/settings']) {
         const ordinary = routerFor(user)
         await ordinary.push(path)
         assert.equal(ordinary.currentRoute.value.path, '/common/403')
@@ -47,6 +47,11 @@ test('management pages require ADMIN and the account route does not collide with
         assert.equal(privileged.currentRoute.value.path, path)
         assert.equal(privileged.currentRoute.value.meta.requiresAdmin, true)
     }
+    // Runtime settings moved into System settings; the old page opens its tab.
+    const privileged = routerFor(admin)
+    await privileged.push('/admin/configure')
+    assert.equal(privileged.currentRoute.value.path, '/admin/settings')
+    assert.equal(privileged.currentRoute.value.query.tab, 'runtime')
     const ordinary = routerFor(user)
     await ordinary.push('/admin/user/profile')
     assert.equal(ordinary.currentRoute.value.path, '/account/profile')

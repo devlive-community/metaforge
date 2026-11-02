@@ -261,13 +261,10 @@ const createDefaultRouter = (router: Router) => {
                 component: () => import('@/views/pages/system/menu/MenuHome.vue')
             },
             {
+                // Runtime settings moved into System settings.
                 name: 'configure',
                 path: 'configure',
-                meta: {
-                    title: 'configure.runtime.title',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/system/configure/ConfigureHome.vue')
+                redirect: { path: '/admin/settings', query: { tab: 'runtime' } }
             },
             {
                 name: 'settings',

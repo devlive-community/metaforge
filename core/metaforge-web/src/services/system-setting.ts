@@ -16,6 +16,18 @@ class SystemSettingService
         return new HttpUtils().put(DEFAULT_PATH, { auth, mail, oauth, fs })
     }
 
+    /** Writes and deletes a probe file with the storage as it is in the form. */
+    testFs(fs: FsSettings): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${ DEFAULT_PATH }/fs/test`, fs)
+    }
+
+    /** Tries an executor's or the dataset target's runtime values as they are in the form. */
+    testRuntime(category: string, name: string, values: Record<string, string>): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${ DEFAULT_PATH }/runtime/test`, { category, name, values })
+    }
+
     /** Sends a test mail with the server as it is in the form. */
     testMail(mail: MailSettings, to: string): Promise<ResponseModel>
     {

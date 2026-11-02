@@ -30,7 +30,10 @@
             <MfTag v-if="tab === 'mail'" size="sm" :variant="ready ? 'success' : 'default'">{{ $t(ready ? 'settings.mail.ready' : 'settings.mail.notReady') }}</MfTag></h2>
           <p class="m-0 mt-1 text-sm text-content-tertiary">{{ $t(`settings.${tab}.description`) }}</p>
         </div>
-        <MfButton variant="primary" :loading="saving" :disabled="loading" @click="save"><Save :size="15"/>{{ $t('settings.save') }}</MfButton>
+        <div class="flex shrink-0 items-center gap-2">
+          <MfButton v-if="testable" :loading="testing" :disabled="loading || !canTest" @click="test"><FlaskConical :size="15"/>{{ $t('settings.test.button') }}</MfButton>
+          <MfButton variant="primary" :loading="saving" :disabled="loading" @click="save"><Save :size="15"/>{{ $t('settings.save') }}</MfButton>
+        </div>
       </header>
 
       <div v-if="loading" class="flex items-center justify-center py-24"><MfSpinner/></div>
@@ -95,7 +98,6 @@
             <span class="text-sm font-semibold text-content">{{ $t('settings.mail.test') }}</span>
             <div class="flex items-center gap-2">
               <MfInput v-model="testTo" class="min-w-0 flex-1" :placeholder="$t('settings.mail.testTo')"/>
-              <MfButton class="shrink-0" :loading="testing" :disabled="!ready || !EMAIL_PATTERN.test(testTo.trim())" @click="test"><Send :size="15"/>{{ $t('settings.mail.testSend') }}</MfButton>
             </div>
             <span class="text-xs text-content-tertiary">{{ $t('settings.mail.testHint') }}</span>
           </div>
@@ -161,6 +163,43 @@
             <p class="m-0 text-xs text-content-tertiary">{{ $t('settings.fs.usageHint') }}</p>
           </MfForm>
         </div>
+        <div v-show="tab === 'runtime'" class="grid grid-cols-1 items-start gap-4 lg:grid-cols-[14rem_minmax(0,1fr)]">
+          <nav class="flex flex-col gap-4" :aria-label="$t('settings.runtime.title')">
+            <div v-for="group in RUNTIME_CATEGORIES" :key="group" class="flex flex-col gap-1">
+              <span class="px-3 text-xs font-medium text-content-tertiary">{{ $t(`settings.runtime.category.${group}`) }}</span>
+              <button v-for="item in runtimeItems.filter(entry => entry.category === group)" :key="runtimeKey(item)" type="button"
+                      class="flex items-center justify-between gap-2 rounded-mf-md px-3 py-2 text-left text-sm outline-none transition-colors focus-visible:ring-2 focus-visible:ring-primary/40"
+                      :class="runtimeKey(item) === runtimeSelected ? 'bg-primary/10 font-semibold text-primary' : 'text-content-secondary hover:bg-surface-hover hover:text-content'"
+                      @click="selectRuntime(item)">
+                <span class="truncate">{{ item.name }}</span>
+                <span v-if="runtimeChanged.includes(runtimeKey(item))" class="size-1.5 shrink-0 rounded-full bg-warning" :title="$t('settings.runtime.unsaved')"/>
+              </button>
+              <span v-if="!runtimeItems.some(entry => entry.category === group)" class="px-3 text-xs text-content-tertiary">{{ $t('settings.runtime.none') }}</span>
+            </div>
+          </nav>
+          <div class="flex min-w-0 flex-col gap-4 rounded-mf-md border border-line p-4">
+            <div v-if="runtimeLoading" class="flex items-center justify-center py-12"><MfSpinner/></div>
+            <MfEmpty v-else-if="!runtimeCurrent" size="sm" :title="$t('settings.runtime.choose')"/>
+            <template v-else>
+              <div class="flex items-center gap-2">
+                <span class="truncate text-sm font-semibold text-content">{{ runtimeCurrent.item.name }}</span>
+                <MfTag size="sm">{{ $t(`settings.runtime.category.${runtimeCurrent.item.category}`) }}</MfTag>
+              </div>
+              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div v-for="field in runtimeCurrent.schema" :key="field.name" class="flex min-w-0 flex-col gap-1.5">
+                  <span class="flex items-center gap-1.5 text-sm font-medium text-content">{{ field.name }}
+                    <MfTooltip v-if="field.description" :content="field.description"><CircleHelp :size="13" class="text-content-tertiary"/></MfTooltip>
+                  </span>
+                  <MfSwitch v-if="field.type === 'BOOLEAN'" :model-value="runtimeCurrent.values[field.name] === 'true'" :aria-label="field.name"
+                            @update:model-value="value => runtimeCurrent && (runtimeCurrent.values[field.name] = value ? 'true' : 'false')"/>
+                  <MfInputNumber v-else-if="field.type === 'NUMBER'" class="w-full" :model-value="numberOf(runtimeCurrent.values[field.name])" :aria-label="field.name"
+                                 @update:model-value="value => runtimeCurrent && (runtimeCurrent.values[field.name] = value === null || value === undefined ? '' : String(value))"/>
+                  <MfInput v-else v-model="runtimeCurrent.values[field.name]" :show-password="field.type === 'PASSWORD'" :aria-label="field.name"/>
+                </div>
+              </div>
+            </template>
+          </div>
+        </div>
       </div>
     </section>
   </div>
@@ -171,8 +210,9 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { Copy, HardDrive, KeyRound, Mail, Save, Send, ShieldCheck, SlidersHorizontal } from '@lucide/vue'
+import { CircleHelp, Copy, Cpu, FlaskConical, HardDrive, KeyRound, Mail, Save, ShieldCheck, SlidersHorizontal } from '@lucide/vue'
 import SystemSettingService from '@/services/system-setting'
+import RuntimeConfigureService from '@/services/runtimeConfigure'
 import { apiBaseUrl } from '@/utils/http'
 import {
   defaultAuthSettings, defaultFsSettings, defaultMailSettings, defaultOAuthGroup, defaultOAuthSettings, EMAIL_PATTERN, fsLocal, incompleteProviders, mailReady,
@@ -189,8 +229,8 @@ const MAIL_FEATURES: readonly string[] = ['emailVerification', 'passwordReset']
 const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
-type Tab = 'auth' | 'mail' | 'oauth' | 'fs'
-const TABS: Tab[] = ['auth', 'mail', 'oauth', 'fs']
+type Tab = 'auth' | 'mail' | 'oauth' | 'fs' | 'runtime'
+const TABS: Tab[] = ['auth', 'mail', 'oauth', 'fs', 'runtime']
 // The tab is kept in ?tab= so a refresh stays on it.
 const tab = computed<Tab>(() => TABS.includes(route.query.tab as Tab) ? route.query.tab as Tab : 'auth')
 const select = (key: Tab) => { if (key !== tab.value) router.replace({ query: { ...route.query, tab: key } }) }
@@ -205,6 +245,42 @@ const authRef = ref()
 const mailRef = ref()
 const siteRef = ref()
 const fs = ref(defaultFsSettings())
+
+// Runtime settings: the executors and the dataset target, each its own row of metaforge_configure.
+interface RuntimeField { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'PASSWORD'; defaultValue: string; description: string }
+interface RuntimeItem { category: 'EXECUTOR' | 'DATASET'; name: string }
+interface RuntimeEntry { item: RuntimeItem; schema: RuntimeField[]; values: Record<string, string>; saved: Record<string, string> }
+const RUNTIME_CATEGORIES = ['EXECUTOR', 'DATASET'] as const
+const runtimeItems = ref<RuntimeItem[]>([])
+const runtimeEntries = ref<Record<string, RuntimeEntry>>({})
+const runtimeSelected = ref('')
+const runtimeLoading = ref(false)
+const runtimeKey = (item: RuntimeItem) => `${ item.category }/${ item.name }`
+const runtimeCurrent = computed(() => runtimeEntries.value[runtimeSelected.value] || null)
+const runtimeChanged = computed(() => Object.entries(runtimeEntries.value).filter(([, entry]) => JSON.stringify(entry.values) !== JSON.stringify(entry.saved)).map(([key]) => key))
+const numberOf = (value: string | undefined) => value === undefined || value === '' || Number.isNaN(Number(value)) ? undefined : Number(value)
+
+async function loadRuntime() {
+  const lists = await Promise.all(RUNTIME_CATEGORIES.map(category => RuntimeConfigureService.list(category)))
+  runtimeItems.value = lists.flatMap((response, index) => (response.status ? response.data || [] : [])
+      .map((row: any) => ({ category: RUNTIME_CATEGORIES[index], name: String(row.name) })))
+  if (!runtimeSelected.value && runtimeItems.value.length) await selectRuntime(runtimeItems.value[0])
+}
+
+/** Opens an item, reading its fields and values the first time; edits are kept while switching. */
+async function selectRuntime(item: RuntimeItem) {
+  const key = runtimeKey(item)
+  runtimeSelected.value = key
+  if (runtimeEntries.value[key]) return
+  runtimeLoading.value = true
+  const response = await RuntimeConfigureService.detail(item.category, item.name)
+  runtimeLoading.value = false
+  if (!response.status || !response.data) { MfMessage.error(response.message); return }
+  const schema: RuntimeField[] = response.data.schema || []
+  const values: Record<string, string> = {}
+  for (const field of schema) values[field.name] = String(response.data.values?.[field.name] ?? field.defaultValue ?? '')
+  runtimeEntries.value = { ...runtimeEntries.value, [key]: { item, schema, values, saved: { ...values } } }
+}
 const fsTypes = ref<string[]>([])
 const fsRef = ref()
 const FS_NAMES = ['LocalFs', 'AliOssFs', 'AmazonS3Fs', 'MinIOFs', 'QiniuFs', 'TencentCosFs']
@@ -250,7 +326,15 @@ const tabs = computed(() => [
   { key: 'mail' as const, icon: Mail, status: t(ready.value ? 'settings.mail.ready' : 'settings.mail.notReady') },
   { key: 'oauth' as const, icon: KeyRound, status: t('settings.tabStatus.oauth', { count: OAUTH_PROVIDERS.filter(id => oauth.value[id].enabled).length }) },
   { key: 'fs' as const, icon: HardDrive, status: fsName(fs.value.type) },
+  { key: 'runtime' as const, icon: Cpu, status: t('settings.runtime.count', { count: runtimeItems.value.length }) },
 ])
+// Mail, file storage and runtime settings can be tried with the values in the form before saving.
+const testable = computed(() => tab.value === 'mail' || tab.value === 'fs' || tab.value === 'runtime')
+const canTest = computed(() => {
+  if (tab.value === 'mail') return ready.value && EMAIL_PATTERN.test(testTo.value.trim())
+  if (tab.value === 'runtime') return !!runtimeCurrent.value
+  return true
+})
 const waiting = computed(() => waitingForMail(auth.value, mail.value))
 // The mail server is required once a feature that sends mail is on.
 const needsMail = computed(() => auth.value.emailVerification || auth.value.passwordReset)
@@ -268,7 +352,7 @@ function apply(data: any) {
 
 async function load() {
   loading.value = true
-  const response = await SystemSettingService.get()
+  const [response] = await Promise.all([SystemSettingService.get(), loadRuntime()])
   loading.value = false
   if (response.status) apply(response.data)
   else MfMessage.error(response.message)
@@ -293,18 +377,45 @@ async function save() {
   }
   saving.value = true
   const response = await SystemSettingService.save(auth.value, mail.value, oauth.value, fs.value)
-  saving.value = false
-  if (!response.status) { MfMessage.error(response.message); return }
+  if (!response.status) { saving.value = false; MfMessage.error(response.message); return }
   apply(response.data)
+  // Runtime items are saved one by one, only those that were changed.
+  for (const key of runtimeChanged.value) {
+    const entry = runtimeEntries.value[key]
+    const saved = await RuntimeConfigureService.save(entry.item.category, entry.item.name, entry.values)
+    if (!saved.status) {
+      saving.value = false
+      runtimeSelected.value = key
+      select('runtime')
+      MfMessage.error(saved.message)
+      return
+    }
+    entry.saved = { ...entry.values }
+  }
+  saving.value = false
   MfMessage.success(t('settings.saved'))
 }
 
+/** Tries the current tab's values as they are in the form; nothing is saved. */
 async function test() {
+  if (tab.value === 'fs') {
+    try {
+      await fsRef.value?.validate()
+    }
+    catch {
+      return
+    }
+  }
   testing.value = true
-  const response = await SystemSettingService.testMail(mail.value, testTo.value.trim())
+  let response
+  if (tab.value === 'mail') response = await SystemSettingService.testMail(mail.value, testTo.value.trim())
+  else if (tab.value === 'fs') response = await SystemSettingService.testFs(fs.value)
+  else if (runtimeCurrent.value) response = await SystemSettingService.testRuntime(runtimeCurrent.value.item.category, runtimeCurrent.value.item.name, runtimeCurrent.value.values)
   testing.value = false
-  if (response.status) MfMessage.success(t('settings.mail.testSent', { to: testTo.value.trim() }))
-  else MfMessage.error(response.message)
+  if (!response) return
+  if (!response.status) { MfMessage.error(response.message); return }
+  if (tab.value === 'mail') MfMessage.success(t('settings.mail.testSent', { to: testTo.value.trim() }))
+  else MfMessage.success(t(tab.value === 'fs' ? 'settings.test.fsPassed' : 'settings.test.runtimePassed'))
 }
 
 onMounted(load)
