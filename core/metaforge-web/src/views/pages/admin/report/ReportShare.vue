@@ -4,7 +4,7 @@
 
     <MfForm v-else id="report-share" ref="formRef" :model="form" layout="vertical" @finish="onSave">
       <MfFormItem name="enabled">
-        <div class="flex items-center justify-between gap-4">
+        <div class="flex w-full items-center justify-between gap-4">
           <div class="min-w-0">
             <div class="font-medium text-content">{{ $t('report.share.public') }}</div>
             <div class="mt-0.5 text-xs text-content-tertiary">{{ $t('report.share.publicHint') }}</div>
@@ -15,16 +15,22 @@
 
       <template v-if="form.enabled">
         <MfFormItem v-if="state.token" :label="$t('report.share.link')" name="link">
-          <div class="flex items-center gap-2">
-            <MfInput :model-value="shareUrl" readonly class="min-w-0 flex-1"/>
-            <MfButton class="shrink-0" @click="copy(shareUrl)">
-              <Copy :size="15"/>{{ $t('report.share.copy') }}
-            </MfButton>
-            <MfButton class="shrink-0" :loading="rotating" :disabled="saving" @click="onRotate">
-              <RefreshCw :size="15"/>{{ $t('report.share.rotate') }}
-            </MfButton>
+          <div class="w-full min-w-0">
+            <MfInput :model-value="shareUrl" readonly class="w-full"/>
+            <div class="mt-2 flex flex-wrap items-center gap-2">
+              <MfButton size="sm" class="shrink-0" @click="copy(shareUrl)">
+                <Copy :size="14"/>{{ $t('report.share.copy') }}
+              </MfButton>
+              <MfButton size="sm" class="shrink-0" :disabled="expired" @click="preview">
+                <ExternalLink :size="14"/>{{ $t('report.share.preview') }}
+              </MfButton>
+              <MfButton size="sm" class="shrink-0" :loading="rotating" :disabled="saving" @click="onRotate">
+                <RefreshCw :size="14"/>{{ $t('report.share.rotate') }}
+              </MfButton>
+              <span v-if="expiryNote" class="min-w-0 text-xs" :class="expired ? 'text-warning' : 'text-content-tertiary'">{{ expiryNote }}</span>
+            </div>
+            <p v-if="dirty" class="mt-1.5 text-xs text-content-tertiary">{{ $t('report.share.previewSaved') }}</p>
           </div>
-          <p v-if="expiryNote" class="mt-1.5 text-xs" :class="expired ? 'text-warning' : 'text-content-tertiary'">{{ expiryNote }}</p>
         </MfFormItem>
         <p v-else class="mb-4 text-xs text-content-tertiary">{{ $t('report.share.linkAfterSave') }}</p>
 
@@ -57,7 +63,7 @@
         </MfFormItem>
 
         <MfFormItem name="embed">
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex w-full items-center justify-between gap-4">
             <div class="min-w-0">
               <div class="font-medium text-content">{{ $t('report.share.embed') }}</div>
               <div class="mt-0.5 text-xs text-content-tertiary">{{ $t('report.share.embedHint') }}</div>
@@ -94,11 +100,11 @@ import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import useClipboard from 'vue-clipboard3'
-import { Copy, RefreshCw } from '@lucide/vue'
+import { Copy, ExternalLink, RefreshCw } from '@lucide/vue'
 import ReportService from '@/services/report'
 import { ReportModel } from '@/model/report'
 import {
-  isShareableReport, isShareExpired, localDate, reportEmbedCode, reportShareUrl, SHARE_ORIGIN, shareExpiresAt, type ShareExpiry
+  formatShareTime, isShareableReport, isShareExpired, localDate, reportEmbedCode, reportShareUrl, SHARE_ORIGIN, shareExpiresAt, type ShareExpiry
 } from './ReportShareUtils'
 
 defineOptions({ name: 'ReportShare' })
@@ -130,6 +136,9 @@ const form = reactive({
   showTitle: props.info.shareShowTitle !== false,
   showDescription: props.info.shareShowDescription !== false,
 })
+const saved = ref(JSON.stringify(form))
+// The preview shows the saved settings; say so while the form has unsaved changes.
+const dirty = computed(() => JSON.stringify(form) !== saved.value)
 const formRef = ref()
 const saving = ref(false)
 const rotating = ref(false)
@@ -140,7 +149,7 @@ const iframeCode = computed(() => reportEmbedCode(window.location.origin, state.
 const expired = computed(() => state.enabled && isShareExpired(state.expiresAt))
 const expiryNote = computed(() => {
   if (!state.enabled || state.expiresAt == null) return ''
-  const time = new Date(state.expiresAt).toLocaleString(locale.value)
+  const time = formatShareTime(state.expiresAt)
   return expired.value ? t('report.share.expiredAt', { time }) : t('report.share.expiresAt', { time })
 })
 
@@ -191,7 +200,13 @@ async function submit(rotate: boolean): Promise<boolean>
     form.expiryDate = localDate(state.expiresAt)
   }
   changed = true
+  saved.value = JSON.stringify(form)
   return true
+}
+
+function preview()
+{
+  window.open(shareUrl.value, '_blank', 'noopener')
 }
 
 async function onSave()

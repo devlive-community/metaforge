@@ -3203,5 +3203,7 @@
   "report.share.expiredAt": "The link expired on {time} and no longer opens; change the expiry and save",
   "report.share.display": "Page shows",
   "report.share.showTitle": "Title",
-  "report.share.showDescription": "Description"
+  "report.share.showDescription": "Description",
+  "report.share.preview": "Preview",
+  "report.share.previewSaved": "Preview shows the saved settings; save to preview your changes."
 }

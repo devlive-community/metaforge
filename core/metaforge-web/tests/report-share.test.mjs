@@ -3,7 +3,7 @@ import test from 'node:test'
 import { sourceModule } from '../../metaforge-ui/tests/component.mjs'
 
 const { sharedReportPath, routeSharedReportPath } = await sourceModule('../../metaforge-web/src/router/shared.ts')
-const { isShareableReport, isShareExpired, localDate, reportEmbedCode, reportShareUrl, SHARE_ORIGIN, shareExpiresAt } = await sourceModule('../../metaforge-web/src/views/pages/admin/report/ReportShareUtils.ts')
+const { formatShareTime, isShareableReport, isShareExpired, localDate, reportEmbedCode, reportShareUrl, SHARE_ORIGIN, shareExpiresAt } = await sourceModule('../../metaforge-web/src/views/pages/admin/report/ReportShareUtils.ts')
 
 const TOKEN = 'abcdefghijklmnopqrstuvwxyz012-_A'
 
@@ -51,4 +51,16 @@ test('expiry choices become concrete moments', () => {
   assert.equal(isShareExpired(now - 1, now), true)
   assert.equal(isShareExpired(now + 1, now), false)
   assert.equal(isShareExpired(null, now), false)
+})
+
+test('expiry times use dashes, not the browser locale', () => {
+  assert.equal(formatShareTime(new Date(2026, 10, 5, 10, 30, 18).getTime()), '2026-11-05 10:30:18')
+  assert.equal(formatShareTime(new Date(2026, 0, 2, 3, 4, 5).getTime()), '2026-01-02 03:04:05')
+})
+
+test('the shared path mapping runs before the router module is evaluated', async () => {
+  const { readFile } = await import('node:fs/promises')
+  const main = await readFile(new URL('../src/main.ts', import.meta.url), 'utf8')
+  const imports = [...main.matchAll(/^import .*$/gm)].map(match => match[0])
+  assert.equal(imports[0], "import './shared-entry'", 'the hash router captures the address when created')
 })

@@ -3203,5 +3203,7 @@
   "report.share.expiredAt": "链接已于 {time} 过期，访问者无法打开；请修改有效期后保存",
   "report.share.display": "页面显示",
   "report.share.showTitle": "显示标题",
-  "report.share.showDescription": "显示描述"
+  "report.share.showDescription": "显示描述",
+  "report.share.preview": "预览",
+  "report.share.previewSaved": "预览显示的是已保存的设置，保存后再预览可看到最新效果。"
 }

@@ -55,3 +55,11 @@ export function isShareExpired(expiresAt: number | null | undefined, now = Date.
 {
     return typeof expiresAt === 'number' && expiresAt <= now
 }
+
+/** YYYY-MM-DD HH:mm:ss in local time, the date style used across the app. */
+export function formatShareTime(time: number): string
+{
+    const value = new Date(time)
+    const pad = (part: number) => String(part).padStart(2, '0')
+    return `${ localDate(time) } ${ pad(value.getHours()) }:${ pad(value.getMinutes()) }:${ pad(value.getSeconds()) }`
+}
