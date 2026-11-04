@@ -1,0 +1,12 @@
+{
+  "label": "CeresDB",
+  "description": "CeresDB is a database system designed to allow for the storage and retrieval of semi-structured data, i.e. data that conforms to a “top-level schema” where columns types are known, but those columns can in-turn contain dictionaries or lists.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ceresdb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 45
+}

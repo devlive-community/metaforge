@@ -1,0 +1,12 @@
+{
+  "label": "Dremio",
+  "description": "Dremio is a free, open source, distributed data platform.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dremio.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 12
+}

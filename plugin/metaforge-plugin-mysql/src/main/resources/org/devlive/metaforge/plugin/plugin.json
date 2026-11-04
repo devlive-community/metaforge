@@ -1,0 +1,13 @@
+{
+  "label": "MySQL",
+  "description": "A powerful MySQL integration plugin that provides comprehensive database connectivity. Features include table/view management, data import/export, SQL query execution, stored procedure support, and real-time data synchronization. Optimized for high-performance data operations with connection pooling and batch processing capabilities.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mysql.svg",
+  "supportVersion": [
+    "8.0",
+    "5.7"
+  ],
+  "order": 0
+}

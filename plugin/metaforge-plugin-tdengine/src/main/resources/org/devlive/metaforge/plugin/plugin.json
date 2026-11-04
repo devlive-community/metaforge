@@ -1,0 +1,12 @@
+{
+  "label": "TDengine",
+  "description": "TDengine is an open source, high-performance, cloud native time-series database optimized for Internet of Things (IoT), Connected Cars, and Industrial IoT.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/tdengine.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 37
+}

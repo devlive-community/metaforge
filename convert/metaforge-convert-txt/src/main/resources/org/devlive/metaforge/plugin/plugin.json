@@ -1,0 +1,12 @@
+{
+  "label": "Txt Convert",
+  "description": "A TXT file conversion plugin for MetaForge.",
+  "i18nFormat": true,
+  "type": "Converter",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/txt.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 52
+}

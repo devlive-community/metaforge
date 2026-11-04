@@ -1,0 +1,12 @@
+{
+  "label": "MongoDB Community",
+  "description": "The MongoDB Community SQL JDBC Driver provides SQL connectivity to MongoDB Community for client applications developed in Java.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mongocommunity.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 49
+}

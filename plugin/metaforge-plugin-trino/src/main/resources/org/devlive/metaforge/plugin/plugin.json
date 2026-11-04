@@ -1,0 +1,12 @@
+{
+  "label": "Trino",
+  "description": "Trino is a distributed SQL query engine for big data.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/trino.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 38
+}

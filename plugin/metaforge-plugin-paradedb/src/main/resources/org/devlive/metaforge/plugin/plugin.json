@@ -1,0 +1,12 @@
+{
+  "label": "ParadeDB",
+  "description": "ParadeDB is a modern Elasticsearch alternative built on Postgres. Built for real-time, update-heavy workloads.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/paradedb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 19
+}

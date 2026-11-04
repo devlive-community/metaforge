@@ -1,0 +1,12 @@
+{
+  "label": "Hologres",
+  "description": "Hologres is a unified real-time data warehousing service developed by Alibaba Cloud. You can use Hologres to write, update, process, and analyze large amounts of data in real time.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hologres.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 41
+}

@@ -152,3 +152,72 @@ jobs:
           -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
           -Dgpg.passphrase="$GPG_PASSPHRASE"
           -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+
+      # The store catalogue and the statistics catalog are built from the very
+      # archives just deployed to Maven Central (dist/plugins holds copies), so
+      # one SHA-256 and size are valid for the Maven and CDN sources alike.
+      - name: Build the store catalogue and the statistics catalog
+        run: >
+          node configure/publish/build-metadata.mjs --dist dist/plugins --strict
+          --out dist/metadata.json --catalog dist/release-catalog.json
+          --commit "$GITHUB_SHA" --generation "$GITHUB_RUN_NUMBER" --released now
+
+      - name: Upload the catalogues
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-catalogue
+          if-no-files-found: error
+          path: |
+            dist/metadata.json
+            dist/release-catalog.json
+
+      # Order: packages to the CDN -> catalog into ForgeStats -> public metadata.json.
+      # A failed step keeps the previous public catalogue, and re-running is safe.
+      - name: Publish the packages to the CDN
+        env:
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          if [ -z "$OSS_ACCESS_KEY_ID" ]; then
+            echo '::warning::OSS secrets are not set; skipping the CDN upload (the store falls back to Maven Central)'
+            exit 0
+          fi
+          # Official ossutil 1.x installer (same tool as configure/publish/publish-oss-artifact.sh).
+          curl -fsSL https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash
+          oss() { ossutil -e "$OSS_ENDPOINT" -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" "$@"; }
+          jq -r '.plugins[] | .sources.cdn' dist/release-catalog.json | while read -r path; do
+            file="dist/plugins/$(basename "$path")"
+            oss cp "$file" "oss://$OSS_BUCKET/applications/metaforge/plugins/$path" -f
+          done
+
+      - name: Import the statistics catalog into ForgeStats
+        env:
+          STATS_SSH_KEY: ${{ secrets.STATS_SSH_KEY }}
+          STATS_SSH_TARGET: ${{ secrets.STATS_SSH_TARGET }}
+        run: |
+          if [ -z "$STATS_SSH_KEY" ] || [ -z "$STATS_SSH_TARGET" ]; then
+            echo '::warning::ForgeStats secrets are not set; downloads of this release are not counted'
+            exit 0
+          fi
+          umask 077
+          printf '%s\n' "$STATS_SSH_KEY" > "$RUNNER_TEMP/stats-key"
+          digest=$(sha256sum dist/release-catalog.json | cut -d ' ' -f 1)
+          ssh -T -i "$RUNNER_TEMP/stats-key" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            "$STATS_SSH_TARGET" "sudo -n /usr/local/sbin/forgestats-admin catalog metaforge $digest" < dist/release-catalog.json
+          rm -f "$RUNNER_TEMP/stats-key"
+
+      - name: Publish the store catalogue
+        env:
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          if [ -z "$OSS_ACCESS_KEY_ID" ]; then
+            echo '::warning::OSS secrets are not set; publish dist/metadata.json from the store-catalogue artifact manually'
+            exit 0
+          fi
+          ossutil -e "$OSS_ENDPOINT" -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" \
+            cp dist/metadata.json "oss://$OSS_BUCKET/applications/metaforge/metadata/metadata.json" -f

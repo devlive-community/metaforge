@@ -1,0 +1,12 @@
+{
+  "label": "GreptimeDB",
+  "description": "GreptimeDB is an open-source unified & cost-effective time-series database for Metrics, Logs, and Events (also Traces in plan). You can gain real-time insights from Edge to Cloud at Any Scale.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/greptimedb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 42
+}
