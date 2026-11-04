@@ -1,5 +1,5 @@
 <template>
-  <MfModal v-model:open="visible" width="560px" :title="$t('report.share.title', { name: info.name })">
+  <MfModal v-model:open="visible" width="600px" :title="$t('report.share.title', { name: info.name })">
     <MfAlert v-if="!shareable" variant="warning" :title="$t('report.share.legacy')"/>
 
     <MfForm v-else id="report-share" ref="formRef" :model="form" layout="vertical" @finish="onSave">
@@ -24,8 +24,37 @@
               <RefreshCw :size="15"/>{{ $t('report.share.rotate') }}
             </MfButton>
           </div>
+          <p v-if="expiryNote" class="mt-1.5 text-xs" :class="expired ? 'text-warning' : 'text-content-tertiary'">{{ expiryNote }}</p>
         </MfFormItem>
         <p v-else class="mb-4 text-xs text-content-tertiary">{{ $t('report.share.linkAfterSave') }}</p>
+
+        <MfFormItem :label="$t('report.share.expiry')" name="expiryDate" :rules="expiryRules">
+          <div class="flex flex-wrap items-center gap-2">
+            <MfSelect v-model="form.expiry" :options="expiryOptions" class="w-40"/>
+            <MfDatePicker v-if="form.expiry === 'date'"
+                          v-model="form.expiryDate"
+                          class="w-48"
+                          :min="today"
+                          :locale="locale"
+                          :label="$t('report.share.expiryDate')"
+                          :placeholder="$t('dataTable.selectDate')"
+                          :today-text="$t('dataTable.today')"
+                          :clear-text="$t('dataTable.clear')"
+                          :previous-text="$t('dataTable.previousMonth')"
+                          :next-text="$t('dataTable.nextMonth')"/>
+          </div>
+        </MfFormItem>
+
+        <MfFormItem :label="$t('report.share.display')" name="display">
+          <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <label class="flex items-center gap-2 text-sm text-content">
+              <MfSwitch v-model="form.showTitle" size="sm"/>{{ $t('report.share.showTitle') }}
+            </label>
+            <label class="flex items-center gap-2 text-sm text-content">
+              <MfSwitch v-model="form.showDescription" size="sm"/>{{ $t('report.share.showDescription') }}
+            </label>
+          </div>
+        </MfFormItem>
 
         <MfFormItem name="embed">
           <div class="flex items-center justify-between gap-4">
@@ -68,13 +97,15 @@ import useClipboard from 'vue-clipboard3'
 import { Copy, RefreshCw } from '@lucide/vue'
 import ReportService from '@/services/report'
 import { ReportModel } from '@/model/report'
-import { isShareableReport, reportEmbedCode, reportShareUrl, SHARE_ORIGIN } from './ReportShareUtils'
+import {
+  isShareableReport, isShareExpired, localDate, reportEmbedCode, reportShareUrl, SHARE_ORIGIN, shareExpiresAt, type ShareExpiry
+} from './ReportShareUtils'
 
 defineOptions({ name: 'ReportShare' })
 
 const props = defineProps<{ isVisible: boolean; info: ReportModel }>()
 const emit = defineEmits<{ (e: 'close', changed: boolean): void }>()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 
 let changed = false
 const visible = computed({
@@ -87,18 +118,48 @@ const state = reactive({
   token: props.info.shareToken ?? '',
   enabled: !!props.info.shareEnabled,
   embed: !!props.info.shareEmbed,
+  expiresAt: props.info.shareExpiresAt ?? null as number | null,
 })
+// A saved expiry reopens as its date, so the exact moment stays visible below the link.
 const form = reactive({
   enabled: !!props.info.shareEnabled,
   embed: !!props.info.shareEmbed,
   origins: props.info.shareOrigins ?? '',
+  expiry: (props.info.shareExpiresAt ? 'date' : 'never') as ShareExpiry,
+  expiryDate: props.info.shareExpiresAt ? localDate(props.info.shareExpiresAt) : '',
+  showTitle: props.info.shareShowTitle !== false,
+  showDescription: props.info.shareShowDescription !== false,
 })
 const formRef = ref()
 const saving = ref(false)
 const rotating = ref(false)
+const today = localDate(Date.now())
 
 const shareUrl = computed(() => reportShareUrl(window.location.origin, state.token))
 const iframeCode = computed(() => reportEmbedCode(window.location.origin, state.token, props.info.name ?? ''))
+const expired = computed(() => state.enabled && isShareExpired(state.expiresAt))
+const expiryNote = computed(() => {
+  if (!state.enabled || state.expiresAt == null) return ''
+  const time = new Date(state.expiresAt).toLocaleString(locale.value)
+  return expired.value ? t('report.share.expiredAt', { time }) : t('report.share.expiresAt', { time })
+})
+
+const expiryOptions = computed(() => [
+  { label: t('report.share.expiryNever'), value: 'never' },
+  { label: t('report.share.expiryDays', { days: 1 }), value: '1d' },
+  { label: t('report.share.expiryDays', { days: 7 }), value: '7d' },
+  { label: t('report.share.expiryDays', { days: 30 }), value: '30d' },
+  { label: t('report.share.expiryDate'), value: 'date' },
+])
+
+const expiryRules = computed(() => [{
+  validator: () => {
+    if (form.expiry !== 'date') return true
+    if (!form.expiryDate) return t('report.share.expiryRequired')
+    const at = shareExpiresAt('date', form.expiryDate)
+    return (at !== null && at > Date.now()) || t('report.share.expiryPast')
+  }
+}])
 
 const originRules = computed(() => [{
   validator: (value: unknown) => String(value ?? '').split(/[\s,]+/).filter(Boolean).every(item => SHARE_ORIGIN.test(item.replace(/\/$/, '')))
@@ -107,13 +168,28 @@ const originRules = computed(() => [{
 
 async function submit(rotate: boolean): Promise<boolean>
 {
-  const response = await ReportService.share(props.info.code as string, { ...form, rotate })
+  const response = await ReportService.share(props.info.code as string, {
+    enabled: form.enabled,
+    embed: form.embed,
+    origins: form.origins,
+    rotate,
+    // An untouched date keeps the exact saved moment instead of moving to the end of that day.
+    expiresAt: form.expiry === 'date' && state.expiresAt != null && form.expiryDate === localDate(state.expiresAt)
+        ? state.expiresAt : shareExpiresAt(form.expiry, form.expiryDate),
+    showTitle: form.showTitle,
+    showDescription: form.showDescription,
+  })
   if (!response.status) {
     MfMessage.error(response.message || t('report.share.failed'))
     return false
   }
-  Object.assign(state, response.data)
+  Object.assign(state, { ...response.data, expiresAt: response.data.expiresAt ?? null })
   form.origins = response.data.origins ?? ''
+  // A preset becomes its concrete date, so saving again does not push the expiry further out.
+  if (state.expiresAt != null) {
+    form.expiry = 'date'
+    form.expiryDate = localDate(state.expiresAt)
+  }
   changed = true
   return true
 }

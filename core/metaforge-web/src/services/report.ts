@@ -12,7 +12,10 @@ export class ReportService
     }
 
     /** Owner only: public link, iframe embedding, allowed sites and link rotation. */
-    share(code: string, configure: { enabled: boolean, embed: boolean, origins: string, rotate: boolean })
+    share(code: string, configure: {
+        enabled: boolean, embed: boolean, origins: string, rotate: boolean,
+        expiresAt: number | null, showTitle: boolean, showDescription: boolean
+    })
     {
         return new HttpUtils().put(`${DEFAULT_PATH}/${encodeURIComponent(code)}/share`, configure)
     }

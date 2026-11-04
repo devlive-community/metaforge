@@ -16,7 +16,12 @@
         <template v-if="column.key === 'name'">
           <div class="flex min-w-0 items-center gap-2">
             <EllipsisCell :text="record.name"/>
-            <MfTag v-if="record.shareEnabled" variant="success" size="sm" class="shrink-0">{{ $t('report.share.shared') }}</MfTag>
+            <MfTag v-if="record.shareEnabled"
+                   :variant="isShareExpired(record.shareExpiresAt) ? 'warning' : 'success'"
+                   size="sm"
+                   class="shrink-0">
+              {{ $t(isShareExpired(record.shareExpiresAt) ? 'report.share.expired' : 'report.share.shared') }}
+            </MfTag>
           </div>
         </template>
         <template v-else-if="column.key === 'realtime'">
@@ -35,6 +40,12 @@
             <MfTooltip :content="$t('report.common.view').replace('$VALUE', record.name)">
               <MfButton variant="ghost" size="sm" shape="circle" @click="visibleView(true, record)">
                 <Eye :size="15" />
+              </MfButton>
+            </MfTooltip>
+
+            <MfTooltip :content="$t('report.share.action')">
+              <MfButton variant="ghost" size="sm" shape="circle" :aria-label="$t('report.share.action')" @click="visibleShare(true, record)">
+                <Share2 :size="15" :class="record.shareEnabled && !isShareExpired(record.shareExpiresAt) && 'text-primary'"/>
               </MfButton>
             </MfTooltip>
 
@@ -57,13 +68,6 @@
                     <div v-else class="flex items-center space-x-2">
                       <Pencil :size="15" />
                       <span>{{ $t('report.common.modify') }}</span>
-                    </div>
-                  </MfMenuItem>
-
-                  <MfMenuItem @click="visibleShare(true, record)">
-                    <div class="flex items-center space-x-2">
-                      <Share2 :size="15" />
-                      <span>{{ $t('report.share.action') }}</span>
                     </div>
                   </MfMenuItem>
 
@@ -109,6 +113,7 @@ import ReportService from '@/services/report'
 import ReportView from '@/views/pages/admin/report/ReportView.vue'
 import ReportDelete from '@/views/pages/admin/report/ReportDelete.vue'
 import ReportShare from '@/views/pages/admin/report/ReportShare.vue'
+import { isShareExpired } from '@/views/pages/admin/report/ReportShareUtils'
 import { Eye, Pencil, Settings, Share2, Trash2 } from '@lucide/vue'
 
 defineOptions({ name: 'ReportHome' })

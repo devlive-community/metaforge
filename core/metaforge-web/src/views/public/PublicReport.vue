@@ -9,9 +9,9 @@
     </div>
 
     <template v-else>
-      <header v-if="showTitle" class="mb-3 shrink-0">
-        <h1 class="truncate font-semibold text-content" :class="embed ? 'text-sm' : 'text-xl'">{{ report.name }}</h1>
-        <p v-if="report.description && !embed" class="mt-1 text-sm text-content-secondary">{{ report.description }}</p>
+      <header v-if="showHeader" class="mb-3 shrink-0">
+        <h1 v-if="report.showTitle" class="truncate font-semibold text-content" :class="embed ? 'text-sm' : 'text-xl'">{{ report.name }}</h1>
+        <p v-if="showDescription" class="mt-1 text-content-secondary" :class="embed ? 'text-xs' : 'text-sm'">{{ report.description }}</p>
       </header>
       <main class="min-h-0 flex-1">
         <MfAlert v-if="!configuration" variant="danger" :title="$t('queryChart.renderError')"/>
@@ -43,16 +43,19 @@ interface PublicReportModel
   realtime: boolean
   configure: string
   embed: boolean
+  showTitle: boolean
+  showDescription: boolean
 }
 
 const route = useRoute()
 const token = computed(() => String(route.params.token ?? ''))
-// Embedded pages are compact; ?title=0 hides the report name inside the host page.
+// Embedded pages are compact; what the page shows is the owner's choice in the share settings.
 const embed = computed(() => route.query.embed === '1')
-const showTitle = computed(() => route.query.title !== '0')
 
 const loading = ref(true)
 const report = ref<PublicReportModel | null>(null)
+const showDescription = computed(() => !!report.value?.showDescription && !!report.value.description)
+const showHeader = computed(() => !!report.value?.showTitle || showDescription.value)
 const configuration = computed(() => {
   try {
     return report.value ? JSON.parse(report.value.configure) : null

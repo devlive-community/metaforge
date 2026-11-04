@@ -3,7 +3,7 @@ import test from 'node:test'
 import { sourceModule } from '../../metaforge-ui/tests/component.mjs'
 
 const { sharedReportPath, routeSharedReportPath } = await sourceModule('../../metaforge-web/src/router/shared.ts')
-const { isShareableReport, reportEmbedCode, reportShareUrl, SHARE_ORIGIN } = await sourceModule('../../metaforge-web/src/views/pages/admin/report/ReportShareUtils.ts')
+const { isShareableReport, isShareExpired, localDate, reportEmbedCode, reportShareUrl, SHARE_ORIGIN, shareExpiresAt } = await sourceModule('../../metaforge-web/src/views/pages/admin/report/ReportShareUtils.ts')
 
 const TOKEN = 'abcdefghijklmnopqrstuvwxyz012-_A'
 
@@ -39,4 +39,16 @@ test('links and embed code', () => {
   assert.match(code, /title="Sales &quot;Q1&quot; &lt;script>"/)
   for (const origin of ['https://example.com', 'http://localhost:8080', 'https://*.example.com']) assert.equal(SHARE_ORIGIN.test(origin), true, origin)
   for (const origin of ['example.com', 'javascript:alert(1)', 'https://a.com/path', 'https://a.com?x=1']) assert.equal(SHARE_ORIGIN.test(origin), false, origin)
+})
+
+test('expiry choices become concrete moments', () => {
+  const now = new Date(2026, 10, 4, 10, 30).getTime()
+  assert.equal(shareExpiresAt('never', '', now), null)
+  assert.equal(shareExpiresAt('7d', '', now), now + 7 * 24 * 60 * 60 * 1000)
+  assert.equal(shareExpiresAt('date', '2026-11-30', now), new Date(2026, 10, 30, 23, 59, 59, 999).getTime(), 'a date lasts the whole day')
+  assert.equal(shareExpiresAt('date', '', now), null)
+  assert.equal(localDate(new Date(2026, 0, 5, 23, 0).getTime()), '2026-01-05')
+  assert.equal(isShareExpired(now - 1, now), true)
+  assert.equal(isShareExpired(now + 1, now), false)
+  assert.equal(isShareExpired(null, now), false)
 })

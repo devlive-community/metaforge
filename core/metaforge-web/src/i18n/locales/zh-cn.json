@@ -3191,5 +3191,17 @@
   "report.share.copyFailed": "复制失败，请手动复制",
   "report.share.publicTitle": "公开报表",
   "report.share.unavailable": "报表不可访问",
-  "report.share.unavailableHint": "链接已失效，或报表的所有者已关闭公开访问。"
+  "report.share.unavailableHint": "链接已失效或已过期，也可能是报表所有者关闭了公开访问。",
+  "report.share.expired": "已过期",
+  "report.share.expiry": "有效期",
+  "report.share.expiryNever": "永久有效",
+  "report.share.expiryDays": "{days} 天",
+  "report.share.expiryDate": "指定日期",
+  "report.share.expiryRequired": "请选择过期日期",
+  "report.share.expiryPast": "过期日期必须晚于现在",
+  "report.share.expiresAt": "链接有效期至 {time}",
+  "report.share.expiredAt": "链接已于 {time} 过期，访问者无法打开；请修改有效期后保存",
+  "report.share.display": "页面显示",
+  "report.share.showTitle": "显示标题",
+  "report.share.showDescription": "显示描述"
 }

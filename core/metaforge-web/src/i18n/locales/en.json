@@ -3191,5 +3191,17 @@
   "report.share.copyFailed": "Copy failed; copy it manually",
   "report.share.publicTitle": "Public report",
   "report.share.unavailable": "Report unavailable",
-  "report.share.unavailableHint": "The link has expired, or the owner turned off public access."
+  "report.share.unavailableHint": "The link is invalid or has expired, or the owner turned off public access.",
+  "report.share.expired": "Expired",
+  "report.share.expiry": "Valid for",
+  "report.share.expiryNever": "Never expires",
+  "report.share.expiryDays": "{days} days",
+  "report.share.expiryDate": "Until a date",
+  "report.share.expiryRequired": "Choose the expiry date",
+  "report.share.expiryPast": "The expiry date must be in the future",
+  "report.share.expiresAt": "The link works until {time}",
+  "report.share.expiredAt": "The link expired on {time} and no longer opens; change the expiry and save",
+  "report.share.display": "Page shows",
+  "report.share.showTitle": "Title",
+  "report.share.showDescription": "Description"
 }
