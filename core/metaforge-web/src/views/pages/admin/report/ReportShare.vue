@@ -62,6 +62,20 @@
           </div>
         </MfFormItem>
 
+        <MfFormItem :label="$t('report.share.dataAccess')" name="dataAccess">
+          <div class="w-full min-w-0">
+            <div class="flex flex-wrap items-center gap-x-6 gap-y-2">
+              <label class="flex items-center gap-2 text-sm text-content">
+                <MfSwitch v-model="form.allowData" size="sm"/>{{ $t('report.share.allowData') }}
+              </label>
+              <label class="flex items-center gap-2 text-sm text-content">
+                <MfSwitch v-model="form.allowDownload" size="sm"/>{{ $t('report.share.allowDownload') }}
+              </label>
+            </div>
+            <p class="mt-1.5 text-xs text-content-tertiary">{{ $t('report.share.dataAccessHint') }}</p>
+          </div>
+        </MfFormItem>
+
         <MfFormItem name="embed">
           <div class="flex w-full items-center justify-between gap-4">
             <div class="min-w-0">
@@ -135,6 +149,8 @@ const form = reactive({
   expiryDate: props.info.shareExpiresAt ? localDate(props.info.shareExpiresAt) : '',
   showTitle: props.info.shareShowTitle !== false,
   showDescription: props.info.shareShowDescription !== false,
+  allowData: !!props.info.shareAllowData,
+  allowDownload: !!props.info.shareAllowDownload,
 })
 const saved = ref(JSON.stringify(form))
 // The preview shows the saved settings; say so while the form has unsaved changes.
@@ -187,6 +203,8 @@ async function submit(rotate: boolean): Promise<boolean>
         ? state.expiresAt : shareExpiresAt(form.expiry, form.expiryDate),
     showTitle: form.showTitle,
     showDescription: form.showDescription,
+    allowData: form.allowData,
+    allowDownload: form.allowDownload,
   })
   if (!response.status) {
     MfMessage.error(response.message || t('report.share.failed'))

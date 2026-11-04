@@ -3189,7 +3189,6 @@
   "report.share.failed": "Unable to save sharing settings",
   "report.share.copied": "Copied",
   "report.share.copyFailed": "Copy failed; copy it manually",
-  "report.share.publicTitle": "Public report",
   "report.share.unavailable": "Report unavailable",
   "report.share.unavailableHint": "The link is invalid or has expired, or the owner turned off public access.",
   "report.share.expired": "Expired",
@@ -3205,5 +3204,15 @@
   "report.share.showTitle": "Title",
   "report.share.showDescription": "Description",
   "report.share.preview": "Preview",
-  "report.share.previewSaved": "Preview shows the saved settings; save to preview your changes."
+  "report.share.previewSaved": "Preview shows the saved settings; save to preview your changes.",
+  "report.share.dataAccess": "Data access",
+  "report.share.allowData": "Allow viewing the data",
+  "report.share.allowDownload": "Allow downloading the data (CSV)",
+  "report.share.dataAccessHint": "A chart needs its data to draw; these decide whether the page also offers a data table and a CSV download, up to 10000 rows.",
+  "report.share.viewChart": "Chart",
+  "report.share.viewData": "Data",
+  "report.share.download": "Download CSV",
+  "report.share.dataUnavailable": "The data is temporarily unavailable",
+  "report.share.noData": "No data",
+  "report.share.truncated": "Showing the first {count} rows"
 }

@@ -3189,7 +3189,6 @@
   "report.share.failed": "分享设置保存失败",
   "report.share.copied": "已复制",
   "report.share.copyFailed": "复制失败，请手动复制",
-  "report.share.publicTitle": "公开报表",
   "report.share.unavailable": "报表不可访问",
   "report.share.unavailableHint": "链接已失效或已过期，也可能是报表所有者关闭了公开访问。",
   "report.share.expired": "已过期",
@@ -3205,5 +3204,15 @@
   "report.share.showTitle": "显示标题",
   "report.share.showDescription": "显示描述",
   "report.share.preview": "预览",
-  "report.share.previewSaved": "预览显示的是已保存的设置，保存后再预览可看到最新效果。"
+  "report.share.previewSaved": "预览显示的是已保存的设置，保存后再预览可看到最新效果。",
+  "report.share.dataAccess": "数据访问",
+  "report.share.allowData": "允许查看原始数据",
+  "report.share.allowDownload": "允许下载数据（CSV）",
+  "report.share.dataAccessHint": "图表本身需要数据才能绘制；这两项决定页面是否提供数据表和 CSV 下载，最多 10000 行。",
+  "report.share.viewChart": "图表",
+  "report.share.viewData": "数据",
+  "report.share.download": "下载 CSV",
+  "report.share.dataUnavailable": "数据暂时无法获取",
+  "report.share.noData": "没有数据",
+  "report.share.truncated": "仅显示前 {count} 行"
 }

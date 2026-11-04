@@ -14,7 +14,8 @@ export class ReportService
     /** Owner only: public link, iframe embedding, allowed sites and link rotation. */
     share(code: string, configure: {
         enabled: boolean, embed: boolean, origins: string, rotate: boolean,
-        expiresAt: number | null, showTitle: boolean, showDescription: boolean
+        expiresAt: number | null, showTitle: boolean, showDescription: boolean,
+        allowData: boolean, allowDownload: boolean
     })
     {
         return new HttpUtils().put(`${DEFAULT_PATH}/${encodeURIComponent(code)}/share`, configure)

@@ -1,5 +1,3 @@
-// Must stay the first import: maps /share and /embed report paths before the router is created.
-import './shared-entry'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './styles/theme.css'
@@ -12,12 +10,17 @@ import router from '@/router'
 import i18n from '@/i18n/I18n'
 import { createIcons } from '@/fontawesome'
 import MetaforgeUI from 'metaforge-ui'
+import { sharedReportPath } from '@/router/shared'
+import PublicReportApp from '@/views/public/PublicReportApp.vue'
 
-const app = createApp(App)
+// Shared report addresses open a standalone public page: no app router, no sign-in, and the
+// address stays exactly as shared (the app's hash routes would otherwise be appended to it).
+const shared = sharedReportPath(window.location.pathname)
+const app = shared ? createApp(PublicReportApp, shared) : createApp(App)
 createIcons(app)
 // Disable warnings
 app.config.warnHandler = () => null
-app.use(router)
+if (!shared) app.use(router)
 app.use(i18n)
 app.use(createPinia())
 app.use(MetaforgeUI)

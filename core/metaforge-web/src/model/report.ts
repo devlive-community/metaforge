@@ -20,4 +20,6 @@ export interface ReportModel
     shareExpiresAt?: number | null
     shareShowTitle?: boolean
     shareShowDescription?: boolean
+    shareAllowData?: boolean
+    shareAllowDownload?: boolean
 }

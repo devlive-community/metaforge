@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { sourceModule } from '../../metaforge-ui/tests/component.mjs'
 
-const { sharedReportPath, routeSharedReportPath } = await sourceModule('../../metaforge-web/src/router/shared.ts')
+const { sharedReportPath } = await sourceModule('../../metaforge-web/src/router/shared.ts')
 const { formatShareTime, isShareableReport, isShareExpired, localDate, reportEmbedCode, reportShareUrl, SHARE_ORIGIN, shareExpiresAt } = await sourceModule('../../metaforge-web/src/views/pages/admin/report/ReportShareUtils.ts')
 
 const TOKEN = 'abcdefghijklmnopqrstuvwxyz012-_A'
@@ -15,15 +15,6 @@ test('only well-formed share and embed paths open the public report', () => {
   assert.equal(sharedReportPath('/'), null)
 })
 
-test('the shared path keeps the address and adds the hash route', () => {
-  const calls = []
-  const history = { state: null, replaceState: (_state, _title, url) => calls.push(url) }
-  routeSharedReportPath({ pathname: `/embed/report/${TOKEN}`, search: '?title=0', hash: '' }, history)
-  assert.deepEqual(calls, [`/embed/report/${TOKEN}?title=0#/public/report/${TOKEN}?embed=1`])
-  routeSharedReportPath({ pathname: `/embed/report/${TOKEN}`, search: '', hash: `#/public/report/${TOKEN}?embed=1` }, history)
-  routeSharedReportPath({ pathname: '/', search: '', hash: '#/report' }, history)
-  assert.equal(calls.length, 1, 'already routed or ordinary pages are left alone')
-})
 
 test('dataset reports and query charts are shareable, earlier query reports are not', () => {
   assert.equal(isShareableReport({ type: 'DATASET', configure: '{}' }), true)
@@ -58,9 +49,10 @@ test('expiry times use dashes, not the browser locale', () => {
   assert.equal(formatShareTime(new Date(2026, 0, 2, 3, 4, 5).getTime()), '2026-01-02 03:04:05')
 })
 
-test('the shared path mapping runs before the router module is evaluated', async () => {
+test('shared addresses mount the standalone public app and keep the address as shared', async () => {
   const { readFile } = await import('node:fs/promises')
   const main = await readFile(new URL('../src/main.ts', import.meta.url), 'utf8')
-  const imports = [...main.matchAll(/^import .*$/gm)].map(match => match[0])
-  assert.equal(imports[0], "import './shared-entry'", 'the hash router captures the address when created')
+  assert.match(main, /createApp\(PublicReportApp, shared\)/)
+  assert.match(main, /if \(!shared\) app\.use\(router\)/, 'the hash router never runs on a shared address')
+  assert.doesNotMatch(main, /replaceState/)
 })
