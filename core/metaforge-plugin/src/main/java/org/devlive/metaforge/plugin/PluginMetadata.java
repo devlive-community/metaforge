@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.nio.file.Path;
+import java.util.Map;
 
 @Data
 @Builder
@@ -30,4 +31,13 @@ public class PluginMetadata
 
     @JsonIgnore
     private Path location;
+
+    /**
+     * Store details the plugin ships in its own plugin.json (see {@link PluginDescriptor}), so the
+     * store can describe an installed plugin without the remote catalogue.
+     */
+    public Map<String, Object> getStore()
+    {
+        return instance == null ? Map.of() : PluginDescriptor.of(instance.getClass());
+    }
 }

@@ -66,6 +66,30 @@ public class CompiledPomPluginLoaderTest
     }
 
     @Test
+    public void everyPluginReadsTheStoreDescriptorShippedInItsOwnClasses()
+            throws Exception
+    {
+        Path first = module("FirstStorePlugin", "EXECUTOR");
+        Path second = module("SecondStorePlugin", "SCHEDULER");
+        Path descriptor = first.resolve("target/classes").resolve(org.devlive.metaforge.plugin.PluginDescriptor.FILE);
+        Files.createDirectories(first.resolve("target/classes/org/devlive/metaforge/plugin"));
+        Files.writeString(descriptor, "{\"label\":\"First\",\"features\":[\"cron\",7],\"order\":1,\"secret\":\"x\"}");
+        Path manifest = temporary.getRoot().toPath().resolve("store.properties");
+        Files.writeString(manifest, "first=" + first.resolve("pom.xml") + "\nsecond=" + second.resolve("pom.xml") + "\n");
+        PluginManager manager = new PluginManager(PluginConfigure.builder().pluginsDir(manifest).autoCleanup(false).build());
+        try {
+            manager.start();
+            java.util.Map<String, java.util.Map<String, Object>> stores = new java.util.HashMap<>();
+            manager.getPluginInfos().forEach(plugin -> stores.put(plugin.getName(), plugin.getStore()));
+            Assert.assertEquals(java.util.Map.of("label", "First", "features", List.of("cron")), stores.get("FirstStore"));
+            Assert.assertEquals(java.util.Map.of(), stores.get("SecondStore"));
+        }
+        finally {
+            manager.stop();
+        }
+    }
+
+    @Test
     public void aManifestRegistersAllCompiledExecutorsAndSchedulers()
             throws Exception
     {
