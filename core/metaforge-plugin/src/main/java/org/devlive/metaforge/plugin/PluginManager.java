@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @Slf4j
 @SuppressFBWarnings(value = {"NP_NULL_ON_SOME_PATH_FROM_RETURN_VALUE", "EI_EXPOSE_REP2"})
@@ -209,30 +210,32 @@ public class PluginManager
                 // Handle installation based on plugin type
                 installed = processPluginInstallation(sourcePath, tempDir);
 
-                if (installed) {
-                    // 创建最终目标目录
-                    // Create final target directory
-                    Path targetPath = config.getPluginsDir().resolve(targetDirectory);
+                if (!installed) {
+                    return false;
+                }
 
-                    // 如果目标目录已存在，先备份
-                    // Backup existing target directory if it exists
-                    if (Files.exists(targetPath)) {
-                        backupExistingPlugin(targetPath);
-                    }
-
-                    // 将临时目录移动到最终位置
-                    // Move temporary directory to final location
+                Path targetPath = config.getPluginsDir().resolve(targetDirectory);
+                Path backup = backupExistingPlugin(targetPath);
+                boolean loaded = false;
+                try {
                     moveDirectory(tempDir, targetPath);
-
-                    // 加载新安装的插件
-                    // Load newly installed plugin
-                    loadPluginFromDirectory(targetPath);
-
+                    List<PluginMetadata> modules = preparePlugins(targetPath);
+                    if (modules.isEmpty()) {
+                        return false;
+                    }
+                    modules.forEach(this::registerPlugin);
+                    loaded = true;
                     log.info("Successfully installed plugin from {} to {}", sourcePath, targetPath);
                     return true;
                 }
-
-                return false;
+                finally {
+                    if (!loaded) {
+                        deleteDirectory(targetPath);
+                        if (backup != null) {
+                            moveDirectory(backup, targetPath);
+                        }
+                    }
+                }
             }
             catch (Exception e) {
                 log.error("Failed to install plugin from: {} to {}", sourcePath, targetDirectory, e);
@@ -270,7 +273,7 @@ public class PluginManager
             }
             // Properties 插件
             // Properties plugin
-            if ("properties".equals(extension)) {
+            else if ("properties".equals(extension)) {
                 installed.set(installPropertiesPlugin(sourcePath, tempDir));
             }
             // POM 插件
@@ -313,21 +316,21 @@ public class PluginManager
 
     // 备份现有插件
     // Backup existing plugin
-    private void backupExistingPlugin(Path pluginPath)
+    private Path backupExistingPlugin(Path pluginPath)
             throws IOException
     {
-        if (Files.exists(pluginPath)) {
-            String timestamp = DateUtils.formatYMDHMS();
-            Path backupPath = pluginPath.getParent().resolve(pluginPath.getFileName() + ".backup." + timestamp);
-
-            try {
-                Files.move(pluginPath, backupPath, StandardCopyOption.REPLACE_EXISTING);
-                log.info("Created backup of existing plugin: {}", backupPath);
-            }
-            catch (IOException e) {
-                log.error("Failed to create backup of existing plugin: {}", pluginPath, e);
-                throw e;
-            }
+        if (!Files.exists(pluginPath)) {
+            return null;
+        }
+        Path backup = Files.createTempDirectory(pluginPath.getParent(), pluginPath.getFileName() + ".backup.");
+        try {
+            Files.move(pluginPath, backup, StandardCopyOption.REPLACE_EXISTING);
+            log.info("Created backup of existing plugin: {}", backup);
+            return backup;
+        }
+        catch (IOException e) {
+            Files.deleteIfExists(backup);
+            throw e;
         }
     }
 
@@ -497,43 +500,21 @@ public class PluginManager
     private boolean installTarPlugin(Path sourcePath, Path tempDir)
             throws IOException
     {
-        // 直接使用 TarPluginLoader 处理
-        // Directly use TarPluginLoader to handle
-        TarPluginLoader tarPluginLoader = new TarPluginLoader();
-        // 先加载插件到临时目录
-        // Load plugins to temporary directory
-        List<Plugin> plugins = tarPluginLoader.load(sourcePath, tempDir, config.getParentClassLoaderPackages());
-        if (!plugins.isEmpty()) {
-            // 查找解压后的子目录
-            // Find extracted subdirectory
-            try (Stream<Path> paths = Files.list(tempDir)) {
-                Optional<Path> subDir = paths
-                        .filter(Files::isDirectory)
-                        .findFirst();
-
-                if (subDir.isPresent()) {
-                    // 如果存在子目录，将其内容移动到临时目录根目录
-                    // If subdirectory exists, move its contents to temp directory root
-                    Path source = subDir.get();
-                    try (Stream<Path> files = Files.list(source)) {
-                        files.forEach(file -> {
-                            try {
-                                Path target = tempDir.resolve(file.getFileName());
-                                Files.move(file, target);
-                            }
-                            catch (IOException e) {
-                                log.error("Failed to move file: {} to {}", file, tempDir, e);
-                            }
-                        });
-                    }
-                    // 删除空的子目录
-                    // Delete empty subdirectory
-                    Files.delete(source);
+        new TarPluginLoader().extractArchive(sourcePath, tempDir);
+        List<Path> entries;
+        try (Stream<Path> paths = Files.list(tempDir)) {
+            entries = paths.collect(Collectors.toList());
+        }
+        if (entries.size() == 1 && Files.isDirectory(entries.get(0))) {
+            Path directory = entries.get(0);
+            try (Stream<Path> files = Files.list(directory)) {
+                for (Path file : files.collect(Collectors.toList())) {
+                    Files.move(file, tempDir.resolve(file.getFileName()));
                 }
             }
-            return true;
+            Files.delete(directory);
         }
-        return false;
+        return !entries.isEmpty();
     }
 
     // 复制目录
@@ -662,6 +643,8 @@ public class PluginManager
             try (Stream<Path> paths = Files.walk(root, config.getScanDepth() == 0 ? 1 : config.getScanDepth())) {
                 candidates = paths.filter(Files::isDirectory)
                         .filter(path -> !path.equals(root))
+                        .filter(path -> StreamSupport.stream(root.relativize(path).spliterator(), false)
+                                .noneMatch(segment -> isPluginStagingDirectory(segment.toString())))
                         .sorted()
                         .collect(Collectors.toList());
             }
@@ -705,11 +688,9 @@ public class PluginManager
         }
     }
 
-    // 安装时仍同步加载；启动/监视扫描复用同一初始化过程
-    // Installation remains synchronous; startup and watcher scans share preparation
-    private void loadPluginFromDirectory(Path pluginDir)
+    private static boolean isPluginStagingDirectory(String name)
     {
-        preparePlugins(pluginDir).forEach(this::registerPlugin);
+        return name.startsWith(TEMP_DIR_PREFIX) || name.contains(".backup.") || name.contains(".unload.");
     }
 
     private List<PluginMetadata> preparePlugins(Path pluginDir)
@@ -780,8 +761,13 @@ public class PluginManager
         synchronized (installLock) {
             String name = metadata.getName();
             PluginMetadata oldPlugin = plugins.remove(name);
-            if (oldPlugin != null && oldPlugin.getClassLoader() != metadata.getClassLoader()) {
-                closePluginClassLoader(oldPlugin);
+            if (oldPlugin != null) {
+                if (oldPlugin.getState() == PluginState.STOPPED) {
+                    metadata.setState(PluginState.STOPPED);
+                }
+                if (oldPlugin.getClassLoader() != metadata.getClassLoader()) {
+                    closePluginClassLoader(oldPlugin);
+                }
             }
             PluginClassLoader loader = (PluginClassLoader) metadata.getClassLoader();
             pluginClassLoaders.put(name, loader);
@@ -873,6 +859,11 @@ public class PluginManager
         if (metadata == null && name != null && RENAMED_PLUGINS.containsKey(name)) {
             metadata = plugins.get(RENAMED_PLUGINS.get(name));
         }
+        if (metadata != null && metadata.getState() == PluginState.STOPPED) {
+            // 禁用后的插件不再对外提供服务，直到重新启用
+            // A stopped plugin is out of service until it is enabled again
+            return Optional.empty();
+        }
         return Optional.ofNullable(metadata)
                 .map(info -> (Plugin) info.getInstance());
     }
@@ -896,6 +887,29 @@ public class PluginManager
     public List<PluginMetadata> getPluginInfos()
     {
         return new ArrayList<>(plugins.values());
+    }
+
+    // 启用或禁用插件（仅切换运行状态标记，不卸载类加载器）
+    // Enable or disable a plugin (toggle the runtime flag only; class loaders stay loaded)
+    public boolean setPluginState(String name, boolean enabled)
+    {
+        if (name == null || name.trim().isEmpty()) {
+            log.warn("Plugin name cannot be null or empty");
+            return false;
+        }
+        synchronized (installLock) {
+            PluginMetadata metadata = plugins.get(name);
+            if (metadata == null && RENAMED_PLUGINS.containsKey(name)) {
+                metadata = plugins.get(RENAMED_PLUGINS.get(name));
+            }
+            if (metadata == null || metadata.getInstance() == null
+                    || metadata.getState() == PluginState.UNLOADED || metadata.getState() == PluginState.FAILED) {
+                return false;
+            }
+            metadata.setState(enabled ? PluginState.STARTED : PluginState.STOPPED);
+            log.info("Plugin {} state changed to {}", name, metadata.getState());
+            return true;
+        }
     }
 
     // 卸载指定名称的插件

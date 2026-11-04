@@ -8,18 +8,13 @@ import org.apache.commons.io.FileUtils;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.conn.ssl.NoopHostnameVerifier;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.ssl.SSLContextBuilder;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginContextManager;
 import org.devlive.metaforge.plugin.SpiType;
 import org.devlive.metaforge.plugin.utils.PluginClassLoaderUtils;
 import org.devlive.metaforge.plugin.utils.VersionUtils;
-
-import javax.net.ssl.SSLContext;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -28,9 +23,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -92,42 +84,47 @@ public class TarPluginLoader
      */
     public List<Plugin> load(Path path, Path targetDir, Set<String> parentClassLoaderPackages)
     {
+        Path extractDir = targetDir;
         try {
-            if (isValidTarPath(path)) {
-                // 如果是 URL 路径，先下载到本地
-                // If it's a URL path, download it first
-                if (path.toString().startsWith("http") || path.toString().startsWith("https")) {
-                    path = downloadTarFile(path.toString().replace(":/", "://"));
-                }
-
-                if (isValidTarFile(path)) {
-                    // 使用指定的目录或创建临时目录
-                    // Use specified directory or create temporary directory
-                    Path extractDir = targetDir != null ? targetDir : createTempDirectory();
-
-                    // 解压 tar 文件
-                    // Extract tar file
-                    extractTarFile(path, extractDir);
-
-                    // 从解压目录加载插件
-                    // Load plugins from extracted directory
-                    List<Plugin> plugins = loadPluginsFromDirectory(extractDir, parentClassLoaderPackages);
-
-                    // 如果使用的是临时目录，则清理
-                    // Clean up if using temporary directory
-                    if (targetDir == null) {
-                        cleanupTempDirectory(extractDir);
-                    }
-
-                    return plugins;
-                }
+            if (!isValidTarPath(path)) {
+                return List.of();
             }
-
-            return List.of();
+            if (extractDir == null) {
+                extractDir = createTempDirectory();
+            }
+            extractArchive(path, extractDir);
+            return loadPluginsFromDirectory(extractDir, parentClassLoaderPackages);
         }
         catch (Exception e) {
             log.error("Failed to load plugins from tar file: {}", path, e);
             return List.of();
+        }
+        finally {
+            if (targetDir == null && extractDir != null) {
+                cleanupTempDirectory(extractDir);
+            }
+        }
+    }
+
+    /** Extract without creating a class loader. The manager loads from the final install path. */
+    public void extractArchive(Path source, Path destination)
+            throws IOException
+    {
+        if (!isValidTarPath(source)) {
+            throw new IOException("Invalid plugin archive path");
+        }
+        Path archive = source;
+        boolean remote = isRemote(source);
+        if (remote) {
+            archive = downloadTarFile(source.toString().replaceFirst("^(https?):/+(?=[^/])", "$1://"));
+        }
+        try {
+            extractTarFile(archive, destination);
+        }
+        finally {
+            if (remote) {
+                Files.deleteIfExists(archive);
+            }
         }
     }
 
@@ -217,24 +214,7 @@ public class TarPluginLoader
         Path tempFile = Files.createTempFile(TEMP_DIR_PREFIX, ".tar");
 
         try {
-            // 创建信任所有证书的 SSL 上下文
-            // Create SSL context that trusts all certificates
-            SSLContext sslContext = SSLContextBuilder.create()
-                    .loadTrustMaterial(null, (cert, authType) -> true)
-                    .build();
-
-            // 创建允许所有主机名的验证器
-            // Create verifier that allows all hostnames
-            SSLConnectionSocketFactory sslFactory = new SSLConnectionSocketFactory(
-                    sslContext,
-                    NoopHostnameVerifier.INSTANCE
-            );
-
-            // 创建 HttpClient
-            // Create HttpClient
-            try (CloseableHttpClient httpClient = HttpClients.custom()
-                    .setSSLSocketFactory(sslFactory)
-                    .build()) {
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
                 // 创建 GET 请求
                 // Create GET request
                 HttpGet request = new HttpGet(url);
@@ -263,7 +243,7 @@ public class TarPluginLoader
 
             return tempFile;
         }
-        catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+        catch (IOException e) {
             try {
                 Files.deleteIfExists(tempFile);
             }
@@ -298,17 +278,19 @@ public class TarPluginLoader
     {
         log.info("Extracting tar file to: {}", destDir);
 
-        try (InputStream fileIn = Files.newInputStream(tarFile);
-                BufferedInputStream buffIn = new BufferedInputStream(fileIn);
-                GZIPInputStream gzipIn = new GZIPInputStream(buffIn);
-                TarArchiveInputStream tarIn = new TarArchiveInputStream(gzipIn)) {
+        Path root = destDir.toAbsolutePath().normalize();
+        try (BufferedInputStream file = new BufferedInputStream(Files.newInputStream(tarFile));
+                TarArchiveInputStream tarIn = new TarArchiveInputStream(archiveStream(file))) {
             TarArchiveEntry entry;
             while ((entry = tarIn.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
                     continue;
                 }
 
-                Path outPath = destDir.resolve(entry.getName());
+                Path outPath = root.resolve(entry.getName()).normalize();
+                if (!outPath.startsWith(root) || !entry.isFile()) {
+                    throw new IOException("Invalid plugin archive entry");
+                }
                 Files.createDirectories(outPath.getParent());
 
                 try (OutputStream out = Files.newOutputStream(outPath)) {
@@ -346,28 +328,22 @@ public class TarPluginLoader
     private boolean isValidTarPath(Path path)
     {
         String pathStr = path.toString();
-        return (pathStr.startsWith("http") || pathStr.startsWith("https"))
-                && (pathStr.endsWith("tar.gz") || pathStr.endsWith("tar") || pathStr.endsWith("tgz"));
+        return (isRemote(path) || Files.isRegularFile(path))
+                && (pathStr.endsWith(".tar.gz") || pathStr.endsWith(".tgz") || pathStr.endsWith(".tar"));
     }
 
-    /**
-     * 检查是否合法的 Tar 文件，通过解压文件头检查
-     * Check if it's a valid Tar file, by checking the file header
-     *
-     * @param path file path
-     * @return true if it's a valid Tar file
-     */
-    private boolean isValidTarFile(Path path)
+    private static boolean isRemote(Path path)
     {
-        try (InputStream fileIn = Files.newInputStream(path);
-                BufferedInputStream buffIn = new BufferedInputStream(fileIn);
-                GZIPInputStream gzipIn = new GZIPInputStream(buffIn)) {
-            log.debug("Validating tar file: {}", path);
-            log.debug("Tar file header: {}", gzipIn.readNBytes(512));
-            return true;
-        }
-        catch (IOException e) {
-            return false;
-        }
+        String value = path.toString();
+        return value.startsWith("http:/") || value.startsWith("https:/");
+    }
+
+    private static InputStream archiveStream(BufferedInputStream file)
+            throws IOException
+    {
+        file.mark(2);
+        boolean compressed = file.read() == 0x1f && file.read() == 0x8b;
+        file.reset();
+        return compressed ? new GZIPInputStream(file) : file;
     }
 }
