@@ -4,7 +4,7 @@
       <MfSpinner size="lg" :label="loadingText"/>
     </div>
 
-    <div v-show="!loadingState" :class="(workspaceMode || workbenchMode) && 'flex h-dvh flex-col overflow-hidden'">
+    <div v-show="!loadingState" :class="(workspaceMode || workbenchMode || storeMode) && 'flex h-dvh flex-col overflow-hidden'">
       <div class="relative z-30 flex w-full shrink-0 flex-col">
         <!-- 数据源管理工作台使用独立头部（原型设计，通栏），其余页面使用默认头部 -->
         <WorkbenchHeader v-if="workbenchMode"/>
@@ -23,12 +23,16 @@
         <RouterView/>
       </main>
 
+      <main v-else-if="storeMode" class="isolate flex min-h-0 flex-1 overflow-hidden">
+        <RouterView/>
+      </main>
+
       <!-- Content keeps the query page side spacing (8px); only headers use .container. -->
       <main v-else class="isolate min-h-screen px-2 py-6">
         <RouterView/>
       </main>
 
-      <LayoutFooter v-if="!workspaceMode && !workbenchMode"/>
+      <LayoutFooter v-if="!workspaceMode && !workbenchMode && !storeMode"/>
     </div>
   </div>
 </template>
@@ -45,6 +49,7 @@ import { provideI18nHandler } from '@/i18n/I18n'
 const { loadLocale, loadingState, loadingText } = provideI18nHandler()
 
 const route = useRoute()
+const storeMode = computed(() => route.name === 'store')
 const workspaceMode = computed(() => route.meta.workspace === true)
 const workbenchMode = computed(() => isSourceWorkbenchRoute(route))
 
