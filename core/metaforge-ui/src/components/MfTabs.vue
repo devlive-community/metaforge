@@ -72,7 +72,9 @@ const navClass = computed(() => clsx(
     'flex gap-1',
     vertical.value
         ? clsx('flex-col py-1', props.tabPosition === 'right' ? 'border-l border-line order-2' : 'border-r border-line order-1')
-        : clsx('flex-row items-center border-b border-line px-1', props.tabPosition === 'bottom' ? 'order-2' : 'order-1'),
+        // The divider is an inset shadow, not a border the active tab overlaps with -mb-px: that 1px
+        // overflow turned the scrollable bar into a vertical scroller. Long bars scroll sideways only.
+        : clsx('flex-row items-center overflow-x-auto overflow-y-hidden px-1 shadow-[inset_0_-1px_0_var(--mf-color-line)]', props.tabPosition === 'bottom' ? 'order-2' : 'order-1'),
 ))
 
 function tabClass(entry: PaneEntry): string {
@@ -82,7 +84,7 @@ function tabClass(entry: PaneEntry): string {
         'transition-[color,border-color,background-color] duration-(--mf-duration-base) ease-(--mf-easing)',
         entry.disabled && 'cursor-not-allowed opacity-40',
         active
-            ? vertical.value ? 'text-primary bg-surface-active rounded-mf-md' : 'border-b-2 border-b-primary text-primary -mb-px'
+            ? vertical.value ? 'text-primary bg-surface-active rounded-mf-md' : 'border-b-2 border-b-primary text-primary'
             : clsx('text-content-secondary hover:text-content', vertical.value ? 'rounded-mf-md hover:bg-surface-hover' : 'border-b-2 border-b-transparent', !entry.disabled && ''),
     )
 }
