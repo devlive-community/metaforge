@@ -1,10 +1,14 @@
 <template>
   <div class="relative h-full w-full" :style="{ width: width, height: height }">
-    <div v-if="loading" class="flex items-center justify-center absolute inset-0">
+    <template v-if="configuration?.queryChart">
+      <QueryChartPreview v-if="snapshot" :options="snapshot.options" :rows="snapshot.rows"/>
+      <MfAlert v-else variant="danger" :title="$t('queryChart.renderError')"/>
+    </template>
+    <div v-else-if="loading" class="flex items-center justify-center absolute inset-0">
       <MfSpinner size="lg"/>
     </div>
 
-    <div v-if="localConfiguration && !loading">
+    <div v-if="!configuration?.queryChart && localConfiguration && !loading">
       <div v-if="localConfiguration.message" class="p-4">
         <MfAlert variant="danger" :title="localConfiguration.message"/>
       </div>
@@ -91,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, defineAsyncComponent, ref } from 'vue'
 import { MfMessage } from 'metaforge-ui'
 import { cloneDeep } from 'lodash'
 import { Type } from '@/views/components/visual/Type'
@@ -113,6 +117,7 @@ import ExecuteService from '@/services/execute.ts'
 import { ExecuteModel } from '@/model/execute.ts'
 
 defineOptions({ name: 'VisualView' })
+const QueryChartPreview = defineAsyncComponent(() => import('./query/QueryChartPreview.vue'))
 
 const props = withDefaults(defineProps<{
   configuration?: Configuration | null
@@ -125,6 +130,14 @@ const props = withDefaults(defineProps<{
 }>(), {
   width: '100%',
   height: '400px'
+})
+
+const snapshot = computed(() => {
+  const config = props.configuration
+  const saved = config?.queryChart
+  if (saved?.version !== 1 || !Array.isArray(config?.columns)
+      || !Array.isArray(saved.options?.fields) || !Array.isArray(saved.options?.groups)) return null
+  return { options: saved.options, rows: config.columns }
 })
 
 const loading = ref(false)
@@ -181,5 +194,5 @@ const handleInitialize = () => {
   })
 }
 
-handleInitialize()
+if (!props.configuration?.queryChart) handleInitialize()
 </script>

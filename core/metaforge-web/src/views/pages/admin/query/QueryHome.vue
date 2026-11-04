@@ -241,6 +241,7 @@
                           :source-code="responseConfigure.sourceCode"
                           :dataset-available="responseConfigure.kind === 'query'"
                           :query="responseConfigure.query"
+                          :query-label="responseConfigure.label"
                           @add-dataset="onCreateFromResult"
                           @existing-dataset="onExistingDataset"
                           @refresh="onRun"/>
@@ -377,6 +378,7 @@ const responseConfigure = reactive({
   message: null as string | null,
   query: '',
   sourceCode: '',
+  label: '',
   kind: 'query' as 'query' | 'plan'
 })
 const dataInfo = ref<SnippetModel>(null as unknown as SnippetModel)
@@ -514,6 +516,7 @@ const runContent = (sql: string, syncEditorFromResponse: boolean) => {
   const executedEditor = editors.value[activeEditor.value as string]
   responseConfigure.kind = 'query'
   responseConfigure.sourceCode = executedSource
+  responseConfigure.label = executedEditor?.title || ''
   responseConfigure.response = null
   responseConfigure.message = null
   responseConfigure.query = ''

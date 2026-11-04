@@ -20,7 +20,7 @@
           {{ $t('common.export') }}
         </MfButton>
 
-        <MfButton size="sm" :disabled="!exportable" @click="visualVisible = true">
+        <MfButton size="sm" :disabled="!canVisualize" @click="openVisual">
           <ChartColumn :size="14"/>
           {{ $t('dataset.common.visual') }}
         </MfButton>
@@ -138,24 +138,21 @@
                     @update:current="onPageChange"/>
     </div>
 
-    <GridVisual v-if="visualVisible"
-                :is-visible="visualVisible"
-                :configure="visualConfigure"
-                @close="visualVisible = $event"/>
+    <GridVisual v-if="visualSource" :is-visible="true" :source="visualSource" @close="visualSource = undefined"/>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChartColumn, CircleAlert, CircleCheck, Download, Plus, RefreshCw, Search } from '@lucide/vue'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
-import { GridConfigure } from '@/views/components/grid/GridConfigure'
-import GridVisual from '@/views/components/grid/GridVisual.vue'
+import type { QueryChartSource } from '@/composables/useQueryChartBuilder'
 import { ResponseModel } from '@/model/response'
 import { queryResultState } from '@/model/query-result-state'
 
 defineOptions({ name: 'QueryResultPanel' })
+const GridVisual = defineAsyncComponent(() => import('@/views/components/grid/GridVisual.vue'))
 
 const props = withDefaults(defineProps<{
   response?: ResponseModel | null
@@ -163,6 +160,7 @@ const props = withDefaults(defineProps<{
   sourceId?: number
   sourceCode?: string
   query?: string
+  queryLabel?: string
   datasetAvailable?: boolean
 }>(), {
   response: null,
@@ -185,7 +183,7 @@ const activeTab = ref<'results' | 'messages'>('results')
 const quickFilter = ref('')
 const pageSize = ref(100)
 const currentPage = ref(1)
-const visualVisible = ref(false)
+const visualSource = ref<QueryChartSource>()
 // Widths the user dragged or fitted; columns without one size to their content.
 const widths = ref<Record<string, number>>({})
 
@@ -229,16 +227,13 @@ const filteredRows = computed(() => {
 const pagedRows = computed(() => filteredRows.value.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value))
 const onResize = (column: { key?: string }, width: number) => { if (column.key) widths.value = { ...widths.value, [column.key]: width } }
 
-const visualConfigure = computed<GridConfigure>(() => ({
-  headers: headers.value as any,
-  columns: rows.value as any,
-  height: 400,
-  width: 800,
-  showSeriesNumber: false,
-  sourceId: props.sourceId,
-  query: props.query,
-  code: props.sourceCode
-}))
+const canVisualize = computed(() => canAddDataset.value && hasRows.value && new Set(headers.value).size === headers.value.length)
+
+function openVisual() {
+  if (!canVisualize.value || !props.sourceCode) return
+  visualSource.value = { headers: [...headers.value], rows: rows.value.slice(), types: props.response?.data?.types,
+    code: props.sourceCode, query: props.query, elapsed: elapsed.value, label: props.queryLabel }
+}
 
 const onPageChange = (page: number) => {
   currentPage.value = page
