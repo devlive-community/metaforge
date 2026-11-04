@@ -24,6 +24,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Collaborators are Spring-managed singletons")
@@ -58,10 +59,16 @@ public class ReportServiceImpl
     public CommonResponse<ReportEntity> saveOrUpdate(BaseRepository<ReportEntity, Long> repository, ReportEntity configure)
     {
         var user = UserDetailsService.getUser();
-        if (user.getId() == null || (configure.getId() != null && this.repository.findById(configure.getId())
-                .filter(existing -> Objects.equals(existing.getUserId(), user.getId())).isEmpty())) {
+        Optional<ReportEntity> existing = configure.getId() == null ? Optional.empty() : this.repository.findById(configure.getId())
+                .filter(value -> Objects.equals(value.getUserId(), user.getId()));
+        if (user.getId() == null || (configure.getId() != null && existing.isEmpty())) {
             return CommonResponse.failure("Report not found");
         }
+        // Sharing changes only through the share endpoint: a save keeps the stored values, and a new report starts private.
+        configure.setShareToken(existing.map(ReportEntity::getShareToken).orElse(null));
+        configure.setShareEnabled(existing.map(ReportEntity::isShareEnabled).orElse(false));
+        configure.setShareEmbed(existing.map(ReportEntity::isShareEmbed).orElse(false));
+        configure.setShareOrigins(existing.map(ReportEntity::getShareOrigins).orElse(null));
         JsonNode chart = chartRefresh.chart(configure);
         if (chart != null && configure.getSource() == null) {
             return CommonResponse.failure("Dynamic chart data source not found");

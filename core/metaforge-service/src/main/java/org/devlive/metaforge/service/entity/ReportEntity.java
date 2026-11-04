@@ -68,6 +68,25 @@ public class ReportEntity
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Long datasetId;
 
+    // Public link and iframe embedding. The token is the only public identifier of a shared report;
+    // only its owner reads these fields and they change through the share endpoint, never a save.
+    @Column("share_token")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String shareToken;
+
+    @Column("share_enabled")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private boolean shareEnabled;
+
+    @Column("share_embed")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private boolean shareEmbed;
+
+    // Origins allowed to frame the report, one per line; empty allows any site.
+    @Column("share_origins")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String shareOrigins;
+
     @Transient
     @Reference("datasetId")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
