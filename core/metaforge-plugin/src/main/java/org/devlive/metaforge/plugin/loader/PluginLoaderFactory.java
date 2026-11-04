@@ -111,7 +111,17 @@ public class PluginLoaderFactory
                 List<Plugin> modules = loader.load(pluginDir, parentClassLoaderPackages);
                 if (modules != null && !modules.isEmpty()) {
                     log.info("Successfully loaded [ {} ] plugin(s) using loader type [ {} ]", modules.size(), type);
-                    modules.forEach(v -> v.setClassLoader(loader.getClass().getName()));
+                    // 开发模式的 pom/编译目录加载器不设置 key，商店只能靠类名匹配目录清单而出现重复行；
+                    // 统一以模块目录名（与 metadata.json 的 key 一致）兜底
+                    // Development loaders leave the key unset, so the store matched by class name and listed
+                    // plugins twice. Fall back to the module directory name, which equals the catalogue key.
+                    Path module = pluginDir.toString().endsWith("pom.xml") && pluginDir.getParent() != null ? pluginDir.getParent() : pluginDir;
+                    modules.forEach(v -> {
+                        v.setClassLoader(loader.getClass().getName());
+                        if (v.getKey() == null || v.getKey().isBlank()) {
+                            v.setKey(loader.extractPluginName(module));
+                        }
+                    });
                     return modules;
                 }
             }

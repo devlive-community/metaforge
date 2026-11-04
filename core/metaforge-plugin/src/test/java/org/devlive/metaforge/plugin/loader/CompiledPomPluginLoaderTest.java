@@ -53,6 +53,19 @@ public class CompiledPomPluginLoaderTest
     }
 
     @Test
+    public void developmentModulesUseTheirDirectoryAsCatalogueKey()
+            throws Exception
+    {
+        // metaforge-fs-local registers as "LocalFs"; only the directory name matches the catalogue key.
+        Path root = module("LocalFsPlugin", "FILESYSTEM");
+        Path module = Files.move(root, root.resolveSibling("metaforge-fs-local"));
+        List<Plugin> loaded = PluginLoaderFactory.loadPlugins(module.resolve("pom.xml"), Set.of("java.", "org.devlive.metaforge.plugin."));
+        Assert.assertEquals(1, loaded.size());
+        Assert.assertEquals("metaforge-fs-local", loaded.get(0).getKey());
+        loaded.get(0).getPluginClassLoader().close();
+    }
+
+    @Test
     public void aManifestRegistersAllCompiledExecutorsAndSchedulers()
             throws Exception
     {
