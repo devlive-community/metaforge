@@ -1,5 +1,6 @@
 package org.devlive.metaforge.service.service;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -48,10 +49,18 @@ public interface ReportShareService
         /** Show the report name and the description on the public page; null keeps them shown. */
         private Boolean showTitle;
         private Boolean showDescription;
+        /** Offer the data as a table, and as a CSV download; null keeps them off. */
+        private Boolean allowData;
+        private Boolean allowDownload;
 
         public ShareRequest(boolean enabled, boolean embed, String origins, boolean rotate)
         {
-            this(enabled, embed, origins, rotate, null, null, null);
+            this(enabled, embed, origins, rotate, null, null, null, null, null);
+        }
+
+        public ShareRequest(boolean enabled, boolean embed, String origins, boolean rotate, Long expiresAt, Boolean showTitle, Boolean showDescription)
+        {
+            this(enabled, embed, origins, rotate, expiresAt, showTitle, showDescription, null, null);
         }
     }
 
@@ -67,6 +76,8 @@ public interface ReportShareService
         private Long expiresAt;
         private boolean showTitle;
         private boolean showDescription;
+        private boolean allowData;
+        private boolean allowDownload;
     }
 
     @Data
@@ -82,5 +93,25 @@ public interface ReportShareService
         private boolean embed;
         private boolean showTitle;
         private boolean showDescription;
+        private boolean allowData;
+        private boolean allowDownload;
     }
+
+    /** The report data as a table: column names and rows in the same order. */
+    @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2"}, justification = "Plain response object, built once per request")
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    class Table
+    {
+        private List<String> headers;
+        private List<List<Object>> rows;
+        private boolean truncated;
+    }
+
+    /** The data table, when the owner offers it on the public page. */
+    CommonResponse<Table> table(String token);
+
+    /** The report name and data for a CSV download, when the owner allows downloads. */
+    Optional<Map.Entry<String, Table>> download(String token);
 }

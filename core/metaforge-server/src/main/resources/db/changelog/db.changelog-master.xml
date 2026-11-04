@@ -39,4 +39,5 @@
     <include file="core/core-0011-dataset-history-metrics.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0012-report-share.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0013-report-share-options.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0014-report-share-data.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

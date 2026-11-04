@@ -107,6 +107,15 @@ public class ReportEntity
     @Builder.Default
     private boolean shareShowDescription = true;
 
+    // Offer the data as a table and as a CSV download on the public page
+    @Column("share_allow_data")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private boolean shareAllowData;
+
+    @Column("share_allow_download")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private boolean shareAllowDownload;
+
     @Transient
     @Reference("datasetId")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})

@@ -276,4 +276,36 @@ public class ReportShareServiceImplTest
         assertTrue("omitted display options keep the page complete", again.isShowTitle() && again.isShowDescription());
         assertEquals("Weekly", again.getDescription());
     }
+
+    @Test
+    public void dataTablesAndDownloadsNeedTheOwnersPermission()
+    {
+        report("chart", ReportType.QUERY, "{\"queryChart\":{\"version\":1},\"columns\":[{\"region\":\"East\",\"amount\":12},{\"region\":\"West\",\"amount\":7}]}");
+        String token = service.share("chart", request(true, false, "", false)).getData().getToken();
+        assertFalse("off by default", service.table(token).getStatus());
+        assertFalse(service.download(token).isPresent());
+
+        service.share("chart", new ReportShareService.ShareRequest(true, false, "", false, null, null, null, true, false));
+        ReportShareService.Table table = service.table(token).getData();
+        assertEquals(List.of("region", "amount"), table.getHeaders());
+        assertEquals(List.of(List.of("East", 12), List.of("West", 7)), table.getRows());
+        assertFalse("viewing data does not allow downloading it", service.download(token).isPresent());
+
+        service.share("chart", new ReportShareService.ShareRequest(true, false, "", false, null, null, null, false, true));
+        assertFalse(service.table(token).getStatus());
+        Map.Entry<String, ReportShareService.Table> download = service.download(token).orElseThrow();
+        assertEquals("chart", download.getKey());
+        assertEquals(2, download.getValue().getRows().size());
+        assertTrue(service.view(token).getData().isAllowDownload());
+    }
+
+    @Test
+    public void datasetRowsKeepHeaderOrderWhetherListsOrObjects()
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        ReportShareService.Table table = ReportShareServiceImpl.table(List.of("a", "b"), List.of(
+                mapper.valueToTree(Map.of("b", 2, "a", "x")), mapper.valueToTree(List.of("y", 3))));
+        assertEquals(List.of(List.of("x", 2), List.of("y", 3)), table.getRows());
+        assertFalse(table.isTruncated());
+    }
 }

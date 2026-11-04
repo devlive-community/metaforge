@@ -51,6 +51,7 @@ public class ReportShareServiceImpl
     // Public traffic must not turn into one database query per page view.
     private static final long CACHE_MILLIS = 30_000;
     private static final int CACHE_SIZE = 1000;
+    static final int MAX_TABLE_ROWS = 10_000;
 
     private final ReportRepository repository;
     private final UserRepository userRepository;
@@ -101,6 +102,8 @@ public class ReportShareServiceImpl
         report.setShareExpiresAt(request.getExpiresAt() == null ? null : new Date(request.getExpiresAt()));
         report.setShareShowTitle(!Boolean.FALSE.equals(request.getShowTitle()));
         report.setShareShowDescription(!Boolean.FALSE.equals(request.getShowDescription()));
+        report.setShareAllowData(Boolean.TRUE.equals(request.getAllowData()));
+        report.setShareAllowDownload(Boolean.TRUE.equals(request.getAllowDownload()));
         repository.save(report);
         evict(report.getShareToken());
         return CommonResponse.success(state(report));
@@ -113,7 +116,7 @@ public class ReportShareServiceImpl
                 .map(report -> CommonResponse.success(new PublicReport(report.getName(),
                         report.isShareShowDescription() ? report.getDescription() : null,
                         report.getType() == null ? null : report.getType().name(), report.isRealtime(), report.getConfigure(), report.isShareEmbed(),
-                        report.isShareShowTitle(), report.isShareShowDescription())))
+                        report.isShareShowTitle(), report.isShareShowDescription(), report.isShareAllowData(), report.isShareAllowDownload())))
                 .orElseGet(() -> CommonResponse.failure("Report not found"));
     }
 
@@ -157,6 +160,82 @@ public class ReportShareServiceImpl
             CommonResponse<?> response = asOwner(report.get(), () -> dataSetService.adhoc(dataset.get().getCode(), query));
             return Boolean.TRUE.equals(response.getStatus()) ? CommonResponse.success(response.getData()) : CommonResponse.failure(String.valueOf(response.getMessage()));
         }));
+    }
+
+    @Override
+    public CommonResponse<Table> table(String token)
+    {
+        Optional<ReportEntity> report = shared(token).filter(ReportEntity::isShareAllowData);
+        if (report.isEmpty()) {
+            return CommonResponse.failure("Report data is not shared");
+        }
+        return rows(report.get(), token);
+    }
+
+    @Override
+    public Optional<Map.Entry<String, Table>> download(String token)
+    {
+        Optional<ReportEntity> report = shared(token).filter(ReportEntity::isShareAllowDownload);
+        if (report.isEmpty()) {
+            return Optional.empty();
+        }
+        CommonResponse<Table> table = rows(report.get(), token);
+        return Boolean.TRUE.equals(table.getStatus())
+                ? Optional.of(Map.entry(StringUtils.defaultIfBlank(report.get().getName(), "report"), table.getData()))
+                : Optional.empty();
+    }
+
+    /** The same rows the public chart shows: the refreshed or saved chart rows, or the dataset result. */
+    private CommonResponse<Table> rows(ReportEntity report, String token)
+    {
+        if (report.getType() == ReportType.DATASET) {
+            CommonResponse<Object> data = data(token);
+            if (!Boolean.TRUE.equals(data.getStatus())) {
+                return CommonResponse.failure(String.valueOf(data.getMessage()));
+            }
+            JsonNode result = mapper.valueToTree(data.getData());
+            List<String> headers = new ArrayList<>();
+            result.path("headers").forEach(header -> headers.add(header.asText()));
+            List<JsonNode> items = new ArrayList<>();
+            result.path("columns").forEach(items::add);
+            return CommonResponse.success(table(headers, items));
+        }
+        List<JsonNode> items = new ArrayList<>();
+        if (report.isRealtime()) {
+            CommonResponse<List<Map<String, Object>>> refreshed = refresh(token);
+            if (Boolean.TRUE.equals(refreshed.getStatus())) {
+                refreshed.getData().forEach(row -> items.add(mapper.valueToTree(row)));
+            }
+        }
+        if (items.isEmpty()) {
+            try {
+                mapper.readTree(report.getConfigure()).path("columns").forEach(items::add);
+            }
+            catch (JsonProcessingException e) {
+                return CommonResponse.failure("Report data is unavailable");
+            }
+        }
+        Set<String> headers = new LinkedHashSet<>();
+        items.stream().filter(JsonNode::isObject).forEach(row -> row.fieldNames().forEachRemaining(headers::add));
+        return CommonResponse.success(table(new ArrayList<>(headers), items));
+    }
+
+    /** Rows as lists in header order; object rows by name, array rows by position. */
+    static Table table(List<String> headers, List<JsonNode> items)
+    {
+        List<List<Object>> rows = new ArrayList<>();
+        for (JsonNode item : items) {
+            if (rows.size() >= MAX_TABLE_ROWS) {
+                return new Table(headers, rows, true);
+            }
+            List<Object> row = new ArrayList<>(headers.size());
+            for (int index = 0; index < headers.size(); index++) {
+                JsonNode cell = item.isObject() ? item.get(headers.get(index)) : item.isArray() ? item.get(index) : (index == 0 ? item : null);
+                row.add(cell == null || cell.isNull() ? null : cell.isNumber() ? cell.numberValue() : cell.isBoolean() ? cell.booleanValue() : cell.isValueNode() ? cell.asText() : cell.toString());
+            }
+            rows.add(row);
+        }
+        return new Table(headers, rows, false);
     }
 
     @Override
@@ -237,7 +316,8 @@ public class ReportShareServiceImpl
     private ShareState state(ReportEntity report)
     {
         return new ShareState(report.isShareEnabled(), report.isShareEmbed(), StringUtils.defaultString(report.getShareOrigins()), report.getShareToken(),
-                report.getShareExpiresAt() == null ? null : report.getShareExpiresAt().getTime(), report.isShareShowTitle(), report.isShareShowDescription());
+                report.getShareExpiresAt() == null ? null : report.getShareExpiresAt().getTime(), report.isShareShowTitle(), report.isShareShowDescription(),
+                report.isShareAllowData(), report.isShareAllowDownload());
     }
 
     private String newToken()
