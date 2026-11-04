@@ -69,6 +69,9 @@ public class ReportServiceImpl
         configure.setShareEnabled(existing.map(ReportEntity::isShareEnabled).orElse(false));
         configure.setShareEmbed(existing.map(ReportEntity::isShareEmbed).orElse(false));
         configure.setShareOrigins(existing.map(ReportEntity::getShareOrigins).orElse(null));
+        configure.setShareExpiresAt(existing.map(ReportEntity::getShareExpiresAt).orElse(null));
+        configure.setShareShowTitle(existing.map(ReportEntity::isShareShowTitle).orElse(true));
+        configure.setShareShowDescription(existing.map(ReportEntity::isShareShowDescription).orElse(true));
         JsonNode chart = chartRefresh.chart(configure);
         if (chart != null && configure.getSource() == null) {
             return CommonResponse.failure("Dynamic chart data source not found");

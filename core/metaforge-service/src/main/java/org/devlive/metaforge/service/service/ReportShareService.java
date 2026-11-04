@@ -43,6 +43,16 @@ public interface ReportShareService
         private boolean embed;
         private String origins;
         private boolean rotate;
+        /** Epoch milliseconds after which the link stops working; null never expires. */
+        private Long expiresAt;
+        /** Show the report name and the description on the public page; null keeps them shown. */
+        private Boolean showTitle;
+        private Boolean showDescription;
+
+        public ShareRequest(boolean enabled, boolean embed, String origins, boolean rotate)
+        {
+            this(enabled, embed, origins, rotate, null, null, null);
+        }
     }
 
     @Data
@@ -54,6 +64,9 @@ public interface ReportShareService
         private boolean embed;
         private String origins;
         private String token;
+        private Long expiresAt;
+        private boolean showTitle;
+        private boolean showDescription;
     }
 
     @Data
@@ -67,5 +80,7 @@ public interface ReportShareService
         private boolean realtime;
         private String configure;
         private boolean embed;
+        private boolean showTitle;
+        private boolean showDescription;
     }
 }

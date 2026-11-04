@@ -1,8 +1,10 @@
 package org.devlive.metaforge.service.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonView;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -14,6 +16,8 @@ import org.devlive.metaforge.service.persistence.Reference;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.relational.core.mapping.Column;
 import org.springframework.data.relational.core.mapping.Table;
+
+import java.util.Date;
 
 @Data
 @SuperBuilder
@@ -86,6 +90,22 @@ public class ReportEntity
     @Column("share_origins")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String shareOrigins;
+
+    // The link stops working after this instant; null never expires. Sent as epoch milliseconds.
+    @Column("share_expires_at")
+    @JsonFormat(shape = JsonFormat.Shape.NUMBER)
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Date shareExpiresAt;
+
+    @Column("share_show_title")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    @Builder.Default
+    private boolean shareShowTitle = true;
+
+    @Column("share_show_description")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    @Builder.Default
+    private boolean shareShowDescription = true;
 
     @Transient
     @Reference("datasetId")

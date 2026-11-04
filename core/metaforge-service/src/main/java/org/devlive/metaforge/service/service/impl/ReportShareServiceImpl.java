@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -84,6 +85,9 @@ public class ReportShareServiceImpl
         if (request.isEnabled() && !shareable(report)) {
             return CommonResponse.failure("This report was saved by the earlier chart editor. Save it again from the query page to share it.");
         }
+        if (request.isEnabled() && request.getExpiresAt() != null && request.getExpiresAt() <= System.currentTimeMillis()) {
+            return CommonResponse.failure("The expiry time must be in the future");
+        }
         Optional<String> origins = normalizeOrigins(request.getOrigins());
         if (origins.isEmpty()) {
             return CommonResponse.failure("Allowed sites must be origins such as https://example.com, at most " + MAX_ORIGINS);
@@ -94,6 +98,9 @@ public class ReportShareServiceImpl
         report.setShareEnabled(request.isEnabled());
         report.setShareEmbed(request.isEmbed());
         report.setShareOrigins(origins.get().isEmpty() ? null : origins.get());
+        report.setShareExpiresAt(request.getExpiresAt() == null ? null : new Date(request.getExpiresAt()));
+        report.setShareShowTitle(!Boolean.FALSE.equals(request.getShowTitle()));
+        report.setShareShowDescription(!Boolean.FALSE.equals(request.getShowDescription()));
         repository.save(report);
         evict(report.getShareToken());
         return CommonResponse.success(state(report));
@@ -103,8 +110,10 @@ public class ReportShareServiceImpl
     public CommonResponse<PublicReport> view(String token)
     {
         return shared(token)
-                .map(report -> CommonResponse.success(new PublicReport(report.getName(), report.getDescription(),
-                        report.getType() == null ? null : report.getType().name(), report.isRealtime(), report.getConfigure(), report.isShareEmbed())))
+                .map(report -> CommonResponse.success(new PublicReport(report.getName(),
+                        report.isShareShowDescription() ? report.getDescription() : null,
+                        report.getType() == null ? null : report.getType().name(), report.isRealtime(), report.getConfigure(), report.isShareEmbed(),
+                        report.isShareShowTitle(), report.isShareShowDescription())))
                 .orElseGet(() -> CommonResponse.failure("Report not found"));
     }
 
@@ -166,7 +175,8 @@ public class ReportShareServiceImpl
         }
         try {
             return repository.findByShareToken(token)
-                    .filter(report -> report.isActive() && report.isShareEnabled() && token.equals(report.getShareToken()) && shareable(report));
+                    .filter(report -> report.isActive() && report.isShareEnabled() && token.equals(report.getShareToken())
+                            && !expired(report, System.currentTimeMillis()) && shareable(report));
         }
         catch (RuntimeException e) {
             // Anonymous callers never see internal errors such as SQL text; to them the report is unavailable.
@@ -185,6 +195,11 @@ public class ReportShareServiceImpl
             log.warn("Shared report read failed: {}", e.getClass().getSimpleName());
             return CommonResponse.failure("Report data is temporarily unavailable");
         }
+    }
+
+    static boolean expired(ReportEntity report, long now)
+    {
+        return report.getShareExpiresAt() != null && report.getShareExpiresAt().getTime() <= now;
     }
 
     /** Dataset reports and query charts render from saved data; earlier query reports ran SQL in the browser. */
@@ -221,7 +236,8 @@ public class ReportShareServiceImpl
 
     private ShareState state(ReportEntity report)
     {
-        return new ShareState(report.isShareEnabled(), report.isShareEmbed(), StringUtils.defaultString(report.getShareOrigins()), report.getShareToken());
+        return new ShareState(report.isShareEnabled(), report.isShareEmbed(), StringUtils.defaultString(report.getShareOrigins()), report.getShareToken(),
+                report.getShareExpiresAt() == null ? null : report.getShareExpiresAt().getTime(), report.isShareShowTitle(), report.isShareShowDescription());
     }
 
     private String newToken()

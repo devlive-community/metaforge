@@ -232,6 +232,7 @@ public class ReportShareServiceImplTest
         assertTrue(kept.isShareEmbed());
         assertEquals(token, kept.getShareToken());
         assertEquals("https://a.com", kept.getShareOrigins());
+        assertTrue(kept.isShareShowTitle());
     }
 
     @Test
@@ -247,5 +248,32 @@ public class ReportShareServiceImplTest
         assertFalse(String.valueOf(view.getMessage()).contains("SQL"));
         assertFalse(failing.frameAncestors(token).isPresent());
         assertFalse(failing.data(token).getStatus());
+    }
+
+    @Test
+    public void linksExpireAndTheOwnerChoosesWhatThePageShows()
+    {
+        ReportEntity report = report("chart", ReportType.QUERY, CHART);
+        report.setDescription("Weekly");
+        long past = System.currentTimeMillis() - 1000;
+        assertFalse("an expiry in the past is refused",
+                service.share("chart", new ReportShareService.ShareRequest(true, true, "", false, past, null, null)).getStatus());
+        long future = System.currentTimeMillis() + 3_600_000;
+        CommonResponse<ReportShareService.ShareState> shared = service.share("chart", new ReportShareService.ShareRequest(true, true, "", false, future, false, false));
+        assertTrue(shared.getStatus());
+        assertEquals(Long.valueOf(future), shared.getData().getExpiresAt());
+        String token = shared.getData().getToken();
+        ReportShareService.PublicReport view = service.view(token).getData();
+        assertFalse(view.isShowTitle());
+        assertFalse(view.isShowDescription());
+        assertNull("a hidden description is not sent", view.getDescription());
+
+        report.setShareExpiresAt(new java.util.Date(past));
+        assertFalse("expired links stop working", service.view(token).getStatus());
+        assertFalse(service.frameAncestors(token).isPresent());
+        assertTrue("an owner can extend the link", service.share("chart", new ReportShareService.ShareRequest(true, true, "", false, null, null, null)).getStatus());
+        ReportShareService.PublicReport again = service.view(token).getData();
+        assertTrue("omitted display options keep the page complete", again.isShowTitle() && again.isShowDescription());
+        assertEquals("Weekly", again.getDescription());
     }
 }
