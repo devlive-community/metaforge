@@ -11,6 +11,12 @@ export class ReportService
         super(DEFAULT_PATH)
     }
 
+    /** Owner only: public link, iframe embedding, allowed sites and link rotation. */
+    share(code: string, configure: { enabled: boolean, embed: boolean, origins: string, rotate: boolean })
+    {
+        return new HttpUtils().put(`${DEFAULT_PATH}/${encodeURIComponent(code)}/share`, configure)
+    }
+
     refreshChart(code: string)
     {
         return new HttpUtils().get(`${DEFAULT_PATH}/${encodeURIComponent(code)}/chart-refresh`)

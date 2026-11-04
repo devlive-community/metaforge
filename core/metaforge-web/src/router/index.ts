@@ -5,6 +5,7 @@ import { createAuthRoute } from '@/router/auth'
 import { createDefaultRouter } from '@/router/default'
 import { createHttpRoute } from '@/router/http'
 import { createSetupRoute } from '@/router/setup'
+import { createSharedRoute } from '@/router/shared'
 import SetupService from '@/services/setup'
 import { TokenUtils } from '@/utils/token'
 import { interimLocation, trackPendingNavigation } from '@/composables/useRouteRedirect'
@@ -22,6 +23,7 @@ trackPendingNavigation(router)
 createHttpRoute(router)
 createAuthRoute(router)
 createSetupRoute(router)
+createSharedRoute(router)
 createDefaultRouter(router)
 
 // 首次导航时检查是否已完成首次安装：未安装跳转 /setup，已安装访问 /setup 回登录页。

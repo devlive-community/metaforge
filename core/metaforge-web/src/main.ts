@@ -10,6 +10,10 @@ import router from '@/router'
 import i18n from '@/i18n/I18n'
 import { createIcons } from '@/fontawesome'
 import MetaforgeUI from 'metaforge-ui'
+import { routeSharedReportPath } from '@/router/shared'
+
+// Shared report paths become the public report route before the router reads the address.
+routeSharedReportPath(window.location, window.history)
 
 const app = createApp(App)
 createIcons(app)

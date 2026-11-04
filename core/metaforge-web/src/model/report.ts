@@ -12,4 +12,8 @@ export interface ReportModel
     description?: string
     dataset?: DatasetModel
     source?: SourceModel
+    shareToken?: string
+    shareEnabled?: boolean
+    shareEmbed?: boolean
+    shareOrigins?: string
 }

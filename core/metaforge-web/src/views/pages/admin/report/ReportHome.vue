@@ -14,7 +14,10 @@
                @size-change="onSizeChange">
       <template #bodyCell="{ column, record }">
         <template v-if="column.key === 'name'">
-          <EllipsisCell :text="record.name"/>
+          <div class="flex min-w-0 items-center gap-2">
+            <EllipsisCell :text="record.name"/>
+            <MfTag v-if="record.shareEnabled" variant="success" size="sm" class="shrink-0">{{ $t('report.share.shared') }}</MfTag>
+          </div>
         </template>
         <template v-else-if="column.key === 'realtime'">
           <MfSwitch v-model="record.realtime" size="sm" :disabled="record.realtime"/>
@@ -57,6 +60,13 @@
                     </div>
                   </MfMenuItem>
 
+                  <MfMenuItem @click="visibleShare(true, record)">
+                    <div class="flex items-center space-x-2">
+                      <Share2 :size="15" />
+                      <span>{{ $t('report.share.action') }}</span>
+                    </div>
+                  </MfMenuItem>
+
                   <MfMenuItem @click="visibleDelete(true, record)">
                     <div class="flex items-center space-x-2">
                       <Trash2 :size="15" />
@@ -76,6 +86,11 @@
               :info="dataInfo"
               @close="visibleView(false, null)"/>
 
+  <ReportShare v-if="dataShareVisible && dataInfo"
+               :is-visible="dataShareVisible"
+               :info="dataInfo"
+               @close="changed => visibleShare(false, null, changed)"/>
+
   <ReportDelete v-if="dataDeleteVisible"
                 :is-visible="dataDeleteVisible"
                 :info="dataInfo"
@@ -93,7 +108,8 @@ import { usePagedList } from '@/composables/usePagedList'
 import ReportService from '@/services/report'
 import ReportView from '@/views/pages/admin/report/ReportView.vue'
 import ReportDelete from '@/views/pages/admin/report/ReportDelete.vue'
-import { Eye, Pencil, Settings, Trash2 } from '@lucide/vue'
+import ReportShare from '@/views/pages/admin/report/ReportShare.vue'
+import { Eye, Pencil, Settings, Share2, Trash2 } from '@lucide/vue'
 
 defineOptions({ name: 'ReportHome' })
 
@@ -103,6 +119,7 @@ const { headers } = useHeaders()
 const dataInfo = ref<ReportModel | null>(null)
 const dataViewVisible = ref(false)
 const dataDeleteVisible = ref(false)
+const dataShareVisible = ref(false)
 
 const {
     loading,
@@ -119,6 +136,14 @@ const {
 const visibleView = (opened: boolean, value: ReportModel | null) => {
   dataViewVisible.value = opened
   dataInfo.value = value
+}
+
+const visibleShare = (opened: boolean, value: ReportModel | null, changed = false) => {
+  dataShareVisible.value = opened
+  dataInfo.value = value
+  if (!opened && changed) {
+    initialize()
+  }
 }
 
 const visibleDelete = (opened: boolean, value: ReportModel | null) => {

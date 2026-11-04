@@ -46,6 +46,7 @@ import { computed, defineAsyncComponent, onBeforeUnmount, ref, shallowRef, watch
 import { MfMessage } from 'metaforge-ui'
 import { RefreshCw } from '@lucide/vue'
 import ReportService from '@/services/report'
+import PublicReportService from '@/services/public-report'
 import type { QueryChartRow } from '@/model/query-chart'
 import { cloneDeep } from 'lodash'
 import { Type } from '@/views/components/visual/Type'
@@ -69,6 +70,8 @@ const props = withDefaults(defineProps<{
   original?: string
   reportCode?: string
   realtime?: boolean
+  /** Renders a shared report: data comes from the public API by token, never from visitor SQL. */
+  shareToken?: string
 }>(), {
   width: '100%',
   height: '400px'
@@ -82,7 +85,7 @@ const snapshot = computed(() => {
   return { options: saved.options, rows: config.columns }
 })
 
-const dynamicCode = computed(() => props.realtime && snapshot.value ? props.reportCode : undefined)
+const dynamicCode = computed(() => props.realtime && snapshot.value ? (props.shareToken || props.reportCode) : undefined)
 const refreshInterval = computed(() => {
   const seconds = snapshot.value?.options.refreshSeconds
   return seconds === 60 || seconds === 300 || seconds === 900 ? seconds : 0
@@ -100,7 +103,7 @@ async function refreshChart() {
   const run = generation
   refreshing.value = true
   try {
-    const response = await ReportService.refreshChart(code)
+    const response = props.shareToken ? await PublicReportService.refresh(props.shareToken) : await ReportService.refreshChart(code)
     if (run !== generation) return
     if (!response.status || !Array.isArray(response.data)) {
       refreshFailed.value = true
@@ -156,7 +159,20 @@ const handleInitialize = () => {
   localConfiguration.value = cloneDeep(props.configuration) as Configuration
   setTimeout(() => {
     loading.value = true
-    if (props.type === 'QUERY') {
+    if (props.shareToken) {
+      PublicReportService.data(props.shareToken)
+                         .then((response) => {
+                           if (response.status) {
+                             formatRaw(response)
+                           }
+                           else {
+                             hasError.value = true
+                             message.value = response.message
+                           }
+                         })
+                         .finally(() => (loading.value = false))
+    }
+    else if (props.type === 'QUERY') {
       const configure: ExecuteModel = { name: props.original as any, content: props.query as any, mode: 'REPORT' }
       ExecuteService.execute(configure, null)
                     .then((response) => {
