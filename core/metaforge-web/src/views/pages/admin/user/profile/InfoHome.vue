@@ -22,7 +22,7 @@
         <template v-else>
           <div class="text-sm text-gray-500">{{ $t('user.tip.radar7Days') }}</div>
           <div class="p-2">
-            <VisualPie v-if="radar.configuration" :configuration="radar.configuration as any" height="200px" :submitted="false"/>
+            <VisualChart :type="Type.PIE" v-if="radar.configuration" :configuration="radar.configuration as any" height="200px" :submitted="false"/>
           </div>
         </template>
       </MfCard>
@@ -35,7 +35,8 @@ import { reactive, ref } from 'vue'
 import { HttpUtils } from '@/utils/http'
 import UserService from '@/services/user'
 import { Configuration } from '@/views/components/visual/Configuration'
-import VisualPie from '@/views/components/visual/components/VisualPie.vue'
+import VisualChart from '@/views/components/visual/components/VisualChart.vue'
+import { Type } from '@/views/components/visual/Type'
 import { DateUtils } from '@/utils/date'
 import Contribution from '@/views/components/contribution/Contribution.vue'
 

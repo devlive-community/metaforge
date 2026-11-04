@@ -1,11 +1,8 @@
+import { isCompleteFilter, type FilterFieldKind, type FilterGroup, type FilterJoin, type FilterRule } from './typed-filter'
+
 export const queryChartTypes = ['line', 'bar', 'area', 'pie', 'donut', 'scatter', 'horizontal', 'radar', 'funnel', 'rose', 'table'] as const
 export type QueryChartType = typeof queryChartTypes[number]
 export type QueryChartRow = Record<string, unknown>
-export type FilterOperator = 'eq' | 'ne' | 'contains' | 'in' | 'null' | 'notNull' | 'gte' | 'lte' | 'between'
-export type FilterJoin = 'and' | 'or'
-export interface ChartFilter { field: string; operator: FilterOperator; value: string; end: string }
-export interface ChartFilterGroup { join: FilterJoin; rules: ChartFilter[] }
-
 export interface QueryChartOptions {
   type: QueryChartType
   name: string
@@ -18,7 +15,7 @@ export interface QueryChartOptions {
   grain: 'none' | 'hour' | 'day' | 'week' | 'month'
   filtersEnabled: boolean
   filterJoin: FilterJoin
-  groups: ChartFilterGroup[]
+  groups: FilterGroup[]
   xTitle: string
   yTitle: string
   dateFormat: 'short' | 'full' | 'time'
@@ -54,7 +51,8 @@ export interface QueryChartOptions {
   tooltipTemplate: string
   zoom: boolean
   download: boolean
-  pointAction: 'details' | 'highlight' | 'none'
+  pointAction: 'details' | 'filter' | 'highlight' | 'none'
+  refreshSeconds?: number
   detailsMode: 'panel' | 'dialog'
   nulls: 'ignore' | 'zero' | 'keep'
   timezone: string
@@ -69,10 +67,12 @@ export interface QueryChartConfiguration {
 
 export const snapshotRowLimit = 10000
 
-export function chartFieldKind(rows: QueryChartRow[], name: string, type?: string) {
+export function chartFieldKind(rows: QueryChartRow[], name: string, type?: string): FilterFieldKind {
   if (type && /date|time/i.test(type)) return 'date'
   if (type && /int|decimal|double|float|numeric|number|real/i.test(type) && !/interval|point/i.test(type)) return 'number'
+  if (type && /bool/i.test(type)) return 'boolean'
   const sample = rows.slice(0, 200).map(row => row[name]).filter(value => value !== null && value !== undefined && value !== '')
+  if (sample.length && sample.every(value => typeof value === 'boolean')) return 'boolean'
   if (sample.length && sample.every(value => typeof value === 'number')) return 'number'
   if (sample.length && sample.every(value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}(?:$|[T ])/.test(value) && Number.isFinite(Date.parse(value)))) return 'date'
   return 'text'
@@ -90,7 +90,7 @@ export function defaultQueryChart(headers: string[], dateField?: string): QueryC
     palette: 'green', colors: '', smooth: false, dashed: false, lineWidth: 2, pointSize: 5, points: true,
     fill: true, opacity: 24, transparent: false,
     tooltip: 'dimension', tooltipTemplate: '', zoom: false, download: true, pointAction: 'details', detailsMode: 'panel',
-    nulls: 'ignore', timezone: 'Asia/Shanghai', maxRows: snapshotRowLimit
+    refreshSeconds: 0, nulls: 'ignore', timezone: 'Asia/Shanghai', maxRows: snapshotRowLimit
   }
 }
 
@@ -130,34 +130,27 @@ function timeGroup(value: unknown, grain: QueryChartOptions['grain'], dateFormat
   return date
 }
 
-export function filterNeedsValue(operator: FilterOperator) {
-  return operator !== 'null' && operator !== 'notNull'
-}
-
-export function isCompleteFilter(rule: ChartFilter) {
-  return !!rule.field && (!filterNeedsValue(rule.operator) || !!rule.value.trim())
-      && (rule.operator !== 'between' || !!rule.end.trim())
-}
-
 function compare(value: unknown, target: string) {
   const left = asNumber(value) ?? dateValue(value)
   const right = asNumber(target) ?? dateValue(target)
   return left !== undefined && right !== undefined ? left - right : asText(value).localeCompare(target)
 }
 
-function matches(row: QueryChartRow, rule: ChartFilter, formatter: Intl.DateTimeFormat) {
+function matches(row: QueryChartRow, rule: FilterRule, formatter: Intl.DateTimeFormat) {
   const raw = row[rule.field]
   const dayComparison = rule.operator !== 'contains' && rule.operator !== 'in' && /^\d{4}-\d{2}-\d{2}$/.test(rule.value)
   const value = dayComparison && (dateValue(raw) !== undefined || typeof raw === 'number') ? timeGroup(raw, 'day', formatter) : raw
   if (rule.operator === 'null') return value == null
   if (rule.operator === 'notNull') return value != null
-  if (value == null) return false
-  const text = asText(value)
+  if (value == null || (rule.kind === 'number' && asNumber(value) === undefined)) return false
+  const text = rule.kind === 'boolean' && (value === 0 || value === 1) ? String(value === 1) : asText(value)
   switch (rule.operator) {
-    case 'eq': return text === rule.value
-    case 'ne': return text !== rule.value
+    case 'eq': return rule.kind === 'number' ? compare(value, rule.value) === 0 : text === rule.value
+    case 'ne': return rule.kind === 'number' ? compare(value, rule.value) !== 0 : text !== rule.value
     case 'contains': return text.toLocaleLowerCase().includes(rule.value.toLocaleLowerCase())
     case 'in': return rule.value.split(',').map(item => item.trim()).includes(text)
+    case 'gt': return compare(value, rule.value) > 0
+    case 'lt': return compare(value, rule.value) < 0
     case 'gte': return compare(value, rule.value) >= 0
     case 'lte': return compare(value, rule.value) <= 0
     case 'between': return compare(value, rule.value) >= 0 && compare(value, rule.end) <= 0
@@ -178,7 +171,7 @@ export function aggregateQueryChart(rows: QueryChartRow[], options: QueryChartOp
     timeZone: options.timezone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23'
   })
   const filtered = options.filtersEnabled && groups.length ? limited.filter(row => {
-    const evaluate = (group: ChartFilterGroup) => group.join === 'and'
+    const evaluate = (group: FilterGroup) => group.join === 'and'
         ? group.rules.every(rule => matches(row, rule, formatter)) : group.rules.some(rule => matches(row, rule, formatter))
     return options.filterJoin === 'and' ? groups.every(evaluate) : groups.some(evaluate)
   }) : limited

@@ -112,8 +112,11 @@
             </section>
             <section class="space-y-2 border-t border-line pt-4">
               <h4 class="font-semibold">{{ $t('queryChart.saveMode') }}</h4>
-              <div class="rounded-mf-md border border-primary/25 bg-primary/5 p-3 text-primary">{{ $t('queryChart.snapshot') }}</div>
-              <p class="text-xs text-content-tertiary">{{ $t('queryChart.dynamicUnavailable') }}</p>
+              <MfSelect v-model="saveMode" :options="saveModes" :aria-label="$t('queryChart.saveMode')"/>
+              <p class="text-xs text-content-tertiary">{{ $t('queryChart.dynamicHelp') }}</p>
+              <MfFormItem v-if="saveMode === 'dynamic'" :label="$t('queryChart.refreshInterval')">
+                <MfSelect v-model="options.refreshSeconds" :options="refreshIntervals"/>
+              </MfFormItem>
             </section>
             <section class="space-y-3 border-t border-line pt-4">
               <h4 class="font-semibold">{{ $t('queryChart.fieldList') }}</h4>
@@ -126,43 +129,19 @@
             </section>
           </template>
 
-          <template v-else-if="panel === 'filters'">
-            <MfCheckbox v-model="options.filtersEnabled">{{ $t('queryChart.filtersEnabled') }}</MfCheckbox>
-            <MfAlert variant="info" :title="$t('queryChart.filterNotice')"/>
-            <MfSelect v-if="options.groups.length > 1" v-model="options.filterJoin" :options="choices('join', ['and', 'or'])" :aria-label="$t('queryChart.groupJoin')"/>
-            <section v-for="(group, groupIndex) in options.groups" :key="groupIndex" class="space-y-3 border-t border-line pt-4">
-              <div class="flex items-center justify-between">
-                <h4 class="font-semibold">{{ $t('queryChart.filterGroup', { number: groupIndex + 1 }) }}</h4>
-                <MfButton size="sm" variant="ghost" :aria-label="$t('common.delete')" @click="options.groups.splice(groupIndex, 1)"><Trash2 :size="15"/></MfButton>
-              </div>
-              <MfSelect v-if="group.rules.length > 1" v-model="group.join" :options="choices('join', ['and', 'or'])" :aria-label="$t('queryChart.groupJoin')"/>
-              <div v-for="(rule, ruleIndex) in group.rules" :key="ruleIndex" class="space-y-2 rounded-mf-md border border-line p-2.5">
-                <div class="grid grid-cols-[1fr_1fr_auto] items-center gap-2">
-                  <MfSelect :model-value="rule.field" searchable :options="fieldOptions" :placeholder="$t('queryChart.selectField')" @update:model-value="rule.field = String($event); rule.value = ''; rule.end = ''"/>
-                  <MfSelect v-model="rule.operator" :options="choices('operator', operators)" :aria-label="$t('queryChart.operatorLabel')"/>
-                  <MfButton size="sm" variant="ghost" :aria-label="$t('common.delete')" @click="group.rules.splice(ruleIndex, 1)"><Trash2 :size="14"/></MfButton>
-                </div>
-                <div v-if="filterNeedsValue(rule.operator)" class="flex gap-2">
-                  <template v-if="fieldKinds[rule.field] === 'date' && rule.operator !== 'contains' && rule.operator !== 'in'">
-                    <MfDatePicker v-model="rule.value" :locale="locale" :label="$t('queryChart.filterValue')" :placeholder="$t('dataTable.selectDate')"
-                                  :max="rule.operator === 'between' ? rule.end || undefined : undefined"/>
-                    <MfDatePicker v-if="rule.operator === 'between'" v-model="rule.end" :locale="locale" :label="$t('queryChart.filterEnd')"
-                                  :placeholder="$t('queryChart.filterEnd')" :min="rule.value || undefined"/>
-                  </template>
-                  <template v-else>
-                    <MfInput v-model="rule.value" :placeholder="$t(rule.operator === 'in' ? 'queryChart.inValues' : 'queryChart.filterValue')"/>
-                    <MfInput v-if="rule.operator === 'between'" v-model="rule.end" :placeholder="$t('queryChart.filterEnd')"/>
-                  </template>
-                </div>
-              </div>
-              <MfButton size="sm" @click="addRule(group)"><Plus :size="14"/>{{ $t('queryChart.addRule') }}</MfButton>
-            </section>
-            <MfButton size="sm" class="self-start" @click="addGroup"><Plus :size="14"/>{{ $t('queryChart.addGroup') }}</MfButton>
-            <section v-if="filterExpression" class="space-y-2 border-t border-line pt-4">
-              <h4 class="font-semibold">{{ $t('queryChart.filterExpression') }}</h4>
-              <pre class="whitespace-pre-wrap break-all rounded-mf-md bg-surface-hover p-3 text-xs">{{ filterExpression }}</pre>
-            </section>
-          </template>
+          <TypedFilterBuilder v-else-if="panel === 'filters'" v-model:enabled="options.filtersEnabled"
+                              v-model:groups="options.groups" v-model:join="options.filterJoin" :fields="filterFields">
+            <template #toggle>
+              <MfCheckbox v-model="options.filtersEnabled">{{ $t('queryChart.filtersEnabled') }}</MfCheckbox>
+            </template>
+            <template #notice><MfAlert variant="info" :title="$t('queryChart.filterNotice')"/></template>
+            <template #expression>
+              <section v-if="filterExpression" class="space-y-2 border-t border-line pt-4">
+                <h4 class="font-semibold">{{ $t('queryChart.filterExpression') }}</h4>
+                <pre class="whitespace-pre-wrap break-all rounded-mf-md bg-surface-hover p-3 text-xs">{{ filterExpression }}</pre>
+              </section>
+            </template>
+          </TypedFilterBuilder>
 
           <QueryChartSettings v-else :panel="panel" :options="options" :time-category="timeCategory" @change="setOption"/>
         </MfForm>
@@ -170,7 +149,7 @@
 
       <aside class="min-h-0 min-w-0 space-y-4 overflow-y-auto bg-surface-hover/40 p-5 max-md:overflow-visible">
         <div class="h-[clamp(340px,46dvh,590px)]">
-          <QueryChartPreview :options="options" :rows="source.rows" :aggregation="result" heading/>
+          <QueryChartPreview :options="options" :rows="source.rows" :aggregation="result" heading linked @filter="emit('filter', $event)"/>
         </div>
         <section class="space-y-2 rounded-mf-lg border border-line bg-primary/5 p-4">
           <h3 class="font-semibold">{{ $t('queryChart.summary') }}</h3>
@@ -203,19 +182,20 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Axis3D, ChartArea, ChartBar, ChartColumn, ChartLine, ChartPie, Check, Circle, Ellipsis, Filter, Info, List, MousePointer2, Palette, Plus, RotateCcw, ScatterChart, Settings2, Table2, Trash2 } from '@lucide/vue'
-import { filterNeedsValue, queryChartTypes, type FilterOperator, type QueryChartOptions } from '@/model/query-chart'
+import { Axis3D, ChartArea, ChartBar, ChartColumn, ChartLine, ChartPie, Check, Circle, Ellipsis, Filter, Info, List, MousePointer2, Palette, RotateCcw, ScatterChart, Settings2, Table2 } from '@lucide/vue'
+import { queryChartTypes, type QueryChartOptions, type QueryChartRow } from '@/model/query-chart'
 import { useQueryChartBuilder, type QueryChartSource } from '@/composables/useQueryChartBuilder'
+import TypedFilterBuilder from '@/views/components/filter/TypedFilterBuilder.vue'
 import QueryChartPreview from '@/views/components/visual/query/QueryChartPreview.vue'
 import QueryChartSettings from '@/views/components/visual/query/QueryChartSettings.vue'
 
 const props = defineProps<{ isVisible: boolean; source: QueryChartSource }>()
-const emit = defineEmits<{ close: [value: boolean] }>()
-const { t, locale } = useI18n()
+const emit = defineEmits<{ close: [value: boolean]; filter: [rows: QueryChartRow[]] }>()
+const { t } = useI18n()
 const source = props.source
 const close = () => emit('close', false)
-const { options, fieldKinds, publishing, error, result, fieldOptions, numericOptions, timeCategory, ruleCount,
-  filterExpression, metricLabel, changeCategory, changeAggregation, toggleField, addGroup, addRule, reset, copyConfig, publish } = useQueryChartBuilder(source, close)
+const { options, fieldKinds, publishing, error, result, fieldOptions, numericOptions, timeCategory, ruleCount, saveMode,
+  filterExpression, metricLabel, changeCategory, changeAggregation, toggleField, reset, copyConfig, publish } = useQueryChartBuilder(source, close)
 const panels = [
   { key: 'chart', icon: ChartColumn }, { key: 'fields', icon: Table2 }, { key: 'filters', icon: Filter },
   { key: 'axes', icon: Axis3D }, { key: 'legend', icon: List }, { key: 'style', icon: Palette },
@@ -231,11 +211,16 @@ const chartCards = [
 ] as const
 const moreTypes = queryChartTypes.slice(chartCards.length)
 const aggregations = ['count', 'distinct', 'sum', 'avg', 'min', 'max']
-const operators: FilterOperator[] = ['eq', 'ne', 'contains', 'in', 'null', 'notNull', 'gte', 'lte', 'between']
+const filterFields = computed(() => fieldOptions.value.map(field => ({ key: field.value, label: field.label, kind: fieldKinds[field.value] })))
 const choices = (key: string, values: readonly string[]) => values.map(value => ({ value, label: t('queryChart.choice.' + key + '.' + value) }))
 const metricOptions = computed(() => options.value.aggregation === 'count'
     ? [{ value: 0, label: t('queryChart.records') }, ...fieldOptions.value]
     : options.value.aggregation === 'distinct' ? fieldOptions.value : numericOptions.value)
+const saveModes = computed(() => ['snapshot', 'dynamic'].map(value => ({ value, label: t('queryChart.' + value) })))
+const refreshIntervals = computed(() => [
+  { value: 0, label: t('queryChart.manualRefresh') },
+  ...[60, 300, 900].map(value => ({ value, label: t('queryChart.everyMinutes', { count: value / 60 }) }))
+])
 const sourceLabel = computed(() => (source.label ? source.label + ' · ' : '') + t('queryChart.result'))
 const sizeText = computed(() => t('queryChart.size', { rows: source.rows.length, fields: source.headers.length }))
 const sourceStats = computed(() => [{ label: t('queryChart.rows'), value: source.rows.length }, { label: t('queryChart.fieldList'), value: source.headers.length }])
@@ -244,7 +229,7 @@ const summary = computed(() => [
   { label: t('queryChart.resultSize'), value: sizeText.value },
   { label: t('queryChart.chartType'), value: t('queryChart.type.' + options.value.type) },
   { label: t('queryChart.metric'), value: t('queryChart.choice.aggregation.' + options.value.aggregation) + ' · ' + metricLabel.value },
-  { label: t('queryChart.saveMode'), value: t('queryChart.snapshot') },
+  { label: t('queryChart.saveMode'), value: t('queryChart.' + saveMode.value) },
   { label: t('queryChart.filteredRows'), value: t('queryChart.rowCount', { count: result.value.rowCount }) }
 ])
 

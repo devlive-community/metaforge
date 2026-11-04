@@ -1,7 +1,18 @@
 <template>
   <div class="relative h-full w-full" :style="{ width: width, height: height }">
     <template v-if="configuration?.queryChart">
-      <QueryChartPreview v-if="snapshot" :options="snapshot.options" :rows="snapshot.rows"/>
+      <div v-if="snapshot" class="flex h-full min-h-0 flex-col gap-2">
+        <div v-if="dynamicCode" class="flex shrink-0 flex-wrap items-center justify-between gap-2">
+          <span class="text-xs text-content-secondary" aria-live="polite">
+            {{ refreshedAt ? $t('queryChart.refreshedAt', { time: refreshedAt }) : $t('queryChart.dynamic') }}
+          </span>
+          <MfButton size="sm" variant="secondary" :loading="refreshing" @click="refreshChart">
+            <RefreshCw :size="14"/>{{ $t('common.refresh') }}
+          </MfButton>
+        </div>
+        <MfAlert v-if="refreshFailed" variant="warning" :title="$t('queryChart.refreshError')"/>
+        <QueryChartPreview class="min-h-0 flex-1" :options="snapshot.options" :rows="refreshedRows ?? snapshot.rows"/>
+      </div>
       <MfAlert v-else variant="danger" :title="$t('queryChart.renderError')"/>
     </template>
     <div v-else-if="loading" class="flex items-center justify-center absolute inset-0">
@@ -24,95 +35,24 @@
                        :width="width"
                        :height="height"/>
 
-          <VisualLine v-else-if="configuration?.type === Type.LINE"
-                      :configuration="localConfiguration as any"
-                      :submitted="false"
-                      :width="width"
-                      :height="height"/>
-
-          <VisualBar v-else-if="configuration?.type === Type.BAR"
-                     :configuration="localConfiguration as any"
-                     :submitted="false"
-                     :width="width"
-                     :height="height"/>
-
-          <VisualArea v-else-if="configuration?.type === Type.AREA"
-                      :configuration="localConfiguration as any"
-                      :submitted="false"
-                      :width="width"
-                      :height="height"/>
-
-          <VisualPie v-else-if="configuration?.type === Type.PIE"
-                     :configuration="localConfiguration as any"
-                     :submitted="false"
-                     :width="width"
-                     :height="height"/>
-
-          <VisualHistogram v-else-if="configuration?.type === Type.HISTOGRAM"
-                           :configuration="localConfiguration as any"
-                           :submitted="false"
-                           :width="width"
-                           :height="height"/>
-
-          <VisualWordCloud v-else-if="configuration?.type === Type.WORDCLOUD"
-                           :configuration="localConfiguration as any"
-                           :submitted="false"
-                           :width="width"
-                           :height="height"/>
-
-          <VisualScatter v-else-if="configuration?.type === Type.SCATTER"
-                         :configuration="localConfiguration as any"
-                         :submitted="false"
-                         :width="width"
-                         :height="height"/>
-
-          <VisualRadar v-else-if="configuration?.type === Type.RADAR"
-                       :configuration="localConfiguration as any"
-                       :submitted="false"
-                       :width="width"
-                       :height="height"/>
-
-          <VisualFunnel v-else-if="configuration?.type === Type.FUNNEL"
-                        :configuration="localConfiguration as any"
-                        :submitted="false"
-                        :width="width"
-                        :height="height"/>
-
-          <VisualGauge v-else-if="configuration?.type === Type.GAUGE"
-                       :configuration="localConfiguration as any"
-                       :submitted="false"
-                       :width="width"
-                       :height="height"/>
-
-          <VisualRose v-else-if="configuration?.type === Type.ROSE"
-                      :configuration="localConfiguration as any"
-                      :submitted="false"
-                      :width="width"
-                      :height="height"/>
+          <VisualChart v-else :configuration="localConfiguration as Configuration" :submitted="false" :width="width" :height="height"/>
         </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent, ref } from 'vue'
+import { computed, defineAsyncComponent, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { MfMessage } from 'metaforge-ui'
+import { RefreshCw } from '@lucide/vue'
+import ReportService from '@/services/report'
+import type { QueryChartRow } from '@/model/query-chart'
 import { cloneDeep } from 'lodash'
 import { Type } from '@/views/components/visual/Type'
-import VisualWordCloud from '@/views/components/visual/components/VisualWordCloud.vue'
-import VisualHistogram from '@/views/components/visual/components/VisualHistogram.vue'
-import VisualPie from '@/views/components/visual/components/VisualPie.vue'
-import VisualArea from '@/views/components/visual/components/VisualArea.vue'
 import { Configuration } from './Configuration'
-import VisualBar from '@/views/components/visual/components/VisualBar.vue'
-import VisualLine from '@/views/components/visual/components/VisualLine.vue'
+import VisualChart from './components/VisualChart.vue'
 import VisualTable from '@/views/components/visual/components/VisualTable.vue'
 import DatasetService from '@/services/dataset'
-import VisualRadar from '@/views/components/visual/components/VisualRadar.vue'
-import VisualScatter from '@/views/components/visual/components/VisualScatter.vue'
-import VisualFunnel from '@/views/components/visual/components/VisualFunnel.vue'
-import VisualGauge from '@/views/components/visual/components/VisualGauge.vue'
-import VisualRose from '@/views/components/visual/components/VisualRose.vue'
 import ExecuteService from '@/services/execute.ts'
 import { ExecuteModel } from '@/model/execute.ts'
 
@@ -127,6 +67,8 @@ const props = withDefaults(defineProps<{
   width?: string
   height?: string
   original?: string
+  reportCode?: string
+  realtime?: boolean
 }>(), {
   width: '100%',
   height: '400px'
@@ -138,6 +80,56 @@ const snapshot = computed(() => {
   if (saved?.version !== 1 || !Array.isArray(config?.columns)
       || !Array.isArray(saved.options?.fields) || !Array.isArray(saved.options?.groups)) return null
   return { options: saved.options, rows: config.columns }
+})
+
+const dynamicCode = computed(() => props.realtime && snapshot.value ? props.reportCode : undefined)
+const refreshInterval = computed(() => {
+  const seconds = snapshot.value?.options.refreshSeconds
+  return seconds === 60 || seconds === 300 || seconds === 900 ? seconds : 0
+})
+const refreshing = ref(false)
+const refreshFailed = ref(false)
+const refreshedAt = ref('')
+const refreshedRows = shallowRef<QueryChartRow[]>()
+let generation = 0
+let timer: number | undefined
+
+async function refreshChart() {
+  const code = dynamicCode.value
+  if (!code || refreshing.value) return
+  const run = generation
+  refreshing.value = true
+  try {
+    const response = await ReportService.refreshChart(code)
+    if (run !== generation) return
+    if (!response.status || !Array.isArray(response.data)) {
+      refreshFailed.value = true
+      return
+    }
+    refreshedRows.value = response.data
+    refreshedAt.value = new Date().toLocaleTimeString()
+    refreshFailed.value = false
+  }
+  catch { if (run === generation) refreshFailed.value = true }
+  finally { if (run === generation) refreshing.value = false }
+}
+
+watch([dynamicCode, refreshInterval], ([code, seconds]) => {
+  generation++
+  window.clearInterval(timer)
+  refreshing.value = false
+  refreshedRows.value = undefined
+  refreshedAt.value = ''
+  refreshFailed.value = false
+  if (!code) return
+  void refreshChart()
+  if (seconds) timer = window.setInterval(() => {
+    if (!document.hidden) void refreshChart()
+  }, seconds * 1000)
+}, { immediate: true })
+onBeforeUnmount(() => {
+  generation++
+  window.clearInterval(timer)
 })
 
 const loading = ref(false)

@@ -3,8 +3,9 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import ReportService from '@/services/report'
-import { aggregateQueryChart, chartFieldKind, createQueryChartSnapshot, defaultQueryChart, isCompleteFilter,
-  type ChartFilterGroup, type QueryChartOptions, type QueryChartRow } from '@/model/query-chart'
+import { isCompleteFilter } from '@/model/typed-filter'
+import { aggregateQueryChart, chartFieldKind, createQueryChartSnapshot, defaultQueryChart,
+  type QueryChartOptions, type QueryChartRow } from '@/model/query-chart'
 
 export interface QueryChartSource {
   headers: string[]
@@ -22,6 +23,7 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
   const fieldKinds = Object.fromEntries(source.headers.map((name, index) => [name, chartFieldKind(source.rows, name, source.types?.[index])]))
   const firstDate = source.headers.find(name => fieldKinds[name] === 'date')
   const options = ref(defaultQueryChart(source.headers, firstDate))
+  const saveMode = ref<'snapshot' | 'dynamic'>('snapshot')
   const publishing = ref(false)
   const error = ref('')
   const result = computed(() => aggregateQueryChart(source.rows, options.value))
@@ -31,11 +33,13 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
   const ruleCount = computed(() => options.value.groups.reduce((count, group) => count + group.rules.length, 0))
   const metricLabel = computed(() => options.value.metric || t('queryChart.records'))
   const filterExpression = computed(() => options.value.groups.map(group => {
-    const symbols = { eq: '=', ne: '!=', contains: 'LIKE', in: 'IN', null: 'IS NULL', notNull: 'IS NOT NULL', gte: '>=', lte: '<=', between: 'BETWEEN' }
+    const symbols = { eq: '=', ne: '!=', contains: 'CONTAINS', in: 'IN', null: 'IS NULL', notNull: 'IS NOT NULL', gt: '>', gte: '>=', lt: '<', lte: '<=', between: 'BETWEEN' }
     return '(' + group.rules.filter(isCompleteFilter).map(rule => {
+      const format = (value: string | undefined) => rule.kind === 'number' || rule.kind === 'boolean' ? value : JSON.stringify(value)
       const value = rule.operator === 'null' || rule.operator === 'notNull' ? ''
-          : rule.operator === 'between' ? ' ' + JSON.stringify(rule.value) + ' AND ' + JSON.stringify(rule.end)
-          : ' ' + JSON.stringify(rule.value)
+          : rule.operator === 'between' ? ' ' + format(rule.value) + ' AND ' + format(rule.end)
+          : rule.operator === 'in' ? ' (' + rule.value.split(',').map(item => format(item.trim())).join(', ') + ')'
+          : ' ' + format(rule.value)
       return rule.field + ' ' + symbols[rule.operator] + value
     }).join(' ' + group.join.toUpperCase() + ' ') + ')'
   }).filter(expression => expression !== '()').join('\n' + options.value.filterJoin.toUpperCase() + ' '))
@@ -67,24 +71,15 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
     if (!checked) options.value.groups.forEach(group => { group.rules = group.rules.filter(rule => rule.field !== name) })
   }
 
-  function addRule(group: ChartFilterGroup) {
-    group.rules.push({ field: options.value.fields[0] || '', operator: 'eq', value: '', end: '' })
-  }
-
-  function addGroup() {
-    const group: ChartFilterGroup = { join: 'and', rules: [] }
-    addRule(group)
-    options.value.groups.push(group)
-  }
-
   function reset() {
     options.value = defaultQueryChart(source.headers, firstDate)
+    saveMode.value = 'snapshot'
     error.value = ''
   }
 
   async function copyConfig() {
     try {
-      await navigator.clipboard.writeText(JSON.stringify({ ...options.value, query: source.query, mode: 'snapshot' }, null, 2))
+      await navigator.clipboard.writeText(JSON.stringify({ ...options.value, query: source.query, mode: saveMode.value }, null, 2))
       MfMessage.success(t('query.tip.copySuccess'))
     }
     catch { MfMessage.error(t('queryChart.copyError')) }
@@ -118,7 +113,7 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
     publishing.value = true
     try {
       const response = await ReportService.saveOrUpdate({
-        name, description: chart.description, realtime: false, type: 'QUERY',
+        name, description: chart.description, realtime: saveMode.value === 'dynamic', type: 'QUERY',
         configure, query: source.query, source: { code: source.code }
       })
       if (!response.status) {
@@ -133,6 +128,6 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
     finally { publishing.value = false }
   }
 
-  return { options, fieldKinds, publishing, error, result, fieldOptions, numericOptions, timeCategory,
-    ruleCount, filterExpression, metricLabel, changeCategory, changeAggregation, toggleField, addGroup, addRule, reset, copyConfig, publish }
+  return { options, fieldKinds, publishing, error, result, fieldOptions, numericOptions, timeCategory, saveMode,
+    ruleCount, filterExpression, metricLabel, changeCategory, changeAggregation, toggleField, reset, copyConfig, publish }
 }

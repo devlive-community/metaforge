@@ -70,3 +70,15 @@ test('date picker bounds include the entire ending day in the configured timezon
   assert.deepEqual(result.filtered, rows.slice(1, 3))
   assert.equal(result.points[0].value, 2)
 })
+
+test('numeric filters compare values numerically and respect the enabled flag', () => {
+  const rows = [{ category: 'A', amount: '2.00' }, { category: 'A', amount: '10.00' }, { category: 'B', amount: 'N/A' }]
+  const options = defaultQueryChart(['category', 'amount'])
+  options.groups = [{ join: 'and', rules: [{ field: 'amount', kind: 'number', operator: 'gt', value: '3', end: '' }] }]
+  assert.equal(aggregateQueryChart(rows, options).rowCount, 3)
+  options.filtersEnabled = true
+  assert.deepEqual(aggregateQueryChart(rows, options).filtered, [rows[1]])
+  options.groups[0].rules[0].operator = 'eq'
+  options.groups[0].rules[0].value = '2'
+  assert.deepEqual(aggregateQueryChart(rows, options).filtered, [rows[0]])
+})

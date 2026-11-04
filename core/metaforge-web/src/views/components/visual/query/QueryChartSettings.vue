@@ -16,7 +16,6 @@
       </MfFormItem>
     </div>
   </section>
-  <MfAlert v-if="panel === 'advanced'" variant="info" :title="label('refreshCache')">{{ label('snapshotNotice') }}</MfAlert>
 </template>
 
 <script setup lang="ts">
@@ -70,8 +69,8 @@ const groups = computed(() => {
   ]
   if (props.panel === 'interaction') return [
     { title: 'tooltipSettings', fields: [select('tooltip', ['dimension', 'mark', 'off']), { key: 'tooltipTemplate', control: 'textarea', placeholder: '{x} · {series}: {value}' } as Field] },
-    { title: 'chartInteraction', fields: [...(cartesian ? [toggle('zoom')] : []), toggle('download'), select('pointAction', ['details', 'highlight', 'none']),
-      ...(props.options.pointAction === 'details' ? [select('detailsMode', ['panel', 'dialog'])] : [])] }
+    { title: 'chartInteraction', fields: [...(cartesian ? [toggle('zoom')] : []), toggle('download'), select('pointAction', ['details', 'filter', 'highlight', 'none']),
+      ...(['details', 'filter'].includes(props.options.pointAction) ? [select('detailsMode', ['panel', 'dialog'])] : [])] }
   ]
   return [{ title: 'processing', fields: [select('nulls', ['ignore', 'zero', 'keep']),
     select('timezone', ['Asia/Shanghai', 'UTC', 'America/Los_Angeles'], true), number('maxRows', 1, snapshotRowLimit)] }]

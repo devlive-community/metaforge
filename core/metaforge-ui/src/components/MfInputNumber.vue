@@ -16,6 +16,7 @@ const props = withDefaults(defineProps<{
     disabled?: boolean
     invalid?: boolean
     controls?: boolean
+    decimalOnly?: boolean
 }>(), {
     modelValue: undefined,
     step: 1,
@@ -23,6 +24,7 @@ const props = withDefaults(defineProps<{
     disabled: false,
     invalid: false,
     controls: true,
+    decimalOnly: false,
 })
 
 const emit = defineEmits<{
@@ -50,7 +52,12 @@ function fromRaw(raw: string): number | undefined {
 }
 
 function onInput(event: Event): void {
-    const raw = (event.target as HTMLInputElement).value
+    const input = event.target as HTMLInputElement
+    const raw = input.value
+    if (props.decimalOnly && (!/^[+-]?\d*(?:\.\d*)?$/.test(raw) || (!Number.isNaN(Number(raw)) && !Number.isFinite(Number(raw))))) {
+        input.value = display.value
+        return
+    }
     const value = fromRaw(raw)
     if (value !== undefined && props.precision !== undefined) {
         emitValue(Number(value.toFixed(props.precision)))
@@ -99,6 +106,7 @@ const wrapperClass = computed(() => clsx(
             :value="display"
             type="text"
             inputmode="decimal"
+            :aria-label="typeof attrs['aria-label'] === 'string' ? attrs['aria-label'] : undefined"
             :placeholder="placeholder"
             :disabled="disabled"
             class="h-full min-w-0 flex-1 appearance-none border-0 bg-transparent text-sm text-content placeholder:text-content-placeholder outline-none focus:ring-0"

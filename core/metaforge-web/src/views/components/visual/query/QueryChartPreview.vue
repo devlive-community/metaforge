@@ -9,9 +9,11 @@
         <MfButton size="sm" :variant="showData ? 'secondary' : 'ghost'" :aria-pressed="showData" @click="view = 'data'">
           <Table2 :size="14"/>{{ $t('queryChart.data') }}
         </MfButton>
-        <MfButton v-if="options.download && !showData" size="sm" variant="ghost" :disabled="!chartRows.length || invalidCircular || failed" @click="download">
-          <Download :size="14"/>PNG
-        </MfButton>
+        <template v-if="options.download && !showData && !showInlineDetails">
+          <MfButton v-for="format in formats" :key="format" size="sm" variant="ghost" :disabled="!chartRows.length || invalidCircular || failed" @click="download(format)">
+            <Download :size="14"/>{{ format.toUpperCase() }}
+          </MfButton>
+        </template>
       </div>
     </div>
     <section class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-mf-lg border border-line bg-surface p-4">
@@ -55,13 +57,15 @@ import { aggregateQueryChart, type QueryChartOptions, type QueryChartRow } from 
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import QueryChartCanvas from './QueryChartCanvas.vue'
 
-const props = defineProps<{ options: QueryChartOptions; rows: QueryChartRow[]; heading?: boolean; aggregation?: ReturnType<typeof aggregateQueryChart> }>()
+const props = defineProps<{ options: QueryChartOptions; rows: QueryChartRow[]; heading?: boolean; linked?: boolean; aggregation?: ReturnType<typeof aggregateQueryChart> }>()
+const emit = defineEmits<{ filter: [rows: QueryChartRow[]] }>()
+const formats = ['png', 'svg'] as const
 const { t } = useI18n()
 const view = ref<'chart' | 'data'>('chart')
 const page = ref(1)
 const detailPage = ref(1)
 const pageSize = 50
-const activePoint = ref<number>()
+const activePoint = ref<number[]>()
 const failed = ref(false)
 const canvas = ref<InstanceType<typeof QueryChartCanvas>>()
 const showData = computed(() => props.options.type === 'table' || view.value === 'data')
@@ -74,7 +78,8 @@ const chartRows = computed(() => {
   if (circular.value) return points.filter(point => (point.value ?? 0) > 0)
   return points.some(point => point.value !== null) ? points : []
 })
-const detailRows = computed(() => activePoint.value === undefined ? [] : result.value.details.get(activePoint.value) || [])
+const rowsFor = (ids: number[]) => [...new Set(ids.flatMap(id => result.value.details.get(id) ?? []))]
+const detailRows = computed(() => activePoint.value ? rowsFor(activePoint.value) : [])
 const showInlineDetails = computed(() => !!detailRows.value.length && props.options.detailsMode === 'panel')
 const rawColumns = computed(() => props.options.fields.map(name => ({ title: name, dataIndex: name })))
 const tableColumns = computed(() => showInlineDetails.value || props.options.type === 'table' ? rawColumns.value : [
@@ -88,14 +93,19 @@ const cellText = (value: unknown) => value == null ? 'NULL' : typeof value === '
 watch([result, view], () => { page.value = 1; activePoint.value = undefined; failed.value = false })
 watch(() => props.options, () => { failed.value = false }, { deep: true })
 
-function selectPoint(id: number) {
-  if (props.options.pointAction !== 'details') return
+function selectPoint(ids: number[]) {
+  if (props.options.pointAction === 'filter' && props.linked) {
+    const rows = rowsFor(ids)
+    if (rows.length) emit('filter', rows)
+    return
+  }
+  if (props.options.pointAction !== 'details' && props.options.pointAction !== 'filter') return
   page.value = 1
   detailPage.value = 1
-  activePoint.value = id
+  activePoint.value = ids
 }
-async function download() {
-  try { await canvas.value?.exportImage(props.options.name || 'chart') }
+async function download(format: typeof formats[number]) {
+  try { await canvas.value?.exportImage(props.options.name || 'chart', format) }
   catch { MfMessage.error(t('queryChart.exportError')) }
 }
 </script>

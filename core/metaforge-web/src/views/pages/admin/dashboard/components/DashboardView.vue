@@ -36,6 +36,8 @@
                       :code="item.node.code"
                       :configuration="JSON.parse(item.node.configure)"
                       :type="item.original?.type"
+                      :report-code="item.original.code"
+                      :realtime="item.original.realtime"
                       :query="item.original.type === 'DATASET' ? JSON.parse(item.original.query as string) : item.original.query"
                       :original="item?.original?.source?.code"/>
 

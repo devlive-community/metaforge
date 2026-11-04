@@ -28,6 +28,8 @@ export interface IChart
 {
     xAxis?: string
     x2Axis?: string
+    leftField?: string
+    rightField?: string
     yAxis?: string
     series?: string
     outerRadius?: number[]
