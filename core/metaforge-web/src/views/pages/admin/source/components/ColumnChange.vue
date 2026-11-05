@@ -73,6 +73,7 @@
 </template>
 
 <script setup lang="ts">
+import { useMetadataTreeChange } from '@/composables/useMetadataTreeChange'
 import { computed, inject, ref } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
 import { useI18n } from 'vue-i18n'
@@ -89,6 +90,7 @@ const emit = defineEmits<{ (e: 'close', value: boolean): void }>()
 const can = inject<(capability: string) => boolean>('metadataCan', () => false)
 const route = useRoute()
 const { t } = useI18n()
+const treeChanged = useMetadataTreeChange()
 
 const visible = computed({
   get: () => props.isVisible,
@@ -172,6 +174,7 @@ const onSubmit = () => {
                      if (response.status && response.data && response.data.isSuccessful) {
                        const columns = formState.value.columns.map((item: any) => item.name).join(', ') as string
                        MfMessage.success(t('source.tip.changeColumnSuccess').replace('$VALUE', columns))
+                       treeChanged()
                        onCancel()
                      }
                      else {

@@ -5,6 +5,10 @@ import { useSourceWorkspaceLayout } from './useSourceWorkspaceLayout'
 import { useNativeNamespaces } from './useNativeNamespaces'
 import { useSourceCapabilities } from './useSourceCapabilities'
 import type { WorkspaceLoaders } from './useWorkspaceLoading'
+import { provideMetadataTreeVersion } from './useMetadataTreeChange'
+import { useRouter } from 'vue-router'
+import { useSourceDatabasesStore } from '@/stores/source-databases'
+import { sourceManageLocation } from '@/model/source-manage'
 
 /** Data-source workspace context; route changes invalidate in-flight metadata requests. */
 export function useMetadataWorkspace() {
@@ -29,6 +33,31 @@ export function useMetadataWorkspace() {
   let revision = 0
   const identity = computed(() => [route.params.source, route.params.database, route.params.table].join('/'))
 
+  provideMetadataTreeVersion()
+
+  // Opening a source without a database shows its first database instead of an empty workspace;
+  // until the list arrives the sidebar and the content show that it is loading.
+  const router = useRouter()
+  const databases = useSourceDatabasesStore()
+  const databaseState = computed(() => databases.entryOf(sourceId.value))
+  const needsDatabase = computed(() => !route.params.database && can('database:list'))
+  provide('metadataDatabases', computed(() => ({
+    needsDatabase: needsDatabase.value,
+    loading: needsDatabase.value && (capabilityLoading.value || !databaseState.value.loaded || databaseState.value.loading),
+    empty: databaseState.value.loaded && !databaseState.value.loading && !databaseState.value.options.length,
+    error: databaseState.value.error,
+  })))
+  watch(() => [sourceId.value, String(route.params.database || ''), route.path].join('\u0000'), async () => {
+    const source = sourceId.value
+    if (!source || route.params.database || route.path !== '/manage') return
+    await ensureCapabilities()
+    if (source !== sourceId.value || route.params.database || !can('database:list')) return
+    await databases.load(source)
+    const first = databases.entryOf(source).options[0]?.value
+    if (first && source === sourceId.value && !route.params.database && route.path === '/manage') {
+      void router.replace(sourceManageLocation({ source, database: first }))
+    }
+  }, { immediate: true })
   provide('metadataTableInfo', tableInfo)
   provide('metadataTableStats', { indexes, foreignKeys })
   provide('metadataColumnRows', columnRows)

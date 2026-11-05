@@ -3751,5 +3751,8 @@
   "dashboard.studio.decorationField.rotation": "旋转角度",
   "dashboard.studio.decorationField.opacity": "不透明度（%）",
   "dashboard.studio.fillDecoration": "填充底色",
-  "dashboard.studio.internalMotion": "内部动画"
+  "dashboard.studio.internalMotion": "内部动画",
+  "source.manage.chooseDatabase": "请先在顶部选择数据库",
+  "source.manage.noDatabases": "这个数据源下没有数据库",
+  "source.manage.databasesFailed": "数据库列表加载失败"
 }

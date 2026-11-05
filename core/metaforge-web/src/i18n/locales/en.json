@@ -3751,5 +3751,8 @@
   "dashboard.studio.decorationField.rotation": "Rotation",
   "dashboard.studio.decorationField.opacity": "Opacity (%)",
   "dashboard.studio.fillDecoration": "Fill background",
-  "dashboard.studio.internalMotion": "Internal animation"
+  "dashboard.studio.internalMotion": "Internal animation",
+  "source.manage.chooseDatabase": "Choose a database at the top",
+  "source.manage.noDatabases": "This source has no databases",
+  "source.manage.databasesFailed": "Unable to load the databases"
 }

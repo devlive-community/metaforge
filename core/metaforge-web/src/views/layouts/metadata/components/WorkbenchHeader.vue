@@ -10,12 +10,13 @@
             <MfAvatar :size="28" :src="pluginLogo" :alt="sourceName">
               <Database :size="18"/>
             </MfAvatar>
-            <span class="dc-source-name max-w-[144px] truncate text-xl font-bold text-content">{{ sourceName }}</span>
+            <MfLoadingIcon v-if="sourceLoading" :size="16" class="text-content-tertiary" :aria-label="$t('common.loading')"/>
+            <span v-else class="dc-source-name max-w-[144px] truncate text-xl font-bold text-content">{{ sourceName }}</span>
           </span>
         </MfTooltip>
 
         <MfSelect v-if="can('database:list')" v-model="currentDatabase" class="shrink-0" style="width: 142px" size="sm"
-                  :options="databaseOptions" :placeholder="$t('source.common.database')"/>
+                  :options="databaseOptions" :loading="databasesLoading" :placeholder="$t('source.common.database')"/>
 
         <nav class="dc-workbench-nav flex min-w-0 items-center gap-1">
           <router-link v-for="item in navItems" :key="item.path" :to="item.to || item.path"
@@ -139,7 +140,7 @@
 import { Bell, CircleHelp, Database, LogOut, Settings } from '@lucide/vue'
 import { useWorkbenchHeader } from '@/composables/useWorkbenchHeader'
 defineOptions({ name: 'WorkbenchHeader' })
-const { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems, isNavActive, userInfo,
+const { can, sourceName, sourceLoading, pluginLogo, currentDatabase, databaseOptions, databasesLoading, navItems, isNavActive, userInfo,
   messages, onNotifyScroll, handleNotificationClick, isLoggedIn, logout } = useWorkbenchHeader()
 </script>
 
