@@ -79,6 +79,43 @@ public enum NotificationScene
         return admin;
     }
 
+    /** Notifications that belong to no scene, such as channel tests, are system notices. */
+    public static final String SYSTEM = "SYSTEM";
+
+    /** The category a stored notification type belongs to: its scene's, dataset for old operation names, else system. */
+    public static String categoryOf(String type)
+    {
+        if (type != null && LEGACY.containsKey(type)) {
+            return Category.DATASET.name();
+        }
+        return of(type).map(scene -> scene.getCategory().name()).orElse(SYSTEM);
+    }
+
+    /** Every stored type that falls under a scene category, old operation names included. */
+    public static Set<String> typesOf(Category category)
+    {
+        Set<String> types = new LinkedHashSet<>();
+        for (NotificationScene scene : values()) {
+            if (scene.getCategory() == category) {
+                types.add(scene.name());
+            }
+        }
+        if (category == Category.DATASET) {
+            types.addAll(LEGACY.keySet());
+        }
+        return types;
+    }
+
+    /** Every type that belongs to some scene category; anything else is a system notice. */
+    public static Set<String> knownTypes()
+    {
+        Set<String> types = new LinkedHashSet<>(LEGACY.keySet());
+        for (NotificationScene scene : values()) {
+            types.add(scene.name());
+        }
+        return types;
+    }
+
     public static Optional<NotificationScene> of(String name)
     {
         return Arrays.stream(values()).filter(scene -> scene.name().equals(name)).findFirst();

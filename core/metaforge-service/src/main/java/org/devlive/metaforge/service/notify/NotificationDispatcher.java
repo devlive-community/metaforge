@@ -120,7 +120,7 @@ public class NotificationDispatcher
                 .userId(user.getId())
                 .type(scene == null ? "TEST" : scene.name())
                 .name(StringUtils.abbreviate(StringUtils.defaultString(title), 255))
-                .content(content)
+                .content(StringUtils.abbreviate(StringUtils.defaultString(content), 2000))
                 .entityType(entityType)
                 .entityCode(event == null ? null : event.getEntityCode())
                 .entityName(event == null ? null : StringUtils.abbreviate(event.getEntityName(), 255))

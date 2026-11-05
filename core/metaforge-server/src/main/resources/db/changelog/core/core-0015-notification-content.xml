@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Notification content carries failure reasons and summaries that outgrow 255 characters. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0015-notification-content" author="metaforge">
+        <modifyDataType tableName="metaforge_notification" columnName="content" newDataType="${string}(2000)"/>
+        <addNotNullConstraint tableName="metaforge_notification" columnName="content" columnDataType="${string}(2000)" defaultNullValue=""/>
+        <createIndex tableName="metaforge_notification" indexName="idx_notify_user_read">
+            <column name="user_id"/>
+            <column name="is_read"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>
