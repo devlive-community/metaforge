@@ -14,6 +14,7 @@ const createDefaultRouter = (router: Router) => {
         children: [
             { name: 'home', path: 'home', meta: { title: 'common.home' }, component: () => import('@/views/pages/default/dashboard/DashboardHome.vue') },
             { name: 'store', path: 'store', meta: { title: 'common.store' }, component: () => import('@/views/pages/store/StoreHome.vue') },
+            { name: 'notifications', path: 'notifications', meta: { title: 'notify.text.center' }, component: () => import('@/views/pages/notification/NotificationCenter.vue') },
             { name: 'workspace', path: 'workspace', redirect: '/query' },
             { name: 'analysis', path: 'analysis', redirect: '/dashboard' },
             {

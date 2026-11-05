@@ -188,7 +188,7 @@ import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import { Mail, MessageCircle, Plug } from '@lucide/vue'
 import UserService from '@/services/user.ts'
-import { useUserStore } from '@/stores/user'
+import { useNotificationStore } from '@/stores/notifications'
 import { coverage, NotifyCategory, NotifyChannel, NotifyChannelSetting, NotifyField, sameScenes, setScenes } from '@/model/notify.ts'
 
 defineOptions({ name: 'NotifyForm' })
@@ -196,7 +196,7 @@ defineOptions({ name: 'NotifyForm' })
 const MAX_VALUE_LENGTH = 2000
 
 const { t, te } = useI18n()
-const userStore = useUserStore()
+const notifications = useNotificationStore()
 
 const loading = ref(true)
 const failed = ref('')
@@ -372,7 +372,7 @@ const test = async (channel: NotifyChannel, configure: Record<string, string>) =
       MfMessage.success(t('notify.tip.testSent', { channel: channelName(channel.type) }))
       if (channel.builtin) {
         // The site channel stored a notification: show it in the header now.
-        userStore.notificationsChanged()
+        notifications.changed()
       }
     }
     else {

@@ -54,30 +54,7 @@
           </MfTooltip>
 
           <div v-if="userInfo" class="flex items-center">
-            <MfPopover trigger="click" placement="bottomRight" @update:open="onNotifyOpen">
-              <template #content>
-                <div class="dc-notify" style="width: 340px; max-height: 300px; overflow-y: auto;" @scroll="onNotifyScroll">
-                  <div v-if="messages.length === 0" class="p-4 text-center text-sm text-content-tertiary">
-                    {{ $t('common.noData') }}
-                  </div>
-
-                  <div v-for="(item, index) in messages"
-                       :key="index"
-                       class="dc-notify__item"
-                       @click="handleNotificationClick(item)">
-                    <NotificationItem :item="item"/>
-
-                    <div class="text-xs text-content-tertiary mt-1">{{ item.createTime }}</div>
-                  </div>
-                </div>
-              </template>
-
-              <MfBadge :count="userInfo?.unreadCount || 0">
-                <button type="button" class="dc-header__icon-action" :aria-label="$t('notify.text.center')">
-                  <Bell :size="20" />
-                </button>
-              </MfBadge>
-            </MfPopover>
+            <NotificationBell/>
           </div>
 
           <!-- User Info -->
@@ -133,17 +110,14 @@
 </template>
 
 <script setup lang="ts">
-import NotificationItem from '@/views/components/notify/NotificationItem.vue'
-import { computed, onMounted, ref, watch } from 'vue'
+import NotificationBell from '@/views/components/notify/NotificationBell.vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { MfMessage } from 'metaforge-ui'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { TokenUtils } from '@/utils/token'
 import router from '@/router'
-import NotificationService from '@/services/notification'
-import { FilterModel } from '@/model/filter.ts'
-import { Bell, CircleHelp, LogOut } from '@lucide/vue'
+import { CircleHelp, LogOut } from '@lucide/vue'
 import { MENU_ICONS } from '@/config/menu-icons'
 
 defineOptions({ name: 'LayoutHeader' })
@@ -174,62 +148,12 @@ const menuIcons = MENU_ICONS
 
 const route = useRoute()
 const userStore = useUserStore()
-const filter: FilterModel = new FilterModel()
-const messages = ref<any[]>([])
-const pageIndex = ref<number>(1)
-const hasMoreData = ref(true)
-const loading = ref(false)
 
-const { userInfo, isLoggedIn, menu: activeMenus, notificationVersion } = storeToRefs(userStore)
-
-watch(notificationVersion, () => fetchMessages())
-
-// Opening the list always shows what arrived since the page loaded.
-const onNotifyOpen = (open: boolean) => {
-  if (open) {
-    fetchMessages()
-    userStore.fetchUserInfo()
-  }
-}
-
-const fetchMessages = async (value: number = 1, append = false) => {
-  filter.page = value
-  filter.orders = [{ column: 'createTime', order: 'desc' }]
-  loading.value = true
-  try {
-    const response = await NotificationService.getAll(filter)
-    if (response.status && response.data) {
-      const items = response.data.content.map((item: any) => {
-        item.read = item.isRead
-        return item
-      })
-      messages.value = append ? [...messages.value, ...items] : items
-      pageIndex.value = response.data.page
-      hasMoreData.value = response.data.page < response.data.totalPage
-    }
-    else {
-      MfMessage.error(response.message)
-    }
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-const onNotifyScroll = (event: any) => {
-  const target = event.target
-  if (loading.value || !hasMoreData.value) {
-    return
-  }
-  if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 10) {
-    fetchMessages(pageIndex.value + 1, true)
-  }
-}
+const { userInfo, isLoggedIn, menu: activeMenus } = storeToRefs(userStore)
 
 onMounted(async () => {
   if (TokenUtils.getAuthUser()) {
     await Promise.all([userStore.fetchUserInfo(), userStore.fetchMenus()])
-    await fetchMessages()
   }
 })
 
@@ -238,33 +162,9 @@ const logout = () => {
   router.push('/auth/signin')
 }
 
-const handleNotificationClick = (msg: any) => {
-  const { id, code } = msg
-  const payload = { id, code, isRead: true }
-  NotificationService.saveOrUpdate(payload)
-                     .then(response => {
-                       if (response.status && response.data) {
-                         fetchMessages()
-                         userStore.fetchUserInfo()
-                       }
-                       else {
-                         MfMessage.error(response.message)
-                       }
-                     })
-}
 </script>
 
 <style scoped>
-.dc-notify__item {
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.dc-notify__item:hover {
-    background-color: var(--mf-color-surface-hover);
-}
-
 .dc-header__bar {
     min-height: 64px;
     display: flex;

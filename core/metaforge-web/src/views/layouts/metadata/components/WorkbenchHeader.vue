@@ -31,30 +31,7 @@
 
         <MfSpace :size="16" :wrap="false" class="dc-header__actions shrink-0">
           <div v-if="userInfo" class="flex items-center">
-            <MfPopover trigger="click" placement="bottomRight" @update:open="onNotifyOpen">
-              <template #content>
-                <div class="dc-notify" style="width: 340px; max-height: 300px; overflow-y: auto;" @scroll="onNotifyScroll">
-                  <div v-if="messages.length === 0" class="p-4 text-center text-sm text-content-tertiary">
-                    {{ $t('common.noData') }}
-                  </div>
-
-                  <div v-for="(item, index) in messages"
-                       :key="index"
-                       class="dc-notify__item"
-                       @click="handleNotificationClick(item)">
-                    <NotificationItem :item="item"/>
-
-                    <div class="text-xs text-content-tertiary mt-1">{{ item.createTime }}</div>
-                  </div>
-                </div>
-              </template>
-
-              <MfBadge :count="userInfo?.unreadCount || 0">
-                <button type="button" class="dc-header__icon-action" :aria-label="$t('notify.text.center')">
-                  <Bell :size="20" />
-                </button>
-              </MfBadge>
-            </MfPopover>
+            <NotificationBell/>
           </div>
 
           <!-- 帮助 -->
@@ -118,12 +95,12 @@
 </template>
 
 <script setup lang="ts">
-import NotificationItem from '@/views/components/notify/NotificationItem.vue'
-import { Bell, CircleHelp, Database, LogOut, Settings } from '@lucide/vue'
+import NotificationBell from '@/views/components/notify/NotificationBell.vue'
+import { CircleHelp, Database, LogOut, Settings } from '@lucide/vue'
 import { useWorkbenchHeader } from '@/composables/useWorkbenchHeader'
 defineOptions({ name: 'WorkbenchHeader' })
 const { can, sourceName, sourceLoading, pluginLogo, currentDatabase, databaseOptions, databasesLoading, navItems, isNavActive, userInfo,
-  messages, onNotifyScroll, handleNotificationClick, onNotifyOpen, isLoggedIn, logout } = useWorkbenchHeader()
+  isLoggedIn, logout } = useWorkbenchHeader()
 </script>
 
 <style scoped>

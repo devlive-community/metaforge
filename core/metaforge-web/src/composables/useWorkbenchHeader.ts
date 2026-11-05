@@ -1,6 +1,5 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
-import { MfMessage } from 'metaforge-ui'
 import { canOpenWorkbenchPage, compareLocation, erLocation, exportLocation, importLocation, sourceManageLocation } from '@/model/source-manage'
 import { useSourceCapabilities } from './useSourceCapabilities'
 import { useSourceDatabasesStore } from '@/stores/source-databases'
@@ -9,9 +8,7 @@ import { useI18n } from 'vue-i18n'
 import { storeToRefs } from 'pinia'
 import { TokenUtils } from '@/utils/token'
 import router from '@/router'
-import NotificationService from '@/services/notification'
 import SourceService from '@/services/source'
-import { FilterModel } from '@/model/filter.ts'
 import { Download, GitCompare, Home, Network, SquareTerminal, Upload } from '@lucide/vue'
 
 export function useWorkbenchHeader() {
@@ -20,8 +17,6 @@ export function useWorkbenchHeader() {
   const { t } = useI18n()
 
   const userStore = useUserStore()
-
-  const filter: FilterModel = new FilterModel()
 
   // Source workbench navigation: home, then only the pages the source's plugin declares what they need for.
   const context = () => ({ source: routeSource.value, database: String(route.params.database || '') })
@@ -91,64 +86,11 @@ export function useWorkbenchHeader() {
     void databases.load(source, true)
   }, { immediate: true })
 
-  const messages = ref<any[]>([])
+  const { userInfo, isLoggedIn } = storeToRefs(userStore)
 
-  const pageIndex = ref<number>(1)
-
-  const hasMoreData = ref(true)
-
-  const loading = ref(false)
-
-  const { userInfo, isLoggedIn, notificationVersion } = storeToRefs(userStore)
-
-  const fetchMessages = async (value: number = 1, append = false) => {
-    filter.page = value
-    filter.orders = [{ column: 'createTime', order: 'desc' }]
-    loading.value = true
-    try {
-      const response = await NotificationService.getAll(filter)
-      if (response.status && response.data) {
-        const items = response.data.content.map((item: any) => {
-          item.read = item.isRead
-          return item
-        })
-        messages.value = append ? [...messages.value, ...items] : items
-        pageIndex.value = response.data.page
-        hasMoreData.value = response.data.page < response.data.totalPage
-      }
-      else {
-        MfMessage.error(response.message)
-      }
-    }
-    finally {
-      loading.value = false
-    }
-  }
-
-  const onNotifyScroll = (event: any) => {
-    const target = event.target
-    if (loading.value || !hasMoreData.value) {
-      return
-    }
-    if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 10) {
-      fetchMessages(pageIndex.value + 1, true)
-    }
-  }
-
-  watch(notificationVersion, () => fetchMessages())
-
-// Opening the list always shows what arrived since the page loaded.
-const onNotifyOpen = (open: boolean) => {
-    if (open) {
-        fetchMessages()
-        userStore.fetchUserInfo()
-    }
-}
-
-onMounted(async () => {
+  onMounted(async () => {
     if (TokenUtils.getAuthUser()) {
       await Promise.all([userStore.fetchUserInfo(), userStore.fetchMenus()])
-      await fetchMessages()
     }
   })
 
@@ -159,20 +101,6 @@ onMounted(async () => {
     router.push('/auth/signin')
   }
 
-  const handleNotificationClick = (msg: any) => {
-    const { id, code } = msg
-    const payload = { id, code, isRead: true }
-    NotificationService.saveOrUpdate(payload)
-                       .then(response => {
-                         if (response.status && response.data) {
-                           fetchMessages()
-                           userStore.fetchUserInfo()
-                         }
-                         else {
-                           MfMessage.error(response.message)
-                         }
-                       })
-  }
   return { can, sourceName, sourceLoading, pluginLogo, currentDatabase, databaseOptions, databasesLoading, navItems, isNavActive, userInfo,
-    messages, onNotifyScroll, handleNotificationClick, onNotifyOpen, isLoggedIn, logout }
+    isLoggedIn, logout }
 }
