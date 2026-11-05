@@ -77,6 +77,11 @@ public class ClickHouseE2ETest
             ok("drop column", service.execute(configure, "ALTER TABLE e2e.items DROP COLUMN created"));
             Assert.assertFalse(column(ok("columns", service.getColumns(configure, "e2e", "items")), "object_name").contains("created"));
 
+            // The index page reads ClickHouse system tables, never MySQL's information_schema.STATISTICS.
+            ok("add skipping index", service.execute(configure, "ALTER TABLE e2e.items ADD INDEX idx_name name TYPE bloom_filter GRANULARITY 4"));
+            List<String> indexes = column(ok("index details", service.getIndexDetails(configure, "e2e", "items")), "index_name");
+            Assert.assertTrue(indexes.toString(), indexes.containsAll(List.of("PRIMARY", "idx_name")));
+
             ok("drop table", service.execute(configure, "DROP TABLE e2e.items"));
             Assert.assertFalse(column(ok("tables", service.getTables(configure, "e2e")), "object_name").contains("items"));
             ok("drop database", service.execute(configure, "DROP DATABASE e2e"));
