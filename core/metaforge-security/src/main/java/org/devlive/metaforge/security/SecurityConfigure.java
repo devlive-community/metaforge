@@ -77,6 +77,9 @@ public class SecurityConfigure
                         // Shared reports: token-addressed public API and the pages that render it
                         "/api/v1/public/**", "/share/**", "/embed/**")
                 .permitAll()
+                // Pages of the history-routed web UI; their API calls stay authenticated
+                .requestMatchers(new WebUiRequestMatcher())
+                .permitAll()
                 .requestMatchers(new AdminApiRequestMatcher())
                 .hasAuthority("ADMIN")
                 .anyRequest()

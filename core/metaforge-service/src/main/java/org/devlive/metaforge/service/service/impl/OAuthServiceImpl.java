@@ -38,7 +38,7 @@ public class OAuthServiceImpl
         implements OAuthService
 {
     /** The web page that finishes the sign-in; the console routes by the hash. */
-    static final String CALLBACK_PAGE = "/#/auth/oauth";
+    static final String CALLBACK_PAGE = "/auth/oauth";
     private static final Pattern NOT_NAME = Pattern.compile("[^A-Za-z0-9_]+");
     private static final int USERNAME_BASE = 15;
 

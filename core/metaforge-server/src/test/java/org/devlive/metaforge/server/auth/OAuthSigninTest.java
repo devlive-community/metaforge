@@ -159,7 +159,7 @@ public class OAuthSigninTest
     {
         OAuthService.Redirect started = service.authorize("github", "/query", null);
         assertNull(started.getState());
-        assertEquals(SITE + "/#/auth/oauth?error=disabled&redirect=%2Fquery", started.getLocation());
+        assertEquals(SITE + "/auth/oauth?error=disabled&redirect=%2Fquery", started.getLocation());
         assertNull(service.authorize("unknown", null, null).getState());
     }
 
@@ -183,7 +183,7 @@ public class OAuthSigninTest
         assertEquals("http://internal:9096/api/auth/oauth/github/callback", query(started.getLocation()).get("redirect_uri"));
         // A state started for one provider is refused by another.
         String state = started.getState();
-        assertEquals("http://internal:9096/#/auth/oauth?error=state", service.callback("google", "the-code", state, state, null, "http://internal:9096"));
+        assertEquals("http://internal:9096/auth/oauth?error=state", service.callback("google", "the-code", state, state, null, "http://internal:9096"));
     }
 
     @Test
