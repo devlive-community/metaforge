@@ -7,8 +7,8 @@ import * as echarts from 'echarts'
 import 'echarts-wordcloud'
 import { onBeforeUnmount, ref, watch } from 'vue'
 
-const props = defineProps<{ option: echarts.EChartsOption }>()
-const emit = defineEmits<{ point: [data: unknown]; error: [] }>()
+const props = defineProps<{ option: echarts.EChartsOption; map?: { name: string; source: Parameters<typeof echarts.registerMap>[1] } }>()
+const emit = defineEmits<{ point: [data: unknown, name?: string]; error: [] }>()
 const host = ref<HTMLElement>()
 let chart: echarts.ECharts | undefined
 let observer: ResizeObserver | undefined
@@ -17,9 +17,10 @@ function render() {
   const element = host.value
   if (!element?.clientWidth || !element.clientHeight) return
   try {
+    if (props.map && !echarts.getMap(props.map.name)) echarts.registerMap(props.map.name, props.map.source)
     if (!chart) {
       chart = echarts.init(element)
-      chart.on('click', event => emit('point', event.data))
+      chart.on('click', event => emit('point', event.data, event.name))
     }
     chart.setOption(props.option, { notMerge: true })
   }
@@ -42,7 +43,7 @@ watch(host, element => {
   observer.observe(element)
   render()
 }, { flush: 'post' })
-watch(() => props.option, render, { flush: 'post' })
+watch([() => props.option, () => props.map], render, { flush: 'post' })
 
 onBeforeUnmount(() => {
   observer?.disconnect()

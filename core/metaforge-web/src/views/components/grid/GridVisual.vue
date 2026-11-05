@@ -47,20 +47,24 @@
             <section class="space-y-3">
               <h4 class="font-semibold">{{ $t('queryChart.chartType') }}</h4>
               <div class="grid grid-cols-4 gap-2">
-                <button v-for="item in chartCards" :key="item.key" type="button" :aria-pressed="options.type === item.key"
+                <button v-for="kind in chartCards" :key="kind" type="button" :aria-pressed="options.type === kind"
                         class="flex min-w-0 flex-col items-center justify-center gap-2 rounded-mf-md border px-1 py-4 text-center text-xs"
-                        :class="options.type === item.key ? 'border-primary bg-primary/5 text-primary' : 'border-line hover:bg-surface-hover'"
-                        @click="options.type = item.key">
-                  <component :is="item.icon" :size="21" class="text-primary"/>{{ $t('queryChart.type.' + item.key) }}
+                        :class="options.type === kind ? 'border-primary bg-primary/5 text-primary' : 'border-line hover:bg-surface-hover'"
+                        @click="selectChartType(kind)">
+                  <QueryChartTypeIcon :type="kind" :size="21" class="text-primary"/>{{ $t('queryChart.type.' + kind) }}
                 </button>
                 <MfDropdown trigger="click" placement="bottomRight">
-                  <button type="button" class="flex h-full w-full flex-col items-center justify-center gap-2 rounded-mf-md border border-line px-1 py-4 text-xs hover:bg-surface-hover">
-                    <Ellipsis :size="21" class="text-primary"/>{{ $t('queryChart.more') }}
+                  <button type="button" :aria-label="$t('queryChart.more')" class="flex h-full w-full flex-col items-center justify-center gap-2 rounded-mf-md border border-line px-1 py-4 text-xs hover:bg-surface-hover">
+                    <QueryChartTypeIcon v-if="moreTypes.includes(options.type)" :type="options.type" :size="21" class="text-primary"/>
+                    <Ellipsis v-else :size="21" class="text-primary"/>
+                    {{ moreTypes.includes(options.type) ? $t('queryChart.type.' + options.type) : $t('queryChart.more') }}
                   </button>
                   <template #overlay>
-                    <div class="flex min-w-32 flex-col gap-1">
+                    <div class="flex max-h-[45dvh] min-w-40 flex-col gap-1 overflow-y-auto">
                       <MfButton v-for="kind in moreTypes" :key="kind" size="sm" :variant="kind === options.type ? 'secondary' : 'ghost'"
-                                @click="options.type = kind">{{ $t('queryChart.type.' + kind) }}</MfButton>
+                                class="shrink-0 justify-start!" :aria-pressed="kind === options.type" @click="selectChartType(kind)">
+                        <QueryChartTypeIcon :type="kind" class="shrink-0 text-primary"/>{{ $t('queryChart.type.' + kind) }}
+                      </MfButton>
                     </div>
                   </template>
                 </MfDropdown>
@@ -78,21 +82,23 @@
             </section>
 
             <section v-if="options.type !== 'table'" class="space-y-3 border-t border-line pt-4">
-              <h4 class="font-semibold">{{ $t('queryChart.dimensions') }}</h4>
-              <MfFormItem name="category" :label="$t('queryChart.category')" required-mark>
+              <h4 class="font-semibold">{{ $t(options.type === 'map' || options.type === 'custom' ? 'queryChart.mapping.title.' + options.type : 'queryChart.dimensions') }}</h4>
+              <QueryChartDataFields v-if="specializedData" :options="options" :fields="fieldOptions"
+                                    :numeric-fields="numericOptions" @change="changeMappings"/>
+              <MfFormItem v-else name="category" :label="$t('queryChart.category')" required-mark>
                 <div class="grid w-full grid-cols-2 gap-2">
                   <MfSelect :model-value="options.category" :options="fieldOptions" searchable @update:model-value="changeCategory(String($event))"/>
                   <MfSelect v-model="options.grain" :disabled="!timeCategory" :options="choices('grain', ['none', 'hour', 'day', 'week', 'month'])"/>
                 </div>
               </MfFormItem>
-              <MfFormItem name="metric" :label="$t('queryChart.metric')" required-mark>
+              <MfFormItem v-if="!specializedData?.raw" name="metric" :label="$t('queryChart.metric')" required-mark>
                 <div class="grid w-full grid-cols-2 gap-2">
                   <MfSelect :model-value="options.aggregation === 'count' && !options.metric ? 0 : options.metric" :options="metricOptions" searchable
                             :placeholder="$t('queryChart.selectField')" @update:model-value="options.metric = typeof $event === 'string' ? $event : ''"/>
                   <MfSelect :model-value="options.aggregation" :options="choices('aggregation', aggregations)" @update:model-value="changeAggregation($event as QueryChartOptions['aggregation'])"/>
                 </div>
               </MfFormItem>
-              <MfFormItem name="series" :label="$t('queryChart.series')">
+              <MfFormItem v-if="!specializedData" name="series" :label="$t('queryChart.series')">
                 <MfSelect :model-value="options.series || 0" :options="[{ value: 0, label: $t('queryChart.ungrouped') }, ...fieldOptions]" searchable
                           @update:model-value="options.series = typeof $event === 'string' ? $event : ''"/>
               </MfFormItem>
@@ -182,11 +188,14 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Axis3D, ChartArea, ChartBar, ChartColumn, ChartLine, ChartPie, Check, Circle, Ellipsis, Filter, Info, List, MousePointer2, Palette, RotateCcw, ScatterChart, Settings2, Table2 } from '@lucide/vue'
-import { queryChartTypes, type QueryChartOptions, type QueryChartRow } from '@/model/query-chart'
+import { Axis3D, ChartColumn, Check, Ellipsis, Filter, Info, List, MousePointer2, Palette, RotateCcw, Settings2, Table2 } from '@lucide/vue'
+import { queryChartTypes, type QueryChartOptions, type QueryChartRow, type QueryChartType } from '@/model/query-chart'
+import { chartDataSpec, suggestChartFields, type ChartMappings } from '@/model/query-chart-data'
 import { useQueryChartBuilder, type QueryChartSource } from '@/composables/useQueryChartBuilder'
 import TypedFilterBuilder from '@/views/components/filter/TypedFilterBuilder.vue'
 import QueryChartPreview from '@/views/components/visual/query/QueryChartPreview.vue'
+import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIcon.vue'
+import QueryChartDataFields from '@/views/components/visual/query/QueryChartDataFields.vue'
 import QueryChartSettings from '@/views/components/visual/query/QueryChartSettings.vue'
 
 const props = defineProps<{ isVisible: boolean; source: QueryChartSource }>()
@@ -204,12 +213,20 @@ const panels = [
 const panel = ref<typeof panels[number]['key']>('chart')
 const editor = ref<HTMLElement>()
 const form = ref<{ validate: () => Promise<unknown> }>()
-const chartCards = [
-  { key: 'line', icon: ChartLine }, { key: 'bar', icon: ChartColumn }, { key: 'area', icon: ChartArea },
-  { key: 'pie', icon: ChartPie }, { key: 'donut', icon: Circle }, { key: 'scatter', icon: ScatterChart },
-  { key: 'horizontal', icon: ChartBar }
-] as const
+const chartCards = queryChartTypes.slice(0, 7)
 const moreTypes = queryChartTypes.slice(chartCards.length)
+const specializedData = computed(() => chartDataSpec(options.value.type))
+function selectChartType(type: QueryChartType) {
+  if (type === options.value.type) return
+  const suggested = suggestChartFields(type, numericOptions.value.map(field => field.value))
+  options.value.type = type
+  if (suggested.chartFields) options.value.chartFields = { ...suggested.chartFields, ...options.value.chartFields }
+  options.value.parallelFields ??= suggested.parallelFields
+}
+function changeMappings(change: Partial<ChartMappings>) {
+  if (change.category !== undefined) changeCategory(change.category)
+  Object.assign(options.value, change)
+}
 const aggregations = ['count', 'distinct', 'sum', 'avg', 'min', 'max']
 const filterFields = computed(() => fieldOptions.value.map(field => ({ key: field.value, label: field.label, kind: fieldKinds[field.value] })))
 const choices = (key: string, values: readonly string[]) => values.map(value => ({ value, label: t('queryChart.choice.' + key + '.' + value) }))

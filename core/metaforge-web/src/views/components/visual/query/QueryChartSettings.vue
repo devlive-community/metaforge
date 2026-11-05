@@ -50,13 +50,13 @@ const set = (key: Key, value: unknown) => {
 
 const groups = computed(() => {
   const type = props.options.type
-  const cartesian = ['line', 'bar', 'area', 'scatter', 'horizontal'].includes(type)
+  const cartesian = ['line', 'bar', 'area', 'scatter', 'effectScatter', 'horizontal', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom'].includes(type)
   const line = type === 'line' || type === 'area'
   if (props.panel === 'axes') return [
     { title: 'xAxis', fields: [text('xTitle'), ...(props.timeCategory ? [select('dateFormat', ['short', 'full', 'time'])] : []),
       select('sort', ['asc', 'desc', 'original']), ...(cartesian ? [toggle('xVisible'), toggle('xTitleVisible'), toggle('hideOverlap')] : [])] },
     { title: 'yAxis', fields: [select('numberFormat', ['integer', 'decimal', 'percent', 'compact']),
-      ...(cartesian ? [text('yTitle'), number('min', undefined, undefined, 3), number('max', undefined, undefined, 3), toggle('grid'), toggle('yVisible')] : [])] }
+      ...(cartesian || type === 'gauge' ? [text('yTitle'), number('min', undefined, undefined, 3), number('max', undefined, undefined, 3), toggle('grid'), toggle('yVisible')] : [])] }
   ]
   if (props.panel === 'legend') return [
     { title: 'legendSettings', fields: [toggle('legend'), select('legendPosition', ['top', 'bottom', 'right']), text('seriesName'), toggle('legendInteractive')] },

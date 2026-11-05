@@ -1,6 +1,11 @@
 import { isCompleteFilter, type FilterFieldKind, type FilterGroup, type FilterJoin, type FilterRule } from './typed-filter'
 
-export const queryChartTypes = ['line', 'bar', 'area', 'pie', 'donut', 'scatter', 'horizontal', 'radar', 'funnel', 'rose', 'table'] as const
+export const queryChartTypes = [
+  'line', 'bar', 'area', 'pie', 'donut', 'scatter', 'horizontal',
+  'radar', 'funnel', 'rose', 'table', 'effectScatter', 'pictorialBar', 'heatmap', 'gauge',
+  'candlestick', 'boxplot', 'histogram', 'parallel', 'themeRiver', 'tree', 'treemap', 'sunburst',
+  'graph', 'sankey', 'map', 'lines', 'custom',
+] as const
 export type QueryChartType = typeof queryChartTypes[number]
 export type QueryChartRow = Record<string, unknown>
 export interface QueryChartOptions {
@@ -13,6 +18,9 @@ export interface QueryChartOptions {
   aggregation: 'count' | 'distinct' | 'sum' | 'avg' | 'min' | 'max'
   series: string
   grain: 'none' | 'hour' | 'day' | 'week' | 'month'
+  chartFields?: Record<string, string>
+  parallelFields?: string[]
+  mapGeoJson?: string
   filtersEnabled: boolean
   filterJoin: FilterJoin
   groups: FilterGroup[]
@@ -179,7 +187,7 @@ export function aggregateQueryChart(rows: QueryChartRow[], options: QueryChartOp
   if (options.category) filtered.forEach(row => {
     if (row[options.category] == null && options.nulls === 'ignore') return
     const category = timeGroup(row[options.category], options.grain, formatter)
-    const series = options.series ? asText(row[options.series]) : ''
+    const series = options.series && options.type !== 'map' ? asText(row[options.series]) : ''
     const key = JSON.stringify([category, series])
     if (!buckets.has(key)) buckets.set(key, { category, series, rows: [] })
     buckets.get(key)!.rows.push(row)

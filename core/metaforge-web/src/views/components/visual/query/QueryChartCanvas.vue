@@ -1,5 +1,5 @@
 <template>
-  <EChart ref="canvas" class="h-full w-full" :option="spec" @point="selectPoint" @error="emit('error')"/>
+  <EChart ref="canvas" class="h-full w-full" :option="spec" :map="prepared?.map" @point="selectPoint" @error="emit('error')"/>
 </template>
 
 <script setup lang="ts">
@@ -7,11 +7,12 @@ import type { EChartsOption } from 'echarts'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { QueryChartOptions, QueryChartPoint } from '@/model/query-chart'
+import type { PreparedQueryChart } from '@/model/query-chart-series'
 import EChart from '../EChart.vue'
 
-const props = defineProps<{ options: QueryChartOptions; points: QueryChartPoint[]; metric: string }>()
+const props = defineProps<{ options: QueryChartOptions; points: QueryChartPoint[]; prepared?: PreparedQueryChart; metric: string; embedded?: boolean }>()
 const emit = defineEmits<{ point: [ids: number[]]; error: [] }>()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const canvas = ref<InstanceType<typeof EChart>>()
 const themeVersion = ref(0)
 let observer: MutationObserver | undefined
@@ -19,15 +20,30 @@ let observer: MutationObserver | undefined
 const spec = computed<EChartsOption>(() => {
   const options = props.options
   themeVersion.value
-  const style = getComputedStyle(document.documentElement)
+  const style = getComputedStyle(canvas.value?.$el ?? document.documentElement)
   const token = (name: string) => style.getPropertyValue('--mf-color-' + name).trim()
   const palette = { green: token('primary'), blue: token('info'), purple: '#8359d8' }
   const colors = options.colors.split(/[,\s]+/).filter(color => /^#[0-9a-f]{6}$/i.test(color))
   const chartColors = [...new Set([...colors, palette[options.palette], token('info'), '#8359d8', token('warning'), token('danger'), token('primary')])].filter(Boolean)
+  const special = props.prepared?.option
+  if (special) {
+    const showAxis = !!special.xAxis && !!special.yAxis
+    return {
+      animation: false,
+      color: chartColors,
+      backgroundColor: options.transparent ? 'transparent' : token('surface'),
+      textStyle: { color: token('content-secondary') },
+      tooltip: { show: options.tooltip !== 'off', trigger: 'item', renderMode: 'richText', confine: true },
+      ...(showAxis ? { grid: { top: 22, bottom: options.zoom ? 38 : 16, left: 24, right: 18, containLabel: true },
+        dataZoom: options.zoom ? [{ type: 'inside' }, { type: 'slider', height: 14, bottom: 4 }] : undefined } : {}),
+      ...special,
+      ...(special.visualMap ? { visualMap: { ...special.visualMap, inRange: { color: ['#e7f4ef', chartColors[0] || '#0a8f67'] } } } : {}),
+    } as EChartsOption
+  }
   const circular = ['pie', 'donut', 'rose', 'funnel'].includes(options.type)
   const radar = options.type === 'radar'
   const horizontal = options.type === 'horizontal'
-  const numericX = options.type === 'scatter' && props.points.every(point => point.category.trim() && Number.isFinite(Number(point.category)))
+  const numericX = (options.type === 'scatter' || options.type === 'effectScatter') && props.points.every(point => point.category.trim() && Number.isFinite(Number(point.category)))
   const formatCategory = (label: string) => {
     if (options.dateFormat === 'full' || !/^\d{4}-\d{2}-\d{2}/.test(label)) return label
     return options.dateFormat === 'time' ? label.slice(5).replace('-', '/') : label.slice(5, 10)
@@ -70,12 +86,20 @@ const spec = computed<EChartsOption>(() => {
     emphasis: { focus: options.pointAction === 'highlight' ? 'self' : 'none' },
     selectedMode: options.pointAction === 'highlight' ? 'single' : false
   }
+  const topLegend = options.legend && options.legendPosition === 'top'
+  const bottomLegend = options.legend && options.legendPosition === 'bottom'
+  const rightLegend = options.legend && options.legendPosition === 'right'
+  const donut = props.embedded && options.type === 'donut'
+  const donutX = rightLegend ? '36%' : '50%'
+  const donutTotal = donut && (options.aggregation === 'sum' || options.aggregation === 'count')
+      ? formatValue(props.points.reduce((sum, point) => sum + (point.value ?? 0), 0), true) : undefined
   const circularData = props.points.map(point => ({
     name: [formatCategory(point.category), point.series].filter(Boolean).join(' · '), value: point.value, point, pointId: point.pointId
   }))
   const series = circular ? [{
     ...marks, type: options.type === 'funnel' ? 'funnel' : 'pie',
-    radius: options.type === 'donut' ? ['45%', '75%'] : '75%',
+    radius: options.type === 'donut' ? (donut && rightLegend ? ['36%', '58%'] : ['45%', '75%']) : '75%',
+    center: donut ? [donutX, '51%'] : undefined,
     roseType: options.type === 'rose' ? 'radius' : undefined,
     data: circularData
   }] : Array.from(bySeries, ([name, points], index) => ({
@@ -86,6 +110,7 @@ const spec = computed<EChartsOption>(() => {
       if (!point) return null
       return { value: numericX ? [Number(category), point.value] : point.value, point, pointId: point.pointId }
     }),
+    ...(options.type === 'pictorialBar' ? { symbol: 'roundRect' } : {}),
     smooth: options.smooth, showSymbol: options.points, symbolSize: options.pointSize,
     lineStyle: { width: options.lineWidth, type: options.dashed ? 'dashed' : 'solid' },
     areaStyle: options.type === 'area' || (options.type === 'line' && options.fill) ? {
@@ -95,9 +120,6 @@ const spec = computed<EChartsOption>(() => {
     } : undefined
   }))
   const radarBounds = radar ? { min: Math.min(0, ...props.points.map(point => point.value ?? 0)), max: Math.max(1, ...props.points.map(point => point.value ?? 0)) } : {}
-  const topLegend = options.legend && options.legendPosition === 'top'
-  const bottomLegend = options.legend && options.legendPosition === 'bottom'
-  const rightLegend = options.legend && options.legendPosition === 'right'
   const tooltipText = (point: QueryChartPoint) => options.tooltipTemplate.trim()
       ? options.tooltipTemplate.replace(/\{(x|series|value)\}/g, (_match, field) => field === 'x' ? formatCategory(point.category)
           : field === 'series' ? seriesName(point) : formatValue(point.value, true))
@@ -111,10 +133,15 @@ const spec = computed<EChartsOption>(() => {
     backgroundColor: options.transparent ? 'transparent' : token('surface'), textStyle: { color: text },
     legend: { show: options.legend, selectedMode: options.legendInteractive, type: 'scroll',
       orient: rightLegend ? 'vertical' : 'horizontal', right: rightLegend ? 0 : undefined,
-      top: topLegend || rightLegend ? 0 : undefined, bottom: bottomLegend ? 0 : undefined, textStyle: { color: text } },
+      top: donut && rightLegend ? 'middle' : topLegend || rightLegend ? 0 : undefined, bottom: bottomLegend ? 0 : undefined, textStyle: { color: text } },
     tooltip: { show: options.tooltip !== 'off', renderMode: 'richText', confine: true,
       trigger: circular || radar || options.tooltip === 'mark' ? 'item' : 'axis',
       formatter: radar ? undefined : tooltipFormatter },
+    ...(donutTotal ? {
+      title: { text: donutTotal, subtext: t(options.aggregation === 'count' ? 'dashboard.studio.totalRecords' : 'dashboard.studio.totalValue'),
+        left: donutX, top: '50%', textAlign: 'center', textVerticalAlign: 'middle', itemGap: 4, padding: 0,
+        textStyle: { fontSize: 19, color: token('content') }, subtextStyle: { fontSize: 10, color: token('content-tertiary') } }
+    } : {}),
     ...(radar ? {
       radar: { indicator: categories.map(name => ({ name: formatCategory(name),
         ...radarBounds })), radius: '60%' },
@@ -132,12 +159,16 @@ const spec = computed<EChartsOption>(() => {
   } as EChartsOption
 })
 
-function selectPoint(data: unknown) {
+function selectPoint(data: unknown, name?: string) {
   const datum = data as { pointId?: number; pointIds?: number[] } | undefined
   const ids = datum?.pointIds ?? (typeof datum?.pointId === 'number' ? [datum.pointId] : [])
+  const series = Array.isArray(data) && typeof data[2] === 'string' ? data[2] : name
+  const namedId = series === undefined ? undefined : props.prepared?.names?.get(series)
   if (ids.length) emit('point', ids)
+  else if (namedId !== undefined) emit('point', [namedId])
 }
 onMounted(() => {
+  themeVersion.value++
   observer = new MutationObserver(() => { themeVersion.value++ })
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'data-theme'] })
 })

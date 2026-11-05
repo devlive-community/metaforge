@@ -3,6 +3,8 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import ReportService from '@/services/report'
+import { chartDataSpec } from '@/model/query-chart-data'
+import { prepareQueryChart } from '@/model/query-chart-series'
 import { isCompleteFilter } from '@/model/typed-filter'
 import { aggregateQueryChart, chartFieldKind, createQueryChartSnapshot, defaultQueryChart,
   type QueryChartOptions, type QueryChartRow } from '@/model/query-chart'
@@ -90,7 +92,9 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
     const chart = options.value
     error.value = ''
     if (!chart.name.trim()) return
-    if (!chart.fields.length || (chart.type !== 'table' && (!chart.category || (chart.aggregation !== 'count' && !chart.metric)))) {
+    const dataSpec = chartDataSpec(chart.type)
+    if (!chart.fields.length || (chart.type !== 'table' &&
+        ((!dataSpec || dataSpec.category) && !chart.category || !dataSpec?.raw && chart.aggregation !== 'count' && !chart.metric))) {
       error.value = t('queryChart.requiredFields')
       return
     }
@@ -102,7 +106,12 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
       error.value = t('queryChart.axisRange')
       return
     }
-    if (chart.type !== 'table' && (!result.value.points.some(point => point.value !== null)
+    const prepared = prepareQueryChart(chart, result.value)
+    if (prepared?.issue) {
+      error.value = t('queryChart.issue.' + prepared.issue)
+      return
+    }
+    if (!prepared && chart.type !== 'table' && (!result.value.points.some(point => point.value !== null)
         || (['pie', 'donut', 'rose', 'funnel'].includes(chart.type) && (result.value.points.some(point => (point.value ?? 0) < 0)
             || !result.value.points.some(point => (point.value ?? 0) > 0))))) {
       error.value = t('queryChart.noUsableValues')

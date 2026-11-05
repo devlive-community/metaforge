@@ -10,8 +10,10 @@
       <MfTable :fill="fill" resizable :columns="columns" :data-source="paged" row-key="__row" density="compact" :bordered="false"
                :empty-text="$t(keyword ? 'query.result.noMatch' : 'common.noData')" @resize="onResize" @resize-end="onResize">
         <template v-for="column in columns" :key="column.key" #[`cell-${column.key}`]="{ record }">
-          <span v-if="record[column.dataIndex] === null || record[column.dataIndex] === undefined" class="text-content-tertiary">NULL</span>
-          <div v-else :class="!widths[column.key] && 'max-w-80'"><EllipsisCell :text="cellText(record[column.dataIndex])"/></div>
+          <slot name="cell" :header="column.title" :value="record[column.dataIndex]">
+            <span v-if="record[column.dataIndex] === null || record[column.dataIndex] === undefined" class="text-content-tertiary">NULL</span>
+            <div v-else :class="!widths[column.key] && 'max-w-80'"><EllipsisCell :text="cellText(record[column.dataIndex])"/></div>
+          </slot>
         </template>
       </MfTable>
     </div>
@@ -40,6 +42,10 @@ const props = withDefaults(defineProps<{
   fill?: boolean
   pageSize?: number
 }>(), { searchable: false, fill: false, pageSize: 100 })
+
+defineSlots<{
+  cell?(props: { header: string; value: unknown }): unknown
+}>()
 
 const keyword = ref('')
 const page = ref(1)
