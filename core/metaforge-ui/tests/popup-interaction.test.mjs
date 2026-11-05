@@ -192,6 +192,27 @@ test('horizontal submenu closes outside while inline expansion stays open', asyn
     finally { host.unmount() }
 })
 
+test('horizontal submenu gives the pointer time to reach the choices and cancels closing on re-entry', async () => {
+    const host = mountHost(h(Menu, { mode: 'horizontal' }, {
+        default: () => h(SubMenu, { key_: 'tools', title: 'Tools' }, () => h(MenuItem, { key_: 'leaf' }, () => 'Leaf')),
+    }))
+    try {
+        const trigger = host.find(node => node.props.onMouseenter)
+        const popup = host.find(node => node.props.class?.includes('absolute'))
+        trigger.props.onMouseenter()
+        await nextTick()
+        trigger.props.onMouseleave()
+        await nextTick()
+        assert.equal(popup.style.display, '')
+        trigger.props.onMouseenter()
+        await new Promise(resolve => setTimeout(resolve, 220))
+        assert.equal(popup.style.display, '')
+        await click(host.document, host.find(node => node.props['aria-selected'] === false))
+        assert.equal(popup.style.display, 'none')
+    }
+    finally { host.unmount() }
+})
+
 test('menu activation reaches the link and emits only once', async () => {
     let linkClicks = 0
     let activations = 0

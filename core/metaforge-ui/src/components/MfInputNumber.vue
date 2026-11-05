@@ -17,6 +17,8 @@ const props = withDefaults(defineProps<{
     invalid?: boolean
     controls?: boolean
     decimalOnly?: boolean
+    /** Keep typed text intact until the input changes on blur. Step buttons remain immediate. */
+    commitOnChange?: boolean
 }>(), {
     modelValue: undefined,
     step: 1,
@@ -58,13 +60,11 @@ function onInput(event: Event): void {
         input.value = display.value
         return
     }
+    if (props.commitOnChange && event.type === 'input') return
     const value = fromRaw(raw)
-    if (value !== undefined && props.precision !== undefined) {
-        emitValue(Number(value.toFixed(props.precision)))
-    }
-    else {
-        emitValue(value)
-    }
+    const next = value !== undefined && props.precision !== undefined ? Number(value.toFixed(props.precision)) : value
+    if (props.commitOnChange) input.value = next === undefined ? display.value : String(next)
+    emitValue(next)
 }
 
 function stepBy(delta: number): void {
