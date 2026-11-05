@@ -1,153 +1,98 @@
 <template>
-  <MfCard :title="$t('dashboard.common.list')">
-    <template #extra>
-      <MfTooltip :content="$t('dashboard.common.create')">
-        <router-link to="/dashboard/info" target="_blank">
-          <MfButton variant="primary" size="sm" shape="circle">
-            <Plus :size="15" />
-          </MfButton>
-        </router-link>
-      </MfTooltip>
-    </template>
+  <section class="flex min-h-[70vh] flex-col gap-4">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <h1 class="text-xl font-bold">{{ $t('dashboard.common.list') }}</h1>
+      <MfButton variant="primary" @click="router.push('/dashboard/info')"><Plus :size="16"/>{{ $t('dashboard.common.create') }}</MfButton>
+    </div>
 
-    <div class="mb-3 min-h-screen p-2">
-      <div v-if="loading" class="flex items-center justify-center py-16">
-        <MfSpinner size="lg"/>
-      </div>
-      <template v-else>
-        <div class="grid grid-cols-4 gap-4">
-          <div v-for="item in data" :key="item.code">
-            <MfCard class="mb-4">
-              <template #header>
-                <router-link :to="`/dashboard/preview/${item.code}`" target="_blank">{{ item.name }}</router-link>
-              </template>
-
-              <template #extra>
-                <MfSpace class="items-center">
-                  <div v-if="item.description" class="cursor-pointer mt-1">
-                    <MfTooltip :content="item.description">
-                      <Info :size="20" />
-                    </MfTooltip>
-                  </div>
-
-                  <MfDropdown trigger="click" placement="bottomRight">
-                    <MfButton variant="ghost" size="sm" shape="circle">
-                      <Settings :size="18" />
-                    </MfButton>
-
-                    <template #overlay>
-                      <MfMenu>
-                        <MfMenuItem>
-                          <router-link :to="`/dashboard/info/${item.code}`" target="_blank" class="flex items-center space-x-2">
-                            <Pencil :size="15" />
-                            <span>{{ $t('dashboard.common.modify') }}</span>
-                          </router-link>
-                        </MfMenuItem>
-
-                        <MfMenuItem @click="visibleDelete(true, item)">
-                          <div class="flex items-center space-x-2">
-                            <Trash2 :size="15" />
-                            <span>{{ $t('dashboard.common.delete') }}</span>
-                          </div>
-                        </MfMenuItem>
-                      </MfMenu>
-                    </template>
-                  </MfDropdown>
-                </MfSpace>
-              </template>
-
-              <div class="p-3">
-                <div class="aspect-video w-full relative overflow-hidden rounded-md flex items-center justify-center">
-                  <img class="w-32 h-32 object-cover"
-                       :src="`${item.avatar?.path ? item.avatar.path : '/static/images/dashboard.png'}`"
-                       :alt="item.name"/>
-                </div>
-
-                <div class="text-xs text-muted-foreground text-right mt-2">{{ item.createTime }}</div>
+    <div v-if="loading" class="flex min-h-60 flex-1 items-center justify-center"><MfSpinner size="lg"/></div>
+    <div v-else-if="failed" class="flex min-h-60 flex-1 items-center justify-center">
+      <MfAlert variant="danger" :title="$t('dashboard.studio.loadFailed')"><MfButton size="sm" @click="load">{{ $t('common.refresh') }}</MfButton></MfAlert>
+    </div>
+    <MfEmpty v-else-if="!data.length" class="min-h-60 flex-1" :title="$t('dashboard.studio.noDashboards')"/>
+    <template v-else>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <article v-for="item in dashboards" :key="item.code" class="flex min-w-0 flex-col rounded-mf-lg border border-line bg-surface">
+          <RouterLink :to="item.link" class="relative flex aspect-[2/1] items-center justify-center overflow-hidden rounded-t-mf-lg border-b border-line"
+                      :class="item.mode === 'wall' ? 'bg-[#071b2d] text-[#15e5d1]' : 'bg-primary/6 text-primary'">
+            <img v-if="item.avatar?.path" :src="item.avatar.path" :alt="item.name" class="size-full object-cover"/>
+            <Monitor v-else-if="item.mode === 'wall'" :size="40"/>
+            <LayoutDashboard v-else :size="40"/>
+          </RouterLink>
+          <div class="flex flex-1 flex-col gap-2 p-3">
+            <div class="flex min-w-0 items-center gap-2">
+              <RouterLink :to="item.link" class="min-w-0 flex-1 truncate font-semibold hover:text-primary">{{ item.name }}</RouterLink>
+              <MfTag size="sm" :variant="item.published ? 'success' : 'primary'">{{ $t(item.published ? 'dashboard.studio.status.published' : 'dashboard.studio.status.draft') }}</MfTag>
+            </div>
+            <p v-if="item.description" class="line-clamp-2 text-xs text-content-secondary">{{ item.description }}</p>
+            <div class="mt-auto flex items-center justify-between gap-2">
+              <span class="min-w-0 truncate text-xs text-content-tertiary">{{ item.updateTime || item.createTime }}</span>
+              <div class="flex shrink-0 items-center gap-1">
+                <MfButton variant="ghost" size="sm" :aria-label="$t('dashboard.common.modify')" @click="router.push(item.editor)"><Pencil :size="15"/></MfButton>
+                <MfButton variant="ghost" size="sm" :aria-label="$t('dashboard.common.delete')" class="text-danger" @click="deleteItem = item"><Trash2 :size="15"/></MfButton>
               </div>
-            </MfCard>
-          </div>
-
-          <div class="col-span-4">
-            <div v-if="!loading && data.length === 0" class="text-center">
-              {{ $t('common.noData') }}
             </div>
           </div>
-        </div>
+        </article>
+      </div>
+      <MfPagination class="mt-auto justify-end" :current="page" :page-size="size" :total="total" show-size :page-sizes="[12, 24, 36]"
+                    @change="changePage"/>
+    </template>
+  </section>
 
-        <div v-if="data.length > 0" class="py-2 flex justify-end">
-          <MfPagination :current="pageIndex"
-                        :page-size="pageSize"
-                        :total="dataCount"
-                        show-size
-                        :page-sizes="[12, 24, 36]"
-                        @change="(page: number, size: number) => size !== pageSize ? onSizeChange(page, size) : onPageChange(page)"/>
-        </div>
-      </template>
-    </div>
-  </MfCard>
-
-  <DashboardDelete v-if="deleteVisible"
-                   :is-visible="deleteVisible"
-                   :data="dataInfo"
-                   @close="visibleDelete(false, null)"/>
+  <DashboardDelete v-if="deleteItem" :is-visible="true" :data="deleteItem" @close="deleteItem = undefined; load()"/>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onScopeDispose, ref, shallowRef } from 'vue'
+import { useRouter } from 'vue-router'
+import { LayoutDashboard, Monitor, Pencil, Plus, Trash2 } from '@lucide/vue'
 import DashboardService from '@/services/dashboard'
+import type { DashboardModel } from '@/model/dashboard'
+import { readDashboardDocument } from '@/model/dashboard-layout'
 import { FilterModel } from '@/model/filter'
-import { DashboardModel } from '@/model/dashboard'
-import DashboardDelete from '@/views/pages/admin/dashboard/DashboardDelete.vue'
-import { Info, Pencil, Plus, Settings, Trash2 } from '@lucide/vue'
+import DashboardDelete from './DashboardDelete.vue'
 
-defineOptions({ name: 'DashboardHome' })
-
-const filter: FilterModel = new FilterModel()
-filter.size = 12
-
+const router = useRouter()
 const loading = ref(false)
-const deleteVisible = ref(false)
-const data = ref<DashboardModel[]>([])
-const pageIndex = ref(1)
-const pageSize = ref(12)
-const dataCount = ref(0)
-const dataInfo = ref<DashboardModel | null>(null)
-
-const handleInitialize = () => {
+const failed = ref(false)
+const page = ref(1)
+const size = ref(12)
+const total = ref(0)
+const data = shallowRef<DashboardModel[]>([])
+const deleteItem = shallowRef<DashboardModel>()
+const dashboards = computed(() => data.value.map(item => {
+  const document = readDashboardDocument(item.configure, item.name, item.description)
+  const published = !!document.published
+  const code = encodeURIComponent(item.code || '')
+  const editor = '/dashboard/info/' + code
+  return { ...item, published, mode: (document.published ?? document.draft).mode, editor,
+    link: published ? '/dashboard/preview/' + code : editor }
+}))
+let request = 0
+async function load() {
+  const id = ++request
   loading.value = true
-  DashboardService.getAll(filter)
-                  .then((response) => {
-                    if (response.status) {
-                      data.value = response.data.content
-                      dataCount.value = response.data.total
-                      pageSize.value = response.data.size
-                      pageIndex.value = response.data.page
-                    }
-                  })
-                  .finally(() => (loading.value = false))
-}
-
-const fetchData = (value: number) => {
-  filter.page = value
-  filter.size = pageSize.value
-  handleInitialize()
-}
-
-const onPageChange = (value: number) => fetchData(value)
-
-const onSizeChange = (_current: number, size: number) => {
-  pageSize.value = size
-  fetchData(pageIndex.value)
-}
-
-const visibleDelete = (opened: boolean, info: DashboardModel | null) => {
-  deleteVisible.value = opened
-  dataInfo.value = info
-  if (!opened) {
-    handleInitialize()
+  failed.value = false
+  try {
+    const response = await DashboardService.getAll({ ...new FilterModel(), page: page.value, size: size.value })
+    if (id !== request) return
+    if (!response.status || !Array.isArray(response.data?.content)) throw new Error('Unable to load dashboards')
+    data.value = response.data.content
+    total.value = response.data.total
+    if (!data.value.length && page.value > 1 && total.value > 0) {
+      page.value = Math.max(1, Math.ceil(total.value / size.value))
+      await load()
+    }
   }
+  catch { if (id === request) failed.value = true }
+  finally { if (id === request) loading.value = false }
 }
-
-handleInitialize()
+function changePage(current: number, pageSize: number) {
+  page.value = pageSize === size.value ? current : 1
+  size.value = pageSize
+  void load()
+}
+void load()
+onScopeDispose(() => { request++ })
 </script>

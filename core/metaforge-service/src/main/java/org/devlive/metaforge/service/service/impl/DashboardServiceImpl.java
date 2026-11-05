@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.entity.DashboardEntity;
 import org.devlive.metaforge.service.entity.ReportEntity;
+import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.repository.DashboardRepository;
 import org.devlive.metaforge.service.repository.ReportRepository;
@@ -16,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 @Service
@@ -38,20 +41,35 @@ public class DashboardServiceImpl
     @Transactional
     public CommonResponse<DashboardEntity> saveOrUpdate(BaseRepository<DashboardEntity, Long> baseRepository, DashboardEntity configure)
     {
-        configure.setUser(UserDetailsService.getUser());
+        var user = UserDetailsService.getUser();
+        if (user.getId() == null) {
+            return CommonResponse.failure("Dashboard not found");
+        }
+        if (configure.getId() != null) {
+            var existing = repository.findById(configure.getId())
+                    .filter(value -> Objects.equals(value.getUserId(), user.getId()))
+                    .orElse(null);
+            if (existing == null) {
+                return CommonResponse.failure("Dashboard not found");
+            }
+            configure.setCreateTime(existing.getCreateTime());
+            configure.setActive(existing.isActive());
+            if (configure.getAvatar() == null) {
+                configure.setAvatar(existing.getAvatar());
+            }
+        }
+        configure.setUser(user);
         List<Long> reportIds = new ArrayList<>();
         if (configure.getReports() != null) {
-            configure.getReports()
-                    .forEach(entity -> reportRepository.findByCode(entity.getCode())
-                            .ifPresentOrElse(
-                                    report -> {
-                                        entity.setId(report.getId());
-                                        reportIds.add(report.getId());
-                                    },
-                                    () -> {
-                                        throw new RuntimeException("Report [ " + entity.getCode() + " ] not found");
-                                    }
-                            ));
+            for (ReportEntity requested : configure.getReports()) {
+                var report = reportRepository.findByCode(requested.getCode())
+                        .filter(value -> Objects.equals(value.getUserId(), user.getId()))
+                        .orElse(null);
+                if (report == null) {
+                    return CommonResponse.failure("Dashboard report not found");
+                }
+                reportIds.add(report.getId());
+            }
         }
         DashboardEntity saved = repository.save(configure);
         linkRepository.replaceDashboardReports(saved.getId(), reportIds);
@@ -61,23 +79,41 @@ public class DashboardServiceImpl
     @Override
     public CommonResponse<DashboardEntity> getById(BaseRepository<DashboardEntity, Long> baseRepository, Long id)
     {
-        CommonResponse<DashboardEntity> response = DashboardService.super.getById(baseRepository, id);
-        return withReports(response);
+        return loadOwned(repository.findById(id));
     }
 
     @Override
     public CommonResponse<DashboardEntity> getByCode(BaseRepository<DashboardEntity, Long> baseRepository, String code)
     {
-        CommonResponse<DashboardEntity> response = DashboardService.super.getByCode(baseRepository, code);
-        return withReports(response);
+        return loadOwned(repository.findByCode(code));
+    }
+
+    private CommonResponse<DashboardEntity> loadOwned(Optional<DashboardEntity> match)
+    {
+        Long userId = UserDetailsService.getUser().getId();
+        return match.filter(value -> userId != null && Objects.equals(value.getUserId(), userId))
+                .map(value -> Persistence.references().load(value))
+                .map(value -> withReports(CommonResponse.success(value)))
+                .orElseGet(() -> CommonResponse.failure("Dashboard not found"));
     }
 
     @Override
     @Transactional
     public CommonResponse<String> deleteByCode(BaseRepository<DashboardEntity, Long> baseRepository, String code)
     {
-        repository.findByCode(code).ifPresent(dashboard -> linkRepository.deleteDashboard(dashboard.getId()));
-        return DashboardService.super.deleteByCode(baseRepository, code);
+        Long userId = UserDetailsService.getUser().getId();
+        if (userId == null) {
+            return CommonResponse.failure("Dashboard not found");
+        }
+        DashboardEntity dashboard = repository.findByCode(code)
+                .filter(value -> Objects.equals(value.getUserId(), userId))
+                .orElse(null);
+        if (dashboard == null) {
+            return CommonResponse.failure("Dashboard not found");
+        }
+        linkRepository.deleteDashboard(dashboard.getId());
+        repository.delete(dashboard);
+        return CommonResponse.success(code);
     }
 
     private CommonResponse<DashboardEntity> withReports(CommonResponse<DashboardEntity> response)
@@ -85,8 +121,12 @@ public class DashboardServiceImpl
         DashboardEntity dashboard = response.getData();
         if (response.getStatus() && dashboard != null) {
             Set<ReportEntity> reports = new HashSet<>();
-            reportRepository.findAllById(linkRepository.reportIdsOfDashboard(dashboard.getId())).forEach(reports::add);
-            dashboard.setReports(reports);
+            reportRepository.findAllById(linkRepository.reportIdsOfDashboard(dashboard.getId())).forEach(report -> {
+                if (Objects.equals(report.getUserId(), dashboard.getUserId())) {
+                    reports.add(report);
+                }
+            });
+            dashboard.setReports(Persistence.references().load(reports));
         }
         return response;
     }

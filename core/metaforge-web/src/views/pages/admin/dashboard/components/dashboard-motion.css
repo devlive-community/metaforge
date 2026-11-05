@@ -1,0 +1,29 @@
+.dashboard-widget-motion {
+  animation-name: var(--widget-motion-name);
+  animation-duration: var(--widget-motion-duration);
+  animation-delay: var(--widget-motion-delay);
+  animation-iteration-count: var(--widget-motion-repeat);
+  animation-timing-function: var(--widget-motion-easing);
+  animation-fill-mode: both;
+}
+.dashboard-widget-motion.motion-on-hover { animation-name: none; }
+.dashboard-widget-motion.motion-on-hover:hover { animation-name: var(--widget-motion-name); }
+@media (prefers-reduced-motion: no-preference) {
+  .dashboard-screen-host:hover .dashboard-screen-effect.dashboard-widget-motion.motion-on-hover { animation-name: var(--widget-motion-name); }
+}
+@keyframes mf-dashboard-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes mf-dashboard-slideUp { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes mf-dashboard-slideDown { from { opacity: 0; transform: translateY(-24px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes mf-dashboard-slideLeft { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes mf-dashboard-slideRight { from { opacity: 0; transform: translateX(-24px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes mf-dashboard-zoom { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: scale(1); } }
+@keyframes mf-dashboard-rotate { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+@keyframes mf-dashboard-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); } }
+@keyframes mf-dashboard-bounce { 0%, 100% { transform: translateY(0); } 30%, 60% { transform: translateY(-12px); } 45%, 75% { transform: translateY(0); } }
+@keyframes mf-dashboard-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes mf-dashboard-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
+@keyframes mf-dashboard-flip { from { transform: perspective(800px) rotateY(0); } to { transform: perspective(800px) rotateY(360deg); } }
+@keyframes mf-dashboard-glow { 0%, 100% { filter: drop-shadow(0 0 0 transparent); } 50% { filter: drop-shadow(0 0 10px var(--mf-color-primary)); } }
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-widget-motion, .dashboard-widget-motion.motion-on-hover:hover { animation: none; }
+}

@@ -27,7 +27,9 @@ const createDefaultRouter = (router: Router) => {
             },
             {
                 path: 'dashboard/preview/:code',
+                name: 'dashboard-preview',
                 meta: {
+                    dashboardStudio: true,
                     title: 'common.dashboard',
                     isRoot: false
                 },
@@ -35,7 +37,9 @@ const createDefaultRouter = (router: Router) => {
             },
             {
                 path: 'dashboard/info/:code?',
+                name: 'dashboard-editor',
                 meta: {
+                    dashboardStudio: true,
                     title: 'common.dashboard',
                     isRoot: false
                 },
