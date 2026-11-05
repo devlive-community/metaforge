@@ -18,6 +18,10 @@ import org.springframework.stereotype.Service;
 @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The event publisher is a Spring-managed singleton")
 public class NotificationEventPublisher
 {
+    /** Publishes nothing; stands in where no Spring context wires the real one, as in unit tests. */
+    public static final NotificationEventPublisher NONE = new NotificationEventPublisher(event -> {
+    });
+
     private final ApplicationEventPublisher eventPublisher;
 
     public void publish(NotificationEvent event)
@@ -45,6 +49,17 @@ public class NotificationEventPublisher
                 .entityName(entityName)
                 .entityExists(!scene.name().endsWith("_DELETED"))
                 .build());
+    }
+
+    /** Notifies the user with the given code, for work that finishes off the request thread. */
+    public void publishTo(String userCode, NotificationScene scene, String title, String content, EntityType entityType, String entityCode, String entityName)
+    {
+        if (userCode == null) {
+            return;
+        }
+        UserEntity user = new UserEntity();
+        user.setCode(userCode);
+        publish(scene, user, title, content, entityType, entityCode, entityName);
     }
 
     private static UserEntity currentUser()

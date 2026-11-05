@@ -15,6 +15,9 @@ import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.plugin.PluginType;
 import org.devlive.metaforge.service.common.SourceColumns;
 import org.devlive.metaforge.service.entity.SourceEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.importer.ImportPlan;
 import org.devlive.metaforge.service.importer.ImportStatements;
 import org.devlive.metaforge.service.importer.ImportTable;
@@ -26,6 +29,7 @@ import org.devlive.metaforge.service.service.TableImportService;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -86,6 +90,14 @@ public class TableImportServiceImpl
     {
         this.pluginManager = pluginManager;
         this.repository = repository;
+    }
+
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
     }
 
     /** One analysed upload. */
@@ -670,7 +682,20 @@ public class TableImportServiceImpl
             boolean failed = progress.stream().anyMatch(item -> "failed".equals(item.get("status")));
             job.put("status", failed ? "failed" : "done");
             job.put("finishedAt", System.currentTimeMillis());
+            notifyFinished(session, database, failed, progress);
         }
+    }
+
+    private void notifyFinished(Session session, String database, boolean failed, List<Map<String, Object>> progress)
+    {
+        long done = progress.stream().filter(item -> "done".equals(item.get("status"))).count();
+        String reason = progress.stream().filter(item -> "failed".equals(item.get("status")))
+                .map(item -> item.get("target") + ": " + item.get("message")).findFirst().orElse("");
+        notifications.publishTo(session.user, failed ? NotificationScene.IMPORT_FAILED : NotificationScene.IMPORT_SUCCEEDED,
+                String.format(failed ? "导入到 %s 失败" : "导入到 %s 完成", database),
+                failed ? String.format("%d/%d 张表导入成功。%s", done, progress.size(), reason)
+                        : String.format("%d 张表已导入 %s。", done, database),
+                EntityType.SOURCE, session.code, database);
     }
 
     private static void importTable(Session session, String database, ImportPlan plan, Target target, ImportStatements statements, ImportPlan.TablePlan table,

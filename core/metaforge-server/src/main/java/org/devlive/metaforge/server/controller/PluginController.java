@@ -8,6 +8,9 @@ import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.server.service.PluginReferences;
 import org.devlive.metaforge.server.service.PluginStore;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,12 +37,23 @@ public class PluginController
     private final PluginManager pluginManager;
     private final PluginReferences references;
     private final PluginStore store;
+    private final NotificationEventPublisher notifications;
 
-    public PluginController(PluginManager pluginManager, PluginReferences references, PluginStore store)
+    public PluginController(PluginManager pluginManager, PluginReferences references, PluginStore store, NotificationEventPublisher notifications)
     {
         this.pluginManager = pluginManager;
         this.references = references;
         this.store = store;
+        this.notifications = notifications;
+    }
+
+    /** Tells the administrator how a plugin change went, once it went through. */
+    private CommonResponse<Boolean> notified(CommonResponse<Boolean> response, NotificationScene scene, String name, String title, String content)
+    {
+        if (Boolean.TRUE.equals(response.getStatus())) {
+            notifications.publish(scene, title, content, EntityType.PLUGIN, name, name);
+        }
+        return response;
     }
 
     @GetMapping
@@ -72,8 +86,10 @@ public class PluginController
                     .size(request.getSize())
                     .build();
             try {
-                return store.install(target, (archive, name) -> pluginManager.installPlugin(archive, name))
-                        ? CommonResponse.success(true) : CommonResponse.failure("Unable to install the plugin package");
+                return notified(store.install(target, (archive, name) -> pluginManager.installPlugin(archive, name))
+                                ? CommonResponse.success(true) : CommonResponse.failure("Unable to install the plugin package"),
+                        NotificationScene.PLUGIN_INSTALLED, request.getName(), String.format("插件 %s 已安装", request.getName()),
+                        String.format("插件 %s %s 已从插件商店安装。", request.getName(), request.getVersion()));
             }
             catch (IOException e) {
                 log.warn("Store install of {} {} failed: {}", request.getName(), request.getVersion(), e.getMessage());
@@ -83,8 +99,10 @@ public class PluginController
         if (request.getUrl() == null || request.getUrl().isBlank()) {
             return CommonResponse.failure("Plugin package and name are required");
         }
-        return pluginManager.installPlugin(Path.of(request.getUrl()), request.getName())
-                ? CommonResponse.success(true) : CommonResponse.failure("Unable to install the plugin package");
+        return notified(pluginManager.installPlugin(Path.of(request.getUrl()), request.getName())
+                        ? CommonResponse.success(true) : CommonResponse.failure("Unable to install the plugin package"),
+                NotificationScene.PLUGIN_INSTALLED, request.getName(), String.format("插件 %s 已安装", request.getName()),
+                String.format("插件 %s 已安装。", request.getName()));
     }
 
     // 商店下载量来自统计服务，未知插件不返回（前端显示为未知而不是 0）
@@ -108,8 +126,8 @@ public class PluginController
         if (references.isInUse(name, pluginManager.getPluginInfos())) {
             return CommonResponse.failure("The plugin is referenced by existing resources");
         }
-        return pluginManager.uninstallPlugin(name)
-                ? CommonResponse.success(true) : CommonResponse.failure("Unable to uninstall the plugin");
+        return notified(pluginManager.uninstallPlugin(name) ? CommonResponse.success(true) : CommonResponse.failure("Unable to uninstall the plugin"),
+                NotificationScene.PLUGIN_UNINSTALLED, name, String.format("插件 %s 已卸载", name), String.format("插件 %s 已卸载。", name));
     }
 
     @PreAuthorize(value = "hasAuthority('ADMIN')")
@@ -125,8 +143,9 @@ public class PluginController
     public CommonResponse<Boolean> changeState(@PathVariable(value = "name") String name,
                                                @RequestBody PluginStateRequest request)
     {
-        return pluginManager.setPluginState(name, request.isEnabled())
-                ? CommonResponse.success(true) : CommonResponse.failure("Unable to change plugin state");
+        String state = request.isEnabled() ? "启用" : "停用";
+        return notified(pluginManager.setPluginState(name, request.isEnabled()) ? CommonResponse.success(true) : CommonResponse.failure("Unable to change plugin state"),
+                NotificationScene.PLUGIN_STATE_CHANGED, name, String.format("插件 %s 已%s", name, state), String.format("插件 %s 已%s。", name, state));
     }
 
     @Data

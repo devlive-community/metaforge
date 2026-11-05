@@ -27,6 +27,9 @@ import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.entity.convert.AvatarEntity;
 import org.devlive.metaforge.service.entity.itransient.user.UserEditorEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.model.AiModel;
 import org.devlive.metaforge.service.persistence.Persistence;
@@ -45,6 +48,7 @@ import org.devlive.metaforge.service.security.UserDetailsServiceImpl;
 import org.devlive.metaforge.service.service.JwtService;
 import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.service.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
@@ -123,6 +127,14 @@ public class UserServiceImpl
         this.pluginManager = pluginManager;
         this.request = request;
         this.userDetailsService = userDetailsService;
+    }
+
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
     }
 
     @Override
@@ -276,6 +288,8 @@ public class UserServiceImpl
                 .map(user -> {
                     user.setPassword(encoder.encode(configure.getPassword()));
                     userRepository.save(user);
+                    notifications.publishTo(user.getCode(), NotificationScene.PASSWORD_CHANGED, "登录密码已被重置",
+                            "管理员重置了你的登录密码；如非预期，请联系管理员。", EntityType.USER, user.getCode(), user.getUsername());
                     return CommonResponse.success(user.getId());
                 })
                 .orElseGet(() -> CommonResponse.failure(ServiceState.USER_NOT_FOUND));
@@ -309,6 +323,8 @@ public class UserServiceImpl
         }
         user.setPassword(encoder.encode(configure.getNewPassword()));
         this.userRepository.save(user);
+        notifications.publish(NotificationScene.PASSWORD_CHANGED, "登录密码已修改", "你的登录密码已修改；如非本人操作，请立即重置密码。",
+                EntityType.USER, user.getCode(), user.getUsername());
         return CommonResponse.success(user.getId());
     }
 

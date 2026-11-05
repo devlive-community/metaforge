@@ -7,6 +7,9 @@ import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.entity.PageEntity;
 import org.devlive.metaforge.service.entity.ReportEntity;
 import org.devlive.metaforge.service.entity.SourceEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.repository.DataSetRepository;
@@ -17,6 +20,7 @@ import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.ReportService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,6 +53,14 @@ public class ReportServiceImpl
         this.dataSetRepository = dataSetRepository;
     }
 
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
+    }
+
     @Override
     public CommonResponse<PageEntity<ReportEntity>> getAll(FilterBody filter)
     {
@@ -57,6 +69,18 @@ public class ReportServiceImpl
 
     @Override
     public CommonResponse<ReportEntity> saveOrUpdate(BaseRepository<ReportEntity, Long> repository, ReportEntity configure)
+    {
+        boolean created = configure.getId() == null;
+        CommonResponse<ReportEntity> response = save(repository, configure);
+        if (created && Boolean.TRUE.equals(response.getStatus()) && response.getData() != null) {
+            ReportEntity report = response.getData();
+            notifications.publish(NotificationScene.REPORT_CREATED, String.format("报表「%s」已创建", report.getName()),
+                    String.format("报表「%s」已保存。", report.getName()), EntityType.REPORT, report.getCode(), report.getName());
+        }
+        return response;
+    }
+
+    private CommonResponse<ReportEntity> save(BaseRepository<ReportEntity, Long> repository, ReportEntity configure)
     {
         var user = UserDetailsService.getUser();
         Optional<ReportEntity> existing = configure.getId() == null ? Optional.empty() : this.repository.findById(configure.getId())
@@ -140,7 +164,12 @@ public class ReportServiceImpl
     @Transactional
     public CommonResponse<String> deleteByCode(BaseRepository<ReportEntity, Long> repository, String code)
     {
-        repository.findByCode(code).ifPresent(value -> linkRepository.deleteReport(value.getId()));
-        return ReportService.super.deleteByCode(repository, code);
+        Optional<ReportEntity> report = repository.findByCode(code);
+        report.ifPresent(value -> linkRepository.deleteReport(value.getId()));
+        CommonResponse<String> response = ReportService.super.deleteByCode(repository, code);
+        report.filter(value -> Boolean.TRUE.equals(response.getStatus()))
+                .ifPresent(value -> notifications.publish(NotificationScene.REPORT_DELETED, String.format("报表「%s」已删除", value.getName()),
+                        String.format("报表「%s」已删除，它的分享链接随之失效。", value.getName()), EntityType.REPORT, value.getCode(), value.getName()));
+        return response;
     }
 }

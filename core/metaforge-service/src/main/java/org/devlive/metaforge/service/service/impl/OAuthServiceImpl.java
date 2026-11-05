@@ -6,6 +6,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.entity.UserOAuthEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.repository.UserOAuthRepository;
 import org.devlive.metaforge.service.repository.UserRepository;
 import org.devlive.metaforge.service.service.OAuthService;
@@ -15,6 +18,7 @@ import org.devlive.metaforge.service.settings.OAuthClient;
 import org.devlive.metaforge.service.settings.OAuthProvider;
 import org.devlive.metaforge.service.settings.OAuthSettings;
 import org.devlive.metaforge.service.settings.OAuthStates;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 
@@ -59,6 +63,14 @@ public class OAuthServiceImpl
         this.userService = userService;
         this.userRepository = userRepository;
         this.links = links;
+    }
+
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
     }
 
     /** A sign-in that stops with an error code the callback page explains. */
@@ -189,6 +201,7 @@ public class OAuthServiceImpl
         }
         String email = AuthServiceImpl.isEmail(profile.getEmail()) ? profile.getEmail().trim().toLowerCase(Locale.ROOT) : "";
         UserEntity user = email.isEmpty() ? null : userRepository.findByEmail(email).map(this::active).orElse(null);
+        boolean existing = user != null;
         if (user == null) {
             if (!settings.auth().isRegistration()) {
                 throw new Failure("registration");
@@ -203,6 +216,12 @@ public class OAuthServiceImpl
                 .subject(profile.getSubject())
                 .createTime(new Date())
                 .build());
+        if (existing) {
+            // Off the request's security context: the user is only now signing in.
+            notifications.publishTo(user.getCode(), NotificationScene.OAUTH_BOUND, String.format("已绑定 %s 账号", provider.getLabel()),
+                    String.format("你的账号已通过邮箱 %s 与 %s 账号关联，之后可以直接用它登录；如非本人操作，请联系管理员。", email, provider.getLabel()),
+                    EntityType.USER, user.getCode(), user.getUsername());
+        }
         return user;
     }
 

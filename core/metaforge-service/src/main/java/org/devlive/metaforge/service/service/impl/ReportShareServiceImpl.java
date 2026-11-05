@@ -11,7 +11,10 @@ import org.devlive.metaforge.service.body.adhoc.Adhoc;
 import org.devlive.metaforge.service.entity.DataSetEntity;
 import org.devlive.metaforge.service.entity.ReportEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
 import org.devlive.metaforge.service.enums.ReportType;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.repository.DataSetRepository;
 import org.devlive.metaforge.service.repository.ReportRepository;
 import org.devlive.metaforge.service.repository.UserRepository;
@@ -19,6 +22,7 @@ import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.DataSetService;
 import org.devlive.metaforge.service.service.ReportService;
 import org.devlive.metaforge.service.service.ReportShareService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -73,6 +77,14 @@ public class ReportShareServiceImpl
         this.mapper = mapper;
     }
 
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
+    }
+
     @Override
     public CommonResponse<ShareState> share(String code, ShareRequest request)
     {
@@ -93,6 +105,7 @@ public class ReportShareServiceImpl
         if (origins.isEmpty()) {
             return CommonResponse.failure("Allowed sites must be origins such as https://example.com, at most " + MAX_ORIGINS);
         }
+        boolean wasShared = report.isShareEnabled();
         if (request.isRotate() || report.getShareToken() == null) {
             report.setShareToken(newToken());
         }
@@ -106,6 +119,12 @@ public class ReportShareServiceImpl
         report.setShareAllowDownload(Boolean.TRUE.equals(request.getAllowDownload()));
         repository.save(report);
         evict(report.getShareToken());
+        if (wasShared != request.isEnabled()) {
+            notifications.publish(request.isEnabled() ? NotificationScene.REPORT_SHARED : NotificationScene.REPORT_UNSHARED,
+                    String.format(request.isEnabled() ? "报表「%s」已开启分享" : "报表「%s」已关闭分享", report.getName()),
+                    String.format(request.isEnabled() ? "报表「%s」现在可以通过分享链接访问。" : "报表「%s」的分享链接已失效。", report.getName()),
+                    EntityType.REPORT, report.getCode(), report.getName());
+        }
         return CommonResponse.success(state(report));
     }
 

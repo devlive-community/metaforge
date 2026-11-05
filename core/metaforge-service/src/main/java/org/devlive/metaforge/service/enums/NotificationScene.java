@@ -28,10 +28,7 @@ public enum NotificationScene
     REPORT_DELETED(Category.REPORT),
     REPORT_SHARED(Category.REPORT),
     REPORT_UNSHARED(Category.REPORT),
-    DASHBOARD_PUBLISHED(Category.REPORT),
-
-    WORKFLOW_SUCCEEDED(Category.WORKFLOW),
-    WORKFLOW_FAILED(Category.WORKFLOW),
+    DASHBOARD_CREATED(Category.REPORT),
 
     IMPORT_SUCCEEDED(Category.TRANSFER),
     IMPORT_FAILED(Category.TRANSFER),
@@ -40,7 +37,6 @@ public enum NotificationScene
 
     PASSWORD_CHANGED(Category.ACCOUNT),
     OAUTH_BOUND(Category.ACCOUNT),
-    OAUTH_UNBOUND(Category.ACCOUNT),
 
     PLUGIN_INSTALLED(Category.PLUGIN, true),
     PLUGIN_UNINSTALLED(Category.PLUGIN, true),
@@ -48,7 +44,7 @@ public enum NotificationScene
 
     public enum Category
     {
-        DATASET, SOURCE, REPORT, WORKFLOW, TRANSFER, ACCOUNT, PLUGIN
+        DATASET, SOURCE, REPORT, TRANSFER, ACCOUNT, PLUGIN
     }
 
     // Subscriptions saved before scenes existed named only an operation, which always meant datasets.

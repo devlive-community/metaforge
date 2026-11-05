@@ -4,6 +4,9 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.entity.DashboardEntity;
 import org.devlive.metaforge.service.entity.ReportEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.repository.DashboardRepository;
@@ -11,6 +14,7 @@ import org.devlive.metaforge.service.repository.ReportRepository;
 import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.DashboardService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,6 +39,14 @@ public class DashboardServiceImpl
         this.repository = repository;
         this.reportRepository = reportRepository;
         this.linkRepository = linkRepository;
+    }
+
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
     }
 
     @Override
@@ -71,8 +83,13 @@ public class DashboardServiceImpl
                 reportIds.add(report.getId());
             }
         }
+        boolean created = configure.getId() == null;
         DashboardEntity saved = repository.save(configure);
         linkRepository.replaceDashboardReports(saved.getId(), reportIds);
+        if (created) {
+            notifications.publish(NotificationScene.DASHBOARD_CREATED, String.format("仪表盘「%s」已创建", saved.getName()),
+                    String.format("仪表盘「%s」已创建，包含 %d 个报表。", saved.getName(), reportIds.size()), EntityType.DASHBOARD, saved.getCode(), saved.getName());
+        }
         return CommonResponse.success(saved);
     }
 

@@ -17,6 +17,9 @@ import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.plugin.PluginType;
 import org.devlive.metaforge.service.common.SourceColumns;
 import org.devlive.metaforge.service.entity.SourceEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.exporter.ExportPlan;
 import org.devlive.metaforge.service.exporter.ExportStatements;
 import org.devlive.metaforge.service.repository.SourceRepository;
@@ -26,6 +29,7 @@ import org.devlive.metaforge.service.service.TableExportService;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -80,6 +84,14 @@ public class DatabaseExportServiceImpl
     {
         this.pluginManager = pluginManager;
         this.repository = repository;
+    }
+
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
     }
 
     /** Jobs belong to the user who started them. */
@@ -412,7 +424,10 @@ public class DatabaseExportServiceImpl
         }
         jobs.put(job.id, job);
         String output = String.valueOf(checked.getData().get("output"));
-        runner.submit(() -> run(job, target, converter, database, plan, output));
+        runner.submit(() -> {
+            run(job, target, converter, database, plan, output);
+            notifyFinished(job, code, database);
+        });
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("jobId", job.id);
         return CommonResponse.success(result);
@@ -460,6 +475,17 @@ public class DatabaseExportServiceImpl
         finally {
             pool.shutdownNow();
         }
+    }
+
+    private void notifyFinished(Job job, String code, String database)
+    {
+        boolean succeeded = "done".equals(job.status);
+        long failed = job.tables.values().stream().filter(item -> "failed".equals(item.get("status"))).count();
+        String content = succeeded
+                ? String.format("%s 的 %d 张表已导出为 %s，可在导出页面下载。", database, job.tables.size(), job.name)
+                : String.format("%s 导出未完成：%s", database, job.message != null ? job.message : failed + " 张表导出失败");
+        notifications.publishTo(job.user, succeeded ? NotificationScene.EXPORT_SUCCEEDED : NotificationScene.EXPORT_FAILED,
+                String.format(succeeded ? "%s 导出完成" : "%s 导出失败", database), content, EntityType.SOURCE, code, database);
     }
 
     private void exportTable(Job job, Target target, ConvertService converter, String database, ExportPlan plan, ExportPlan.TablePlan table, Map<String, String> schemas)

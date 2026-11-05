@@ -5,7 +5,10 @@ import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.entity.DataSetEntity;
 import org.devlive.metaforge.service.entity.ReportEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
+import org.devlive.metaforge.service.enums.NotificationScene;
 import org.devlive.metaforge.service.enums.ReportType;
+import org.devlive.metaforge.service.event.NotificationEvent;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.repository.DataSetRepository;
 import org.devlive.metaforge.service.repository.ReportRepository;
 import org.devlive.metaforge.service.repository.SourceRepository;
@@ -149,6 +152,18 @@ public class ReportShareServiceImplTest
         assertNotEquals(token, rotated);
         assertFalse("the old link stops working", service.view(token).getStatus());
         assertTrue(service.view(rotated).getStatus());
+    }
+
+    @Test
+    public void turningSharingOnOrOffNotifiesTheOwnerOnce()
+    {
+        List<NotificationScene> scenes = new ArrayList<>();
+        service.setNotifications(new NotificationEventPublisher(event -> scenes.add(((NotificationEvent) event).getScene())));
+        report("chart", ReportType.QUERY, CHART);
+        service.share("chart", request(true, false, "", false));
+        service.share("chart", request(true, false, "", true));
+        service.share("chart", request(false, false, "", false));
+        assertEquals("rotating the link is not a new share", List.of(NotificationScene.REPORT_SHARED, NotificationScene.REPORT_UNSHARED), scenes);
     }
 
     @Test
