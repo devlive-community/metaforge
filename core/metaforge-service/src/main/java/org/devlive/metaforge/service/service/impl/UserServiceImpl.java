@@ -487,17 +487,6 @@ public class UserServiceImpl
         }
     }
 
-    @Override
-    public CommonResponse<UserEntity> changeNotify(UserEntity configure)
-    {
-        return userRepository.findByCode(UserDetailsService.getUser().getCode())
-                .map(value -> {
-                    value.setNotifyConfigure(configure.getNotifyConfigure());
-                    return CommonResponse.success(userRepository.save(value));
-                })
-                .orElseGet(() -> CommonResponse.failure(ServiceState.USER_NOT_FOUND));
-    }
-
     private FsRequest getFsRequest(MultipartFile file, UploadBody configure)
             throws IOException
     {

@@ -145,10 +145,4 @@ public class UserController
     {
         return this.service.uploadAvatar(configure);
     }
-
-    @PutMapping(value = "change-notify")
-    public CommonResponse<UserEntity> changeNotify(@RequestBody UserEntity configure)
-    {
-        return this.service.changeNotify(configure);
-    }
 }

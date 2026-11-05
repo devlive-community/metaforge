@@ -112,7 +112,8 @@ public class UserEntity
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Long unreadCount;
 
-    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    // Holds channel secrets: read through /api/v1/user/notify, which masks them, never with the user.
+    @JsonIgnore
     public List<NotificationTypeEntity> getNotifyConfigure()
     {
         if (StringUtils.isEmpty(notifyConfigureValue)) {

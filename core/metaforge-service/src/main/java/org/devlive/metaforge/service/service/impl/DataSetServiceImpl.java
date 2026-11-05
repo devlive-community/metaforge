@@ -30,7 +30,6 @@ import org.devlive.metaforge.plugin.configure.PluginConfigurePipelineType;
 import org.devlive.metaforge.scheduler.SchedulerRequest;
 import org.devlive.metaforge.scheduler.SchedulerService;
 import org.devlive.metaforge.service.adapter.PageRequestAdapter;
-import org.devlive.metaforge.service.annotation.SendNotification;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.PipelineFieldBody;
 import org.devlive.metaforge.service.body.adhoc.Adhoc;
@@ -50,7 +49,7 @@ import org.devlive.metaforge.service.enums.ColumnMode;
 import org.devlive.metaforge.service.enums.ColumnType;
 import org.devlive.metaforge.service.enums.CreatedMode;
 import org.devlive.metaforge.service.enums.EntityType;
-import org.devlive.metaforge.service.enums.NotificationType;
+import org.devlive.metaforge.service.enums.NotificationScene;
 import org.devlive.metaforge.service.enums.QueryMode;
 import org.devlive.metaforge.service.enums.SyncMode;
 import org.devlive.metaforge.service.event.NotificationEventPublisher;
@@ -142,7 +141,6 @@ public class DataSetServiceImpl
 
     @Transactional
     @Override
-    @SendNotification(type = NotificationType.DYNAMIC)
     public CommonResponse<DataSetEntity> saveOrUpdate(BaseRepository<DataSetEntity, Long> repository, DataSetEntity configure)
     {
         try {
@@ -163,12 +161,18 @@ public class DataSetServiceImpl
             return CommonResponse.failure("New datasets cannot reuse persisted column identities");
         }
         UserEntity user = UserDetailsService.getUser();
+        // Decided before the build assigns an id, which made every new dataset read as an update.
+        boolean created = configure.getId() == null;
         java.util.concurrent.ExecutorService service = Executors.newSingleThreadExecutor();
         service.submit(() -> {
             configure.setUser(user);
             completeState(configure, DataSetState.METADATA_START);
             startBuild(configure, true);
         });
+        eventPublisher.publish(created ? NotificationScene.DATASET_CREATED : NotificationScene.DATASET_UPDATED, user,
+                String.format(created ? "数据集「%s」已创建" : "数据集「%s」已更新", configure.getName()),
+                String.format(created ? "数据集「%s」已创建，正在构建元数据。" : "数据集「%s」的配置已更新，正在重新构建。", configure.getName()),
+                EntityType.DATASET, configure.getCode(), configure.getName());
         return CommonResponse.success(configure);
     }
 
@@ -488,7 +492,6 @@ public class DataSetServiceImpl
 
     @Override
     @Transactional
-    @SendNotification(type = NotificationType.DELETED)
     public CommonResponse<String> deleteByCode(BaseRepository<DataSetEntity, Long> repository, String code)
     {
         return repository.findByCode(code)
@@ -512,6 +515,8 @@ public class DataSetServiceImpl
                         historyRepository.deleteAllByDatasetId(value.getId());
                         repository.delete(value);
                     });
+                    eventPublisher.publish(NotificationScene.DATASET_DELETED, String.format("数据集「%s」已删除", value.getName()),
+                            String.format("数据集「%s」及其同步数据已删除。", value.getName()), EntityType.DATASET, value.getCode(), value.getName());
                     return CommonResponse.success(code);
                 })
                 .orElseGet(() -> CommonResponse.failure(String.format("DataSet [ %s ] not found", code)));
@@ -792,6 +797,24 @@ public class DataSetServiceImpl
         }
     }
 
+    /** Tells the user how a sync ended; one they stopped themselves needs no notice. */
+    private void notifySynced(DataSetEntity entity, SyncJob job, UserEntity user)
+    {
+        RunState state = job.getState();
+        if (state != RunState.SUCCESS && state != RunState.FAILURE && state != RunState.TIMEOUT) {
+            return;
+        }
+        boolean succeeded = state == RunState.SUCCESS;
+        List<org.devlive.metaforge.service.dataset.sync.SyncTransition> transitions = job.getTransitions();
+        String reason = transitions.isEmpty() ? null : transitions.get(transitions.size() - 1).getMessage();
+        String content = succeeded
+                ? String.format("数据集「%s」同步完成。", entity.getName())
+                : String.format("数据集「%s」同步失败：%s", entity.getName(), reason == null || reason.isBlank() ? state.name() : reason);
+        eventPublisher.publish(succeeded ? NotificationScene.DATASET_SYNC_SUCCEEDED : NotificationScene.DATASET_SYNC_FAILED, user,
+                String.format(succeeded ? "数据集「%s」同步成功" : "数据集「%s」同步失败", entity.getName()),
+                content, EntityType.DATASET, entity.getCode(), entity.getName());
+    }
+
     private PluginService getOutputPlugin()
     {
         return pluginManager.getPlugin(initializerConfigure.getDataSetConfigure().getType())
@@ -831,14 +854,7 @@ public class DataSetServiceImpl
                         setAuthenticationContext(currentUser);
                         try {
                             DataSetEntity result = runSync(entity, running, safeOverrides);
-                            eventPublisher.publishNotificationEvent(
-                                    result,
-                                    null,
-                                    "",
-                                    EntityType.DATASET,
-                                    NotificationType.SYNCDATA,
-                                    new String[] {}
-                            );
+                            notifySynced(result, running, currentUser);
                         }
                         finally {
                             SecurityContextHolder.clearContext();
