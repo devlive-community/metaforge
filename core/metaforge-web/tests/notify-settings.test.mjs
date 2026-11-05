@@ -6,10 +6,13 @@ const read = path => readFile(new URL('../src/' + path, import.meta.url), 'utf8'
 
 test('the notify page configures and subscribes only enabled channels', async () => {
   const page = await read('views/pages/admin/user/profile/components/NotifyForm.vue')
-  // Settings forms render only while their channel is on.
-  assert.match(page, /<MfForm v-if="settingOf\(channel\.type\)\.enabled"/)
+  // Channel cards wrap into a grid, so more channels only add rows.
+  assert.match(page, /grid-template-columns: repeat\(auto-fill, minmax\(240px, 1fr\)\)/)
+  // Settings open in a drawer, offered only for enabled channels; turning on a channel that lacks required settings opens it first.
+  assert.match(page, /v-if="savedOf\(channel\.type\)\.enabled && channel\.fields\.length > 0"/)
+  assert.match(page, /if \(enabled && needsSettings\(channel\)\) \{\n\s+openEditor\(channel, true\)/)
   // Scene columns are the enabled channels only.
-  assert.match(page, /const enabledChannels = computed\(\(\) => channels\.value\.filter\(channel => settingOf\(channel\.type\)\.enabled\)\)/)
+  assert.match(page, /const enabledChannels = computed\(\(\) => channels\.value\.filter\(channel => savedOf\(channel\.type\)\.enabled\)\)/)
   assert.match(page, /v-for="channel in enabledChannels"/)
   // A stored secret may stay empty and is never shown.
   assert.match(page, /required: field\.required && !\(field\.type === 'SECRET' && isConfigured\(type, field\)\)/)

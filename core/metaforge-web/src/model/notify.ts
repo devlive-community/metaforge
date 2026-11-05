@@ -40,23 +40,19 @@ export interface NotifyChannelSetting
 
 export const INTERNAL_CHANNEL = 'Internal'
 
-/** Subscribes or unsubscribes one enabled channel to the given scenes. */
-export const setScenes = (setting: NotifyChannelSetting, scenes: string[], checked: boolean): void => {
-    const services = new Set(setting.services)
+/** Subscribes or unsubscribes a channel's scene list to the given scenes. */
+export const setScenes = (target: { services: string[] }, scenes: string[], checked: boolean): void => {
+    const services = new Set(target.services)
     scenes.forEach(scene => checked ? services.add(scene) : services.delete(scene))
-    setting.services = Array.from(services)
+    target.services = Array.from(services)
 }
 
 /** How many of the scenes the channel receives: none, some or all. */
-export const coverage = (setting: NotifyChannelSetting, scenes: string[]): 'none' | 'some' | 'all' => {
-    const count = scenes.filter(scene => setting.services.includes(scene)).length
+export const coverage = (target: { services: string[] }, scenes: string[]): 'none' | 'some' | 'all' => {
+    const count = scenes.filter(scene => target.services.includes(scene)).length
     return count === 0 ? 'none' : count === scenes.length ? 'all' : 'some'
 }
 
-/** A comparable snapshot of the settings, to tell whether anything changed since the last save. */
-export const snapshot = (settings: NotifyChannelSetting[]): string => JSON.stringify(settings.map(setting => ({
-    type: setting.type,
-    enabled: setting.enabled,
-    services: [...setting.services].sort(),
-    configure: setting.configure
-})))
+/** Whether two scene lists hold the same scenes, in any order. */
+export const sameScenes = (left: string[], right: string[]): boolean =>
+    left.length === right.length && left.every(scene => right.includes(scene))
