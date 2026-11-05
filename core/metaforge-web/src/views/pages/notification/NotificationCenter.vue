@@ -2,8 +2,8 @@
   <div class="dc-center">
     <div class="dc-center__head">
       <div class="min-w-0">
-        <div class="dc-center__title">{{ $t('notify.text.center') }}</div>
-        <div class="dc-center__desc">{{ $t('notify.center.description') }}</div>
+        <h1 class="m-0 text-xl leading-7 font-semibold text-content">{{ $t('notify.text.center') }}</h1>
+        <p class="mt-1 mb-0 text-sm leading-5 text-content-secondary">{{ $t('notify.center.description') }}</p>
       </div>
       <div class="dc-center__actions">
         <MfButton @click="router.push('/account/notify')">
@@ -221,30 +221,16 @@ onMounted(() => {
 <style scoped>
 .dc-center {
     width: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 24px 16px;
+    min-width: 0;
 }
 
 .dc-center__head {
     display: flex;
     flex-wrap: wrap;
-    align-items: flex-end;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
     margin-bottom: 16px;
-}
-
-.dc-center__title {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--dc-text-title);
-}
-
-.dc-center__desc {
-    margin-top: 4px;
-    font-size: 13px;
-    color: var(--dc-text-secondary);
 }
 
 .dc-center__actions {
@@ -256,7 +242,7 @@ onMounted(() => {
 
 .dc-center__body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 280px;
+    grid-template-columns: minmax(0, 1fr) 300px;
     gap: 16px;
     align-items: start;
 }
