@@ -42,26 +42,7 @@
                        :key="index"
                        class="dc-notify__item"
                        @click="handleNotificationClick(item)">
-                    <div class="mt-1 text-sm text-content-secondary">
-                      <div v-if="item.entityExists" class="flex space-x-1">
-                        <span>{{ $t(`common.${ item.entityType?.toLowerCase() || '' }`) }}</span>
-
-                        <template v-if="item.entityType === 'DATASET'">
-                          <router-link :to="`/dataset/info/${item.entityCode}`" target="_blank" class="hover:text-primary flex items-center">
-                            [ {{ item.entityName }} ]
-                          </router-link>
-                        </template>
-
-                        <template v-else>
-                          <router-link class="hover:text-primary" :to="'/' + item.entityType + '/' + item.entityCode">[ {{ item.entityName }} ]</router-link>
-                        </template>
-
-                        <span>{{ $t(`common.${ item.type?.toLowerCase() || '' }`) }}</span>
-                      </div>
-                      <div v-else>
-                        {{ $t(`common.${ item.entityType?.toLowerCase() || '' }`) }} [ {{ item.entityName }} ] {{ $t(`common.${ item.type?.toLowerCase() || '' }`) }}
-                      </div>
-                    </div>
+                    <NotificationItem :item="item"/>
 
                     <div class="text-xs text-content-tertiary mt-1">{{ item.createTime }}</div>
                   </div>
@@ -137,6 +118,7 @@
 </template>
 
 <script setup lang="ts">
+import NotificationItem from '@/views/components/notify/NotificationItem.vue'
 import { Bell, CircleHelp, Database, LogOut, Settings } from '@lucide/vue'
 import { useWorkbenchHeader } from '@/composables/useWorkbenchHeader'
 defineOptions({ name: 'WorkbenchHeader' })

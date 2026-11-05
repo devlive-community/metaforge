@@ -1,342 +1,315 @@
 <template>
   <div class="dc-notify">
-    <!-- 页头：标题 + 描述 + 标语 -->
     <div class="dc-notify__pagehead">
       <div class="min-w-0">
         <div class="dc-notify__title">{{ $t('user.common.notify') }}</div>
         <div class="dc-notify__desc">{{ $t('notify.tip.page') }}</div>
       </div>
-      <div class="dc-notify__slogan">Data for a smarter tomorrow</div>
+      <div class="dc-notify__actions">
+        <MfButton :disabled="!dirty || saving" @click="reset">{{ $t('common.reset') }}</MfButton>
+        <MfButton variant="primary" :loading="saving" :disabled="!dirty || loading" @click="save">{{ $t('common.save') }}</MfButton>
+      </div>
     </div>
 
-    <!-- 通知渠道 -->
-    <div class="dc-notify__card">
-      <div class="dc-notify__section-head">
-        <div class="dc-notify__section-icon">
-          <Mail :size="16" />
-        </div>
-        <div>
-          <div class="dc-notify__section-title">{{ $t('notify.common.channels') }}</div>
-          <div class="dc-notify__section-sub">{{ $t('notify.tip.channels') }}</div>
-        </div>
-      </div>
+    <div v-if="loading" class="dc-notify__card dc-notify__loading">
+      <MfSpinner size="lg" :label="$t('common.loading')"/>
+    </div>
 
-      <template v-if="loading">
-        <div class="flex items-center justify-center py-10"><MfSpinner/></div>
+    <MfResult v-else-if="failed"
+              status="error"
+              class="dc-notify__card"
+              :title="$t('notify.tip.loadFailed')"
+              :sub-title="failed">
+      <template #extra>
+        <MfButton @click="load">{{ $t('common.refresh') }}</MfButton>
       </template>
-      <template v-else>
-        <div class="dc-notify__channel-grid">
+    </MfResult>
+
+    <template v-else>
+      <!-- Channels: a switch each; settings only for enabled ones -->
+      <div class="dc-notify__card">
+        <div class="dc-notify__section-head">
+          <div class="dc-notify__section-icon"><Send :size="16"/></div>
+          <div class="min-w-0">
+            <div class="dc-notify__section-title">{{ $t('notify.common.channels') }}</div>
+            <div class="dc-notify__section-sub">{{ $t('notify.tip.channels') }}</div>
+          </div>
+        </div>
+
+        <div class="dc-notify__channels">
           <div v-for="channel in channels"
                :key="channel.type"
-               class="dc-notify__channel">
-            <div class="flex items-start gap-3">
+               class="dc-notify__channel"
+               :class="{ 'dc-notify__channel--on': settingOf(channel.type).enabled }">
+            <div class="dc-notify__channel-head">
               <div class="dc-notify__channel-icon">
-                <component :size="18" :is="channelIcon(channel.type)" />
+                <component :is="channelIcon(channel.type)" :size="18"/>
               </div>
-              <div class="min-w-0">
-                <div class="dc-notify__channel-name">{{ channelName(channel.type) }}</div>
+              <div class="min-w-0 flex-1">
+                <div class="dc-notify__channel-name">
+                  {{ channelName(channel.type) }}
+                  <MfTag v-if="channel.builtin" size="sm">{{ $t('notify.text.builtin') }}</MfTag>
+                </div>
                 <div class="dc-notify__channel-desc">{{ channelDesc(channel.type) }}</div>
               </div>
-            </div>
-            <div class="flex items-center justify-between mt-3">
-              <span class="dc-notify__channel-state"
-                    :class="channel.enabled ? 'dc-notify__channel-state--on' : 'dc-notify__channel-state--off'">
-                <CircleCheck :size="12" v-if="channel.enabled"/>
-                <CircleMinus :size="12" v-else/>
-                {{ channel.enabled ? $t('notify.state.enabled') : $t('notify.state.disabled') }}
-              </span>
-              <MfButton v-if="!channel.enabled"
+              <MfButton v-if="settingOf(channel.type).enabled"
                         size="sm"
-                        @click="toggleChannel(channel, true)">
-                {{ $t('notify.common.enable') }}
+                        :loading="testing === channel.type"
+                        :disabled="saving || (testing !== '' && testing !== channel.type)"
+                        @click="test(channel)">
+                <Zap :size="14"/>
+                {{ $t('notify.common.test') }}
               </MfButton>
+              <MfSwitch v-model="settingOf(channel.type).enabled" :disabled="saving"/>
+            </div>
+
+            <template v-if="channel.fields.length > 0">
+              <MfForm v-if="settingOf(channel.type).enabled"
+                      :ref="(form: any) => registerForm(channel.type, form)"
+                      layout="vertical"
+                      class="dc-notify__fields"
+                      :model="settingOf(channel.type).configure">
+                <MfFormItem v-for="field in channel.fields"
+                            :key="field.name"
+                            :name="field.name"
+                            :label="fieldLabel(channel.type, field)"
+                            :tip="fieldTip(channel.type, field)"
+                            :required-mark="field.required"
+                            :rules="fieldRules(channel.type, field)">
+                  <MfInput v-model="settingOf(channel.type).configure[field.name]"
+                           :type="field.type === 'SECRET' ? 'password' : 'text'"
+                           :show-password="field.type === 'SECRET'"
+                           :maxlength="MAX_VALUE_LENGTH"
+                           :placeholder="fieldPlaceholder(channel.type, field)"/>
+                </MfFormItem>
+              </MfForm>
+              <div v-else class="dc-notify__channel-off">{{ $t('notify.tip.enableToConfigure') }}</div>
+            </template>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenes by category; one column per enabled channel -->
+      <div class="dc-notify__card">
+        <div class="dc-notify__section-head">
+          <div class="dc-notify__section-icon"><BellRing :size="16"/></div>
+          <div class="min-w-0">
+            <div class="dc-notify__section-title">{{ $t('notify.common.scenarios') }}</div>
+            <div class="dc-notify__section-sub">{{ $t('notify.tip.scenarios') }}</div>
+          </div>
+        </div>
+
+        <MfEmpty v-if="enabledChannels.length === 0" :description="$t('notify.tip.noEnabledChannel')"/>
+
+        <div v-else class="dc-notify__matrix">
+          <div class="dc-notify__matrix-row dc-notify__matrix-head" :style="gridStyle">
+            <div/>
+            <div v-for="channel in enabledChannels" :key="channel.type" class="dc-notify__matrix-cell">
+              {{ channelName(channel.type) }}
+            </div>
+          </div>
+
+          <div v-for="category in categories" :key="category.key" class="dc-notify__category">
+            <div class="dc-notify__matrix-row dc-notify__category-row" :style="gridStyle">
+              <div class="min-w-0">
+                <div class="dc-notify__category-name">{{ categoryName(category.key) }}</div>
+                <div class="dc-notify__category-desc">{{ categoryDesc(category.key) }}</div>
+              </div>
+              <div v-for="channel in enabledChannels" :key="channel.type" class="dc-notify__matrix-cell">
+                <MfCheckbox :model-value="coverage(settingOf(channel.type), category.scenes) === 'all'"
+                            :indeterminate="coverage(settingOf(channel.type), category.scenes) === 'some'"
+                            :disabled="saving"
+                            @update:model-value="(checked: any) => setScenes(settingOf(channel.type), category.scenes, !!checked)"/>
+              </div>
+            </div>
+            <div v-for="scene in category.scenes" :key="scene" class="dc-notify__matrix-row dc-notify__scene-row" :style="gridStyle">
+              <div class="dc-notify__scene-name">{{ sceneName(scene) }}</div>
+              <div v-for="channel in enabledChannels" :key="channel.type" class="dc-notify__matrix-cell">
+                <MfCheckbox :model-value="settingOf(channel.type).services.includes(scene)"
+                            :disabled="saving"
+                            @update:model-value="(checked: any) => setScenes(settingOf(channel.type), [scene], !!checked)"/>
+              </div>
             </div>
           </div>
         </div>
-      </template>
-    </div>
-
-    <!-- 触发场景 -->
-    <div class="dc-notify__card">
-      <div class="dc-notify__section-head">
-        <div class="dc-notify__section-icon">
-          <BellRing :size="16" />
-        </div>
-        <div class="min-w-0">
-          <div class="dc-notify__section-title">{{ $t('notify.common.scenarios') }}</div>
-          <div class="dc-notify__section-sub">{{ $t('notify.tip.scenarios') }}</div>
-        </div>
-        <MfButton variant="primary"
-                  style="margin-left: auto"
-                  @click="openBatch">
-          <Settings :size="14"/>
-          {{ $t('notify.common.batch') }}
-        </MfButton>
       </div>
-
-      <div class="dc-notify__rows">
-        <div v-for="scenario in scenarios"
-             :key="scenario.key"
-             class="dc-notify__row">
-          <div class="dc-notify__row-icon">
-            <component :size="16" :is="scenario.icon" />
-          </div>
-          <div class="flex-1 min-w-0">
-            <div class="dc-notify__row-name">{{ $t(scenario.nameKey) }}</div>
-            <div class="dc-notify__row-desc">{{ $t(scenario.tipKey) }}</div>
-          </div>
-          <MfSwitch :model-value="isScenarioOn(scenario.key)"
-                    :disabled="saving"
-                    @update:model-value="checked => toggleScenario(scenario.key, checked)"/>
-          <MfButton variant="ghost" size="sm" @click="openScenarioChannels(scenario.key)">
-            <Settings :size="15" :style="{ color: 'var(--dc-text-secondary)' }"/>
-          </MfButton>
-        </div>
-      </div>
-    </div>
-
-    <!-- 批量设置：发送渠道 × 触发场景 -->
-    <MfModal v-model:open="batchVisible"
-             :title="$t('notify.common.batch')"
-             width="480px">
-      <div class="dc-notify__batch-section">
-        <div class="dc-notify__batch-label">{{ $t('notify.common.sendChannels') }}</div>
-        <MfCheckboxGroup v-model="batchChannels"
-                         class="dc-notify__batch-group"
-                         :options="channels.map((channel: any) => ({ label: channelName(channel.type), value: channel.type }))"/>
-      </div>
-
-      <div class="dc-notify__batch-section">
-        <div class="dc-notify__batch-label">{{ $t('notify.common.scenarios') }}</div>
-        <MfCheckboxGroup v-model="batchScenarios"
-                         class="dc-notify__batch-group"
-                         :options="scenarios.map((scenario: any) => ({ label: $t(scenario.nameKey), value: scenario.key }))"/>
-      </div>
-
-      <div class="dc-notify__batch-tip">{{ $t('notify.tip.batch') }}</div>
-
-      <template #footer>
-        <MfButton @click="batchVisible = false">{{ $t('common.cancel') }}</MfButton>
-        <MfButton variant="primary" :loading="saving" @click="applyBatch">{{ $t('common.apply') }}</MfButton>
-      </template>
-    </MfModal>
-
-    <!-- 单场景配置：选择接收该场景通知的渠道 -->
-    <MfModal v-model:open="scenarioVisible"
-             :title="scenarioName(scenarioKey)"
-             width="440px">
-      <div class="dc-notify__batch-section">
-        <div class="dc-notify__batch-label">{{ $t('notify.common.sendChannels') }}</div>
-        <MfCheckboxGroup v-model="scenarioChannels"
-                         class="dc-notify__batch-group"
-                         :options="channels.map((channel: any) => ({ label: channelName(channel.type), value: channel.type }))"/>
-      </div>
-
-      <template #footer>
-        <MfButton @click="scenarioVisible = false">{{ $t('common.cancel') }}</MfButton>
-        <MfButton variant="primary" :loading="saving" @click="applyScenarioChannels">{{ $t('common.confirm') }}</MfButton>
-      </template>
-    </MfModal>
+    </template>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { BellRing, CircleCheck, CircleMinus, CirclePlus, Mail, MessageCircle, Pencil, Plug, RefreshCw, Settings, Trash2 } from '@lucide/vue'
+import { BellRing, Mail, MessageCircle, Plug, Send, Zap } from '@lucide/vue'
 import UserService from '@/services/user.ts'
-import PluginService from '@/services/plugin.ts'
-import { HttpUtils } from '@/utils/http.ts'
+import { coverage, NotifyCategory, NotifyChannel, NotifyChannelSetting, NotifyField, setScenes, snapshot } from '@/model/notify.ts'
 
 defineOptions({ name: 'NotifyForm' })
 
-const { t } = useI18n()
+const MAX_VALUE_LENGTH = 2000
 
-const loading = ref(false)
+const { t, te } = useI18n()
+
+const loading = ref(true)
+const failed = ref('')
 const saving = ref(false)
-const formState = reactive<{ notifyConfigure: any[] }>({ notifyConfigure: [] })
+const testing = ref('')
+const channels = ref<NotifyChannel[]>([])
+const categories = ref<NotifyCategory[]>([])
+const settings = ref<NotifyChannelSetting[]>([])
+const saved = ref('')
+const forms = new Map<string, any>()
 
-/** 触发场景（服务端枚举：CREATED/UPDATED/DELETED/DYNAMIC/SYNCDATA） */
-const scenarios = [
-  { key: 'CREATED', icon: CirclePlus, nameKey: 'notify.text.created', tipKey: 'notify.tip.created' },
-  { key: 'UPDATED', icon: Pencil, nameKey: 'notify.text.updated', tipKey: 'notify.tip.updated' },
-  { key: 'DELETED', icon: Trash2, nameKey: 'notify.text.deleted', tipKey: 'notify.tip.deleted' },
-  { key: 'DYNAMIC', icon: BellRing, nameKey: 'notify.text.dynamic', tipKey: 'notify.tip.dynamic' },
-  { key: 'SYNCDATA', icon: RefreshCw, nameKey: 'notify.text.syncData', tipKey: 'notify.tip.syncData' }
-]
+const enabledChannels = computed(() => channels.value.filter(channel => settingOf(channel.type).enabled))
+const dirty = computed(() => snapshot(settings.value) !== saved.value)
+const gridStyle = computed(() => ({ gridTemplateColumns: `minmax(0, 1fr) repeat(${ enabledChannels.value.length }, 96px)` }))
 
-const channels = computed(() => formState.notifyConfigure)
-const batchVisible = ref(false)
-const batchChannels = ref<string[]>([])
-const batchScenarios = ref<string[]>([])
+const empty = (type: string): NotifyChannelSetting => ({ type, enabled: false, services: [], configure: {}, configured: [] })
 
-const scenarioVisible = ref(false)
-const scenarioKey = ref('')
-const scenarioChannels = ref<string[]>([])
+// Every channel has an entry once loaded (see adopt), so rendering never adds one.
+const settingOf = (type: string): NotifyChannelSetting => settings.value.find(item => item.type === type) || empty(type)
 
-const channelIcon = (type: string): any => {
-  if (type === 'Internal') {
-    return Mail
+const registerForm = (type: string, form: any) => {
+  if (form) {
+    forms.set(type, form)
   }
-  if (type === 'DingTalk') {
-    return MessageCircle
+  else {
+    forms.delete(type)
   }
-  return Plug
 }
 
-const channelName = (type: string): string => {
-  const key = `notify.text.${ type.toLowerCase() }`
-  const value = t(key)
-  return value === key ? type : value
+const translated = (key: string, fallback: string): string => te(key) ? t(key) : fallback
+
+const channelIcon = (type: string): any => type === 'Internal' ? Mail : type === 'DingTalk' ? MessageCircle : Plug
+const channelName = (type: string): string => translated(`notify.text.${ type.toLowerCase() }`, type)
+const channelDesc = (type: string): string => translated(`notify.tip.${ type.toLowerCase() }`, t('notify.tip.channelFallback'))
+const categoryName = (key: string): string => translated(`notify.category.${ key.toLowerCase() }`, key)
+const categoryDesc = (key: string): string => translated(`notify.categoryTip.${ key.toLowerCase() }`, '')
+const sceneName = (key: string): string => translated(`notify.scene.${ key }`, key)
+const fieldLabel = (type: string, field: NotifyField): string => translated(`notify.field.${ type.toLowerCase() }.${ field.name }`, field.label)
+const fieldTip = (type: string, field: NotifyField): string => translated(`notify.fieldTip.${ type.toLowerCase() }.${ field.name }`, field.description || '')
+
+const isConfigured = (type: string, field: NotifyField): boolean => (settingOf(type).configured || []).includes(field.name)
+
+const fieldPlaceholder = (type: string, field: NotifyField): string => {
+  if (field.type === 'SECRET' && isConfigured(type, field)) {
+    return t('notify.tip.secretKept')
+  }
+  return field.placeholder || ''
 }
 
-const channelDesc = (type: string): string => {
-  const key = `notify.tip.${ type.toLowerCase() }`
-  const value = t(key)
-  return value === key ? t('notify.tip.channelFallback') : value
+const fieldRules = (type: string, field: NotifyField) => {
+  const label = fieldLabel(type, field)
+  return [
+    // A secret that is already stored may stay empty: the server keeps it.
+    { required: field.required && !(field.type === 'SECRET' && isConfigured(type, field)), message: t('notify.validate.required', { field: label }) },
+    { max: MAX_VALUE_LENGTH, message: t('notify.validate.tooLong', { field: label }) },
+    ...(field.type === 'URL'
+      ? [{ validator: (value: unknown) => !value || /^https?:\/\/\S+$/i.test(String(value)), message: t('notify.validate.url', { field: label }) }]
+      : [])
+  ]
 }
 
-const scenarioName = (key: string): string => {
-  const scenario = scenarios.find(item => item.key === key)
-  return scenario ? t(scenario.nameKey) : key
+const adopt = (data: NotifyChannelSetting[]) => {
+  settings.value = channels.value.map(channel => {
+    const item = (data || []).find(entry => entry.type === channel.type) || empty(channel.type)
+    const configure: Record<string, string> = {}
+    channel.fields.forEach(field => (configure[field.name] = item.configure?.[field.name] || ''))
+    return {
+      type: channel.type,
+      enabled: !!item.enabled,
+      services: [...(item.services || [])],
+      configure,
+      configured: [...(item.configured || [])]
+    }
+  })
+  saved.value = snapshot(settings.value)
 }
 
-const isScenarioOn = (key: string): boolean => {
-  return channels.value.some(channel => (channel.services || []).includes(key))
-}
-
-const handlerInitialize = () => {
+const load = async () => {
   loading.value = true
-  const axios = new HttpUtils().getAxios()
-
-  axios.all([UserService.getInfo(), PluginService.getPlugins()])
-       .then(axios.spread((infoResponse: any, plugin: any) => {
-         formState.notifyConfigure = [{ type: 'Internal', enabled: false, services: [] }]
-
-         const pluginNames: string[] = []
-         if (plugin.status && plugin.data && Array.isArray(plugin.data)) {
-           plugin.data
-                 .filter((v: { type: string }) => v.type === 'NOTIFY')
-                 .forEach((item: { name: string }) => {
-                   if (item?.name && !pluginNames.includes(item.name)) {
-                     pluginNames.push(item.name)
-                     formState.notifyConfigure.push({ type: item.name, enabled: false, services: [] })
-                   }
-                 })
-         }
-
-         if (infoResponse.status && infoResponse.data) {
-           const serverConfigure = infoResponse.data.notifyConfigure
-           if (serverConfigure && Array.isArray(serverConfigure)) {
-             serverConfigure.forEach((serverConfig: any) => {
-               if (!serverConfig?.type) {
-                 return
-               }
-               const exists = formState.notifyConfigure.find(c => c.type === serverConfig.type)
-               if (exists) {
-                 exists.enabled = !!serverConfig.enabled
-                 exists.services = serverConfig.services || []
-               }
-               else {
-                 formState.notifyConfigure.push({ ...serverConfig, services: serverConfig.services || [] })
-               }
-             })
-           }
-
-           // 清理历史脏数据：只保留内置渠道与已安装的通知插件
-           const validTypes = new Set(formState.notifyConfigure
-             .filter(channel => channel.type === 'Internal' || pluginNames.includes(channel.type))
-             .map(channel => channel.type))
-           const removed = formState.notifyConfigure.filter(channel => !validTypes.has(channel.type))
-           formState.notifyConfigure = formState.notifyConfigure.filter(channel => validTypes.has(channel.type))
-           if (removed.length > 0) {
-             save(true)
-           }
-         }
-         else if (infoResponse.message) {
-           MfMessage.error(infoResponse.message)
-         }
-       }))
-       .finally(() => (loading.value = false))
+  failed.value = ''
+  try {
+    const [catalog, current] = await Promise.all([UserService.getNotifyCatalog(), UserService.getNotifySettings()])
+    if (!catalog.status || !current.status) {
+      failed.value = String((catalog.status ? current : catalog).message || '')
+      return
+    }
+    channels.value = catalog.data?.channels || []
+    categories.value = catalog.data?.categories || []
+    adopt(current.data)
+  }
+  finally {
+    loading.value = false
+  }
 }
 
-const save = (silent = false) => {
+const reset = () => load()
+
+const validate = async (): Promise<boolean> => {
+  for (const channel of enabledChannels.value) {
+    const form = forms.get(channel.type)
+    if (!form) {
+      continue
+    }
+    try {
+      await form.validate()
+    }
+    catch {
+      MfMessage.error(t('notify.validate.channel', { channel: channelName(channel.type) }))
+      return false
+    }
+  }
+  return true
+}
+
+const save = async () => {
+  if (!(await validate())) {
+    return
+  }
   saving.value = true
-  UserService.changeNotify(formState)
-             .then(response => {
-               if (response.status) {
-                 if (!silent) {
-                   MfMessage.success(t('common.successfully') as string)
-                 }
-               }
-               else {
-                 MfMessage.error(response.message)
-               }
-             })
-             .finally(() => (saving.value = false))
-}
-
-const toggleChannel = (channel: any, enabled: boolean) => {
-  channel.enabled = enabled
-  save()
-}
-
-const toggleScenario = (key: string, checked: boolean) => {
-  formState.notifyConfigure.forEach(channel => {
-    const services = new Set(channel.services || [])
-    if (checked) {
-      services.add(key)
+  try {
+    const response = await UserService.saveNotifySettings(settings.value)
+    if (response.status) {
+      adopt(response.data)
+      MfMessage.success(t('common.successfully'))
     }
     else {
-      services.delete(key)
+      MfMessage.error(response.message)
     }
-    channel.services = Array.from(services)
-  })
-  save()
+  }
+  finally {
+    saving.value = false
+  }
 }
 
-const openBatch = () => {
-  batchChannels.value = channels.value.map(channel => channel.type)
-  batchScenarios.value = scenarios.filter(scenario => isScenarioOn(scenario.key)).map(scenario => scenario.key)
-  batchVisible.value = true
-}
-
-const applyBatch = () => {
-  formState.notifyConfigure.forEach(channel => {
-    if (batchChannels.value.includes(channel.type)) {
-      channel.enabled = true
-      channel.services = [...batchScenarios.value]
+const test = async (channel: NotifyChannel) => {
+  const form = forms.get(channel.type)
+  if (form) {
+    try {
+      await form.validate()
     }
-  })
-  batchVisible.value = false
-  save()
-}
-
-const openScenarioChannels = (key: string) => {
-  scenarioKey.value = key
-  scenarioChannels.value = channels.value
-      .filter(channel => (channel.services || []).includes(key))
-      .map(channel => channel.type)
-  scenarioVisible.value = true
-}
-
-const applyScenarioChannels = () => {
-  formState.notifyConfigure.forEach(channel => {
-    const services = new Set(channel.services || [])
-    if (scenarioChannels.value.includes(channel.type)) {
-      services.add(scenarioKey.value)
+    catch {
+      return
+    }
+  }
+  testing.value = channel.type
+  try {
+    const response = await UserService.testNotify(settingOf(channel.type))
+    if (response.status) {
+      MfMessage.success(t('notify.tip.testSent', { channel: channelName(channel.type) }))
     }
     else {
-      services.delete(scenarioKey.value)
+      MfMessage.error(response.message)
     }
-    channel.services = Array.from(services)
-  })
-  scenarioVisible.value = false
-  save()
+  }
+  finally {
+    testing.value = ''
+  }
 }
 
-handlerInitialize()
+onMounted(load)
 </script>
 
 <style scoped>
@@ -364,13 +337,11 @@ handlerInitialize()
     margin-top: 4px;
 }
 
-.dc-notify__slogan {
-    font-size: 14px;
-    font-style: italic;
-    color: var(--dc-primary);
-    opacity: 0.7;
+.dc-notify__actions {
+    display: flex;
+    gap: 8px;
     flex-shrink: 0;
-    transform: rotate(-2deg);
+    white-space: nowrap;
 }
 
 .dc-notify__card {
@@ -380,6 +351,13 @@ handlerInitialize()
     box-shadow: var(--dc-shadow-card);
     padding: 20px;
     margin-bottom: 16px;
+}
+
+.dc-notify__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 240px;
 }
 
 .dc-notify__section-head {
@@ -413,32 +391,55 @@ handlerInitialize()
     margin-top: 2px;
 }
 
-.dc-notify__channel-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+.dc-notify__channels {
+    display: flex;
+    flex-direction: column;
     gap: 12px;
 }
 
 .dc-notify__channel {
-    padding: 14px;
     border: 1px solid var(--dc-border-light);
     border-radius: var(--dc-radius-md);
-    background: var(--dc-bg);
+    padding: 14px 16px;
+    transition: border-color 0.15s ease;
+}
+
+.dc-notify__channel--on {
+    border-color: var(--dc-primary-border, var(--dc-primary));
+}
+
+.dc-notify__channel-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.dc-notify__channel-head :deep(button) {
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .dc-notify__channel-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 38px;
-    height: 38px;
+    width: 36px;
+    height: 36px;
     border-radius: var(--dc-radius-md);
-    background: var(--dc-primary-light);
-    color: var(--dc-primary);
+    background: var(--dc-surface-hover);
+    color: var(--dc-text-secondary);
     flex-shrink: 0;
 }
 
+.dc-notify__channel--on .dc-notify__channel-icon {
+    background: var(--dc-primary-light);
+    color: var(--dc-primary);
+}
+
 .dc-notify__channel-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 14px;
     font-weight: 600;
     color: var(--dc-text-title);
@@ -447,83 +448,76 @@ handlerInitialize()
 .dc-notify__channel-desc {
     font-size: 12px;
     color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
-.dc-notify__channel-state {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 12px;
-}
-
-.dc-notify__channel-state--on {
-    color: var(--dc-success);
-}
-
-.dc-notify__channel-state--off {
-    color: var(--dc-text-disabled);
-}
-
-.dc-notify__rows {
-    display: flex;
-    flex-direction: column;
-}
-
-.dc-notify__row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 4px;
-    border-bottom: 1px solid var(--dc-border-light);
-}
-
-.dc-notify__row:last-child {
-    border-bottom: none;
-}
-
-.dc-notify__row-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: var(--dc-radius-md);
-    background: var(--dc-primary-light);
-    color: var(--dc-primary);
-    flex-shrink: 0;
-}
-
-.dc-notify__row-name {
-    font-size: 14px;
-    color: var(--dc-text-title);
-}
-
-.dc-notify__row-desc {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
     margin-top: 2px;
 }
 
-.dc-notify__batch-section {
-    margin-bottom: 14px;
+.dc-notify__fields {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--dc-border-light);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    column-gap: 16px;
 }
 
-.dc-notify__batch-label {
+.dc-notify__channel-off {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--dc-text-tertiary, var(--dc-text-secondary));
+}
+
+.dc-notify__matrix {
+    overflow-x: auto;
+}
+
+.dc-notify__matrix-row {
+    display: grid;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    min-width: max-content;
+}
+
+.dc-notify__matrix-head {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--dc-text-secondary);
+    border-bottom: 1px solid var(--dc-border-light);
+}
+
+.dc-notify__matrix-cell {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.dc-notify__category + .dc-notify__category {
+    border-top: 1px solid var(--dc-border-light);
+}
+
+.dc-notify__category-row {
+    background: var(--dc-surface-hover);
+    border-radius: var(--dc-radius-md);
+    margin-top: 8px;
+}
+
+.dc-notify__category-name {
     font-size: 13px;
     font-weight: 600;
     color: var(--dc-text-title);
-    margin-bottom: 8px;
 }
 
-.dc-notify__batch-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px 16px;
-}
-
-.dc-notify__batch-tip {
+.dc-notify__category-desc {
     font-size: 12px;
     color: var(--dc-text-secondary);
+}
+
+.dc-notify__scene-name {
+    font-size: 13px;
+    color: var(--dc-text-primary, var(--dc-text-title));
+    padding-left: 12px;
 }
 </style>

@@ -4,6 +4,7 @@ import { HttpUtils } from '@/utils/http'
 import { BaseService } from '@/services/base'
 import { UserChatModel, UserEditor, UsernameModel, UserPasswordModel, UserRoleModel } from '@/model/user'
 import { FilterModel } from '@/model/filter'
+import { NotifyChannelSetting } from '@/model/notify'
 
 const DEFAULT_PATH_AUTH = '/api/auth'
 const DEFAULT_PATH_USER = '/api/v1/user'
@@ -149,9 +150,24 @@ class UserService
         return new HttpUtils().upload(`${ DEFAULT_PATH_USER }/uploadAvatar`, configure)
     }
 
-    changeNotify(configure: any): Promise<ResponseModel>
+    getNotifyCatalog(): Promise<ResponseModel>
     {
-        return new HttpUtils().put(`${ DEFAULT_PATH_USER }/change-notify`, configure)
+        return new HttpUtils().get(`${ DEFAULT_PATH_USER }/notify/catalog`)
+    }
+
+    getNotifySettings(): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH_USER }/notify`)
+    }
+
+    saveNotifySettings(settings: NotifyChannelSetting[]): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ DEFAULT_PATH_USER }/notify`, settings)
+    }
+
+    testNotify(setting: NotifyChannelSetting): Promise<ResponseModel>
+    {
+        return new HttpUtils().post(`${ DEFAULT_PATH_USER }/notify/test`, setting)
     }
 }
 
