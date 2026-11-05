@@ -1,3 +1,5 @@
+// Must stay the first import: turns old /#/ addresses into paths before the router is created.
+import './legacy-hash-entry'
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import './styles/theme.css'
@@ -13,8 +15,7 @@ import MetaforgeUI from 'metaforge-ui'
 import { sharedReportPath } from '@/router/shared'
 import PublicReportApp from '@/views/public/PublicReportApp.vue'
 
-// Shared report addresses open a standalone public page: no app router, no sign-in, and the
-// address stays exactly as shared (the app's hash routes would otherwise be appended to it).
+// Shared report addresses open a standalone public page without the app router and sign-in.
 const shared = sharedReportPath(window.location.pathname)
 const app = shared ? createApp(PublicReportApp, shared) : createApp(App)
 createIcons(app)

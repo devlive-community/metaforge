@@ -1,5 +1,5 @@
 import { watch } from 'vue'
-import { createRouter, createWebHashHistory, RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import i18n from '@/i18n/I18n'
 import { createAuthRoute } from '@/router/auth'
 import { createDefaultRouter } from '@/router/default'
@@ -14,7 +14,8 @@ import { workbenchGuard } from './workbench'
 const routes: Array<RouteRecordRaw> = []
 
 const router = createRouter({
-    history: createWebHashHistory(),
+    // History routing: addresses read /query, never /#/query. The server answers page addresses with the app.
+    history: createWebHistory(),
     routes
 })
 
