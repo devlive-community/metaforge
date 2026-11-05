@@ -47,3 +47,16 @@ test('both headers show notifications through the shared scene-aware item', asyn
     assert.doesNotMatch(source, /common\.\$\{ item\.type/)
   }
 })
+
+test('a test notice on the site channel shows in the header without reloading', async () => {
+  const page = await read('views/pages/admin/user/profile/components/NotifyForm.vue')
+  assert.match(page, /if \(channel\.builtin\) \{[\s\S]*?userStore\.notificationsChanged\(\)/)
+  const store = await read('stores/user.ts')
+  assert.match(store, /notificationVersion\.value\+\+/)
+  for (const [file, pattern] of [['views/layouts/common/components/LayoutHeader.vue', /watch\(notificationVersion, \(\) => fetchMessages\(\)\)/], ['composables/useWorkbenchHeader.ts', /watch\(notificationVersion, \(\) => fetchMessages\(\)\)/]]) {
+    assert.match(await read(file), pattern, file)
+  }
+  for (const file of ['views/layouts/common/components/LayoutHeader.vue', 'views/layouts/metadata/components/WorkbenchHeader.vue']) {
+    assert.match(await read(file), /<MfPopover trigger="click" placement="bottomRight" @update:open="onNotifyOpen">/, file)
+  }
+})

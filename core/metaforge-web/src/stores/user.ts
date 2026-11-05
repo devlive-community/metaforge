@@ -42,6 +42,13 @@ export const useUserStore = defineStore('user', () => {
         catch (error) { console.error('Failed to refresh navigation:', error) }
     }
 
+    // Bumped whenever new notifications may exist, so every header reloads its list and unread count.
+    const notificationVersion = ref(0)
+    const notificationsChanged = async () => {
+        notificationVersion.value++
+        await fetchUserInfo()
+    }
+
     // 登出
     const logout = () => {
         userInfo.value = {} as AuthResponse
@@ -58,6 +65,8 @@ export const useUserStore = defineStore('user', () => {
         fetchUserInfo,
         updateMenu,
         fetchMenus,
+        notificationVersion,
+        notificationsChanged,
         logout
     }
 })

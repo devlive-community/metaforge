@@ -54,7 +54,7 @@
           </MfTooltip>
 
           <div v-if="userInfo" class="flex items-center">
-            <MfPopover trigger="click" placement="bottomRight">
+            <MfPopover trigger="click" placement="bottomRight" @update:open="onNotifyOpen">
               <template #content>
                 <div class="dc-notify" style="width: 340px; max-height: 300px; overflow-y: auto;" @scroll="onNotifyScroll">
                   <div v-if="messages.length === 0" class="p-4 text-center text-sm text-content-tertiary">
@@ -134,7 +134,7 @@
 
 <script setup lang="ts">
 import NotificationItem from '@/views/components/notify/NotificationItem.vue'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import { useUserStore } from '@/stores/user'
@@ -180,7 +180,17 @@ const pageIndex = ref<number>(1)
 const hasMoreData = ref(true)
 const loading = ref(false)
 
-const { userInfo, isLoggedIn, menu: activeMenus } = storeToRefs(userStore)
+const { userInfo, isLoggedIn, menu: activeMenus, notificationVersion } = storeToRefs(userStore)
+
+watch(notificationVersion, () => fetchMessages())
+
+// Opening the list always shows what arrived since the page loaded.
+const onNotifyOpen = (open: boolean) => {
+  if (open) {
+    fetchMessages()
+    userStore.fetchUserInfo()
+  }
+}
 
 const fetchMessages = async (value: number = 1, append = false) => {
   filter.page = value

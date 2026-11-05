@@ -31,7 +31,7 @@
 
         <MfSpace :size="16" :wrap="false" class="dc-header__actions shrink-0">
           <div v-if="userInfo" class="flex items-center">
-            <MfPopover trigger="click" placement="bottomRight">
+            <MfPopover trigger="click" placement="bottomRight" @update:open="onNotifyOpen">
               <template #content>
                 <div class="dc-notify" style="width: 340px; max-height: 300px; overflow-y: auto;" @scroll="onNotifyScroll">
                   <div v-if="messages.length === 0" class="p-4 text-center text-sm text-content-tertiary">
@@ -123,7 +123,7 @@ import { Bell, CircleHelp, Database, LogOut, Settings } from '@lucide/vue'
 import { useWorkbenchHeader } from '@/composables/useWorkbenchHeader'
 defineOptions({ name: 'WorkbenchHeader' })
 const { can, sourceName, sourceLoading, pluginLogo, currentDatabase, databaseOptions, databasesLoading, navItems, isNavActive, userInfo,
-  messages, onNotifyScroll, handleNotificationClick, isLoggedIn, logout } = useWorkbenchHeader()
+  messages, onNotifyScroll, handleNotificationClick, onNotifyOpen, isLoggedIn, logout } = useWorkbenchHeader()
 </script>
 
 <style scoped>

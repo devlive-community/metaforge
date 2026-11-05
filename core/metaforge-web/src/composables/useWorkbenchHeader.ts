@@ -99,7 +99,7 @@ export function useWorkbenchHeader() {
 
   const loading = ref(false)
 
-  const { userInfo, isLoggedIn } = storeToRefs(userStore)
+  const { userInfo, isLoggedIn, notificationVersion } = storeToRefs(userStore)
 
   const fetchMessages = async (value: number = 1, append = false) => {
     filter.page = value
@@ -135,7 +135,17 @@ export function useWorkbenchHeader() {
     }
   }
 
-  onMounted(async () => {
+  watch(notificationVersion, () => fetchMessages())
+
+// Opening the list always shows what arrived since the page loaded.
+const onNotifyOpen = (open: boolean) => {
+    if (open) {
+        fetchMessages()
+        userStore.fetchUserInfo()
+    }
+}
+
+onMounted(async () => {
     if (TokenUtils.getAuthUser()) {
       await Promise.all([userStore.fetchUserInfo(), userStore.fetchMenus()])
       await fetchMessages()
@@ -164,5 +174,5 @@ export function useWorkbenchHeader() {
                        })
   }
   return { can, sourceName, sourceLoading, pluginLogo, currentDatabase, databaseOptions, databasesLoading, navItems, isNavActive, userInfo,
-    messages, onNotifyScroll, handleNotificationClick, isLoggedIn, logout }
+    messages, onNotifyScroll, handleNotificationClick, onNotifyOpen, isLoggedIn, logout }
 }
