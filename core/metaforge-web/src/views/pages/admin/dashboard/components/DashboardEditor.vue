@@ -4,10 +4,7 @@
     <header class="relative z-20 shrink-0 border-b border-line bg-surface shadow-mf-sm">
       <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-2 py-2 sm:px-4">
         <div class="flex min-w-0 flex-1 items-center gap-2.5">
-          <RouterLink to="/dashboard" class="grid size-8 shrink-0 place-items-center rounded-mf-md text-content-secondary hover:bg-surface-hover hover:text-primary"
-                      :aria-label="$t('dashboard.studio.backToList')" :title="$t('dashboard.studio.backToList')">
-            <ArrowLeft :size="16"/>
-          </RouterLink>
+          <StudioBackLink to="/dashboard" :label="$t('dashboard.studio.backToList')"/>
           <div class="min-w-0">
             <h1 class="truncate text-sm font-semibold sm:text-base" :title="workspaceName">{{ workspaceName }}</h1>
             <p class="truncate text-xs text-content-tertiary">{{ $t(wall ? 'dashboard.studio.editWall' : 'dashboard.studio.editDashboard') }}</p>
@@ -147,7 +144,8 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import { v4 as uuid } from 'uuid'
-import { ArrowLeft, ArrowUpRight, ChevronLeft, ChevronRight, Laptop, Layers, Maximize, Minimize, PanelsTopLeft, Pencil, Play, Redo2, Save, Smartphone, Tablet, Undo2 } from '@lucide/vue'
+import { ArrowUpRight, ChevronLeft, ChevronRight, Laptop, Layers, Maximize, Minimize, PanelsTopLeft, Pencil, Play, Redo2, Save, Smartphone, Tablet, Undo2 } from '@lucide/vue'
+import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
 import DashboardService from '@/services/dashboard'
 import ReportService from '@/services/report'
 import { FilterModel } from '@/model/filter'

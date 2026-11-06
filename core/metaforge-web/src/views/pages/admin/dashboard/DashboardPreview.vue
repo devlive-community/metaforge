@@ -9,10 +9,7 @@
   <div v-else class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface">
     <header class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line bg-surface px-3 py-2 sm:px-4">
       <div class="flex min-w-0 items-center gap-2">
-        <RouterLink to="/dashboard" class="grid size-8 shrink-0 place-items-center rounded-mf-md text-content-secondary hover:bg-surface-hover hover:text-primary"
-                    :aria-label="$t('dashboard.studio.backToList')" :title="$t('dashboard.studio.backToList')">
-          <ArrowLeft :size="16"/>
-        </RouterLink>
+        <StudioBackLink to="/dashboard" :label="$t('dashboard.studio.backToList')"/>
         <div class="min-w-0">
           <h1 class="truncate text-base font-semibold" :title="design.name">{{ design.name }}</h1>
           <p class="text-xs text-content-tertiary">{{ $t(design.mode === 'wall' ? 'dashboard.studio.wallPreviewTitle' : 'dashboard.studio.previewTitle') }}</p>
@@ -36,7 +33,8 @@ import { computed, onMounted, onScopeDispose, ref, shallowRef, watch } from 'vue
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
-import { ArrowLeft, ArrowUpRight, Maximize, Minimize, Pencil } from '@lucide/vue'
+import { ArrowUpRight, Maximize, Minimize, Pencil } from '@lucide/vue'
+import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
 import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'

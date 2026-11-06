@@ -6,6 +6,7 @@
       <p class="mt-0.5 text-[11px] leading-4 text-content-secondary">{{ description }}</p>
     </div>
     <div class="flex shrink-0 gap-1">
+      <slot name="actions"/>
       <MfButton v-if="pinnable" size="sm" variant="ghost" class="size-7! p-0!" :aria-pressed="pinned"
                 :aria-label="$t(pinned ? 'dashboard.studio.unpinPanel' : 'dashboard.studio.pinPanel')"
                 :title="$t(pinned ? 'dashboard.studio.unpinPanel' : 'dashboard.studio.pinPanel')" @click="emit('pin')">
