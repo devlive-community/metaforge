@@ -4193,5 +4193,21 @@
   "dashboard.home.failed": "Unable to change the home page",
   "dashboard.home.unavailable": "Your home data screen cannot be opened",
   "dashboard.home.unavailableHint": "It may have been deleted or is not published. Open the default home page or remove it as your home page.",
-  "dashboard.home.openDefault": "Open default home page"
+  "dashboard.home.openDefault": "Open default home page",
+  "homeWorkspace.greeting": "Welcome back, {name}",
+  "homeWorkspace.welcome": "Welcome to MetaForge",
+  "homeWorkspace.connectSource": "Connect a source",
+  "homeWorkspace.openQuery": "SQL query",
+  "homeWorkspace.recent": "Recently updated",
+  "homeWorkspace.shortcuts": "Quick access",
+  "homeWorkspace.viewAll": "View all",
+  "homeWorkspace.loadFailed": "Unable to load resources",
+  "homeWorkspace.unavailable": "Unavailable",
+  "homeWorkspace.empty.datasets": "No datasets yet",
+  "homeWorkspace.empty.visualizations": "No visualizations yet",
+  "homeWorkspace.visualizations": "Visualizations",
+  "homeWorkspace.workspace": "Visualization workspace",
+  "homeWorkspace.reports": "Visual reports",
+  "homeWorkspace.queryCount": "Query executions",
+  "homeWorkspace.createVisualization": "Create visualization"
 }

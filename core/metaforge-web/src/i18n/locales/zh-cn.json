@@ -4193,5 +4193,21 @@
   "dashboard.home.failed": "设置主页失败",
   "dashboard.home.unavailable": "主页数据大屏无法打开",
   "dashboard.home.unavailableHint": "它可能已被删除或尚未发布，可以打开默认首页或取消设为主页。",
-  "dashboard.home.openDefault": "打开默认首页"
+  "dashboard.home.openDefault": "打开默认首页",
+  "homeWorkspace.greeting": "你好，{name}",
+  "homeWorkspace.welcome": "欢迎来到 MetaForge",
+  "homeWorkspace.connectSource": "连接数据源",
+  "homeWorkspace.openQuery": "SQL 查询",
+  "homeWorkspace.recent": "最近更新",
+  "homeWorkspace.shortcuts": "快捷入口",
+  "homeWorkspace.viewAll": "查看全部",
+  "homeWorkspace.loadFailed": "暂时无法加载资源",
+  "homeWorkspace.unavailable": "暂不可用",
+  "homeWorkspace.empty.datasets": "还没有数据集",
+  "homeWorkspace.empty.visualizations": "还没有可视化作品",
+  "homeWorkspace.visualizations": "可视化作品",
+  "homeWorkspace.workspace": "可视化工作台",
+  "homeWorkspace.reports": "可视化报表",
+  "homeWorkspace.queryCount": "查询次数",
+  "homeWorkspace.createVisualization": "新建可视化作品"
 }

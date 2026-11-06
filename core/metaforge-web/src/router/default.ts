@@ -14,7 +14,7 @@ const createDefaultRouter = (router: Router) => {
         meta: { requiresAuth: true },
         children: [
             {
-                name: 'home', path: 'home', meta: { title: 'common.home' }, component: () => import('@/views/pages/default/dashboard/DashboardHome.vue'),
+                name: 'home', path: 'home', meta: { title: 'common.home', workspace: true }, component: () => import('@/views/pages/default/dashboard/DashboardHome.vue'),
                 // A user who chose a data screen as their home page lands on it; ?default=1 still opens the default home.
                 beforeEnter: async to => {
                     if (to.query.default) return true
