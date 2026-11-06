@@ -49,3 +49,23 @@ test('metrics render only what is known and declared', () => {
     [['volume', ['rowsRead']], ['throughput', ['writeRowsPerSecond']], ['pipeline', ['queue']]])
   assert.deepEqual(metricGroups([]), [])
 })
+
+test('executors that report no or partial metrics never break the run pages', async () => {
+  const { metricNumber, ratePoints, stageList } = await sourceModule('../../metaforge-web/src/model/workflow-metrics.ts')
+  // An executor without metrics (SeaTunnel), an old record, and a partial or malformed report.
+  for (const metrics of [undefined, null, {}, { rowsRead: null, progress: 'x', series: null, stages: 'none' },
+    { series: [null, { at: 'a' }, { at: 2000, readRowsPerSecond: null }, { at: 1000, readRowsPerSecond: 5, writeRowsPerSecond: -3 }],
+      stages: [null, { state: 'DONE' }, { name: 'TRANSFER', elapsedMs: NaN }] }]) {
+    for (const key of Object.keys(WORKFLOW_METRICS)) assert.doesNotThrow(() => metricText(key, metrics))
+    assert.equal(metricNumber(metrics, 'rowsRead'), 0)
+    assert.equal(metricNumber(metrics, 'progress', -1), -1)
+    assert.ok(Array.isArray(ratePoints(metrics)) && Array.isArray(stageList(metrics)))
+  }
+  const partial = { series: [null, { at: 'a' }, { at: 2000, readRowsPerSecond: null }, { at: 1000, readRowsPerSecond: 5, writeRowsPerSecond: -3 }],
+    stages: [null, { state: 'DONE' }, { name: 'TRANSFER', elapsedMs: NaN }] }
+  assert.deepEqual(ratePoints(partial), [{ at: 1000, read: 5, write: 0 }, { at: 2000, read: 0, write: 0 }])
+  assert.deepEqual(stageList(partial), [{ name: 'TRANSFER', state: 'PENDING', elapsedMs: 0 }])
+  // Nothing declared or unknown names only: no groups, so the page shows its empty state.
+  assert.deepEqual(metricGroups(undefined), [])
+  assert.deepEqual(metricGroups(['somethingNew']), [])
+})

@@ -4112,5 +4112,6 @@
   "workflow.studio.stageState.DONE": "已完成",
   "workflow.studio.stageState.FAILED": "失败",
   "workflow.studio.stageState.SKIPPED": "已跳过",
-  "source.data.dragColumn": "拖动调整 {name} 的位置"
+  "source.data.dragColumn": "拖动调整 {name} 的位置",
+  "workflow.studio.totalPending": "运行结束后统计"
 }

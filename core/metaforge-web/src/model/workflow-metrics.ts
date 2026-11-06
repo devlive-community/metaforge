@@ -94,3 +94,22 @@ export function metricGroups(declared: string[] | undefined): { group: WorkflowM
   return WORKFLOW_METRIC_GROUPS.map(group => ({ group, keys: keys.filter(key => WORKFLOW_METRICS[key].group === group) }))
     .filter(entry => entry.keys.length)
 }
+
+const finite = (value: unknown): number | undefined => typeof value === 'number' && Number.isFinite(value) ? value : undefined
+/** A numeric metric, or `fallback` when the run did not report it (older records, other executors). */
+export const metricNumber = (metrics: WorkflowMetricsSnapshot | undefined | null, key: keyof WorkflowMetricsSnapshot, fallback = 0): number =>
+  finite(metrics?.[key]) ?? fallback
+/** Rate samples with every field present, in time order; malformed samples are dropped. */
+export function ratePoints(metrics: WorkflowMetricsSnapshot | undefined | null): { at: number; read: number; write: number }[] {
+  const series = Array.isArray(metrics?.series) ? metrics!.series : []
+  return series.flatMap(point => {
+    const at = finite(point?.at)
+    return at === undefined ? [] : [{ at, read: Math.max(0, finite(point.readRowsPerSecond) ?? 0), write: Math.max(0, finite(point.writeRowsPerSecond) ?? 0) }]
+  }).sort((left, right) => left.at - right.at)
+}
+/** Stages with a name, a state and a non-negative duration; malformed entries are dropped. */
+export function stageList(metrics: WorkflowMetricsSnapshot | undefined | null): { name: string; state: string; elapsedMs: number }[] {
+  const stages = Array.isArray(metrics?.stages) ? metrics!.stages : []
+  return stages.flatMap(stage => typeof stage?.name === 'string' && stage.name
+    ? [{ name: stage.name, state: typeof stage.state === 'string' ? stage.state : 'PENDING', elapsedMs: Math.max(0, finite(stage.elapsedMs) ?? 0) }] : [])
+}

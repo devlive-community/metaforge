@@ -9,6 +9,7 @@ import { workflowStateVariant, type WorkflowExecutor, type WorkflowModel, type W
 import WorkflowShell from './components/WorkflowShell.vue'
 import WorkflowLog from './components/WorkflowLog.vue'
 import WorkflowMetrics from './components/WorkflowMetrics.vue'
+import { metricNumber, stageList } from '@/model/workflow-metrics'
 import EChart from '@/views/components/visual/EChart.vue'
 import ResultTable from '@/views/components/table/ResultTable.vue'
 const route = useRoute(), router = useRouter(), { t, te } = useI18n()
@@ -32,13 +33,13 @@ function selectTab(value: string) { router.replace({ path: route.path, query: { 
 function openRun(id: string) { router.replace({ path: route.path, query: { run: id } }) }
 const overview = computed(() => selected.value ? [
   { label: 'executionState', value: stateText(selected.value.state) },
-  { label: 'duration', value: elapsed(selected.value.finishedAt ? selected.value.elapsed : metrics.value?.elapsedMs ?? selected.value.elapsed) },
+  { label: 'duration', value: elapsed(selected.value.finishedAt ? selected.value.elapsed : metricNumber(metrics.value, 'elapsedMs', selected.value.elapsed)) },
   { label: 'startedAt', value: selected.value.startTime || '—' },
   { label: 'finishedAt', value: selected.value.finishTime || '—' },
 ] : [])
 WorkflowService.catalog().then(response => { if (response.status) executors.value = response.data?.executors || [] })
 const stateText = (value?: string) => t('dataTable.state' + (value || 'CREATED'))
-const stages = computed(() => metrics.value?.stages || [])
+const stages = computed(() => stageList(metrics.value))
 /** Stage names and states come from the executor; known ones are translated, others shown as reported. */
 const stageName = (name: string) => te('workflow.studio.stage.' + name) ? t('workflow.studio.stage.' + name) : name
 const stageState = (state: string) => te('workflow.studio.stageState.' + state) ? t('workflow.studio.stageState.' + state) : state

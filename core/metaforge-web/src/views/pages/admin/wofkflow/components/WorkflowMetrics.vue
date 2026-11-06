@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import EChart from '@/views/components/visual/EChart.vue'
-import { duration, metricText, type WorkflowMetricsSnapshot } from '@/model/workflow-metrics'
+import { duration, metricNumber, metricText, ratePoints, type WorkflowMetricsSnapshot } from '@/model/workflow-metrics'
 /**
  * The metrics an executor declared for its runs, drawn as charts: progress, read-versus-written
  * volumes, the rate trend with its average and peak, and the reader/writer pipeline. A chart only
@@ -14,10 +14,12 @@ const has = (...keys: string[]) => keys.every(key => props.declared?.includes(ke
 const label = (key: string) => te('workflow.studio.metric.' + key) ? t('workflow.studio.metric.' + key) : key
 const text = (key: string) => {
   const value = metricText(key, props.metrics)
-  if (value === undefined) return '—'
+  // Without a pre-count the executor learns the source total only once the whole source is read.
+  if (value === undefined) return key === 'totalRows' ? t('workflow.studio.totalPending') : '—'
   return key === 'bottleneck' && te('workflow.studio.bottleneck.' + value) ? t('workflow.studio.bottleneck.' + value) : value
 }
-const m = computed(() => props.metrics || {})
+// Every value goes through metricNumber / ratePoints: older records and other executors may omit fields.
+const num = (key: keyof WorkflowMetricsSnapshot, fallback = 0) => metricNumber(props.metrics, key, fallback)
 
 // Theme colors are read from tokens and re-read when the theme switches.
 const themeVersion = ref(0)
@@ -58,7 +60,7 @@ function ring(value: number, center: string, caption: string, color: string) {
 }
 /** Horizontal read-versus-write bars on one axis of one unit. */
 function pair(readKey: string, writeKey: string, format: (value: number) => string) {
-  const values = [Number((m.value as any)[readKey]) || 0, Number((m.value as any)[writeKey]) || 0]
+  const values = [num(readKey as keyof WorkflowMetricsSnapshot), num(writeKey as keyof WorkflowMetricsSnapshot)]
   return {
     grid: { left: 8, right: 64, top: 4, bottom: 4, containLabel: true },
     tooltip: { ...tooltip.value, trigger: 'item' as const, formatter: (item: any) => `${item.name}: ${format(item.value)}` },
@@ -73,19 +75,19 @@ const bytes = (value: number) => metricText('bytesRead', { bytesRead: value }) |
 const ms = (value: number) => duration(value)
 
 const progressChart = computed(() => {
-  const progress = m.value.progress ?? -1
+  const progress = num('progress', -1)
   const known = progress >= 0
-  return ring(known ? progress : 0, known ? `${Math.round(progress)}%` : count(m.value.rowsWritten ?? 0),
+  return ring(known ? progress : 0, known ? `${Math.round(progress)}%` : count(num('rowsWritten')),
     known ? label('progress') : label('rowsWritten'), colors.value.write)
 })
 const rowsChart = computed(() => pair('rowsRead', 'rowsWritten', count))
 const bytesChart = computed(() => pair('bytesRead', 'bytesWritten', bytes))
 const waitChart = computed(() => pair('readerWaitMs', 'writerWaitMs', ms))
 const queueChart = computed(() => {
-  const capacity = m.value.queueCapacity || 0, depth = m.value.queueDepth || 0
+  const capacity = num('queueCapacity'), depth = num('queueDepth')
   return ring(capacity ? depth / capacity * 100 : 0, capacity ? `${depth}/${capacity}` : '—', label('queue'), colors.value.read)
 })
-const series = computed(() => has('series') ? m.value.series || [] : [])
+const series = computed(() => has('series') ? ratePoints(props.metrics) : [])
 const trendChart = computed(() => {
   const reference = (value: number | undefined, name: string, color: string) => value && value > 0
     ? [{ yAxis: Math.round(value), name, lineStyle: { color, type: 'dashed' as const, width: 1 }, label: { formatter: `${name} ${Math.round(value)}`, color: colors.value.axis, fontSize: 10, position: 'insideEndTop' as const } }] : []
@@ -97,11 +99,11 @@ const trendChart = computed(() => {
     xAxis: { type: 'category' as const, boundaryGap: false, data: series.value.map(point => duration(point.at)), axisLabel: axisLabel.value, axisLine: { lineStyle: { color: colors.value.track } }, axisTick: { show: false } },
     yAxis: { type: 'value' as const, name: 'rows/s', nameTextStyle: { color: colors.value.axis, fontSize: 10, align: 'left' as const }, axisLabel: axisLabel.value, splitLine: splitLine.value },
     series: [
-      { name: label('readRowsPerSecond'), type: 'line' as const, smooth: true, showSymbol: false, lineStyle: { width: 2 }, data: series.value.map(point => Math.round(point.readRowsPerSecond)) },
-      { name: label('writeRowsPerSecond'), type: 'line' as const, smooth: true, showSymbol: false, lineStyle: { width: 2 }, data: series.value.map(point => Math.round(point.writeRowsPerSecond)),
+      { name: label('readRowsPerSecond'), type: 'line' as const, smooth: true, showSymbol: false, lineStyle: { width: 2 }, data: series.value.map(point => Math.round(point.read)) },
+      { name: label('writeRowsPerSecond'), type: 'line' as const, smooth: true, showSymbol: false, lineStyle: { width: 2 }, data: series.value.map(point => Math.round(point.write)),
         markLine: { symbol: 'none', silent: true, data: [
-          ...(has('avgWriteRowsPerSecond') ? reference(m.value.avgWriteRowsPerSecond, t('workflow.studio.metricAverage'), colors.value.axis) : []),
-          ...(has('peakWriteRowsPerSecond') ? reference(m.value.peakWriteRowsPerSecond, t('workflow.studio.metricPeak'), colors.value.write) : []),
+          ...(has('avgWriteRowsPerSecond') ? reference(num('avgWriteRowsPerSecond'), t('workflow.studio.metricAverage'), colors.value.axis) : []),
+          ...(has('peakWriteRowsPerSecond') ? reference(num('peakWriteRowsPerSecond'), t('workflow.studio.metricPeak'), colors.value.write) : []),
         ] } },
     ],
   }
@@ -111,7 +113,7 @@ const chips = (keys: string[]) => keys.filter(key => has(key)).map(key => ({ key
 const volumeChips = computed(() => chips(['totalRows', 'etaSeconds']))
 const rateChips = computed(() => chips(['readRowsPerSecond', 'writeRowsPerSecond', 'avgWriteRowsPerSecond', 'peakWriteRowsPerSecond', 'readBytesPerSecond', 'writeBytesPerSecond']))
 const pipelineChips = computed(() => chips(['batchesCommitted', 'avgBatchMs', 'channels']))
-const bottleneck = computed(() => has('bottleneck') ? m.value.bottleneck : undefined)
+const bottleneck = computed(() => has('bottleneck') && typeof props.metrics?.bottleneck === 'string' ? props.metrics.bottleneck : undefined)
 const card = computed(() => props.compact ? 'rounded-mf-md border border-line bg-surface p-3' : 'rounded-mf-lg border border-line bg-surface p-5')
 const title = computed(() => props.compact ? 'mb-2 text-xs font-semibold text-content-secondary' : 'mb-3 text-sm font-semibold text-content')
 const chartHeight = computed(() => props.compact ? 'h-28' : 'h-36')
