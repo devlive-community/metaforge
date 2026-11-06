@@ -167,7 +167,7 @@ initialize()
       <MfAlert v-if="record.state === 'RUNNING'" variant="info" :title="$t('workflow.studio.runningLocked')"/>
       <WorkflowEditor v-if="current" ref="editor" v-model="graph" class="min-h-0 flex-1" :executor="current" :requested-node="String(route.query.node || '')" :readonly="record.state === 'RUNNING' || busy || publishing">
         <template #bottom>
-          <WorkflowConsole ref="consolePanel" :code="code" :capabilities="current.capabilities" :issues="issues" :checked="checked" :checking="checking" @state="record.state = $event" @select="editor?.select($event)"/>
+          <WorkflowConsole ref="consolePanel" :code="code" :capabilities="current.capabilities" :declared-metrics="current.metrics" :issues="issues" :checked="checked" :checking="checking" @state="record.state = $event" @select="editor?.select($event)"/>
         </template>
       </WorkflowEditor>
       <MfEmpty v-else class="flex-1" :title="$t('workflow.studio.noExecutor')" :description="$t('workflow.studio.installExecutor')"/>

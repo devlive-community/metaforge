@@ -7,6 +7,8 @@ capabilities:
   rowCount: false
   metrics: false
   preview: false
+# The SeaTunnel launcher reports no metrics yet; runs show their log only.
+metrics: []
 limits:
   sources: 1
   # Transforms run in order; each one reads the previous result table.

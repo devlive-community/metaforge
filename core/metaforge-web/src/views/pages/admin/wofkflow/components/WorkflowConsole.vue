@@ -5,9 +5,12 @@ import { Activity, ChevronDown, ChevronUp, ExternalLink, FileText, ListChecks, T
 import WorkflowService from '@/services/workflow'
 import type { WorkflowCapabilities, WorkflowRun } from '@/model/workflow'
 import WorkflowLog from './WorkflowLog.vue'
+import WorkflowMetrics from './WorkflowMetrics.vue'
 import ResultTable from '@/views/components/table/ResultTable.vue'
 const props = defineProps<{
   code?: string; capabilities?: WorkflowCapabilities
+  /** Metrics the executor declares for its runs. */
+  declaredMetrics?: string[]
   /** Result of the last check: shown in the validation tab, cleared when the graph changes. */
   issues?: { scope: string; message: string }[]; checked?: boolean; checking?: boolean
 }>()
@@ -75,7 +78,7 @@ defineExpose({ refresh, open: (next?: string) => { collapsed.value = false; if (
         <MfAlert v-else-if="!issues?.length" variant="success" :title="$t('workflow.studio.valid')"/>
         <div v-else class="flex flex-col gap-1"><button v-for="(issue, index) in issues" :key="index" type="button" class="w-full rounded-mf-md px-2 py-1.5 text-left text-xs text-danger hover:bg-danger-light disabled:cursor-default disabled:hover:bg-transparent" :disabled="!issue.scope" @click="emit('select', issue.scope)">{{ issue.message.startsWith('workflow.') ? $t(issue.message) : issue.message }}</button></div>
       </div>
-      <div v-else class="h-full overflow-auto p-3"><template v-if="run?.metrics"><div class="grid grid-cols-3 gap-3"><div v-for="item in [{ key: 'read', value: run.metrics.rowsRead }, { key: 'written', value: run.metrics.rowsWritten }, { key: 'failedRows', value: run.metrics.rowsFailed }]" :key="item.key" class="rounded-mf-md bg-surface-hover px-3 py-2"><span class="text-xs text-content-tertiary">{{ $t('workflow.studio.' + item.key) }}</span><strong class="mt-1 block text-base text-content">{{ item.value }}</strong></div></div><div class="mt-3 flex flex-wrap gap-2"><MfTag v-for="stage in run.metrics.stages" :key="stage.name" :variant="stage.state === 'DONE' ? 'success' : 'default'">{{ stage.name }} · {{ stage.elapsedMs }}ms</MfTag></div></template><MfEmpty v-else class="h-full" size="sm" :title="$t('workflow.studio.noMetrics')" :description="$t(capabilities && !capabilities.metrics ? 'workflow.studio.metricsUnsupported' : 'workflow.studio.engineMetricsHint')"/></div>
+      <div v-else class="h-full overflow-auto p-3"><WorkflowMetrics compact :metrics="run?.metrics" :declared="declaredMetrics"/></div>
     </div>
   </section>
 </template>

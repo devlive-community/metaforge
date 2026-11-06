@@ -36,8 +36,10 @@ const selected = computed(() => items.value.find(item => route.path === item.hre
         </MfMenuItem>
       </MfMenu>
     </aside>
-    <div class="min-w-0 flex-1 pb-6 lg:min-h-0 lg:overflow-y-auto">
-      <slot/>
+    <div class="flex min-w-0 flex-1 flex-col lg:min-h-0">
+      <!-- The page header stays in place; only the body below it scrolls. -->
+      <div v-if="$slots.header" class="shrink-0 pb-4"><slot name="header"/></div>
+      <div class="min-w-0 flex-1 pb-6 lg:min-h-0 lg:overflow-y-auto"><slot/></div>
     </div>
   </div>
 </template>

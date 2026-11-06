@@ -160,6 +160,8 @@ public class WorkflowExecutionTest
         assertFalse(catalog.executor("Seatunnel").definition().getCapabilities().isRowCount());
         assertEquals(0, catalog.executor("MetaForge").definition().limit("transform"));
         assertEquals(3, catalog.executor("Seatunnel").definition().limit("transform"));
+        assertTrue(catalog.executor("MetaForge").definition().getMetrics().containsAll(List.of("rowsWritten", "series", "bottleneck")));
+        assertTrue(catalog.executor("Seatunnel").definition().getMetrics().isEmpty());
         WorkflowEntity workflow = workflow();
         assertTrue(catalog.validate(workflow).isEmpty());
         workflow.getConfigure().getConnections().get(0).setTarget(workflow.getConfigure().getNodes().get(0).getId() + "-input");

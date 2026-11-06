@@ -1,3 +1,4 @@
+import type { WorkflowMetricsSnapshot } from '@/model/workflow-metrics'
 import type { BaseModel } from '@/model/base'
 import type { ConfigureItem, NodeDefinition, NodeInstance, WorkflowConnection } from '@/views/components/editor/workflow/types'
 
@@ -37,6 +38,8 @@ export interface WorkflowExecutor {
   /** Maximum nodes per category, keyed by `sources`, `transforms` and `sinks`. */
   limits: Partial<Record<'sources' | 'transforms' | 'sinks', number>>
   settings: ConfigureItem[]
+  /** Metrics the executor reports for a run (see model/workflow-metrics.ts); pages show only these. */
+  metrics: string[]
   nodes: NodeDefinition[]
   categories: WorkflowCategory[]
 }
@@ -65,11 +68,7 @@ export interface WorkflowRun {
   count?: number
   preview?: Record<string, unknown>[]
   nodes: { id: string; label: string; category: string }[]
-  metrics?: {
-    rowsRead: number; rowsWritten: number; rowsFailed: number; rowsSkipped: number
-    progress: number; elapsedMs: number; avgWriteRowsPerSecond: number
-    stages: { name: string; state: string; elapsedMs: number }[]
-  }
+  metrics?: WorkflowMetricsSnapshot
 }
 export const workflowStateVariant = (state?: string): 'success' | 'danger' | 'primary' | 'default' =>
   state === 'SUCCESS' ? 'success' : ['FAILURE', 'TIMEOUT'].includes(state || '') ? 'danger' : state === 'RUNNING' ? 'primary' : 'default'

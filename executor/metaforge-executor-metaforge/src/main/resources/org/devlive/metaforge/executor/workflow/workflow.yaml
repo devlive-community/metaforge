@@ -11,6 +11,33 @@ limits:
   sources: 1
   transforms: 0
   sinks: 1
+# Metrics reported by MetricsCollector (ExecutorMetrics field names). rowsFailed and rowsSkipped are
+# never filled by this executor, so they are not listed. Keep this list, the web metric registry
+# (model/workflow-metrics.ts) and the collector in step.
+metrics:
+  - rowsRead
+  - rowsWritten
+  - totalRows
+  - progress
+  - etaSeconds
+  - bytesRead
+  - bytesWritten
+  - readRowsPerSecond
+  - writeRowsPerSecond
+  - avgReadRowsPerSecond
+  - avgWriteRowsPerSecond
+  - peakWriteRowsPerSecond
+  - readBytesPerSecond
+  - writeBytesPerSecond
+  - batchesCommitted
+  - avgBatchMs
+  - channels
+  - queue
+  - readerWaitMs
+  - writerWaitMs
+  - bottleneck
+  - stages
+  - series
 # Job settings filled per workflow; empty values fall back to the executor's runtime configuration.
 settings:
   - field: fetchSize

@@ -5,9 +5,10 @@ import { useI18n } from 'vue-i18n'
 import { Play, RefreshCw, Square } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
 import WorkflowService from '@/services/workflow'
-import { workflowStateVariant, type WorkflowModel, type WorkflowRun } from '@/model/workflow'
+import { workflowStateVariant, type WorkflowExecutor, type WorkflowModel, type WorkflowRun } from '@/model/workflow'
 import WorkflowShell from './components/WorkflowShell.vue'
 import WorkflowLog from './components/WorkflowLog.vue'
+import WorkflowMetrics from './components/WorkflowMetrics.vue'
 import EChart from '@/views/components/visual/EChart.vue'
 import ResultTable from '@/views/components/table/ResultTable.vue'
 const route = useRoute(), router = useRouter(), { t } = useI18n()
@@ -20,6 +21,10 @@ const outputHeaders = computed(() => [...new Set((selected.value?.preview || [])
 const elapsed = (value?: number) => value == null ? '—' : value < 1000 ? `${value}ms` : `${(value / 1000).toFixed(1)}s`
 const date = (value?: number) => value ? new Date(value).toLocaleString() : '—'
 const metrics = computed(() => selected.value?.metrics)
+/** Metrics the run's executor declares; pages show only those. */
+const executors = ref<WorkflowExecutor[]>([])
+const declared = computed(() => executors.value.find(item => item.name === (selected.value?.executor || record.value?.executor))?.metrics || [])
+WorkflowService.catalog().then(response => { if (response.status) executors.value = response.data?.executors || [] })
 const stateText = (value?: string) => t('dataTable.state' + (value || 'CREATED'))
 const stages = computed(() => metrics.value?.stages || [])
 const stageChart = computed(() => ({ grid: { left: 40, right: 20, top: 24, bottom: 36 }, tooltip: { trigger: 'axis' as const }, xAxis: { type: 'category' as const, data: stages.value.map(stage => stage.name), axisLabel: { fontSize: 10 } }, yAxis: { type: 'value' as const, name: 'ms', splitLine: { lineStyle: { color: '#e5eeeb' } } }, series: [{ type: 'bar' as const, data: stages.value.map(stage => stage.elapsedMs), barMaxWidth: 36, itemStyle: { color: '#059669', borderRadius: [4, 4, 0, 0] as [number, number, number, number] } }] }))
@@ -81,26 +86,29 @@ onBeforeUnmount(() => { alive = false; generation++; logGeneration++; clearTimeo
 </script>
 <template>
   <WorkflowShell :code="code" :name="record?.name" :state="record?.state">
+    <template v-if="!loading" #header>
+        <header class="flex flex-wrap items-center justify-between gap-3">
+          <div class="min-w-0">
+            <h1 class="flex items-center gap-3 text-xl leading-7 font-semibold text-content">{{ $t('workflow.studio.runs') }}<MfTag v-if="selected" :variant="workflowStateVariant(selected.state)">{{ stateText(selected.state) }}</MfTag></h1>
+            <p v-if="selected" class="mt-1 truncate text-xs text-content-tertiary">{{ selected.id }} · {{ selected.executor }}</p>
+          </div>
+          <div class="flex shrink-0 items-center gap-2">
+            <MfButton size="sm" :loading="refreshing" @click="refresh()"><RefreshCw :size="14"/>{{ $t('common.refresh') }}</MfButton>
+            <MfButton v-if="record?.state === 'RUNNING'" variant="danger" size="sm" :loading="busy" @click="stop"><Square :size="14"/>{{ $t('workflow.studio.stop') }}</MfButton>
+            <MfButton v-else variant="primary" size="sm" :loading="busy" :disabled="!record" @click="execute"><Play :size="14"/>{{ $t('workflow.studio.runAgain') }}</MfButton>
+          </div>
+        </header>
+    </template>
     <div v-if="loading" class="flex h-full min-h-96 items-center justify-center"><MfSpinner :label="$t('common.loading')"/></div>
     <div v-else class="min-w-0">
-      <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="min-w-0">
-          <h1 class="flex items-center gap-3 text-xl leading-7 font-semibold text-content">{{ $t('workflow.studio.runs') }}<MfTag v-if="selected" :variant="workflowStateVariant(selected.state)">{{ stateText(selected.state) }}</MfTag></h1>
-          <p v-if="selected" class="mt-1 truncate text-xs text-content-tertiary">{{ selected.id }} · {{ selected.executor }}</p>
-        </div>
-        <div class="flex shrink-0 items-center gap-2">
-          <MfButton size="sm" :loading="refreshing" @click="refresh()"><RefreshCw :size="14"/>{{ $t('common.refresh') }}</MfButton>
-          <MfButton v-if="record?.state === 'RUNNING'" variant="danger" size="sm" :loading="busy" @click="stop"><Square :size="14"/>{{ $t('workflow.studio.stop') }}</MfButton>
-          <MfButton v-else variant="primary" size="sm" :loading="busy" :disabled="!record" @click="execute"><Play :size="14"/>{{ $t('workflow.studio.runAgain') }}</MfButton>
-        </div>
-      </header>
       <MfAlert v-if="failure" class="mb-4" variant="danger" :title="failure"/>
       <template v-if="selected">
-        <div class="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-5"><div v-for="item in [{ label: 'executionState', value: stateText(selected.state) }, { label: 'duration', value: elapsed(selected.finishedAt ? selected.elapsed : metrics?.elapsedMs ?? selected.elapsed) }, { label: 'read', value: metrics?.rowsRead ?? '—' }, { label: 'written', value: metrics?.rowsWritten ?? selected.count ?? '—' }, { label: 'failedRows', value: metrics?.rowsFailed ?? '—' }]" :key="item.label" class="rounded-mf-lg border border-line bg-surface px-5 py-4"><p class="text-xs text-content-tertiary">{{ $t('workflow.studio.' + item.label) }}</p><strong class="mt-2 block text-xl text-content">{{ item.value }}</strong></div></div>
+        <div class="mb-5 grid grid-cols-2 gap-3"><div v-for="item in [{ label: 'executionState', value: stateText(selected.state) }, { label: 'duration', value: elapsed(selected.finishedAt ? selected.elapsed : metrics?.elapsedMs ?? selected.elapsed) }]" :key="item.label" class="rounded-mf-lg border border-line bg-surface px-5 py-4"><p class="text-xs text-content-tertiary">{{ $t('workflow.studio.' + item.label) }}</p><strong class="mt-2 block text-xl text-content">{{ item.value }}</strong></div></div>
+        <WorkflowMetrics class="mb-5" :metrics="metrics" :declared="declared"/>
         <MfAlert v-if="selected.message" class="mb-5" :variant="selected.state === 'FAILURE' ? 'danger' : 'info'" :title="selected.message"/>
-        <section class="mb-5 rounded-mf-lg border border-line bg-surface p-5"><div class="mb-5 flex items-center justify-between"><h2 class="text-sm font-semibold text-content">{{ $t('workflow.studio.executionStages') }}</h2><span class="text-xs text-content-tertiary">{{ date(selected.startedAt) }} → {{ date(selected.finishedAt) }}</span></div><div v-if="stages.length" class="flex flex-wrap gap-4"><div v-for="stage in stages" :key="stage.name" class="min-w-32 flex-1 rounded-mf-md border border-line bg-surface-hover p-3"><MfTag :variant="stage.state === 'DONE' ? 'success' : stage.state === 'FAILED' ? 'danger' : 'default'">{{ stage.state }}</MfTag><strong class="mt-2 block text-xs text-content">{{ stage.name }}</strong><span class="mt-1 block text-xs text-content-tertiary">{{ elapsed(stage.elapsedMs) }}</span></div></div><MfEmpty v-else size="sm" :title="$t('workflow.studio.noMetrics')" :description="$t('workflow.studio.engineMetricsHint')"/></section>
-        <div class="mb-5 grid gap-5 xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]"><div class="h-[360px] overflow-hidden rounded-mf-lg border border-line bg-surface"><WorkflowLog :lines="logs" :error="logFailure" :loading="logsLoading" @refresh="loadLogs"/></div><section class="flex h-[360px] flex-col rounded-mf-lg border border-line bg-surface p-5"><h2 class="text-sm font-semibold text-content">{{ $t('workflow.studio.stageTiming') }}</h2><EChart v-if="stages.length" class="mt-4 min-h-0 flex-1" :option="stageChart"/><MfEmpty v-else class="flex-1" size="sm" :title="$t('workflow.studio.noMetrics')"/></section></div>
-        <section class="mb-5 rounded-mf-lg border border-line bg-surface p-5"><h2 class="mb-4 text-sm font-semibold text-content">{{ $t('workflow.studio.executionMetadata') }}</h2><div class="grid grid-cols-1 gap-x-8 md:grid-cols-2"><div v-for="item in [{ label: 'executor', value: selected.executor }, { label: 'runId', value: selected.id }, { label: 'startedAt', value: date(selected.startedAt) }, { label: 'finishedAt', value: date(selected.finishedAt) }, { label: 'skipped', value: metrics?.rowsSkipped ?? '—' }, { label: 'writeRate', value: metrics ? metrics.avgWriteRowsPerSecond.toFixed(1) + ' rows/s' : '—' }]" :key="item.label" class="flex items-center justify-between gap-4 border-b border-line py-3 text-xs"><span class="text-content-tertiary">{{ $t('workflow.studio.' + item.label) }}</span><span class="truncate text-content-secondary">{{ item.value }}</span></div></div></section>
+        <section v-if="declared.includes('stages')" class="mb-5 rounded-mf-lg border border-line bg-surface p-5"><div class="mb-5 flex items-center justify-between"><h2 class="text-sm font-semibold text-content">{{ $t('workflow.studio.executionStages') }}</h2><span class="text-xs text-content-tertiary">{{ date(selected.startedAt) }} → {{ date(selected.finishedAt) }}</span></div><div v-if="stages.length" class="flex flex-wrap gap-4"><div v-for="stage in stages" :key="stage.name" class="min-w-32 flex-1 rounded-mf-md border border-line bg-surface-hover p-3"><MfTag :variant="stage.state === 'DONE' ? 'success' : stage.state === 'FAILED' ? 'danger' : 'default'">{{ stage.state }}</MfTag><strong class="mt-2 block text-xs text-content">{{ stage.name }}</strong><span class="mt-1 block text-xs text-content-tertiary">{{ elapsed(stage.elapsedMs) }}</span></div></div><MfEmpty v-else size="sm" :title="$t('workflow.studio.noMetrics')" :description="$t('workflow.studio.engineMetricsHint')"/></section>
+        <div class="mb-5 grid gap-5" :class="declared.includes('stages') && 'xl:grid-cols-[minmax(0,1.7fr)_minmax(320px,1fr)]'"><div class="h-[360px] overflow-hidden rounded-mf-lg border border-line bg-surface"><WorkflowLog :lines="logs" :error="logFailure" :loading="logsLoading" @refresh="loadLogs"/></div><section v-if="declared.includes('stages')" class="flex h-[360px] flex-col rounded-mf-lg border border-line bg-surface p-5"><h2 class="text-sm font-semibold text-content">{{ $t('workflow.studio.stageTiming') }}</h2><EChart v-if="stages.length" class="mt-4 min-h-0 flex-1" :option="stageChart"/><MfEmpty v-else class="flex-1" size="sm" :title="$t('workflow.studio.noMetrics')"/></section></div>
+        <section class="mb-5 rounded-mf-lg border border-line bg-surface p-5"><h2 class="mb-4 text-sm font-semibold text-content">{{ $t('workflow.studio.executionMetadata') }}</h2><div class="grid grid-cols-1 gap-x-8 md:grid-cols-2"><div v-for="item in [{ label: 'executor', value: selected.executor }, { label: 'runId', value: selected.id }, { label: 'startedAt', value: date(selected.startedAt) }, { label: 'finishedAt', value: date(selected.finishedAt) }]" :key="item.label" class="flex items-center justify-between gap-4 border-b border-line py-3 text-xs"><span class="text-content-tertiary">{{ $t('workflow.studio.' + item.label) }}</span><span class="truncate text-content-secondary">{{ item.value }}</span></div></div></section>
       </template>
       <MfEmpty v-else-if="!failure" class="my-12" :title="$t('workflow.studio.noRuns')" :description="$t('workflow.studio.noRunsHint')"/>
       <section v-if="selected?.preview" class="mb-5 flex h-80 flex-col rounded-mf-lg border border-line bg-surface p-5"><h2 class="mb-2 text-sm font-semibold text-content">{{ $t('workflow.studio.output') }}</h2><p class="mb-3 text-xs text-content-tertiary">{{ $t('workflow.studio.outputHint') }}</p><ResultTable class="min-h-0 flex-1" fill :headers="outputHeaders" :rows="selected.preview"/></section>

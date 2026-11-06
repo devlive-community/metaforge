@@ -32,6 +32,12 @@ public class WorkflowExecutorDefinition
     /** Maximum number of nodes per category, keyed by {@code sources}, {@code transforms} and {@code sinks}. */
     private Map<String, Integer> limits = new LinkedHashMap<>();
     private List<NodeItemConfiguration> settings = new ArrayList<>();
+    /**
+     * Metrics the executor actually reports for a run, named after {@code ExecutorMetrics} fields
+     * (plus {@code stages} and {@code series}). Pages show exactly these, so a change to what an
+     * executor reports must update this list and the editor's metric registry together.
+     */
+    private List<String> metrics = new ArrayList<>();
     /** Relative node file paths in the declaration; resolved node definitions once read. */
     private List<NodeConfiguration> nodes = new ArrayList<>();
 
