@@ -4,8 +4,8 @@ import { useI18n } from 'vue-i18n'
 import { Activity, ChevronDown, ChevronUp, ExternalLink, FileText, ListChecks, Table2 } from '@lucide/vue'
 import WorkflowService from '@/services/workflow'
 import type { WorkflowCapabilities, WorkflowRun } from '@/model/workflow'
-import WorkflowLog from './WorkflowLog.vue'
-import WorkflowMetrics from './WorkflowMetrics.vue'
+import RunLog from '@/views/components/run/RunLog.vue'
+import RunMetrics from '@/views/components/run/RunMetrics.vue'
 import ResultTable from '@/views/components/table/ResultTable.vue'
 const props = defineProps<{
   code?: string; capabilities?: WorkflowCapabilities
@@ -70,7 +70,7 @@ defineExpose({ refresh, open: (next?: string) => { collapsed.value = false; if (
     <div v-if="!collapsed" role="separator" tabindex="0" aria-orientation="horizontal" :aria-label="$t('workflow.studio.resizeConsole')" :aria-valuenow="Math.round(height)" aria-valuemin="120" :aria-valuemax="maximumHeight" class="absolute inset-x-0 -top-1 z-10 h-1.5 cursor-row-resize touch-none rounded-mf-md outline-none hover:bg-primary/20 focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-primary focus-visible:bg-primary/20" @pointerdown="resize" @keydown.up.prevent="height = Math.min(height + 20, maximumHeight)" @keydown.down.prevent="height = Math.max(height - 20, 120)"/>
     <header class="flex h-[42px] shrink-0 items-center justify-between gap-2 border-b border-line px-3"><div class="flex h-full gap-4"><button v-for="item in tabs" :key="item.key" type="button" class="flex items-center gap-1.5 border-b-2 px-1 text-xs font-medium" :class="tab === item.key ? 'border-primary text-primary' : 'border-transparent text-content-tertiary hover:text-content'" @click="tab = item.key; collapsed = false"><component :is="item.icon" :size="13"/>{{ $t('workflow.studio.' + item.key) }}<span v-if="item.key === 'validation' && checked && issues?.length" class="rounded-full bg-danger-light px-1.5 text-[10px] leading-4 text-danger">{{ issues.length }}</span></button></div><div class="flex items-center gap-2"><span v-if="run" class="hidden text-[10px] text-content-tertiary xl:block">{{ run.executor }} · {{ $t('dataTable.state' + run.state) }}</span><router-link v-if="code" :to="`/workflow/monitor/${code}`" class="text-content-tertiary hover:text-primary" :aria-label="$t('workflow.studio.runDetails')"><ExternalLink :size="14"/></router-link><MfButton variant="ghost" size="sm" :aria-label="$t('workflow.studio.collapseConsole')" @click="collapsed = !collapsed"><component :is="collapsed ? ChevronUp : ChevronDown" :size="14"/></MfButton></div></header>
     <div v-if="!collapsed" class="min-h-0 flex-1 overflow-hidden">
-      <WorkflowLog v-if="tab === 'logs'" :lines="lines" :loading="loading" :error="failure" compact @refresh="refresh"/>
+      <RunLog v-if="tab === 'logs'" :lines="lines" :loading="loading" :error="failure" compact @refresh="refresh"/>
       <div v-else-if="tab === 'output'" class="flex h-full min-h-0 flex-col px-3 py-2"><template v-if="run?.preview"><p class="mb-2 shrink-0 text-[11px] text-content-tertiary">{{ $t('workflow.studio.outputHint') }}</p><ResultTable class="min-h-0 flex-1" fill :headers="headers" :rows="run.preview"/></template><MfEmpty v-else class="flex-1" size="sm" :title="$t('workflow.studio.noOutput')" :description="$t(capabilities && !capabilities.preview ? 'workflow.studio.outputUnsupported' : run?.state === 'RUNNING' ? 'workflow.studio.outputPending' : 'workflow.studio.outputUnavailable')"/></div>
       <div v-else-if="tab === 'validation'" class="h-full overflow-auto p-3">
         <div v-if="checking" class="flex h-full items-center justify-center"><MfSpinner/></div>
@@ -78,7 +78,7 @@ defineExpose({ refresh, open: (next?: string) => { collapsed.value = false; if (
         <MfAlert v-else-if="!issues?.length" variant="success" :title="$t('workflow.studio.valid')"/>
         <div v-else class="flex flex-col gap-1"><button v-for="(issue, index) in issues" :key="index" type="button" class="w-full rounded-mf-md px-2 py-1.5 text-left text-xs text-danger hover:bg-danger-light disabled:cursor-default disabled:hover:bg-transparent" :disabled="!issue.scope" @click="emit('select', issue.scope)">{{ issue.message.startsWith('workflow.') ? $t(issue.message) : issue.message }}</button></div>
       </div>
-      <div v-else class="h-full overflow-auto p-3"><WorkflowMetrics compact :metrics="run?.metrics" :declared="declaredMetrics"/></div>
+      <div v-else class="h-full overflow-auto p-3"><RunMetrics compact :metrics="run?.metrics" :declared="declaredMetrics"/></div>
     </div>
   </section>
 </template>

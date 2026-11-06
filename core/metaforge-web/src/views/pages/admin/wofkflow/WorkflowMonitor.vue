@@ -7,12 +7,12 @@ import { MfMessage } from 'metaforge-ui'
 import WorkflowService from '@/services/workflow'
 import { workflowStateVariant, type WorkflowExecutor, type WorkflowModel, type WorkflowRun } from '@/model/workflow'
 import WorkflowShell from './components/WorkflowShell.vue'
-import WorkflowLog from './components/WorkflowLog.vue'
-import WorkflowMetrics from './components/WorkflowMetrics.vue'
-import { metricNumber, stageList } from '@/model/workflow-metrics'
-import EChart from '@/views/components/visual/EChart.vue'
+import RunLog from '@/views/components/run/RunLog.vue'
+import RunMetrics from '@/views/components/run/RunMetrics.vue'
+import RunStages from '@/views/components/run/RunStages.vue'
+import { metricNumber } from '@/model/workflow-metrics'
 import ResultTable from '@/views/components/table/ResultTable.vue'
-const route = useRoute(), router = useRouter(), { t, te } = useI18n()
+const route = useRoute(), router = useRouter(), { t } = useI18n()
 const record = ref<WorkflowModel>(), runs = ref<WorkflowRun[]>([]), loading = ref(true), refreshing = ref(false), failure = ref(''), busy = ref(false)
 const logs = ref<string[]>([]), logFailure = ref(''), logsLoading = ref(false)
 const code = computed(() => String(route.params.code || ''))
@@ -39,19 +39,6 @@ const overview = computed(() => selected.value ? [
 ] : [])
 WorkflowService.catalog().then(response => { if (response.status) executors.value = response.data?.executors || [] })
 const stateText = (value?: string) => t('dataTable.state' + (value || 'CREATED'))
-const stages = computed(() => stageList(metrics.value))
-/** Stage names and states come from the executor; known ones are translated, others shown as reported. */
-const stageName = (name: string) => te('workflow.studio.stage.' + name) ? t('workflow.studio.stage.' + name) : name
-const stageState = (state: string) => te('workflow.studio.stageState.' + state) ? t('workflow.studio.stageState.' + state) : state
-const stageChart = computed(() => {
-  const style = getComputedStyle(document.documentElement)
-  const token = (name: string, fallback: string) => style.getPropertyValue('--mf-color-' + name).trim() || fallback
-  const axis = { color: token('content-tertiary', '#7D8D87'), fontSize: 10 }
-  return { grid: { left: 8, right: 16, top: 24, bottom: 8, containLabel: true }, tooltip: { trigger: 'axis' as const, valueFormatter: (value: unknown) => elapsed(Number(value)) },
-    xAxis: { type: 'category' as const, data: stages.value.map(stage => stageName(stage.name)), axisLabel: axis, axisTick: { show: false }, axisLine: { lineStyle: { color: token('line', '#E3EAE7') } } },
-    yAxis: { type: 'value' as const, name: 'ms', nameTextStyle: axis, axisLabel: axis, splitLine: { lineStyle: { color: token('line', '#E3EAE7') } } },
-    series: [{ type: 'bar' as const, data: stages.value.map(stage => stage.elapsedMs), barMaxWidth: 24, itemStyle: { color: token('primary', '#0A8F67'), borderRadius: [4, 4, 0, 0] as [number, number, number, number] } }] }
-})
 const columns = computed(() => [
   { title: t('workflow.studio.runId'), dataIndex: 'id', key: 'id' }, { title: t('common.state'), dataIndex: 'state', key: 'state' },
   { title: t('workflow.studio.startedAt'), dataIndex: 'startTime', key: 'startedAt' }, { title: t('workflow.studio.finishedAt'), dataIndex: 'finishTime', key: 'finishedAt' },
@@ -147,14 +134,11 @@ onBeforeUnmount(() => { alive = false; generation++; logGeneration++; clearTimeo
           <div v-for="item in overview" :key="item.label" class="min-w-0 rounded-mf-lg border border-line bg-surface px-5 py-4"><p class="text-xs text-content-tertiary">{{ $t('workflow.studio.' + item.label) }}</p><strong class="mt-2 block truncate text-lg text-content tabular-nums">{{ item.value }}</strong></div>
         </div>
         <MfAlert v-if="selected.message" class="mb-4" :variant="selected.state === 'FAILURE' ? 'danger' : 'info'" :title="selected.message"/>
-        <div v-if="declared.includes('stages')" class="mb-4 grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,1fr)]">
-          <section class="rounded-mf-lg border border-line bg-surface p-5"><h2 class="mb-4 text-sm font-semibold text-content">{{ $t('workflow.studio.executionStages') }}</h2><div v-if="stages.length" class="grid grid-cols-[repeat(auto-fill,minmax(140px,1fr))] gap-3"><div v-for="stage in stages" :key="stage.name" class="rounded-mf-md border border-line bg-surface-hover p-3"><MfTag :variant="stage.state === 'DONE' ? 'success' : stage.state === 'FAILED' ? 'danger' : stage.state === 'RUNNING' ? 'primary' : 'default'">{{ stageState(stage.state) }}</MfTag><strong class="mt-2 block text-xs text-content">{{ stageName(stage.name) }}</strong><span class="mt-1 block text-xs text-content-tertiary">{{ elapsed(stage.elapsedMs) }}</span></div></div><MfEmpty v-else size="sm" :title="$t('workflow.studio.noMetrics')" :description="$t('workflow.studio.engineMetricsHint')"/></section>
-          <section class="flex min-h-64 flex-col rounded-mf-lg border border-line bg-surface p-5"><h2 class="text-sm font-semibold text-content">{{ $t('workflow.studio.stageTiming') }}</h2><EChart v-if="stages.length" class="mt-3 min-h-48 flex-1" :option="stageChart"/><MfEmpty v-else class="flex-1" size="sm" :title="$t('workflow.studio.noMetrics')"/></section>
-        </div>
+        <RunStages v-if="declared.includes('stages')" class="mb-4" :metrics="metrics"/>
         <section class="rounded-mf-lg border border-line bg-surface p-5"><h2 class="mb-2 text-sm font-semibold text-content">{{ $t('workflow.studio.executionMetadata') }}</h2><div class="grid grid-cols-1 gap-x-8 md:grid-cols-2"><div v-for="item in [{ label: 'executor', value: selected.executor }, { label: 'runId', value: selected.id }, { label: 'startedAt', value: selected.startTime || '—' }, { label: 'finishedAt', value: selected.finishTime || '—' }]" :key="item.label" class="flex items-center justify-between gap-4 border-b border-line py-3 text-xs"><span class="text-content-tertiary">{{ $t('workflow.studio.' + item.label) }}</span><span class="truncate text-content-secondary tabular-nums">{{ item.value }}</span></div></div></section>
       </template>
-      <WorkflowMetrics v-else-if="tab === 'metrics'" :metrics="metrics" :declared="declared"/>
-      <div v-else-if="tab === 'logs'" class="h-[calc(100dvh-260px)] min-h-96 overflow-hidden rounded-mf-lg border border-line bg-surface"><WorkflowLog :lines="logs" :error="logFailure" :loading="logsLoading" @refresh="loadLogs"/></div>
+      <RunMetrics v-else-if="tab === 'metrics'" :metrics="metrics" :declared="declared"/>
+      <div v-else-if="tab === 'logs'" class="h-[calc(100dvh-260px)] min-h-96 overflow-hidden rounded-mf-lg border border-line bg-surface"><RunLog :lines="logs" :error="logFailure" :loading="logsLoading" @refresh="loadLogs"/></div>
       <section v-else-if="tab === 'output'" class="flex h-[calc(100dvh-260px)] min-h-96 flex-col rounded-mf-lg border border-line bg-surface p-5">
         <template v-if="selected.preview?.length"><p class="mb-3 text-xs text-content-tertiary">{{ $t('workflow.studio.outputHint') }}</p><ResultTable class="min-h-0 flex-1" fill :headers="outputHeaders" :rows="selected.preview"/></template>
         <div v-else class="flex flex-1 items-center justify-center"><MfEmpty size="sm" :title="$t('workflow.studio.noOutput')" :description="$t(capabilities && !capabilities.preview ? 'workflow.studio.outputUnsupported' : selected.state === 'RUNNING' ? 'workflow.studio.outputPending' : 'workflow.studio.outputUnavailable')"/></div>

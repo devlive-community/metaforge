@@ -3,12 +3,13 @@ import { computed, ref } from 'vue'
 import { Copy, Download, RefreshCw, Search } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
 import { useI18n } from 'vue-i18n'
-const props = defineProps<{ lines: string[]; loading?: boolean; error?: string; compact?: boolean }>()
+/** A run's log with search, copy and download; shared by workflow runs and dataset syncs. */
+const props = defineProps<{ lines: string[]; loading?: boolean; error?: string; compact?: boolean; filename?: string }>()
 const emit = defineEmits<{ refresh: [] }>()
 const { t } = useI18n(), search = ref('')
 const filtered = computed(() => props.lines.filter(line => line.toLowerCase().includes(search.value.toLowerCase())))
 async function copy() { try { await navigator.clipboard.writeText(props.lines.join('\n')); MfMessage.success(t('common.success')) } catch { MfMessage.error(t('workflow.studio.copyFailed')) } }
-function download() { const url = URL.createObjectURL(new Blob([props.lines.join('\n')], { type: 'text/plain;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = 'workflow.log'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000) }
+function download() { const url = URL.createObjectURL(new Blob([props.lines.join('\n')], { type: 'text/plain;charset=utf-8' })); const link = document.createElement('a'); link.href = url; link.download = props.filename || 'run.log'; link.click(); setTimeout(() => URL.revokeObjectURL(url), 1000) }
 </script>
 <template>
   <section class="flex h-full min-h-0 flex-col">
