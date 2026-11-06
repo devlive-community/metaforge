@@ -5,8 +5,8 @@ import { ArrowLeft, Clock3, GitBranch, Workflow } from '@lucide/vue'
 import { workflowStateVariant } from '@/model/workflow'
 /**
  * Layout of one workflow's pages. The full-screen editor (`studio`) takes the whole viewport;
- * other pages sit beside a side menu leading to the orchestration and the run records, laid out
- * like the account settings.
+ * other pages fill the viewport beside a side menu leading to the orchestration and the run
+ * records: the menu stays in place and only the content scrolls (stacked on narrow screens).
  */
 const props = defineProps<{ code?: string; name?: string; state?: string; studio?: boolean }>()
 const route = useRoute()
@@ -20,8 +20,8 @@ const selected = computed(() => items.value.find(item => route.path === item.hre
   <div v-if="studio" class="flex h-full min-h-0 w-full overflow-hidden bg-surface-hover">
     <div class="flex min-h-0 min-w-0 flex-1 flex-col"><slot/></div>
   </div>
-  <div v-else class="grid min-w-0 w-full grid-cols-1 gap-4 lg:grid-cols-[264px_minmax(0,1fr)]">
-    <aside class="flex min-w-0 flex-col self-start rounded-mf-lg border border-line bg-surface px-3 py-4 shadow-mf-sm lg:min-h-[calc(100vh-220px)]">
+  <div v-else class="flex h-full min-h-0 w-full flex-col gap-4 overflow-y-auto px-2 pt-6 lg:flex-row lg:overflow-hidden">
+    <aside class="flex min-w-0 shrink-0 flex-col rounded-mf-lg border border-line bg-surface px-3 py-4 shadow-mf-sm lg:mb-6 lg:w-[264px] lg:overflow-y-auto">
       <router-link to="/workflow" class="mb-3 flex items-center gap-1 px-2 text-xs text-content-tertiary hover:text-primary"><ArrowLeft :size="12"/>{{ $t('workflow.studio.list') }}</router-link>
       <div class="flex items-center gap-2.5 px-2 pb-3.5">
         <span class="flex size-9 shrink-0 items-center justify-center rounded-mf-md bg-primary-light text-primary"><Workflow :size="18"/></span>
@@ -36,6 +36,8 @@ const selected = computed(() => items.value.find(item => route.path === item.hre
         </MfMenuItem>
       </MfMenu>
     </aside>
-    <div class="min-w-0"><slot/></div>
+    <div class="min-w-0 flex-1 pb-6 lg:min-h-0 lg:overflow-y-auto">
+      <slot/>
+    </div>
   </div>
 </template>

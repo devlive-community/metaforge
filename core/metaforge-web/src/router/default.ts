@@ -221,7 +221,8 @@ const createDefaultRouter = (router: Router) => {
             {
                 path: 'workflow/monitor/:code',
                 name: 'workflow-monitor',
-                meta: { title: 'common.workflow', isRoot: false },
+                // The side menu stays in place while the run details scroll beside it.
+                meta: { workflowWorkspace: true, title: 'common.workflow', isRoot: false },
                 component: () => import('@/views/pages/admin/wofkflow/WorkflowMonitor.vue')
             }
         ]
