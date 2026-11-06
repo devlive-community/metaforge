@@ -58,7 +58,7 @@ export const toneOf = (item: Pick<NotificationItem, 'scene' | 'category'>): Noti
     (item.scene || '').endsWith('_FAILED') ? 'danger' : CATEGORY_TONES[item.category] || 'info'
 
 const ROUTES: Record<string, (code: string) => string> = {
-    DATASET: code => `/dataset/info/${ code }`,
+    DATASET: code => `/dataset/detail/${ code }`,
     SOURCE: code => `/source/${ code }`,
     DASHBOARD: code => `/dashboard/preview/${ code }`,
     WORKFLOW: code => `/workflow/monitor/${ code }`,
@@ -66,8 +66,14 @@ const ROUTES: Record<string, (code: string) => string> = {
 }
 
 /** Where the notification's entity lives on the site, when it still exists and has a page. */
+// Scenes about one run of an entity open its run records rather than the entity itself.
+const SCENE_ROUTES: Record<string, (code: string) => string> = {
+    DATASET_SYNC_SUCCEEDED: code => `/dataset/runs/${ code }`,
+    DATASET_SYNC_FAILED: code => `/dataset/runs/${ code }`
+}
+
 export const linkOf = (item: NotificationItem): string => {
-    const route = ROUTES[item.entityType || '']
+    const route = SCENE_ROUTES[sceneKey(item.scene)] || ROUTES[item.entityType || '']
     return item.entityExists && item.entityCode && route ? route(item.entityCode) : ''
 }
 

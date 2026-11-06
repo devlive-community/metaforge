@@ -21,7 +21,12 @@ test('notifications split into today and earlier, keeping newest first', () => {
 test('failures stand out and entities link only while they exist', () => {
   assert.equal(toneOf(item({ scene: 'DATASET_SYNC_FAILED', category: 'DATASET' })), 'danger')
   assert.equal(toneOf(item({ scene: 'DATASET_CREATED', category: 'DATASET' })), 'primary')
-  assert.equal(linkOf(item({ entityType: 'DATASET', entityCode: 'x' })), '/dataset/info/x')
+  // A dataset opens its detail page; a sync notice, including legacy SYNCDATA ones, opens its sync records.
+  assert.equal(linkOf(item({ entityType: 'DATASET', entityCode: 'x' })), '/dataset/detail/x')
+  assert.equal(linkOf(item({ scene: 'DATASET_SYNC_SUCCEEDED', entityType: 'DATASET', entityCode: 'x' })), '/dataset/runs/x')
+  assert.equal(linkOf(item({ scene: 'DATASET_SYNC_FAILED', entityType: 'DATASET', entityCode: 'x' })), '/dataset/runs/x')
+  assert.equal(linkOf(item({ scene: 'SYNCDATA', entityType: 'DATASET', entityCode: 'x' })), '/dataset/runs/x')
+  assert.equal(linkOf(item({ scene: 'DATASET_SYNC_FAILED', entityType: 'DATASET', entityCode: 'x', entityExists: false })), '')
   assert.equal(linkOf(item({ entityType: 'DATASET', entityCode: 'x', entityExists: false })), '')
   assert.equal(linkOf(item({ entityType: 'USER', entityCode: 'x' })), '')
   assert.equal(sceneKey('SYNCDATA'), 'DATASET_SYNC_SUCCEEDED')
