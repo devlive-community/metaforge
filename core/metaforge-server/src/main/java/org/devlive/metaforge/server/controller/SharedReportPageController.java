@@ -1,5 +1,6 @@
 package org.devlive.metaforge.server.controller;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.server.web.WebUiDocument;
 import org.devlive.metaforge.service.service.DashboardService;
 import org.devlive.metaforge.service.service.ReportShareService;
@@ -25,6 +26,7 @@ public class SharedReportPageController
     private final DashboardService screens;
     private final WebUiDocument document;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring-managed services are intentionally shared singletons")
     public SharedReportPageController(ReportShareService service, DashboardService screens, WebUiDocument document)
     {
         this.service = service;

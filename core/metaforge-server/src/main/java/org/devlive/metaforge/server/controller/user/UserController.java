@@ -1,6 +1,7 @@
 package org.devlive.metaforge.server.controller.user;
 
 import com.google.common.collect.Sets;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.common.response.CommonResponse;
@@ -49,6 +50,7 @@ public class UserController
     private final UserLogService userLogService;
     private final RoleRepository roleRepository;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring-managed repositories and services are intentionally shared singletons")
     public UserController(UserRepository repository, UserService service, UserLogService userLogService, RoleRepository roleRepository)
     {
         super(repository, service);

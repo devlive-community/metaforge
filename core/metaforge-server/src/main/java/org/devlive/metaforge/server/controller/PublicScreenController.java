@@ -1,5 +1,6 @@
 package org.devlive.metaforge.server.controller;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.service.DashboardService;
 import org.springframework.http.CacheControl;
@@ -22,6 +23,7 @@ public class PublicScreenController
 {
     private final DashboardService service;
 
+    @SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "Spring-managed services are intentionally shared singletons")
     public PublicScreenController(DashboardService service)
     {
         this.service = service;
