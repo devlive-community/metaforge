@@ -212,7 +212,7 @@
       "code": "DASHBOARD",
       "name": "全局 - 仪表盘",
       "description": "全局路由：所有用户都可以访问",
-      "url": "/dashboard",
+      "url": "/screen",
       "group": null,
       "sorted": 1,
       "type": "VIEW",

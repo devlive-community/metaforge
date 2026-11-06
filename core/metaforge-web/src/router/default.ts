@@ -4,8 +4,18 @@ import ProfileContainer from '@/views/layouts/profile/LayoutContainer.vue'
 import { sourceManageLocation } from '@/model/source-manage'
 import { accountPages, businessPages, canonicalPagePath } from './navigation'
 import { useUserStore } from '@/stores/user'
+import { legacyScreenPath, SCREEN_LIST_PATH } from '@/model/screen-route'
 
 const createDefaultRouter = (router: Router) => {
+    // A user who chose a data screen as their home page sees it at /home, filling the viewport under the
+    // navigation; ?default=1 opens the default home. Runs on every visit, including query-only changes.
+    router.beforeEach(async to => {
+        if (to.name !== 'home') return true
+        const code = to.query.default ? '' : await useUserStore().resolveHomePage()
+        to.meta.workspace = !code
+        to.meta.workflowWorkspace = !!code
+        return true
+    })
     router.addRoute({
         name: 'app',
         path: '/',
@@ -14,49 +24,21 @@ const createDefaultRouter = (router: Router) => {
         meta: { requiresAuth: true },
         children: [
             {
-                name: 'home', path: 'home', meta: { title: 'common.home', workspace: true }, component: () => import('@/views/pages/default/dashboard/DashboardHome.vue'),
-                // A user who chose a data screen as their home page lands on it; ?default=1 still opens the default home.
-                beforeEnter: async to => {
-                    if (to.query.default) return true
-                    const code = await useUserStore().resolveHomePage()
-                    return code ? { name: 'home-screen', params: { code } } : true
-                }
+                // The layout follows the user's home page choice; see the guard below.
+                name: 'home', path: 'home', meta: { title: 'common.home', workspace: true }, component: () => import('@/views/pages/default/dashboard/HomePage.vue')
             },
-            // Keeps the navigation and gives the screen the rest of the viewport, like the run pages.
-            { name: 'home-screen', path: 'home/screen/:code', meta: { workflowWorkspace: true, title: 'common.home' }, component: () => import('@/views/pages/default/dashboard/HomeScreen.vue') },
+            { path: 'home/screen/:code', redirect: '/home' },
             { name: 'store', path: 'store', meta: { title: 'common.store' }, component: () => import('@/views/pages/store/StoreHome.vue') },
             { name: 'notifications', path: 'notifications', meta: { title: 'notify.text.center' }, component: () => import('@/views/pages/notification/NotificationCenter.vue') },
             { name: 'workspace', path: 'workspace', redirect: '/query' },
-            { name: 'analysis', path: 'analysis', redirect: '/dashboard' },
-            {
-                name: 'dashboard',
-                path: 'dashboard',
-                meta: {
-                    title: 'common.dashboard',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/admin/dashboard/DashboardHome.vue')
-            },
-            {
-                path: 'dashboard/preview/:code',
-                name: 'dashboard-preview',
-                meta: {
-                    dashboardStudio: true,
-                    title: 'common.dashboard',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/admin/dashboard/DashboardPreview.vue')
-            },
-            {
-                path: 'dashboard/info/:code?',
-                name: 'dashboard-editor',
-                meta: {
-                    dashboardStudio: true,
-                    title: 'common.dashboard',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/admin/dashboard/DashboardInfo.vue')
-            },
+            { name: 'analysis', path: 'analysis', redirect: SCREEN_LIST_PATH },
+            // Data screens: list, designer (new and existing) and the published view, which has no toolbar.
+            { name: 'screen', path: 'screen', meta: { title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardHome.vue') },
+            { name: 'screen-design-new', path: 'screen/design', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardInfo.vue') },
+            { name: 'screen-design', path: 'screen/:code/design', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardInfo.vue') },
+            { name: 'screen-view', path: 'screen/:code', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardPreview.vue') },
+            // Former /dashboard addresses (list, info, preview) keep working, with their query and hash.
+            { path: 'dashboard/:rest(.*)*', redirect: to => legacyScreenPath(to.fullPath) || SCREEN_LIST_PATH },
             {
                 name: 'query',
                 path: 'query',

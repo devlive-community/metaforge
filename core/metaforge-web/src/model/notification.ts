@@ -1,3 +1,4 @@
+import { screenViewPath } from './screen-route.ts'
 /** One site notification of the signed-in user, as the notification center lists it. */
 export interface NotificationItem
 {
@@ -60,7 +61,7 @@ export const toneOf = (item: Pick<NotificationItem, 'scene' | 'category'>): Noti
 const ROUTES: Record<string, (code: string) => string> = {
     DATASET: code => `/dataset/detail/${ code }`,
     SOURCE: code => `/source/${ code }`,
-    DASHBOARD: code => `/dashboard/preview/${ code }`,
+    DASHBOARD: code => screenViewPath(code),
     WORKFLOW: code => `/workflow/monitor/${ code }`,
     REPORT: () => '/report'
 }

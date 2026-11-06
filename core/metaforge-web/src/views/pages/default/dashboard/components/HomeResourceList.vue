@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SCREEN_NEW_PATH, screenDesignPath, screenViewPath } from '@/model/screen-route'
 import { computed } from 'vue'
 import { ArrowUpRight, Database, LayoutDashboard, Monitor, Plus } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
@@ -19,7 +20,7 @@ const entries = computed(() => props.items.map(item => {
   }
   const document = readDashboardDocument(item.configure, item.name, item.description)
   return { ...item, icon: (document.published ?? document.draft).mode === 'wall' ? Monitor : LayoutDashboard,
-    link: document.published ? '/dashboard/preview/' + code : '/dashboard/info/' + code,
+    link: document.published ? screenViewPath(item.code || '') : screenDesignPath(item.code),
     status: t(document.published ? 'dashboard.studio.status.published' : 'dashboard.studio.status.draft'),
     tone: document.published ? 'success' as const : 'primary' as const }
 }))
@@ -32,7 +33,7 @@ const entries = computed(() => props.items.map(item => {
       <template #extra><MfButton size="sm" @click="emit('retry')">{{ $t('common.refresh') }}</MfButton></template>
     </MfEmpty>
     <MfEmpty v-else-if="!entries.length" class="min-h-64 flex-1" variant="initial" :title="$t('homeWorkspace.empty.' + kind)">
-      <template #extra><MfButton size="sm" variant="primary" @click="router.push(kind === 'datasets' ? '/dataset/info' : '/dashboard/info')"><Plus :size="14"/>{{ $t(kind === 'datasets' ? 'dataset.common.create' : 'homeWorkspace.createVisualization') }}</MfButton></template>
+      <template #extra><MfButton size="sm" variant="primary" @click="router.push(kind === 'datasets' ? '/dataset/info' : SCREEN_NEW_PATH)"><Plus :size="14"/>{{ $t(kind === 'datasets' ? 'dataset.common.create' : 'homeWorkspace.createVisualization') }}</MfButton></template>
     </MfEmpty>
     <MfMenu v-else class="gap-1!">
       <MfMenuItem v-for="item in entries" :key="item.code" :key_="item.code" class="px-3! py-2.5!">

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
@@ -14,8 +14,9 @@ import DashboardPresentationCanvas from '@/views/pages/admin/dashboard/component
  * usual navigation; editing and fullscreen stay on the data screen pages. An unavailable screen
  * offers the default home page instead.
  */
-const route = useRoute(), router = useRouter(), { t } = useI18n(), userStore = useUserStore()
-const code = computed(() => String(route.params.code || ''))
+const props = defineProps<{ code: string }>()
+const router = useRouter(), { t } = useI18n(), userStore = useUserStore()
+const code = computed(() => props.code)
 const data = shallowRef<DashboardModel>()
 const loading = ref(false), failed = ref(false), busy = ref(false)
 const design = computed(() => data.value ? readDashboardDocument(data.value.configure, data.value.name, data.value.description, t).published : undefined)
@@ -38,7 +39,8 @@ async function unset() {
   try {
     await userStore.setHomePage(null)
     MfMessage.success(t('dashboard.home.cleared'))
-    await router.replace('/home')
+    // The home page is now the default one; a query change re-runs the home layout guard.
+    await router.replace({ path: '/home', query: { default: '1' } })
   } catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.home.failed')) }
   finally { busy.value = false }
 }

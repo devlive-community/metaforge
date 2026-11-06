@@ -6,6 +6,8 @@ export function canonicalPagePath(path: string): string {
     result = result.replace(/^\/admin(?=[/?#]|$)/i, '/admin')
     result = result.replace(/^\/admin\/user\/(profile|info|log|editor|assistant|username|password|notify)(?=[/?#]|$)/i, (_match, page) => `/account/${page.toLowerCase()}`)
     result = result.replace(/^\/admin\/(query|source|dataset|dashboard|history|snippet|report|chat|workflow)(?=[/?#]|$)/i, (_match, page) => `/${page.toLowerCase()}`)
+    // Data screens moved from /dashboard to /screen.
+    result = result.replace(/^\/dashboard(?=[?#]|$)/i, '/screen')
     return result.replace(/^\/admin\/(user|role|menu|schedule|function|configure|settings)(?=[/?#]|$)/i, (_match, page) => `/admin/${page.toLowerCase()}`)
 }
 

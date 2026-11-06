@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { SCREEN_LIST_PATH } from '@/model/screen-route'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -23,10 +24,10 @@ const shortcuts = [
   { path: '/source', icon: Database, label: 'common.source' },
   { path: '/dataset', icon: Table2, label: 'common.dataset' },
   { path: '/workflow', icon: Workflow, label: 'common.workflow' },
-  { path: '/dashboard', icon: LayoutDashboard, label: 'homeWorkspace.workspace' },
+  { path: SCREEN_LIST_PATH, icon: LayoutDashboard, label: 'homeWorkspace.workspace' },
   { path: '/report', icon: ChartColumn, label: 'homeWorkspace.reports' },
 ]
-const listPath = computed(() => resource.value === 'datasets' ? '/dataset' : '/dashboard')
+const listPath = computed(() => resource.value === 'datasets' ? '/dataset' : SCREEN_LIST_PATH)
 const formatCount = (value: number | null) => value === null ? '--' : value.toLocaleString(locale.value)
 </script>
 

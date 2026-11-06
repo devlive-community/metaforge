@@ -2,43 +2,27 @@
   <div v-if="loading" class="flex flex-1 items-center justify-center"><MfSpinner size="lg"/></div>
   <div v-else-if="failed || !design" class="flex flex-1 items-center justify-center p-4">
     <MfAlert :variant="failed ? 'danger' : 'info'" :title="$t(failed ? 'dashboard.studio.loadFailed' : 'dashboard.studio.unpublished')">
-      <MfButton v-if="failed" size="sm" @click="load">{{ $t('common.refresh') }}</MfButton>
-      <MfButton v-else size="sm" @click="edit">{{ $t('dashboard.studio.backToEditor') }}</MfButton>
+      <div class="flex flex-wrap gap-2">
+        <MfButton v-if="failed" size="sm" @click="load">{{ $t('common.refresh') }}</MfButton>
+        <MfButton v-else size="sm" @click="router.push(screenDesignPath(code))">{{ $t('dashboard.studio.backToEditor') }}</MfButton>
+        <MfButton size="sm" @click="router.push(SCREEN_LIST_PATH)">{{ $t('dashboard.studio.backToList') }}</MfButton>
+      </div>
     </MfAlert>
   </div>
+  <!-- Viewing shows the published screen only; editing, sharing and the home page live on the list. -->
   <div v-else class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface">
-    <header class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line bg-surface px-3 py-2 sm:px-4">
-      <div class="flex min-w-0 items-center gap-2">
-        <StudioBackLink to="/dashboard" :label="$t('dashboard.studio.backToList')"/>
-        <div class="min-w-0">
-          <h1 class="truncate text-base font-semibold" :title="design.name">{{ design.name }}</h1>
-        </div>
-      </div>
-      <div class="flex flex-wrap items-center gap-1.5">
-        <MfButton size="sm" :loading="homeBusy" :class="isHome && 'text-primary'" @click="toggleHome"><House :size="14"/>{{ $t(isHome ? 'dashboard.home.unset' : 'dashboard.home.set') }}</MfButton>
-        <MfButton size="sm" @click="edit"><Pencil :size="14"/>{{ $t('dashboard.studio.backToEditor') }}</MfButton>
-        <MfButton v-if="fullscreenAvailable" size="sm" @click="fullscreen">
-          <Minimize v-if="fullscreenActive" :size="14"/><Maximize v-else :size="14"/>
-          {{ $t(fullscreenActive ? 'dashboard.studio.exitFullscreen' : 'dashboard.studio.fullscreen') }}
-        </MfButton>
-        <MfButton size="sm" variant="primary" @click="share"><ArrowUpRight :size="15"/>{{ $t('dashboard.studio.share') }}</MfButton>
-      </div>
-    </header>
     <DashboardPresentationCanvas :design="design" :reports="data?.reports || []"/>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onScopeDispose, ref, shallowRef, watch } from 'vue'
+import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
-import { MfMessage } from 'metaforge-ui'
-import { ArrowUpRight, House, Maximize, Minimize, Pencil } from '@lucide/vue'
-import { useUserStore } from '@/stores/user'
-import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
 import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'
+import { SCREEN_LIST_PATH, screenDesignPath } from '@/model/screen-route'
 import DashboardPresentationCanvas from './components/DashboardPresentationCanvas.vue'
 
 const route = useRoute()
@@ -48,9 +32,6 @@ const code = computed(() => String(route.params.code || ''))
 const data = shallowRef<DashboardModel>()
 const loading = ref(false)
 const failed = ref(false)
-const fullscreenActive = ref(false)
-const fullscreenAvailable = document.fullscreenEnabled
-let enteredFullscreen = false
 const design = computed(() => data.value ? readDashboardDocument(data.value.configure, data.value.name, data.value.description, t).published : undefined)
 let request = 0
 
@@ -68,48 +49,6 @@ async function load() {
   catch { if (id === request) failed.value = true }
   finally { if (id === request) loading.value = false }
 }
-const userStore = useUserStore()
-const homeBusy = ref(false)
-const isHome = computed(() => !!code.value && userStore.homePage === code.value)
-void userStore.resolveHomePage()
-async function toggleHome() {
-  if (homeBusy.value) return
-  homeBusy.value = true
-  const unset = isHome.value
-  try {
-    await userStore.setHomePage(unset ? null : code.value)
-    MfMessage.success(t(unset ? 'dashboard.home.cleared' : 'dashboard.home.saved'))
-  } catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.home.failed')) }
-  finally { homeBusy.value = false }
-}
-function edit() { void router.push('/dashboard/info/' + encodeURIComponent(code.value)) }
-async function share() {
-  try {
-    await navigator.clipboard.writeText(window.location.href)
-    MfMessage.success(t('dashboard.studio.linkCopied'))
-  }
-  catch { MfMessage.error(t('dashboard.studio.linkFailed')) }
-}
-async function fullscreen() {
-  try {
-    if (document.fullscreenElement) await document.exitFullscreen()
-    else {
-      await document.documentElement.requestFullscreen()
-      enteredFullscreen = true
-    }
-    syncFullscreen()
-  }
-  catch { MfMessage.error(t('dashboard.studio.fullscreenFailed')) }
-}
-function syncFullscreen() {
-  fullscreenActive.value = enteredFullscreen && document.fullscreenElement === document.documentElement
-  if (!fullscreenActive.value) enteredFullscreen = false
-}
 watch(code, load, { immediate: true })
-onMounted(() => document.addEventListener('fullscreenchange', syncFullscreen))
-onScopeDispose(() => {
-  request++
-  document.removeEventListener('fullscreenchange', syncFullscreen)
-  if (enteredFullscreen && document.fullscreenElement === document.documentElement) void document.exitFullscreen().catch(() => {})
-})
+onScopeDispose(() => { request++ })
 </script>

@@ -4,7 +4,7 @@
     <header class="relative z-20 shrink-0 border-b border-line bg-surface shadow-mf-sm">
       <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-2 py-2 sm:px-4">
         <div class="flex min-w-0 flex-1 items-center gap-2.5">
-          <StudioBackLink to="/dashboard" :label="$t('dashboard.studio.backToList')"/>
+          <StudioBackLink :to="SCREEN_LIST_PATH" :label="$t('dashboard.studio.backToList')"/>
           <div class="min-w-0">
             <h1 class="truncate text-sm font-semibold sm:text-base" :title="workspaceName">{{ workspaceName }}</h1>
           </div>
@@ -140,6 +140,7 @@
 </template>
 
 <script setup lang="ts">
+import { SCREEN_LIST_PATH, screenDesignPath, screenViewPath } from '@/model/screen-route'
 import { computed, nextTick, onMounted, onScopeDispose, reactive, ref, shallowRef } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
@@ -651,8 +652,8 @@ async function save(publish: boolean) {
     design.value = draft
     published.value = document.published
     MfMessage.success(t(publish ? 'dashboard.studio.published' : 'dashboard.studio.saved'))
-    if (publish) await router.push('/dashboard/preview/' + encodeURIComponent(code.value!))
-    else if (isNew) await router.replace('/dashboard/info/' + encodeURIComponent(code.value!))
+    if (publish) await router.push(screenViewPath(code.value!))
+    else if (isNew) await router.replace(screenDesignPath(code.value!))
   }
   catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.studio.saveFailed')) }
   finally { saving.value = undefined }

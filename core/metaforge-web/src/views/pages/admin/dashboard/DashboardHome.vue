@@ -2,7 +2,7 @@
   <section class="flex min-h-[70vh] flex-col gap-4">
     <div class="flex flex-wrap items-center justify-between gap-3">
       <h1 class="text-xl font-bold">{{ $t('dashboard.common.list') }}</h1>
-      <MfButton variant="primary" @click="router.push('/dashboard/info')"><Plus :size="16"/>{{ $t('dashboard.common.create') }}</MfButton>
+      <MfButton variant="primary" @click="router.push(SCREEN_NEW_PATH)"><Plus :size="16"/>{{ $t('dashboard.common.create') }}</MfButton>
     </div>
 
     <div v-if="loading" class="flex min-h-60 flex-1 items-center justify-center"><MfSpinner size="lg"/></div>
@@ -49,6 +49,7 @@
 </template>
 
 <script setup lang="ts">
+import { SCREEN_NEW_PATH, screenDesignPath, screenViewPath } from '@/model/screen-route'
 import { computed, onScopeDispose, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
 import { House, LayoutDashboard, Monitor, Pencil, Plus, Trash2 } from '@lucide/vue'
@@ -87,10 +88,9 @@ const deleteItem = shallowRef<DashboardModel>()
 const dashboards = computed(() => data.value.map(item => {
   const document = readDashboardDocument(item.configure, item.name, item.description)
   const published = !!document.published
-  const code = encodeURIComponent(item.code || '')
-  const editor = '/dashboard/info/' + code
+  const editor = screenDesignPath(item.code)
   return { ...item, published, mode: (document.published ?? document.draft).mode, editor,
-    link: published ? '/dashboard/preview/' + code : editor }
+    link: published ? screenViewPath(item.code || '') : editor }
 }))
 let request = 0
 async function load() {

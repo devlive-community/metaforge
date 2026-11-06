@@ -13,7 +13,8 @@ const manageUrl = moduleUrl(compile(await readFile(new URL('../src/model/source-
 const layoutUrl = moduleUrl('export default {render(){return null}}')
 // The home route asks the user store for the user's chosen home page; tests set it on globalThis.
 const storeUrl = moduleUrl('export const useUserStore = () => ({ resolveHomePage: async () => globalThis.__homePage || "" })')
-const stubs = { './navigation': navigationUrl, '@/model/source-manage': manageUrl, '@/stores/user': storeUrl }
+const screenUrl = moduleUrl(compile(await readFile(new URL('../src/model/screen-route.ts', import.meta.url), 'utf8')))
+const stubs = { './navigation': navigationUrl, '@/model/source-manage': manageUrl, '@/stores/user': storeUrl, '@/model/screen-route': screenUrl }
 routes = routes.replace(/from (['"])([^'"]+)\1/g, (_match, _quote, name) => `from ${JSON.stringify(stubs[name] || layoutUrl)}`)
 routes = routes.replace(/import\((['"])@\/views\/[^'"]+\1\)/g, 'Promise.resolve({render(){return null}})')
 const { createDefaultRouter } = await import(moduleUrl(routes))
@@ -32,7 +33,7 @@ function routerFor(actor) {
 
 test('business and account pages are available at root paths without admin requirements', async () => {
     const router = routerFor(user)
-    for (const path of ['/query', '/source', '/dataset', '/workflow', '/snippet', '/history', '/dashboard', '/report', '/store', '/account/profile']) {
+    for (const path of ['/query', '/source', '/dataset', '/workflow', '/snippet', '/history', '/screen', '/report', '/store', '/account/profile']) {
         await router.push(path)
         assert.equal(router.currentRoute.value.path, path)
         assert.equal(router.currentRoute.value.meta.requiresAuth, true)
@@ -122,15 +123,48 @@ test('a chosen data screen opens as the home page unless the default home is ask
         await plain.push('/home')
         assert.equal(plain.currentRoute.value.path, '/home')
 
+        assert.equal(plain.currentRoute.value.meta.workspace, true)
+        assert.ok(!plain.currentRoute.value.meta.workflowWorkspace)
+
+        // The chosen screen shows at /home itself, filling the viewport under the navigation.
         globalThis.__homePage = 'SCREEN'
         const chosen = routerFor(user)
         await chosen.push('/home')
-        assert.equal(chosen.currentRoute.value.path, '/home/screen/SCREEN')
+        assert.equal(chosen.currentRoute.value.fullPath, '/home')
         assert.equal(chosen.currentRoute.value.meta.workflowWorkspace, true)
+        assert.ok(!chosen.currentRoute.value.meta.workspace)
+        // A query-only change re-evaluates the layout: ?default=1 is the default home again.
         await chosen.push('/home?default=1')
+        assert.equal(chosen.currentRoute.value.path, '/home')
+        assert.equal(chosen.currentRoute.value.meta.workspace, true)
+        assert.ok(!chosen.currentRoute.value.meta.workflowWorkspace)
+        await chosen.push('/home/screen/SCREEN')
         assert.equal(chosen.currentRoute.value.path, '/home')
     }
     finally {
         delete globalThis.__homePage
     }
+})
+
+test('data screens live under /screen and former /dashboard links still arrive', async () => {
+    const router = routerFor(user)
+    const cases = {
+        '/dashboard': '/screen',
+        '/dashboard?page=2': '/screen?page=2',
+        '/dashboard/info': '/screen/design',
+        '/dashboard/info/ABC': '/screen/ABC/design',
+        '/dashboard/preview/ABC#top': '/screen/ABC#top',
+        '/admin/dashboard': '/screen',
+        '/analysis': '/screen',
+    }
+    for (const [from, to] of Object.entries(cases)) {
+        await router.push(from)
+        assert.equal(router.currentRoute.value.fullPath, to, from)
+    }
+    for (const [path, name] of [['/screen', 'screen'], ['/screen/design', 'screen-design-new'], ['/screen/ABC/design', 'screen-design'], ['/screen/ABC', 'screen-view']]) {
+        await router.push(path)
+        assert.equal(router.currentRoute.value.name, name, path)
+    }
+    assert.equal(router.currentRoute.value.meta.dashboardStudio, true, 'viewing a screen has no global header')
+    assert.deepEqual(normalizeNavigation([{ url: '/dashboard' }], user).map(menu => menu.url), ['/screen'])
 })
