@@ -129,8 +129,8 @@ function addMember(key: unknown) {
 }
 function removeMember(member: DashboardShareMember) { share.value.members = share.value.members.filter(item => item !== member) }
 const memberColumns = computed(() => [
-  { title: t('dashboard.share.member'), dataIndex: 'name', key: 'name' },
-  { title: t('dashboard.share.permissionLabel'), dataIndex: 'permission', key: 'permission', width: 160 },
+  { title: t('dashboard.share.member'), dataIndex: 'name', key: 'name', ellipsis: true },
+  { title: t('dashboard.share.permissionLabel'), dataIndex: 'permission', key: 'permission', width: 128 },
   { title: '', dataIndex: 'id', key: 'action', width: 48 },
 ])
 
@@ -146,11 +146,13 @@ async function load() {
 async function validate() {
   try { await form.value?.validate(); return true }
   catch {
-    // Show the pane that holds the first problem.
-    if (scope.value === 'chosen' && !share.value.widgets?.length) tab.value = 'content'
-    else tab.value = 'public'
+    revealValidation()
     return false
   }
+}
+function revealValidation() {
+  // Fields stay mounted across tabs; reveal the pane containing the first problem.
+  tab.value = scope.value === 'chosen' && !share.value.widgets?.length ? 'content' : 'public'
 }
 async function submit(rotate: boolean) {
   const response = await DashboardService.saveShare(props.dashboard.code || '', {
@@ -184,47 +186,49 @@ void load()
 </script>
 
 <template>
-  <MfModal v-model:open="open" width="640px" :title="$t('dashboard.share.title', { name: dashboard.name })">
-    <div class="flex h-[420px] min-h-0 flex-col">
-      <div v-if="loading" class="flex flex-1 items-center justify-center"><MfSpinner/></div>
-      <MfAlert v-else-if="failure" variant="danger" :title="failure"><MfButton size="sm" @click="load">{{ $t('common.refresh') }}</MfButton></MfAlert>
-      <template v-else>
-        <MfTabs v-model:active-key="tab" class="mb-4 shrink-0">
-          <MfTabPane item-key="members" :tab="$t('dashboard.share.tab.members')"/>
-          <MfTabPane item-key="content" :tab="$t('dashboard.share.tab.content')"/>
-          <MfTabPane item-key="public" :tab="$t('dashboard.share.tab.public')"/>
-        </MfTabs>
-        <MfForm id="dashboard-share" ref="form" :model="share" layout="vertical" class="min-h-0 flex-1 overflow-y-auto" @finish="save">
-          <!-- Both panes stay rendered so the widget choice is validated from either tab. -->
-          <div v-show="tab === 'members'">
+  <MfModal v-model:open="open" width="760px" height="min(640px, calc(100dvh - 32px))"
+           body-class="flex min-h-0 flex-col overflow-hidden! px-5 py-4" trap-focus
+           :title="$t('dashboard.share.title', { name: dashboard.name })">
+    <div v-if="loading" class="flex min-h-0 flex-1 items-center justify-center"><MfSpinner/></div>
+    <MfAlert v-else-if="failure" variant="danger" :title="failure"><MfButton size="sm" @click="load">{{ $t('common.refresh') }}</MfButton></MfAlert>
+    <MfForm v-else id="dashboard-share" ref="form" :model="share" layout="vertical" class="min-h-0 flex-1 overflow-hidden"
+            @finish="save" @finish-failed="revealValidation">
+      <MfTabs v-model:active-key="tab" fill class="share-tabs">
+        <!-- Panes remain mounted for cross-tab validation. Their inner padding protects focus rings. -->
+        <MfTabPane item-key="members" :tab="$t('dashboard.share.tab.members')">
+          <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5 p-1">
             <MfFormItem :label="$t('dashboard.share.everyone')">
               <div class="w-full">
-                <MfSelect v-model="everyone" class="w-full" :options="everyoneOptions"/>
+                <MfSelect v-model="everyone" class="w-full" :options="everyoneOptions" :placeholder="$t('dashboard.share.everyoneNone')" :aria-label="$t('dashboard.share.everyone')"/>
                 <p class="mt-1.5 text-[11px] leading-5 text-content-tertiary">{{ $t('dashboard.share.everyoneHint') }}</p>
               </div>
             </MfFormItem>
             <MfFormItem :label="$t('dashboard.share.members')">
               <div class="w-full space-y-3">
                 <MfSelect class="w-full" searchable :loading="searching" :options="candidateOptions" :filter-option="() => true" model-value=""
-                          :placeholder="$t('dashboard.share.addMember')" @search="onSearch" @update:model-value="addMember"/>
+                          :placeholder="$t('dashboard.share.addMember')" :aria-label="$t('dashboard.share.members')" @search="onSearch" @update:model-value="addMember"/>
                 <MfTable :columns="memberColumns" :data-source="share.members" row-key="key" density="compact" :empty-text="$t('dashboard.share.noMembers')">
                   <template #cell-name="{ record }">
                     <div class="flex min-w-0 items-center gap-2">
                       <component :is="record.type === 'ROLE' ? Shield : User" :size="14" class="shrink-0 text-content-tertiary"/>
-                      <span class="truncate">{{ record.name }}</span>
-                      <MfTag size="sm">{{ $t('dashboard.share.type.' + record.type) }}</MfTag>
+                      <div class="min-w-0 flex-1">
+                        <MfTooltip :content="record.name" class="w-full min-w-0"><span class="block truncate">{{ record.name }}</span></MfTooltip>
+                        <span class="block text-[11px] text-content-tertiary">{{ $t('dashboard.share.type.' + record.type) }}</span>
+                      </div>
                     </div>
                   </template>
-                  <template #cell-permission="{ record }"><MfSelect v-model="record.permission" size="sm" class="w-full" :options="grantOptions"/></template>
+                  <template #cell-permission="{ record }"><MfSelect v-model="record.permission" size="sm" class="w-full" :options="grantOptions" :aria-label="$t('dashboard.share.permissionLabel') + ' · ' + record.name"/></template>
                   <template #cell-action="{ record }"><MfButton variant="ghost" size="sm" :aria-label="$t('common.delete')" @click="removeMember(record)"><Trash2 :size="14"/></MfButton></template>
                 </MfTable>
               </div>
             </MfFormItem>
           </div>
-          <div v-show="tab === 'content'">
+        </MfTabPane>
+        <MfTabPane item-key="content" :tab="$t('dashboard.share.tab.content')">
+          <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5 p-1">
             <MfFormItem :label="$t('dashboard.share.visible')">
               <div class="w-full">
-                <MfRadioGroup v-model="scope">
+                <MfRadioGroup v-model="scope" :aria-label="$t('dashboard.share.visible')">
                   <MfRadio value="all" :label="$t('dashboard.share.visibleAll')"/>
                   <MfRadio value="chosen" :label="$t('dashboard.share.visibleChosen')" :disabled="!published"/>
                 </MfRadioGroup>
@@ -239,20 +243,22 @@ void load()
               </div>
             </MfFormItem>
           </div>
-          <div v-show="tab === 'public'">
+        </MfTabPane>
+        <MfTabPane item-key="public" :tab="$t('dashboard.share.tab.public')">
+          <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start gap-5 p-1">
             <MfFormItem name="publicEnabled">
               <div class="flex w-full items-center justify-between gap-4">
                 <div class="min-w-0">
                   <div class="font-medium text-content">{{ $t('dashboard.share.public.enabled') }}</div>
                   <div class="mt-0.5 text-xs text-content-tertiary">{{ $t(published ? 'dashboard.share.public.enabledHint' : 'dashboard.share.public.unpublished') }}</div>
                 </div>
-                <MfSwitch v-model="share.publicLink.enabled" class="shrink-0" :disabled="!published && !share.publicLink.enabled"/>
+                <MfSwitch v-model="share.publicLink.enabled" class="shrink-0" :aria-label="$t('dashboard.share.public.enabled')" :disabled="!published && !share.publicLink.enabled"/>
               </div>
             </MfFormItem>
             <template v-if="share.publicLink.enabled">
               <MfFormItem v-if="saved.token && saved.enabled" :label="$t('report.share.link')" name="publicLink">
                 <div class="w-full min-w-0">
-                  <MfInput :model-value="shareUrl" readonly class="w-full"/>
+                  <MfInput :model-value="shareUrl" readonly class="w-full" :aria-label="$t('report.share.link')"/>
                   <div class="mt-2 flex flex-wrap items-center gap-2">
                     <MfButton size="sm" class="shrink-0" @click="copy(shareUrl)"><Copy :size="14"/>{{ $t('report.share.copy') }}</MfButton>
                     <MfButton size="sm" class="shrink-0" :disabled="expired" @click="preview"><ExternalLink :size="14"/>{{ $t('report.share.preview') }}</MfButton>
@@ -262,11 +268,11 @@ void load()
                   <p class="mt-1.5 text-[11px] leading-5 text-content-tertiary">{{ $t('dashboard.share.public.contentHint') }}</p>
                 </div>
               </MfFormItem>
-              <p v-else class="mb-4 text-xs text-content-tertiary">{{ $t('report.share.linkAfterSave') }}</p>
+              <p v-else class="text-xs leading-5 text-content-tertiary">{{ $t('report.share.linkAfterSave') }}</p>
               <MfFormItem :label="$t('report.share.expiry')" name="expiryDate" :rules="expiryRules">
-                <div class="flex flex-wrap items-center gap-2">
-                  <MfSelect v-model="expiry" :options="expiryOptions" class="w-40"/>
-                  <MfDatePicker v-if="expiry === 'date'" v-model="expiryDate" class="w-48" :min="today" :locale="locale"
+                <div class="grid w-full min-w-0 grid-cols-1 gap-3 sm:grid-cols-2">
+                  <MfSelect v-model="expiry" :options="expiryOptions" class="w-full" :aria-label="$t('report.share.expiry')"/>
+                  <MfDatePicker v-if="expiry === 'date'" v-model="expiryDate" class="w-full" :min="today" :locale="locale"
                                 :label="$t('report.share.expiryDate')" :placeholder="$t('dataTable.selectDate')" :today-text="$t('dataTable.today')"
                                 :clear-text="$t('dataTable.clear')" :previous-text="$t('dataTable.previousMonth')" :next-text="$t('dataTable.nextMonth')"/>
                 </div>
@@ -277,26 +283,30 @@ void load()
                     <div class="font-medium text-content">{{ $t('report.share.embed') }}</div>
                     <div class="mt-0.5 text-xs text-content-tertiary">{{ $t('report.share.embedHint') }}</div>
                   </div>
-                  <MfSwitch v-model="share.publicLink.embed" class="shrink-0"/>
+                  <MfSwitch v-model="share.publicLink.embed" class="shrink-0" :aria-label="$t('report.share.embed')"/>
                 </div>
               </MfFormItem>
               <template v-if="share.publicLink.embed">
                 <MfFormItem :label="$t('report.share.origins')" name="origins" :rules="originRules">
-                  <MfTextarea v-model="share.publicLink.origins" :rows="3" :placeholder="$t('report.share.originsPlaceholder')"/>
+                  <MfTextarea v-model="share.publicLink.origins" :rows="3" :placeholder="$t('report.share.originsPlaceholder')" :aria-label="$t('report.share.origins')"/>
                 </MfFormItem>
                 <MfFormItem v-if="saved.token && saved.enabled && saved.embed" :label="$t('report.share.code')" name="code">
-                  <MfTextarea :model-value="embedCode" readonly :rows="3"/>
+                  <MfTextarea :model-value="embedCode" readonly :rows="3" :aria-label="$t('report.share.code')"/>
                   <MfButton class="self-start" @click="copy(embedCode)"><Copy :size="15"/>{{ $t('report.share.copyCode') }}</MfButton>
                 </MfFormItem>
               </template>
             </template>
           </div>
-        </MfForm>
-      </template>
-    </div>
+        </MfTabPane>
+      </MfTabs>
+    </MfForm>
     <template #footer>
       <MfButton @click="open = false">{{ $t('common.cancel') }}</MfButton>
       <MfButton type="submit" form="dashboard-share" variant="primary" :loading="saving" :disabled="loading || !!failure || rotating">{{ $t('common.save') }}</MfButton>
     </template>
   </MfModal>
 </template>
+
+<style scoped>
+.share-tabs :deep([role="tab"]) { flex: 1; min-width: 0; padding-inline: 8px; text-align: center; }
+</style>
