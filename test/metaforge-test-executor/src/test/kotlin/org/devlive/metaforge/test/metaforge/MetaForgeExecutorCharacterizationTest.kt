@@ -134,6 +134,8 @@ class MetaForgeExecutorCharacterizationTest
         assertEquals(TotalSource.PRECOUNT, metrics.totalSource)
         assertEquals(100.0, metrics.progress, 0.0)
         assertEquals(0L, metrics.etaSeconds)
+        // 不足一批的行由 close() 提交，同样计为一批 / the partial batch committed by close() counts as a batch
+        assertEquals(1L, metrics.batchesCommitted)
     }
 
     @Test

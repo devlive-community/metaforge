@@ -129,43 +129,67 @@ internal class Channel(
 
     private fun writeLoop(writer: BatchWriter)
     {
+        var closed = false
         try
         {
-            writer.use { w ->
-                while (true)
+            while (true)
+            {
+                val waitStart = System.nanoTime()
+                val batch = queue.take()
+                metrics.recordWriterWait(System.nanoTime() - waitStart)
+                if (batch === END)
                 {
-                    val waitStart = System.nanoTime()
-                    val batch = queue.take()
-                    metrics.recordWriterWait(System.nanoTime() - waitStart)
-                    if (batch === END)
-                    {
-                        break
-                    }
-                    metrics.queueDepth.decrementAndGet()
-                    val started = System.nanoTime()
-                    for (row in batch.rows)
-                    {
-                        w.addRow(row)
-                    }
-                    pendingRows += batch.rows.size
-                    pendingBytes += batch.bytes
-                    if (w.writtenCount() > committed)
-                    {
-                        metrics.recordBatch(System.nanoTime() - started)
-                    }
-                    settle(w.writtenCount())
+                    break
                 }
+                metrics.queueDepth.decrementAndGet()
+                val started = System.nanoTime()
+                for (row in batch.rows)
+                {
+                    writer.addRow(row)
+                }
+                pendingRows += batch.rows.size
+                pendingBytes += batch.bytes
+                if (writer.writtenCount() > committed)
+                {
+                    metrics.recordBatch(System.nanoTime() - started)
+                }
+                settle(writer.writtenCount())
             }
-            // close() 已 flush 剩余行 / close() flushed the remainder
-            settle(writer.writtenCount())
+            // close() 提交剩余不足一批的行，这也是一次批次 / close() commits the final partial batch, which counts as a batch
+            closed = true
+            closeCounted(writer)
         }
         catch (ex: Throwable)
         {
+            if (!closed)
+            {
+                // 出错或取消时仍提交已读行 / rows already read are still committed on failure or cancel
+                try
+                {
+                    closeCounted(writer)
+                }
+                catch (suppressed: Throwable)
+                {
+                    ex.addSuppressed(suppressed)
+                }
+            }
             settle(writer.writtenCount())
             writerError.compareAndSet(null, ex)
             // 让读取方不再阻塞在满队列上 / unblock a reader waiting on a full queue
             queue.clear()
         }
+    }
+
+    private fun closeCounted(writer: BatchWriter)
+    {
+        val before = writer.writtenCount()
+        val started = System.nanoTime()
+        writer.close()
+        if (writer.writtenCount() > before)
+        {
+            metrics.recordBatch(System.nanoTime() - started)
+        }
+        settle(writer.writtenCount())
     }
 
     /**
