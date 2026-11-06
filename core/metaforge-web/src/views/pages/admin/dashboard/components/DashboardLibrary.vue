@@ -1,6 +1,6 @@
 <template>
   <aside class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-line bg-surface shadow-mf-sm">
-    <DashboardPanelHeader :title="$t('dashboard.studio.library')" :description="$t('dashboard.studio.librarySubtitle')"
+    <DashboardPanelHeader :title="$t('dashboard.studio.library')"
                           :pinned="pinned" :pinnable="pinnable" @pin="emit('pin')" @close="emit('close')"/>
     <nav class="mx-3 flex shrink-0 items-center gap-1 px-1 shadow-[inset_0_-1px_0_var(--mf-color-line)]" :aria-label="$t('dashboard.studio.library')">
       <button v-for="item in tabs" :key="item.key" type="button"

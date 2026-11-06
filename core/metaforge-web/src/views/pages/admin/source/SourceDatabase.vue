@@ -10,7 +10,7 @@
             <h1 class="m-0 truncate text-2xl font-semibold text-content">{{ overview.name }}</h1>
             <MfTag v-if="sourceType" size="sm">{{ sourceType }}</MfTag>
           </div>
-          <p class="m-0 mt-1 text-sm text-content-tertiary">{{ $t('source.database.subtitle') }}</p>
+
         </div>
       </header>
 

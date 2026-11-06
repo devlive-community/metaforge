@@ -6,7 +6,7 @@
         <span class="inline-flex size-10 shrink-0 items-center justify-center rounded-mf-md bg-primary/10 text-primary"><SlidersHorizontal :size="18"/></span>
         <div class="min-w-0">
           <h1 class="m-0 text-base font-semibold text-content">{{ $t('navigation.systemSettings') }}</h1>
-          <p class="m-0 mt-0.5 text-xs text-content-tertiary">{{ $t('settings.subtitle') }}</p>
+
         </div>
       </div>
       <nav class="flex flex-col gap-1" :aria-label="$t('navigation.systemSettings')">

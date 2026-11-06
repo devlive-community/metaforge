@@ -6,7 +6,6 @@
       </div>
       <div class="min-w-0">
         <div class="dc-profile-sidebar__title">{{ $t('navigation.accountSettings') }}</div>
-        <div class="dc-profile-sidebar__subtitle">{{ $t('user.tip.settings') }}</div>
       </div>
     </div>
 
@@ -96,12 +95,6 @@ const items = computed(() => [
     font-size: 15px;
     font-weight: 600;
     color: var(--dc-text-title);
-}
-
-.dc-profile-sidebar__subtitle {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 2px;
 }
 
 .dc-profile-sidebar__menu {

@@ -2,7 +2,6 @@
   <div class="dc-notify">
     <div class="dc-notify__pagehead">
       <div class="dc-notify__title">{{ $t('user.common.notify') }}</div>
-      <div class="dc-notify__desc">{{ $t('notify.tip.page') }}</div>
     </div>
 
     <div v-if="loading" class="dc-notify__card dc-notify__loading">
@@ -25,7 +24,6 @@
         <div class="dc-notify__section-head">
           <div class="min-w-0">
             <div class="dc-notify__section-title">{{ $t('notify.common.channels') }}</div>
-            <div class="dc-notify__section-sub">{{ $t('notify.tip.channels') }}</div>
           </div>
         </div>
 
@@ -82,7 +80,6 @@
         <div class="dc-notify__section-head">
           <div class="min-w-0 flex-1">
             <div class="dc-notify__section-title">{{ $t('notify.common.scenarios') }}</div>
-            <div class="dc-notify__section-sub">{{ $t('notify.tip.scenarios') }}</div>
           </div>
           <div v-if="enabledChannels.length > 0" class="dc-notify__section-actions">
             <MfButton :disabled="!scenesDirty || savingScenes" @click="resetScenes">{{ $t('common.reset') }}</MfButton>
@@ -428,12 +425,6 @@ onMounted(load)
     color: var(--dc-text-title);
 }
 
-.dc-notify__desc {
-    font-size: 13px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
 .dc-notify__card {
     background: var(--dc-surface);
     border: 1px solid var(--dc-border-light);
@@ -461,12 +452,6 @@ onMounted(load)
     font-size: 15px;
     font-weight: 600;
     color: var(--dc-text-title);
-}
-
-.dc-notify__section-sub {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 2px;
 }
 
 .dc-notify__section-actions {

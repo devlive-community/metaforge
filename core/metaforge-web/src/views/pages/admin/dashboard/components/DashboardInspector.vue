@@ -1,7 +1,6 @@
 <template>
   <aside class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-l border-line bg-surface shadow-mf-sm">
-    <DashboardPanelHeader :title="$t(groupRect ? 'dashboard.studio.groupProperties' : widget ? 'dashboard.studio.properties' : 'dashboard.studio.pageSettings')"
-                          :description="$t(groupRect ? 'dashboard.studio.groupPropertiesHint' : widget ? 'dashboard.studio.propertiesSubtitle' : 'dashboard.studio.pageSettingsSubtitle')" :pinned="pinned" :pinnable="pinnable"
+    <DashboardPanelHeader :title="$t(groupRect ? 'dashboard.studio.groupProperties' : widget ? 'dashboard.studio.properties' : 'dashboard.studio.pageSettings')" :pinned="pinned" :pinnable="pinnable"
                           @pin="emit('pin')" @close="emit('close')"/>
     <div v-if="groupRect" class="inspector-section min-h-0 flex-1 content-start overflow-auto">
       <DashboardInspectorGroup icon="layout" :title="$t('dashboard.studio.layerGroup', { count: groupCount })">

@@ -12,7 +12,6 @@
         <StudioBackLink to="/dashboard" :label="$t('dashboard.studio.backToList')"/>
         <div class="min-w-0">
           <h1 class="truncate text-base font-semibold" :title="design.name">{{ design.name }}</h1>
-          <p class="text-xs text-content-tertiary">{{ $t(design.mode === 'wall' ? 'dashboard.studio.wallPreviewTitle' : 'dashboard.studio.previewTitle') }}</p>
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-1.5">

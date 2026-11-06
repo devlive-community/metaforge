@@ -1,10 +1,9 @@
 <template>
   <div class="dc-ai">
-    <!-- 页头：标题 + 描述 + 标语 -->
+    <!-- 页头 -->
     <div class="dc-ai__pagehead">
       <div class="min-w-0">
         <div class="dc-ai__title">{{ $t('user.common.assistant') }}</div>
-        <div class="dc-ai__desc">{{ $t('user.tip.assistantPage') }}</div>
       </div>
       <div class="dc-ai__slogan">AI for Better Data</div>
     </div>
@@ -19,7 +18,6 @@
             </div>
             <div>
               <div class="dc-ai__section-title">{{ $t('user.common.basicConfig') }}</div>
-              <div class="dc-ai__section-sub">{{ $t('user.tip.basicConfig') }}</div>
             </div>
           </div>
 
@@ -100,7 +98,6 @@
             </div>
             <div>
               <div class="dc-ai__section-title">{{ $t('user.common.quickConfig') }}</div>
-              <div class="dc-ai__section-sub">{{ $t('user.tip.quickConfig') }}</div>
             </div>
           </div>
 
@@ -241,12 +238,6 @@ handlerInitialize()
     color: var(--dc-text-title);
 }
 
-.dc-ai__desc {
-    font-size: 13px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
 .dc-ai__slogan {
     font-size: 14px;
     font-style: italic;
@@ -288,12 +279,6 @@ handlerInitialize()
     font-size: 15px;
     font-weight: 600;
     color: var(--dc-text-title);
-}
-
-.dc-ai__section-sub {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 2px;
 }
 
 .dc-ai__hint {

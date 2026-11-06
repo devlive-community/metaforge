@@ -4,7 +4,6 @@
     <div class="dc-password__pagehead">
       <div>
         <div class="dc-password__title">{{ $t('user.common.modifyPassword') }}</div>
-        <div class="dc-password__desc">{{ $t('user.tip.passwordPage') }}</div>
       </div>
     </div>
 
@@ -234,12 +233,6 @@ const onReset = () => {
     color: var(--dc-text-title);
 }
 
-.dc-password__desc {
-    font-size: 13px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
 .dc-password__card {
     background: var(--dc-surface);
     border: 1px solid var(--dc-border-light);
@@ -248,7 +241,6 @@ const onReset = () => {
     padding: 20px;
     margin-bottom: 16px;
 }
-
 
 .dc-password__meter {
     display: flex;

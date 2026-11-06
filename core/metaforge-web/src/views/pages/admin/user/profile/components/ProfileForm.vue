@@ -4,7 +4,6 @@
     <div class="dc-profile__pagehead">
       <div class="min-w-0">
         <div class="dc-profile__title">{{ $t('user.common.profile') }}</div>
-        <div class="dc-profile__desc">{{ $t('user.tip.profile') }}</div>
       </div>
       <div class="dc-profile__slogan">
         <div>{{ $t('user.tip.sloganData') }}</div>
@@ -60,7 +59,6 @@
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.basicInfo') }}</div>
-              <div class="dc-profile__section-sub">{{ $t('user.tip.basicInfo') }}</div>
             </div>
           </div>
 
@@ -95,7 +93,6 @@
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.preferences') }}</div>
-              <div class="dc-profile__section-sub">{{ $t('user.tip.preferences') }}</div>
             </div>
           </div>
 
@@ -122,7 +119,6 @@
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.overview') }}</div>
-              <div class="dc-profile__section-sub">{{ $t('user.tip.overview') }}</div>
             </div>
           </div>
 
@@ -353,12 +349,6 @@ handlerInitialize()
     color: var(--dc-text-title);
 }
 
-.dc-profile__desc {
-    font-size: 13px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
 .dc-profile__slogan {
     text-align: right;
     font-size: 12px;
@@ -466,12 +456,6 @@ handlerInitialize()
     font-size: 15px;
     font-weight: 600;
     color: var(--dc-text-title);
-}
-
-.dc-profile__section-sub {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 2px;
 }
 
 .dc-profile__pref {

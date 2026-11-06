@@ -5,7 +5,6 @@
         <Store :size="20" class="text-primary"/>
         {{ $t('store.title') }}
       </div>
-      <div class="mt-1 text-xs text-content-tertiary">{{ $t('store.subtitle') }}</div>
     </div>
 
     <nav :aria-label="$t('store.title')" class="flex gap-1 overflow-x-auto px-2 py-2 md:flex-col md:overflow-visible md:px-3 md:py-4">

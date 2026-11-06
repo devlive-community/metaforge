@@ -7,7 +7,6 @@
           <StudioBackLink to="/dashboard" :label="$t('dashboard.studio.backToList')"/>
           <div class="min-w-0">
             <h1 class="truncate text-sm font-semibold sm:text-base" :title="workspaceName">{{ workspaceName }}</h1>
-            <p class="truncate text-xs text-content-tertiary">{{ $t(wall ? 'dashboard.studio.editWall' : 'dashboard.studio.editDashboard') }}</p>
           </div>
           <MfTag size="sm" class="shrink-0" :variant="draftStatus === 'published' ? 'success' : 'primary'">{{ $t('dashboard.studio.status.' + draftStatus) }}</MfTag>
         </div>

@@ -4,7 +4,6 @@
     <div class="dc-rename__pagehead">
       <div>
         <div class="dc-rename__title">{{ $t('user.common.modifyUsername') }}</div>
-        <div class="dc-rename__desc">{{ $t('user.tip.modifyUsernamePage') }}</div>
       </div>
     </div>
 
@@ -216,12 +215,6 @@ handlerInitialize()
     font-size: 22px;
     font-weight: 600;
     color: var(--dc-text-title);
-}
-
-.dc-rename__desc {
-    font-size: 13px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
 }
 
 .dc-rename__card {
