@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
+import { computed, onScopeDispose, provide, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import DashboardService from '@/services/dashboard'
@@ -24,11 +24,13 @@ import type { DashboardModel } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'
 import { SCREEN_LIST_PATH, screenDesignPath } from '@/model/screen-route'
 import DashboardPresentationCanvas from './components/DashboardPresentationCanvas.vue'
+import { dashboardScreenKey } from '@/composables/useDashboardReports'
 
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
 const code = computed(() => String(route.params.code || ''))
+provide(dashboardScreenKey, code)
 const data = shallowRef<DashboardModel>()
 const loading = ref(false)
 const failed = ref(false)

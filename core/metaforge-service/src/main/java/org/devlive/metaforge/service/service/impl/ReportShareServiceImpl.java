@@ -51,7 +51,7 @@ public class ReportShareServiceImpl
 {
     static final Pattern TOKEN = Pattern.compile("^[A-Za-z0-9_-]{32}$");
     private static final Pattern ORIGIN = Pattern.compile("^https?://(\\*\\.)?[a-z0-9-]+(\\.[a-z0-9-]+)*(:\\d{1,5})?$");
-    private static final int MAX_ORIGINS = 20;
+    static final int MAX_ORIGINS = 20;
     // Public traffic must not turn into one database query per page view.
     private static final long CACHE_MILLIS = 30_000;
     private static final int CACHE_SIZE = 1000;

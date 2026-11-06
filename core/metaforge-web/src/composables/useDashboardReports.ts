@@ -1,10 +1,18 @@
-import { computed, onScopeDispose, shallowRef, watch, type Ref } from 'vue'
+import { computed, inject, onScopeDispose, shallowRef, watch, type InjectionKey, type Ref } from 'vue'
 import ReportService from '@/services/report'
+import DashboardService from '@/services/dashboard'
 import { dashboardSnapshot, type DashboardBoard, type DashboardRefresh } from '@/model/dashboard-layout'
 import type { QueryChartRow } from '@/model/query-chart'
 import type { ReportModel } from '@/model/report'
 
+/**
+ * The screen a board belongs to. Pages showing a saved screen provide it so charts refresh through the
+ * screen, which lets users it is shared with refresh too; without it charts refresh as their owner.
+ */
+export const dashboardScreenKey: InjectionKey<Ref<string | undefined>> = Symbol('dashboardScreen')
+
 export function useDashboardReports(board: Ref<DashboardBoard>, reports: Ref<ReportModel[]>, live: Ref<boolean>) {
+  const screen = inject(dashboardScreenKey, undefined)
   const data = shallowRef<Record<string, QueryChartRow[]>>({})
   const failed = shallowRef<ReadonlySet<string>>(new Set())
   const pending = shallowRef<ReadonlySet<string>>(new Set())
@@ -38,7 +46,7 @@ export function useDashboardReports(board: Ref<DashboardBoard>, reports: Ref<Rep
       if (pending.value.has(code)) return
       pending.value = new Set([...pending.value, code])
       try {
-        const response = await ReportService.refreshChart(code)
+        const response = screen?.value ? await DashboardService.refreshChart(screen.value, code) : await ReportService.refreshChart(code)
         if (run !== generation) return
         if (!response.status || !Array.isArray(response.data)) throw new Error('Invalid chart refresh response')
         data.value = { ...data.value, [code]: response.data }

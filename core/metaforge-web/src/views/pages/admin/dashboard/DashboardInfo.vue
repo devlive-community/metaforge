@@ -10,12 +10,15 @@
 
 <script setup lang="ts">
 import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { permits } from '@/model/dashboard'
+import { screenViewPath } from '@/model/screen-route'
 import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
 import DashboardEditor from './components/DashboardEditor.vue'
 
 const route = useRoute()
+const router = useRouter()
 const code = computed(() => String(route.params.code || ''))
 const loading = ref(false)
 const failed = ref(false)
@@ -33,6 +36,11 @@ async function load() {
     const response = await DashboardService.getByCode(dashboardCode)
     if (id !== request) return
     if (!response.status || !response.data) throw new Error('Dashboard unavailable')
+    // A screen shared for viewing only opens in the viewer instead of the designer.
+    if (!permits(response.data.permission, 'EDIT')) {
+      await router.replace(screenViewPath(dashboardCode))
+      return
+    }
     data.value = response.data
   }
   catch { if (id === request) failed.value = true }

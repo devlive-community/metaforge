@@ -18,7 +18,7 @@
           </MfButton>
           <MfButton size="sm" :disabled="!!saving" @click="previewing = true"><Play :size="15"/>{{ $t('dashboard.studio.preview') }}</MfButton>
           <MfButton size="sm" :loading="saving === 'draft'" :disabled="!!saving" @click="save(false)"><Save :size="15"/>{{ $t('common.save') }}</MfButton>
-          <MfButton size="sm" variant="primary" :loading="saving === 'publish'" :disabled="!!saving" @click="save(true)">
+          <MfButton v-if="canPublish" size="sm" variant="primary" :loading="saving === 'publish'" :disabled="!!saving" @click="save(true)">
             <ArrowUpRight :size="15"/>{{ $t('dashboard.studio.publish') }}
           </MfButton>
         </div>
@@ -141,7 +141,8 @@
 
 <script setup lang="ts">
 import { SCREEN_LIST_PATH, screenDesignPath, screenViewPath } from '@/model/screen-route'
-import { computed, nextTick, onMounted, onScopeDispose, reactive, ref, shallowRef } from 'vue'
+import { computed, nextTick, onMounted, onScopeDispose, provide, reactive, ref, shallowRef } from 'vue'
+import { dashboardScreenKey } from '@/composables/useDashboardReports'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
@@ -152,7 +153,7 @@ import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
 import DashboardService from '@/services/dashboard'
 import ReportService from '@/services/report'
 import { FilterModel } from '@/model/filter'
-import type { DashboardModel } from '@/model/dashboard'
+import { permits, type DashboardModel } from '@/model/dashboard'
 import type { ReportModel } from '@/model/report'
 import { constrainDashboardGroup, constrainDashboardRect, copyDashboardDesign, dashboardCanContain, dashboardCanvasColor, dashboardContainerTool, dashboardDescendantIds, dashboardGridTarget, dashboardGroupBounds, dashboardLayerMembers, dashboardOverlap,
   dashboardPlacement, dashboardReportCodes, dashboardScreenEffectTool, dashboardTools, dashboardWallPresets, dashboardWallResolution, dashboardWidget, dashboardWidgetLabelKey,
@@ -170,6 +171,9 @@ const existing = readDashboardDocument(props.info?.configure, props.info?.name, 
 const design = ref(existing.draft)
 const published = shallowRef(existing.published)
 const code = ref(props.info?.code)
+provide(dashboardScreenKey, code)
+// Editors a screen is shared with save drafts; publishing needs the publish permission.
+const canPublish = computed(() => permits(props.info?.permission, 'PUBLISH'))
 const selectedIds = ref<string[]>([])
 const selectedId = computed({ get: () => selectedIds.value.at(-1) ?? '', set: id => { selectedIds.value = id ? [id] : [] } })
 const viewport = ref<HTMLElement>()

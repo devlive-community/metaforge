@@ -4,12 +4,16 @@
       <h1 class="text-xl font-bold">{{ $t('dashboard.common.list') }}</h1>
       <MfButton variant="primary" @click="router.push(SCREEN_NEW_PATH)"><Plus :size="16"/>{{ $t('dashboard.common.create') }}</MfButton>
     </div>
+    <MfTabs :active-key="view" @update:active-key="selectView(String($event))">
+      <MfTabPane item-key="mine" :tab="$t('dashboard.share.mine')"/>
+      <MfTabPane item-key="shared" :tab="$t('dashboard.share.sharedWithMe')"/>
+    </MfTabs>
 
     <div v-if="loading" class="flex min-h-60 flex-1 items-center justify-center"><MfSpinner size="lg"/></div>
     <div v-else-if="failed" class="flex min-h-60 flex-1 items-center justify-center">
       <MfAlert variant="danger" :title="$t('dashboard.studio.loadFailed')"><MfButton size="sm" @click="load">{{ $t('common.refresh') }}</MfButton></MfAlert>
     </div>
-    <MfEmpty v-else-if="!data.length" class="min-h-60 flex-1" :title="$t('dashboard.studio.noDashboards')"/>
+    <MfEmpty v-else-if="!data.length" class="min-h-60 flex-1" :title="$t(view === 'shared' ? 'dashboard.share.noShared' : 'dashboard.studio.noDashboards')"/>
     <template v-else>
       <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
         <article v-for="item in dashboards" :key="item.code" class="flex min-w-0 flex-col rounded-mf-lg border border-line bg-surface">
@@ -23,46 +27,59 @@
             <div class="flex min-w-0 items-center gap-2">
               <RouterLink :to="item.link" class="min-w-0 flex-1 truncate font-semibold hover:text-primary">{{ item.name }}</RouterLink>
               <MfTag v-if="item.code === userStore.homePage" size="sm" variant="primary"><House :size="12"/>{{ $t('dashboard.home.tag') }}</MfTag>
+              <MfTag v-if="!item.own" size="sm">{{ $t('dashboard.share.permission.' + item.permission) }}</MfTag>
               <MfTag size="sm" :variant="item.published ? 'success' : 'primary'">{{ $t(item.published ? 'dashboard.studio.status.published' : 'dashboard.studio.status.draft') }}</MfTag>
             </div>
             <p v-if="item.description" class="line-clamp-2 text-xs text-content-secondary">{{ item.description }}</p>
             <div class="mt-auto flex items-center justify-between gap-2">
-              <span class="min-w-0 truncate text-xs text-content-tertiary">{{ item.updateTime || item.createTime }}</span>
+              <span class="min-w-0 truncate text-xs text-content-tertiary">{{ item.own ? item.updateTime || item.createTime : $t('dashboard.share.from', { owner: item.ownerName || '—' }) }}</span>
               <div class="flex shrink-0 items-center gap-1">
                 <MfTooltip v-if="item.published" :content="$t(item.code === userStore.homePage ? 'dashboard.home.unset' : 'dashboard.home.set')">
                   <MfButton variant="ghost" size="sm" :class="item.code === userStore.homePage && 'text-primary'" :loading="homeBusy === item.code"
                             :aria-label="$t(item.code === userStore.homePage ? 'dashboard.home.unset' : 'dashboard.home.set')" @click="toggleHome(item.code)"><House :size="15"/></MfButton>
                 </MfTooltip>
-                <MfButton variant="ghost" size="sm" :aria-label="$t('dashboard.common.modify')" @click="router.push(item.editor)"><Pencil :size="15"/></MfButton>
-                <MfButton variant="ghost" size="sm" :aria-label="$t('dashboard.common.delete')" class="text-danger" @click="deleteItem = item"><Trash2 :size="15"/></MfButton>
+                <MfTooltip v-if="item.own" :content="$t('dashboard.share.action')">
+                  <MfButton variant="ghost" size="sm" :aria-label="$t('dashboard.share.action')" @click="shareItem = item"><Share2 :size="15"/></MfButton>
+                </MfTooltip>
+                <MfButton v-if="item.editable" variant="ghost" size="sm" :aria-label="$t('dashboard.common.modify')" @click="router.push(item.editor)"><Pencil :size="15"/></MfButton>
+                <MfButton v-if="item.own" variant="ghost" size="sm" :aria-label="$t('dashboard.common.delete')" class="text-danger" @click="deleteItem = item"><Trash2 :size="15"/></MfButton>
               </div>
             </div>
           </div>
         </article>
       </div>
-      <MfPagination class="mt-auto justify-end" :current="page" :page-size="size" :total="total" show-size :page-sizes="[12, 24, 36]"
+      <MfPagination v-if="view === 'mine'" class="mt-auto justify-end" :current="page" :page-size="size" :total="total" show-size :page-sizes="[12, 24, 36]"
                     @change="changePage"/>
     </template>
   </section>
 
   <DashboardDelete v-if="deleteItem" :is-visible="true" :data="deleteItem" @close="deleteItem = undefined; load()"/>
+  <DashboardShare v-if="shareItem" :dashboard="shareItem" @close="shareItem = undefined"/>
 </template>
 
 <script setup lang="ts">
 import { SCREEN_NEW_PATH, screenDesignPath, screenViewPath } from '@/model/screen-route'
-import { computed, onScopeDispose, ref, shallowRef } from 'vue'
-import { useRouter } from 'vue-router'
-import { House, LayoutDashboard, Monitor, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { House, LayoutDashboard, Monitor, Pencil, Plus, Share2, Trash2 } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores/user'
 import DashboardService from '@/services/dashboard'
-import type { DashboardModel } from '@/model/dashboard'
+import { permits, type DashboardModel } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'
 import { FilterModel } from '@/model/filter'
 import DashboardDelete from './DashboardDelete.vue'
+import DashboardShare from './DashboardShare.vue'
 
 const router = useRouter()
+const route = useRoute()
+// My screens, or the ones others share with me; the choice is kept in the address.
+const view = computed(() => route.query.tab === 'shared' ? 'shared' : 'mine')
+function selectView(value: string) {
+  void router.replace({ path: route.path, query: value === 'shared' ? { tab: 'shared' } : {} })
+}
+const shareItem = shallowRef<DashboardModel>()
 const { t } = useI18n()
 const userStore = useUserStore()
 const homeBusy = ref('')
@@ -89,8 +106,10 @@ const dashboards = computed(() => data.value.map(item => {
   const document = readDashboardDocument(item.configure, item.name, item.description)
   const published = !!document.published
   const editor = screenDesignPath(item.code)
-  return { ...item, published, mode: (document.published ?? document.draft).mode, editor,
-    link: published ? screenViewPath(item.code || '') : editor }
+  const own = !item.permission || item.permission === 'OWNER'
+  const editable = permits(item.permission, 'EDIT')
+  return { ...item, published, own, editable, mode: (document.published ?? document.draft).mode, editor,
+    link: published || !editable ? screenViewPath(item.code || '') : editor }
 }))
 let request = 0
 async function load() {
@@ -98,6 +117,14 @@ async function load() {
   loading.value = true
   failed.value = false
   try {
+    if (view.value === 'shared') {
+      const response = await DashboardService.shared()
+      if (id !== request) return
+      if (!response.status || !Array.isArray(response.data)) throw new Error('Unable to load shared dashboards')
+      data.value = response.data
+      total.value = response.data.length
+      return
+    }
     const response = await DashboardService.getAll({ ...new FilterModel(), page: page.value, size: size.value })
     if (id !== request) return
     if (!response.status || !Array.isArray(response.data?.content)) throw new Error('Unable to load dashboards')
@@ -116,6 +143,7 @@ function changePage(current: number, pageSize: number) {
   size.value = pageSize
   void load()
 }
+watch(view, () => { page.value = 1; void load() })
 void load()
 onScopeDispose(() => { request++ })
 </script>

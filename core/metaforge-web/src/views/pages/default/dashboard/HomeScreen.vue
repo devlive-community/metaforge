@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
+import { computed, onScopeDispose, provide, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
@@ -8,6 +8,7 @@ import type { DashboardModel } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'
 import { useUserStore } from '@/stores/user'
 import DashboardPresentationCanvas from '@/views/pages/admin/dashboard/components/DashboardPresentationCanvas.vue'
+import { dashboardScreenKey } from '@/composables/useDashboardReports'
 
 /**
  * The user's home page when they chose a data screen for it: only the published screen, under the
@@ -17,6 +18,7 @@ import DashboardPresentationCanvas from '@/views/pages/admin/dashboard/component
 const props = defineProps<{ code: string }>()
 const router = useRouter(), { t } = useI18n(), userStore = useUserStore()
 const code = computed(() => props.code)
+provide(dashboardScreenKey, code)
 const data = shallowRef<DashboardModel>()
 const loading = ref(false), failed = ref(false), busy = ref(false)
 const design = computed(() => data.value ? readDashboardDocument(data.value.configure, data.value.name, data.value.description, t).published : undefined)
