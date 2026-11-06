@@ -48,7 +48,8 @@ const actualType = computed(() => props.showPassword || props.type === 'password
 const wrapperClass = computed(() => clsx(
     // Fills its container unless the caller gives it a width.
     !hasWidthClass(attrs.class) && 'w-full',
-    'mf-invalidable inline-flex min-w-0 max-w-full items-center rounded-mf-md border bg-surface',
+    // Keep native/autofill paint inside the rounded frame; the outer element owns the border and focus ring.
+    'mf-invalidable inline-flex min-w-0 max-w-full items-center overflow-hidden rounded-mf-md border bg-surface',
     CONTROL_SIZES[props.size],
     'px-0! gap-0!',
     TRANSITION,
