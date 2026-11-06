@@ -93,6 +93,9 @@ enum class TotalSource
     /** 全量读取后已知的精确值 / exact, the source was fully materialized */
     MATERIALIZED,
 
+    /** 任务成功结束、源端已读完时的精确值 / exact, the run finished after reading the whole source */
+    COMPLETED,
+
     UNKNOWN
 }
 

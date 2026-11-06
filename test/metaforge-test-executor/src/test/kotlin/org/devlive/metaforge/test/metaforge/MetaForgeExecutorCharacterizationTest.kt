@@ -169,6 +169,9 @@ class MetaForgeExecutorCharacterizationTest
         assertEquals(100L, last.rowsRead)
         assertEquals(100L, last.rowsWritten)
         assertEquals(10L, last.batchesCommitted)
+        // 未预统计时，成功结束后源端总行数即为已读行数 / without a pre-count a finished run reports the rows read as the total
+        assertEquals(100L, last.totalRows)
+        assertEquals(TotalSource.COMPLETED, last.totalSource)
         assertEquals(2, last.queueCapacity)
         assertEquals(0, last.queueDepth)
         // 字节按值估算：Int 4 字节 + "row-N" 的 UTF-8 长度

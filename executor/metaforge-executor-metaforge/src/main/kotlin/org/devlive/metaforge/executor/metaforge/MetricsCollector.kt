@@ -156,7 +156,10 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
             series.removeFirst()
         }
 
-        val total = totalRows
+        // A successful run has read the whole source, so the rows read are its exact total
+        // even when no pre-count or materialized read supplied one.
+        val completed = finished && totalRows < 0
+        val total = if (completed) point.read else totalRows
         val written = point.written
         val progress = when
         {
@@ -179,7 +182,7 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
             bytesRead = point.bytesRead,
             bytesWritten = point.bytesWritten,
             totalRows = total,
-            totalSource = totalSource,
+            totalSource = if (completed) TotalSource.COMPLETED else totalSource,
             progress = progress,
             elapsedMs = elapsedMs,
             etaSeconds = eta,
