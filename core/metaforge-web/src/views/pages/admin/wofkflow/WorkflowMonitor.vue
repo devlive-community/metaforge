@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeft, ExternalLink, Play, RefreshCw, Square } from '@lucide/vue'
+import { Play, RefreshCw, Square } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
 import WorkflowService from '@/services/workflow'
 import { workflowStateVariant, type WorkflowModel, type WorkflowRun } from '@/model/workflow'
@@ -80,10 +80,20 @@ async function stop() {
 onBeforeUnmount(() => { alive = false; generation++; logGeneration++; clearTimeout(timer) })
 </script>
 <template>
-  <WorkflowShell :code="code">
-    <div v-if="loading" class="flex flex-1 items-center justify-center"><MfSpinner :label="$t('common.loading')"/></div>
-    <div v-else class="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
-      <header class="mb-5 flex flex-wrap items-center justify-between gap-3"><div class="min-w-0"><router-link to="/workflow" class="mb-2 flex items-center gap-1 text-xs text-content-tertiary hover:text-primary"><ArrowLeft :size="12"/>{{ $t('workflow.studio.list') }}</router-link><h1 class="flex items-center gap-3 text-xl font-semibold text-content">{{ record?.name }} · {{ $t('workflow.studio.runDetails') }}<MfTag v-if="selected" :variant="workflowStateVariant(selected.state)">{{ stateText(selected.state) }}</MfTag></h1><p v-if="selected" class="mt-2 text-xs text-content-tertiary">{{ selected.id }} · {{ selected.executor }}</p></div><div class="flex items-center gap-2"><router-link :to="`/workflow/info/${code}`"><MfButton size="sm"><ExternalLink :size="14"/>{{ $t('workflow.studio.viewWorkflow') }}</MfButton></router-link><MfButton size="sm" :loading="refreshing" @click="refresh()"><RefreshCw :size="14"/>{{ $t('common.refresh') }}</MfButton><MfButton v-if="record?.state === 'RUNNING'" variant="danger" size="sm" :loading="busy" @click="stop"><Square :size="14"/>{{ $t('workflow.studio.stop') }}</MfButton><MfButton v-else variant="primary" size="sm" :loading="busy" :disabled="!record" @click="execute"><Play :size="14"/>{{ $t('workflow.studio.runAgain') }}</MfButton></div></header>
+  <WorkflowShell :code="code" :name="record?.name" :state="record?.state">
+    <div v-if="loading" class="flex h-full min-h-96 items-center justify-center"><MfSpinner :label="$t('common.loading')"/></div>
+    <div v-else class="min-w-0">
+      <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div class="min-w-0">
+          <h1 class="flex items-center gap-3 text-xl leading-7 font-semibold text-content">{{ $t('workflow.studio.runs') }}<MfTag v-if="selected" :variant="workflowStateVariant(selected.state)">{{ stateText(selected.state) }}</MfTag></h1>
+          <p v-if="selected" class="mt-1 truncate text-xs text-content-tertiary">{{ selected.id }} · {{ selected.executor }}</p>
+        </div>
+        <div class="flex shrink-0 items-center gap-2">
+          <MfButton size="sm" :loading="refreshing" @click="refresh()"><RefreshCw :size="14"/>{{ $t('common.refresh') }}</MfButton>
+          <MfButton v-if="record?.state === 'RUNNING'" variant="danger" size="sm" :loading="busy" @click="stop"><Square :size="14"/>{{ $t('workflow.studio.stop') }}</MfButton>
+          <MfButton v-else variant="primary" size="sm" :loading="busy" :disabled="!record" @click="execute"><Play :size="14"/>{{ $t('workflow.studio.runAgain') }}</MfButton>
+        </div>
+      </header>
       <MfAlert v-if="failure" class="mb-4" variant="danger" :title="failure"/>
       <template v-if="selected">
         <div class="mb-5 grid grid-cols-2 gap-3 xl:grid-cols-5"><div v-for="item in [{ label: 'executionState', value: stateText(selected.state) }, { label: 'duration', value: elapsed(selected.finishedAt ? selected.elapsed : metrics?.elapsedMs ?? selected.elapsed) }, { label: 'read', value: metrics?.rowsRead ?? '—' }, { label: 'written', value: metrics?.rowsWritten ?? selected.count ?? '—' }, { label: 'failedRows', value: metrics?.rowsFailed ?? '—' }]" :key="item.label" class="rounded-mf-lg border border-line bg-surface px-5 py-4"><p class="text-xs text-content-tertiary">{{ $t('workflow.studio.' + item.label) }}</p><strong class="mt-2 block text-xl text-content">{{ item.value }}</strong></div></div>

@@ -1,24 +1,41 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { ArrowLeft, Clock3, GitBranch, LayoutList, Settings2 } from '@lucide/vue'
-const props = defineProps<{ code?: string; studio?: boolean }>()
+import { ArrowLeft, Clock3, GitBranch, Workflow } from '@lucide/vue'
+import { workflowStateVariant } from '@/model/workflow'
+/**
+ * Layout of one workflow's pages. The full-screen editor (`studio`) takes the whole viewport;
+ * other pages sit beside a side menu leading to the orchestration and the run records, laid out
+ * like the account settings.
+ */
+const props = defineProps<{ code?: string; name?: string; state?: string; studio?: boolean }>()
 const route = useRoute()
-const links = computed(() => [
-  { key: 'list', path: '/workflow', icon: LayoutList, disabled: false },
-  { key: 'design', path: props.code ? `/workflow/info/${props.code}` : '/workflow/info', icon: GitBranch, disabled: false },
-  { key: 'nodeConfig', path: `/workflow/info/${props.code}?view=config`, icon: Settings2, disabled: !props.code },
-  { key: 'runs', path: `/workflow/monitor/${props.code}`, icon: Clock3, disabled: !props.code },
+const items = computed(() => [
+  { key: 'design', href: `/workflow/info/${props.code}`, icon: GitBranch },
+  { key: 'runs', href: `/workflow/monitor/${props.code}`, icon: Clock3 },
 ])
-const active = computed(() => route.path.includes('/monitor/') ? 'runs' : route.path.includes('/info') ? route.query.view === 'config' ? 'nodeConfig' : 'design' : 'list')
+const selected = computed(() => items.value.find(item => route.path === item.href)?.href || '')
 </script>
 <template>
-  <div class="flex h-full min-h-0 w-full overflow-hidden bg-surface-hover">
-    <aside v-if="!studio" class="hidden w-[196px] shrink-0 flex-col border-r border-line bg-surface lg:flex">
-      <div class="px-5 pb-3 pt-6 text-[10px] font-semibold tracking-widest text-content-tertiary">WORKSPACE / {{ $t('common.workflow') }}</div>
-      <nav class="flex flex-col gap-2 p-3"><template v-for="link in links" :key="link.key"><span v-if="link.disabled" class="flex items-center gap-3 rounded-mf-md px-3 py-3 text-xs text-content-tertiary opacity-50"><component :is="link.icon" :size="16"/>{{ $t('workflow.studio.' + link.key) }}</span><router-link v-else :to="link.path" class="flex items-center gap-3 rounded-mf-md px-3 py-3 text-xs font-medium transition-colors" :class="active === link.key ? 'bg-primary-light text-primary' : 'text-content-secondary hover:bg-surface-hover'"><component :is="link.icon" :size="16"/>{{ $t('workflow.studio.' + link.key) }}</router-link></template></nav>
-      <div class="mt-auto border-t border-line p-4"><router-link to="/" class="flex items-center gap-2 text-xs text-content-tertiary hover:text-primary"><ArrowLeft :size="14"/>{{ $t('common.home') }}</router-link></div>
-    </aside>
+  <div v-if="studio" class="flex h-full min-h-0 w-full overflow-hidden bg-surface-hover">
     <div class="flex min-h-0 min-w-0 flex-1 flex-col"><slot/></div>
+  </div>
+  <div v-else class="grid min-w-0 w-full grid-cols-1 gap-4 lg:grid-cols-[264px_minmax(0,1fr)]">
+    <aside class="flex min-w-0 flex-col self-start rounded-mf-lg border border-line bg-surface px-3 py-4 shadow-mf-sm lg:min-h-[calc(100vh-220px)]">
+      <router-link to="/workflow" class="mb-3 flex items-center gap-1 px-2 text-xs text-content-tertiary hover:text-primary"><ArrowLeft :size="12"/>{{ $t('workflow.studio.list') }}</router-link>
+      <div class="flex items-center gap-2.5 px-2 pb-3.5">
+        <span class="flex size-9 shrink-0 items-center justify-center rounded-mf-md bg-primary-light text-primary"><Workflow :size="18"/></span>
+        <div class="min-w-0">
+          <div class="truncate text-sm font-semibold text-content" :title="name">{{ name || $t('common.workflow') }}</div>
+          <MfTag v-if="state" class="mt-1" size="sm" :variant="workflowStateVariant(state)">{{ $t('dataTable.state' + state) }}</MfTag>
+        </div>
+      </div>
+      <MfMenu mode="inline" :selected-keys="[selected]">
+        <MfMenuItem v-for="item in items" :key="item.href" :key_="item.href">
+          <router-link :to="item.href" class="flex w-full items-center gap-2.5"><component :is="item.icon" :size="15"/><span>{{ $t('workflow.studio.' + item.key) }}</span></router-link>
+        </MfMenuItem>
+      </MfMenu>
+    </aside>
+    <div class="min-w-0"><slot/></div>
   </div>
 </template>
