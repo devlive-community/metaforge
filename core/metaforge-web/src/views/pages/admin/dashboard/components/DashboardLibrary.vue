@@ -16,7 +16,7 @@
         <template #prefix><Search :size="14"/></template>
       </MfInput>
     </div>
-    <div v-if="tab === 'tools'" class="grid min-h-0 flex-1 grid-cols-[108px_minmax(0,1fr)] border-t border-line">
+    <div v-if="tab === 'tools'" class="grid min-h-0 flex-1 grid-cols-[clamp(140px,35%,180px)_minmax(0,1fr)] border-t border-line">
       <nav class="overflow-y-auto border-r border-line p-2" :aria-label="$t('dashboard.studio.toolCategories')">
         <p class="mb-2 px-1 text-xs font-semibold text-content-tertiary">{{ $t('dashboard.studio.toolCategories') }}</p>
         <button v-for="group in toolGroups" :key="group.title" type="button" :aria-pressed="category === group.title && !toolQuery.trim()"
@@ -24,7 +24,7 @@
                 :class="category === group.title && !toolQuery.trim() ? 'bg-primary/10 font-semibold text-primary' : 'text-content-secondary'"
                 @click="category = group.title; toolQuery = ''">
           <component :is="group.icon" :size="14" class="shrink-0"/>
-          <span class="min-w-0 flex-1 truncate" :title="$t('dashboard.studio.' + group.title)">{{ $t('dashboard.studio.' + group.title) }}</span>
+          <span class="min-w-0 flex-1 break-words">{{ $t('dashboard.studio.' + group.title) }}</span>
           <span class="shrink-0 rounded-full bg-surface-hover px-1 text-[10px] tabular-nums">{{ group.items.length }}</span>
         </button>
       </nav>

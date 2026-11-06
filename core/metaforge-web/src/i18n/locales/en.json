@@ -4182,5 +4182,7 @@
   "dataset.runs.loadFailed": "Cannot load sync records",
   "dataTable.statePAUSING": "Pausing",
   "dataTable.statePAUSED": "Paused",
-  "dataTable.stateRETRYING": "Retrying"
+  "dataTable.stateRETRYING": "Retrying",
+  "dashboard.studio.resizeLibrary": "Resize component library",
+  "dashboard.studio.resizeProperties": "Resize properties"
 }

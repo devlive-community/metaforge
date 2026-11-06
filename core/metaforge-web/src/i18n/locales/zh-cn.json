@@ -4182,5 +4182,7 @@
   "dataset.runs.loadFailed": "加载同步记录失败",
   "dataTable.statePAUSING": "暂停中",
   "dataTable.statePAUSED": "已暂停",
-  "dataTable.stateRETRYING": "重试中"
+  "dataTable.stateRETRYING": "重试中",
+  "dashboard.studio.resizeLibrary": "调整组件库宽度",
+  "dashboard.studio.resizeProperties": "调整属性配置宽度"
 }

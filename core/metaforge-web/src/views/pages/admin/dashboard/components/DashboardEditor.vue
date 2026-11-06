@@ -61,7 +61,7 @@
       </div>
     </header>
 
-    <div class="editor-workspace relative flex min-h-0 flex-1 overflow-hidden" :inert="!!saving">
+    <div class="editor-workspace relative flex min-h-0 flex-1 overflow-hidden" :class="resizingPanel && 'panel-resizing'" :style="{ '--library-width': libraryWidth + 'px', '--properties-width': propertiesWidth + 'px' }" :inert="!!saving">
       <Transition name="side-panel-slide">
         <div v-show="libraryVisible" id="dashboard-library" data-dashboard-panel="library" tabindex="-1" :inert="!libraryVisible"
              class="library-panel inset-y-0 left-0 z-10 shrink-0 outline-none"
@@ -72,6 +72,7 @@
                             :pinned="pinnedPanels.library" :pinnable="wide" @pin="togglePin('library')" @close="togglePanel('library')"
                             @add="add" @select="selectFromLibrary" @reorder="reorder" @search="loadAssets"
                             @context="(event, id) => editorBoard?.openContext(event, id)" @group="group(groupable)"/>
+          <MfResizeHandle v-if="wide" v-model="librarySizing.width.value" class="absolute inset-y-0 -right-1 z-20 mx-0!" :min="280" :max="panelMax" :label="$t('dashboard.studio.resizeLibrary')" @pointerdown.capture="startPanelResize('library')" @change="librarySizing.save"/>
         </div>
       </Transition>
 
@@ -102,6 +103,7 @@
                               @children="assignChildren" @add-child="kind => add(kind, undefined, selectedId)" @select-child="id => selectedId = id" @detach="detachChild"
                               @background-image="setBackgroundImage"
                               @remove="remove" @save="save(false)" @preview="previewing = true"/>
+          <MfResizeHandle v-if="wide" v-model="propertiesSizing.width.value" reverse class="absolute inset-y-0 -left-1 z-20 mx-0!" :min="280" :max="panelMax" :label="$t('dashboard.studio.resizeProperties')" @pointerdown.capture="startPanelResize('properties')" @change="propertiesSizing.save"/>
         </div>
       </Transition>
 
@@ -142,6 +144,7 @@ import { computed, nextTick, onMounted, onScopeDispose, reactive, ref, shallowRe
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
+import { usePanelWidth } from '@/composables/usePanelWidth'
 import { v4 as uuid } from 'uuid'
 import { ArrowUpRight, ChevronLeft, ChevronRight, Laptop, Layers, Maximize, Minimize, PanelsTopLeft, Pencil, Play, Redo2, Save, Smartphone, Tablet, Undo2 } from '@lucide/vue'
 import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
@@ -189,6 +192,16 @@ const desktopMedia = window.matchMedia('(min-width: 64rem)')
 const wide = ref(desktopMedia.matches)
 const libraryVisible = computed(() => wide.value ? desktopPanels.library : compactPanel.value === 'library')
 const propertiesVisible = computed(() => wide.value ? desktopPanels.properties : compactPanel.value === 'properties')
+const viewportWidth = ref(window.innerWidth)
+const librarySizing = usePanelWidth('dashboard.library.width', { initial: 320, min: 280, max: 520 })
+const propertiesSizing = usePanelWidth('dashboard.properties.width', { initial: 320, min: 280, max: 520 })
+const panelMax = computed(() => Math.min(520, Math.max(280, Math.floor((viewportWidth.value - 320) / 2))))
+const libraryWidth = computed(() => Math.min(librarySizing.width.value, wide.value ? panelMax.value : viewportWidth.value * .85))
+const propertiesWidth = computed(() => Math.min(propertiesSizing.width.value, wide.value ? panelMax.value : viewportWidth.value * .85))
+const resizingPanel = ref<Panel>()
+function startPanelResize(panel: Panel) { resizingPanel.value = panel; panels.forEach(cancelPanelTimer) }
+function endPanelResize() { const panel = resizingPanel.value; resizingPanel.value = undefined; if (panel) schedulePanelHide(panel) }
+function resizeViewport() { viewportWidth.value = window.innerWidth }
 const fullscreen = ref(false)
 const fullscreenAvailable = document.fullscreenEnabled
 let enteredFullscreen = false
@@ -320,7 +333,7 @@ function previewPanel(panel: Panel, event: PointerEvent) {
 }
 function schedulePanelHide(panel: Panel) {
   cancelPanelTimer(panel)
-  if (!isFloating(panel) || !desktopPanels[panel] || hoveredPanel === panel) return
+  if (resizingPanel.value || !isFloating(panel) || !desktopPanels[panel] || hoveredPanel === panel) return
   panelTimers[panel] = window.setTimeout(() => {
     cancelPanelTimer(panel)
     const focus = document.activeElement
@@ -409,12 +422,18 @@ async function toggleFullscreen() {
   catch { MfMessage.error(t('dashboard.studio.fullscreenFailed')) }
 }
 onMounted(() => {
+  window.addEventListener('resize', resizeViewport)
+  window.addEventListener('pointerup', endPanelResize)
+  window.addEventListener('pointercancel', endPanelResize)
   desktopMedia.addEventListener('change', syncViewport)
   document.addEventListener('fullscreenchange', syncFullscreen)
   document.addEventListener('pointerover', trackPanelHover)
   document.addEventListener('pointerout', trackPanelHover)
 })
 onScopeDispose(() => {
+  window.removeEventListener('resize', resizeViewport)
+  window.removeEventListener('pointerup', endPanelResize)
+  window.removeEventListener('pointercancel', endPanelResize)
   desktopMedia.removeEventListener('change', syncViewport)
   document.removeEventListener('fullscreenchange', syncFullscreen)
   document.removeEventListener('pointerover', trackPanelHover)
@@ -642,15 +661,14 @@ async function save(publish: boolean) {
 
 <style scoped>
 .wall-editor-viewport { container-type: size; }
-.editor-workspace { --panel-width: min(320px, 85%); }
 .library-panel, .properties-panel { display: flex; width: var(--panel-width); }
-.library-panel { --panel-slide-offset: -100%; }
-.properties-panel { --panel-slide-offset: 100%; justify-content: flex-end; }
+.library-panel { --panel-width: var(--library-width); --panel-slide-offset: -100%; }
+.properties-panel { --panel-width: var(--properties-width); --panel-slide-offset: 100%; justify-content: flex-end; }
 .side-panel-content { width: 100%; flex-shrink: 0; }
 .side-panel-docked .side-panel-content { width: var(--panel-width); }
 .panel-toggle { position: absolute; top: 50%; z-index: 15; width: 25px; height: 46px; padding: 0; transform: translateY(-50%); }
-.panel-toggle-left { left: 0; }
-.panel-toggle-right { right: 0; }
+.panel-toggle-left { --panel-width: var(--library-width); left: 0; }
+.panel-toggle-right { --panel-width: var(--properties-width); right: 0; }
 .panel-toggle-left[aria-expanded='true'] { left: var(--panel-width); }
 .panel-toggle-right[aria-expanded='true'] { right: var(--panel-width); }
 @media (prefers-reduced-motion: no-preference) {
@@ -668,8 +686,6 @@ async function save(publish: boolean) {
   .side-panel-backdrop-enter-active, .side-panel-backdrop-leave-active { transition: opacity var(--mf-duration-base) var(--mf-easing); }
   .side-panel-backdrop-enter-from, .side-panel-backdrop-leave-to { opacity: 0; }
   .panel-toggle { transition: left var(--mf-duration-base) var(--mf-easing), right var(--mf-duration-base) var(--mf-easing); }
-}
-@media (min-width: 64rem) {
-  .editor-workspace { --panel-width: 320px; }
+  .panel-resizing .panel-toggle { transition: none; }
 }
 </style>
