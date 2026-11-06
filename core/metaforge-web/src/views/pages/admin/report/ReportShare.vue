@@ -92,7 +92,7 @@
           </MfFormItem>
           <MfFormItem v-if="state.token && state.embed" :label="$t('report.share.code')" name="code">
             <MfTextarea :model-value="iframeCode" readonly :rows="3"/>
-            <MfButton class="mt-2" @click="copy(iframeCode)">
+            <MfButton class="self-start" @click="copy(iframeCode)">
               <Copy :size="15"/>{{ $t('report.share.copyCode') }}
             </MfButton>
           </MfFormItem>

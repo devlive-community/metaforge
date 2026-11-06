@@ -10,11 +10,16 @@ const props = withDefaults(defineProps<{
     requiredMark?: boolean
     /** Hover hint rendered as a help icon on the right of the label. */
     tip?: string
+    /** Stack the control and its help content; use inline only for compound controls. */
+    controlLayout?: 'stack' | 'inline'
+    /** A server-side or asynchronous field error. */
+    error?: string
 }>(), {
     label: '',
     rules: () => [],
     requiredMark: undefined,
     tip: '',
+    controlLayout: 'stack',
 })
 
 interface FormContext {
@@ -28,6 +33,7 @@ interface FormContext {
 
 const form = inject<FormContext | null>('mfForm', null)
 const error = ref<string | undefined>()
+const displayedError = computed(() => props.error || error.value)
 
 const value = computed(() => form?.model.value?.[props.name])
 
@@ -110,7 +116,7 @@ const labelClasses = computed(() => [
 </script>
 
 <template>
-    <div class="flex w-full" :class="horizontal ? 'flex-row items-start gap-3' : 'flex-col gap-1.5'">
+    <div class="flex min-w-0 w-full max-w-full" :class="horizontal ? 'flex-row items-start gap-3' : 'flex-col gap-1.5'">
         <label v-if="label || tip" :class="labelClasses">
             <span>{{ label }}</span>
             <MfTooltip v-if="tip" :content="tip">
@@ -125,11 +131,11 @@ const labelClasses = computed(() => [
             </MfTooltip>
         </label>
         <div class="min-w-0 flex-1">
-            <div class="flex w-full" :class="error ? ' [&_.mf-invalidable]:border-danger' : ''">
+            <div class="flex min-w-0 w-full gap-2" :class="[controlLayout === 'inline' ? 'items-start' : 'flex-col', displayedError && '[&_.mf-invalidable]:border-danger']">
                 <slot />
             </div>
-            <p v-if="error" class="mt-1 text-xs text-danger">
-                {{ error }}
+            <p v-if="displayedError" role="alert" class="mt-1 break-words text-xs text-danger">
+                {{ displayedError }}
             </p>
         </div>
     </div>

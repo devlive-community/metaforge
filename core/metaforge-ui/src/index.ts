@@ -15,6 +15,7 @@ import MfDrawer from './components/MfDrawer.vue'
 import MfDropdown from './components/MfDropdown.vue'
 import MfEmpty from './components/MfEmpty.vue'
 import MfForm from './components/MfForm.vue'
+import MfFormGrid from './components/MfFormGrid.vue'
 import MfFormItem from './components/MfFormItem.vue'
 import MfInput from './components/MfInput.vue'
 import MfInputNumber from './components/MfInputNumber.vue'
@@ -63,6 +64,7 @@ export const components = {
     MfDropdown,
     MfEmpty,
     MfForm,
+    MfFormGrid,
     MfFormItem,
     MfInput,
     MfInputNumber,
@@ -122,6 +124,7 @@ export {
     MfDropdown,
     MfEmpty,
     MfForm,
+    MfFormGrid,
     MfFormItem,
     MfInput,
     MfInputNumber,

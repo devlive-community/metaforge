@@ -3829,5 +3829,11 @@
   "notify.center.detail": "通知详情",
   "notify.center.back": "返回列表",
   "notify.center.view": "查看",
-  "notify.center.entityGone": "对象已删除"
+  "notify.center.entityGone": "对象已删除",
+  "user.validation.required": "请填写此项",
+  "user.validation.currentPassword": "请输入当前密码",
+  "user.validation.passwordSize": "新密码长度应为 8–32 个字符",
+  "user.validation.usernameTaken": "该用户名已存在",
+  "user.validation.usernameChecking": "请等待用户名可用性检测完成",
+  "user.validation.fontSize": "请输入大于零的字号"
 }

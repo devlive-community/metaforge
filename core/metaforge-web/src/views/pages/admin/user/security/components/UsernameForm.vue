@@ -8,33 +8,33 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid min-w-0 grid-cols-1 xl:grid-cols-3 gap-4">
       <!-- 表单区 -->
-      <div class="lg:col-span-2">
+      <div class="min-w-0 xl:col-span-2">
         <div class="dc-rename__card">
           <div v-if="defaultLoading" class="flex items-center justify-center py-10">
             <MfSpinner/>
           </div>
-          <MfForm v-else-if="!defaultLoading && formState" layout="vertical" class="dc-rename__form">
+          <MfForm v-else-if="!defaultLoading && formState" ref="form" :model="formState" layout="vertical" class="dc-rename__form">
+              <MfFormGrid>
               <MfFormItem name="oldUsername" :label="$t('user.common.currentUsername')">
                 <MfInput :model-value="formState.oldUsername" disabled/>
               </MfFormItem>
 
-              <MfFormItem name="newUsername" required-mark :label="$t('user.common.newUsername')" :tip="$t('user.tip.newUsernameFormat')">
-                <MfInput v-model="formState.newUsername"
-                         @input="onUsernameInput">
+              <MfFormItem name="newUsername" :error="checkState === 'error' ? checkMessage : undefined" :rules="usernameRules" :label="$t('user.common.newUsername')" :tip="$t('user.tip.newUsernameFormat')">
+                <MfInput v-model="formState.newUsername" name="new-username" autocomplete="off" :maxlength="20" :disabled="submitting" :invalid="checkState === 'error'">
                   <template #suffix>
                     <CircleCheck :size="14" v-if="checkState === 'success'" class="dc-rename__check--success"/>
                     <CircleX :size="14" v-else-if="checkState === 'error'" class="dc-rename__check--error"/>
                     <MfLoadingIcon v-else-if="checkState === 'loading'" :size="14" class="dc-rename__check--loading"/>
                   </template>
                 </MfInput>
-                <div v-if="checkState === 'error'" class="dc-rename__field-error">{{ checkMessage }}</div>
               </MfFormItem>
 
-              <MfFormItem name="password" required-mark :label="$t('user.common.currentPassword')" :tip="$t('user.tip.passwordConfirm')">
-                <MfInput v-model="formState.password" type="password" show-password/>
+              <MfFormItem name="password" class="col-span-full" :rules="[{ required: true, message: $t('user.validation.currentPassword') }]" :label="$t('user.common.currentPassword')" :tip="$t('user.tip.passwordConfirm')">
+                <MfInput v-model="formState.password" name="current-password" autocomplete="current-password" :disabled="submitting" type="password" show-password/>
               </MfFormItem>
+              </MfFormGrid>
             </MfForm>
 
             <div class="dc-rename__actions">
@@ -77,7 +77,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
@@ -91,12 +91,14 @@ defineOptions({ name: 'UsernameForm' })
 const { t } = useI18n()
 const router = useRouter()
 
+const form = ref<any>()
 const defaultLoading = ref(false)
 const submitting = ref(false)
 const formState = ref<UsernameModel | null>(null)
 
 const checkState = ref<'idle' | 'loading' | 'success' | 'error'>('idle')
 const checkMessage = ref('')
+let checkGeneration = 0
 let checkTimer: ReturnType<typeof setTimeout> | null = null
 
 const infoTips = [
@@ -118,6 +120,7 @@ const handlerInitialize = () => {
 }
 
 const onUsernameInput = () => {
+  ++checkGeneration
   checkState.value = 'idle'
   checkMessage.value = ''
   const username = formState.value?.newUsername?.trim()
@@ -130,16 +133,18 @@ const onUsernameInput = () => {
     return
   }
 
+  if (!/^[A-Za-z_][A-Za-z0-9_]{3,19}$/.test(username)) { checkState.value = 'error'; checkMessage.value = t('user.tip.newUsernameFormat'); return }
   checkState.value = 'loading'
   checkTimer = setTimeout(() => validateUsername(username), 500)
 }
 
 const validateUsername = (username: string) => {
+  const generation = checkGeneration
   checkState.value = 'loading'
   UserService.checkUsername(username)
              .then(response => {
                // 输入可能已变化，丢弃过期结果
-               if (formState.value?.newUsername?.trim() !== username) {
+               if (generation !== checkGeneration || formState.value?.newUsername?.trim() !== username) {
                  return
                }
                if (response.status && response.data === true) {
@@ -148,16 +153,19 @@ const validateUsername = (username: string) => {
                }
                else {
                  checkState.value = 'error'
-                 checkMessage.value = response.message || t('user.tip.renameFailed')
+                 checkMessage.value = response.code === 4027 ? t('user.validation.usernameTaken') : response.code === 4026 ? t('user.tip.newUsernameFormat') : response.message || t('user.tip.renameFailed')
                }
              })
              .catch(() => {
+               if (generation !== checkGeneration || formState.value?.newUsername?.trim() !== username) return
                checkState.value = 'error'
                checkMessage.value = t('common.networkError')
              })
 }
 
-const onSubmit = () => {
+const onSubmit = async () => {
+  if (submitting.value) return
+  try { await form.value?.validate() } catch { return }
   submitting.value = true
   UserService.changeUsername(formState.value as UsernameModel)
              .then((response) => {
@@ -175,6 +183,9 @@ const onSubmit = () => {
 }
 
 const onReset = () => {
+  ++checkGeneration
+  if (checkTimer) clearTimeout(checkTimer)
+  form.value?.clearValidate()
   if (formState.value) {
     formState.value.newUsername = undefined
     formState.value.password = undefined
@@ -183,6 +194,12 @@ const onReset = () => {
   checkMessage.value = ''
 }
 
+const usernameRules = computed(() => [
+  { required: true, pattern: /^[A-Za-z_][A-Za-z0-9_]{3,19}$/, message: t('user.tip.newUsernameFormat') },
+  { validator: () => checkState.value === 'success' || checkMessage.value || t('user.validation.usernameChecking') },
+])
+watch(() => formState.value?.newUsername, onUsernameInput)
+onBeforeUnmount(() => { ++checkGeneration; if (checkTimer) clearTimeout(checkTimer) })
 handlerInitialize()
 </script>
 
@@ -305,4 +322,10 @@ handlerInitialize()
     flex-shrink: 0;
     margin-top: 1px;
 }
+</style>
+
+<style scoped>
+.dc-rename__form { min-width: 0; max-width: 42rem; }
+.dc-rename__card { min-width: 0; }
+.dc-rename__actions { flex-wrap: wrap; }
 </style>

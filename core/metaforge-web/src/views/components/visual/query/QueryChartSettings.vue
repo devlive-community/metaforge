@@ -1,20 +1,22 @@
 <template>
   <section v-for="group in groups" :key="group.title" class="space-y-3 border-t border-line pt-4 first:border-0 first:pt-0">
     <h4 class="flex items-center gap-2 font-semibold"><span class="size-1.5 rounded-full bg-primary"/>{{ label(group.title) }}</h4>
-    <div v-for="field in group.fields" :key="field.key" class="min-w-0">
-      <label v-if="field.control === 'switch'" class="flex items-center justify-between gap-3">
-        <span>{{ label(field.key) }}</span>
-        <MfSwitch :model-value="Boolean(options[field.key])" :aria-label="label(field.key)" @update:model-value="set(field.key, $event)"/>
+    <MfFormGrid>
+    <div v-for="field in group.fields" :key="field.key" class="min-w-0" :class="(field.control === 'textarea' || field.key === 'colors') && 'col-span-full'">
+      <label v-if="field.control === 'switch'" class="flex min-h-9 items-center justify-between gap-2 text-sm text-content-secondary">
+        <span class="min-w-0">{{ label(field.key) }}</span>
+        <MfSwitch class="shrink-0" :model-value="Boolean(options[field.key])" :aria-label="label(field.key)" @update:model-value="set(field.key, $event)"/>
       </label>
       <MfFormItem v-else :name="field.key" :label="label(field.key)">
         <MfSelect v-if="field.control === 'select'" :model-value="String(options[field.key] ?? '')" :options="field.choices" @update:model-value="set(field.key, $event)"/>
-        <MfInputNumber v-else-if="field.control === 'number'" class="w-full" :model-value="options[field.key] as number | undefined"
+        <MfInputNumber v-else-if="field.control === 'number'" class="w-full" decimal-only commit-on-change :model-value="options[field.key] as number | undefined"
                        :min="field.min" :max="field.max" :precision="field.precision" @update:model-value="set(field.key, $event)"/>
         <MfTextarea v-else-if="field.control === 'textarea'" :model-value="String(options[field.key] ?? '')" :placeholder="field.placeholder" :rows="3"
                     @update:model-value="set(field.key, $event)"/>
         <MfInput v-else :model-value="String(options[field.key] ?? '')" :placeholder="field.placeholder" @update:model-value="set(field.key, $event)"/>
       </MfFormItem>
     </div>
+    </MfFormGrid>
   </section>
 </template>
 

@@ -3829,5 +3829,11 @@
   "notify.center.detail": "Notification",
   "notify.center.back": "Back to list",
   "notify.center.view": "Open",
-  "notify.center.entityGone": "Deleted"
+  "notify.center.entityGone": "Deleted",
+  "user.validation.required": "This field is required",
+  "user.validation.currentPassword": "Enter your current password",
+  "user.validation.passwordSize": "Use 8–32 characters for the new password",
+  "user.validation.usernameTaken": "This username is already taken",
+  "user.validation.usernameChecking": "Wait for username availability to be checked",
+  "user.validation.fontSize": "Enter a font size greater than zero"
 }

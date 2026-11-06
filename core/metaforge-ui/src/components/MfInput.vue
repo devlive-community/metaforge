@@ -48,7 +48,7 @@ const actualType = computed(() => props.showPassword || props.type === 'password
 const wrapperClass = computed(() => clsx(
     // Fills its container unless the caller gives it a width.
     !hasWidthClass(attrs.class) && 'w-full',
-    'mf-invalidable inline-flex items-center rounded-mf-md border bg-surface',
+    'mf-invalidable inline-flex min-w-0 max-w-full items-center rounded-mf-md border bg-surface',
     CONTROL_SIZES[props.size],
     'px-0! gap-0!',
     TRANSITION,
@@ -84,7 +84,7 @@ defineExpose({
             :disabled="disabled"
             :readonly="readonly"
             :maxlength="maxlength"
-            class="h-full min-w-0 flex-1 appearance-none border-0 bg-transparent px-3 text-sm text-content placeholder:text-content-placeholder outline-none focus:ring-0"
+            class="h-full w-0 min-w-0 flex-1 appearance-none border-0 bg-transparent px-3 text-sm text-content placeholder:text-content-placeholder outline-none focus:ring-0"
             :class="readonly ? 'cursor-default' : ''"
             :autocomplete="autocomplete"
             :name="name"

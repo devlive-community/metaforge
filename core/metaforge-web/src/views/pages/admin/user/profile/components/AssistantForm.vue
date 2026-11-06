@@ -9,9 +9,9 @@
       <div class="dc-ai__slogan">AI for Better Data</div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid min-w-0 grid-cols-1 xl:grid-cols-3 gap-4">
       <!-- 基础配置 -->
-      <div class="lg:col-span-2">
+      <div class="min-w-0 xl:col-span-2">
         <div class="dc-ai__card">
           <div class="dc-ai__section-head">
             <div class="dc-ai__section-icon">
@@ -24,43 +24,45 @@
           </div>
 
           <div class="relative">
-            <MfForm v-if="formState" layout="vertical" class="dc-ai__form">
-              <MfFormItem name="host" required-mark :label="$t('user.common.host')" :tip="$t('user.tip.host')">
-                <MfInput v-model="formState.host"
+            <MfForm v-if="formState" ref="form" :model="formState" layout="vertical" class="dc-ai__form">
+              <MfFormGrid>
+              <MfFormItem name="host" :rules="[{ required: true, message: $t('user.validation.required') }]" :label="$t('user.common.host')" :tip="$t('user.tip.host')">
+                <MfInput v-model="formState.host" name="assistant-host" autocomplete="url"
                          :placeholder="$t('user.placeholder.host')"/>
               </MfFormItem>
 
-              <MfFormItem name="token" required-mark :label="$t('user.common.apiToken')" :tip="$t('user.tip.token')">
-                <MfInput v-model="formState.token" type="password" show-password>
+              <MfFormItem name="token" :rules="[{ required: true, message: $t('user.validation.required') }]" :label="$t('user.common.apiToken')" :tip="$t('user.tip.token')">
+                <MfInput v-model="formState.token" name="assistant-token" autocomplete="new-password" type="password" show-password>
                   <template #suffix>
                     <span class="dc-ai__kbd">🔑</span>
                   </template>
                 </MfInput>
               </MfFormItem>
 
-              <MfFormItem name="timeout" required-mark :label="$t('user.common.timeoutSeconds')" :tip="$t('user.tip.timeout')">
+              <MfFormItem name="timeout" :rules="[{ required: true, message: $t('user.validation.required') }]" :label="$t('user.common.timeoutSeconds')" :tip="$t('user.tip.timeout')">
                 <MfInputNumber v-model="formState.timeout"
-                                class="w-full"
+                                class="w-full" decimal-only commit-on-change
                                 :min="1"
                                 :max="600"/>
               </MfFormItem>
 
-              <MfFormItem name="contentCount" required-mark :label="$t('user.common.contextCount')" :tip="$t('user.tip.contentCount')">
+              <MfFormItem name="contentCount" :rules="[{ required: true, message: $t('user.validation.required') }]" :label="$t('user.common.contextCount')" :tip="$t('user.tip.contentCount')">
                 <MfInputNumber v-model="formState.contentCount"
-                                class="w-full"
+                                class="w-full" decimal-only commit-on-change
                                 :min="1"
                                 :max="20"/>
               </MfFormItem>
+              </MfFormGrid>
             </MfForm>
 
             <div class="dc-ai__actions">
               <MfButton variant="primary"
                         :loading="loading.submitting"
-                        :disabled="!canSubmit"
+                        :disabled="!canSubmit || loading.default"
                         @click="onSubmit">
                 {{ $t('user.common.saveConfig') }}
               </MfButton>
-              <MfButton :loading="testing" @click="onTestConnection">
+              <MfButton :loading="testing" :disabled="!canSubmit || loading.default" @click="onTestConnection">
                 {{ $t('user.common.testConnection') }}
               </MfButton>
             </div>
@@ -107,7 +109,7 @@
           </div>
 
           <div class="dc-ai__providers">
-            <div v-for="provider in providers"
+            <button type="button" v-for="provider in providers"
                  :key="provider.name"
                  class="dc-ai__provider"
                  @click="selectProvider(provider)">
@@ -115,11 +117,11 @@
                 <component :size="15" :is="provider.icon" :style="{ color: provider.color }"/>
               </span>
               <span class="dc-ai__provider-name">{{ provider.name }}</span>
-            </div>
+            </button>
           </div>
 
           <div class="dc-ai__provider-tip">
-            <InfoCircleOutlined :style="{ fontSize: '12px' }"/>
+            <Info :size="12" class="shrink-0"/>
             <span>{{ $t('user.tip.quickConfigHint') }}</span>
           </div>
         </div>
@@ -132,7 +134,7 @@
 import { computed, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { BookOpen, Compass, Plug, Settings, Zap } from '@lucide/vue'
+import { BookOpen, Compass, Info, Plug, Settings, Zap } from '@lucide/vue'
 import UserService from '@/services/user'
 import { UserChatModel } from '@/model/user'
 import Common from '@/utils/common'
@@ -146,6 +148,7 @@ const loading = reactive({
   default: false,
   submitting: false
 })
+const form = ref<any>()
 const testing = ref(false)
 const formState = ref<UserChatModel | null>(null)
 
@@ -184,7 +187,8 @@ const handlerInitialize = () => {
              .finally(() => (loading.default = false))
 }
 
-const onSubmit = () => {
+const onSubmit = async () => {
+  try { await form.value?.validate() } catch { return }
   loading.submitting = true
   UserService.changeChart(formState.value as UserChatModel)
              .then((response) => {
@@ -395,4 +399,10 @@ handlerInitialize()
     margin-top: 12px;
     line-height: 1.5;
 }
+</style>
+
+<style scoped>
+.dc-ai__card, .dc-ai__form { min-width: 0; }
+.dc-ai__pagehead, .dc-ai__actions { flex-wrap: wrap; }
+.dc-ai__provider { text-align: left; }
 </style>
