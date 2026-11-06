@@ -11,6 +11,9 @@ data class ExecutorResponse(var timeout: Boolean = false,
                             var count: Int = 0,
                             /** 结束时的最终指标；执行器不上报指标时为 null / final metrics, null if not reported */
                             var metrics: ExecutorMetrics? = null) {
+    /** Additive property: keep existing plugin constructor/copy signatures compatible. */
+    var preview: List<Map<String, Any?>>? = null
+
     constructor(timeout: Boolean = false,
                 successful: Boolean = false,
                 state: RunState? = null,

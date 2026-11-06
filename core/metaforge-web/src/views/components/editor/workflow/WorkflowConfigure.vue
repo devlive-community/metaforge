@@ -1,172 +1,101 @@
-<template>
-  <div class="dc-workflow-configure flex flex-col h-full bg-white border-l" :style="{ width: `${ width }px` }">
-    <template v-if="selectedNode">
-      <div class="p-3 border-b">
-        <div class="text-sm font-semibold">{{ selectedNode.label }}</div>
-        <div class="text-xs text-gray-400 mt-1">{{ selectedNode.description }}</div>
-      </div>
-
-      <div class="flex-1 overflow-y-auto p-3">
-        <div v-for="item in selectedNode.configure || []"
-             :key="item.field"
-             class="mb-3">
-          <div class="text-xs text-gray-600 mb-1">
-            <span v-if="item.required" class="text-red-500">*</span>
-            {{ item.label }}
-          </div>
-
-          <MfInput v-if="item.type === 'input'"
-                   :model-value="item.value"
-                   :disabled="item.disabled"
-                   :placeholder="item.placeholder"
-                   :invalid="item.validated && !item.validated.valid"
-                   @update:model-value="(value) => onChange(item, value)"/>
-
-          <MfInput v-else-if="item.type === 'password'"
-                   type="password"
-                   show-password
-                   :model-value="item.value"
-                   :disabled="item.disabled"
-                   :placeholder="item.placeholder"
-                   :invalid="item.validated && !item.validated.valid"
-                   @update:model-value="(value) => onChange(item, value)"/>
-
-          <MfTextarea v-else-if="item.type === 'textarea'"
-                      :model-value="item.value"
-                      :disabled="item.disabled"
-                      :rows="3"
-                      :placeholder="item.placeholder"
-                      :invalid="item.validated && !item.validated.valid"
-                      @update:model-value="(value) => onChange(item, value)"/>
-
-          <MfInputNumber v-else-if="item.type === 'number'"
-                         :model-value="item.value"
-                         :disabled="item.disabled"
-                         :placeholder="item.placeholder"
-                         class="w-full"
-                         :invalid="item.validated && !item.validated.valid"
-                         @change="(value: any) => onChange(item, value)"/>
-
-          <MfSwitch v-else-if="item.type === 'switch'"
-                    :model-value="item.value === true || item.value === 'true'"
-                    :disabled="item.disabled"
-                    @update:model-value="(value: any) => onChange(item, value)"/>
-
-          <MfSelect v-else-if="item.type === 'select'"
-                    :model-value="item.value"
-                    :disabled="item.disabled"
-                    :placeholder="item.placeholder"
-                    clearable
-                    class="w-full"
-                    :options="(item.options || []) as any"
-                    @change="(value: any) => onChange(item, value)"/>
-
-          <MfSelect v-else-if="item.type === 'array'"
-                    :model-value="toArrayValue(item.value)"
-                    :disabled="item.disabled"
-                    tags
-                    searchable
-                    :placeholder="item.placeholder"
-                    class="w-full"
-                    :options="toArrayValue(item.value).map((v) => ({ label: v, value: v }))"
-                    @change="(value: any) => onChange(item, value)"/>
-
-          <MfTextarea v-else-if="item.type === 'map'"
-                      :model-value="toMapText(item.value)"
-                      :disabled="item.disabled"
-                      :rows="3"
-                      placeholder="key=value"
-                      :invalid="item.validated && !item.validated.valid"
-                      @update:model-value="(value) => onChange(item, fromMapText(value))"/>
-
-          <MfInput v-else
-                   :model-value="item.value"
-                   :disabled="item.disabled"
-                   :placeholder="item.placeholder"
-                   @update:model-value="(value) => onChange(item, value)"/>
-
-          <div v-if="item.description" class="text-[10px] text-gray-400 mt-1">{{ item.description }}</div>
-          <div v-if="item.validated && !item.validated.valid" class="text-xs text-red-500 mt-1">
-            {{ item.validated.message }}
-          </div>
-        </div>
-      </div>
-    </template>
-
-    <div v-else class="flex-1 flex items-center justify-center text-sm text-gray-400 p-4 text-center">
-      {{ $t('workflow.placeholder.selectNode') }}
-    </div>
-  </div>
-</template>
-
-<script lang="ts">
-import { defineComponent, PropType } from 'vue'
-import { ConfigureItem, NodeInstance } from './types'
-
-export default defineComponent({
-  name: 'WorkflowConfigure',
-  props: {
-    selectedNode: {
-      type: Object as PropType<NodeInstance | null>,
-      default: null
-    },
-    width: {
-      type: Number,
-      default: 300
-    }
-  },
-  emits: ['update:node'],
-  setup(props, { emit })
-  {
-    const validateItem = (item: ConfigureItem): { valid: boolean; message?: string } => {
-      if (!item.required) {
-        return { valid: true }
-      }
-      const empty = item.value === undefined || item.value === null || item.value === ''
-          || (Array.isArray(item.value) && item.value.length === 0)
-      return empty ? { valid: false, message: item.message || `${ item.label } is required` } : { valid: true }
-    }
-
-    const onChange = (item: ConfigureItem, value: any) => {
-      item.value = value
-      item.validated = validateItem(item)
-      if (props.selectedNode) {
-        emit('update:node', props.selectedNode)
-      }
-    }
-
-    const toArrayValue = (value: any): string[] => {
-      if (Array.isArray(value)) {
-        return value.map((v) => String(v))
-      }
-      if (value !== undefined && value !== null && value !== '') {
-        return [String(value)]
-      }
-      return []
-    }
-
-    const toMapText = (value: any): string => {
-      if (!value || typeof value !== 'object') {
-        return ''
-      }
-      return Object.entries(value)
-          .map(([key, val]) => `${ key }=${ val }`)
-          .join('\n')
-    }
-
-    const fromMapText = (text: string): Record<string, string> => {
-      const result: Record<string, string> = {}
-      text.split('\n')
-          .map((line) => line.trim())
-          .filter((line) => line.includes('='))
-          .forEach((line) => {
-            const index = line.indexOf('=')
-            result[line.slice(0, index).trim()] = line.slice(index + 1).trim()
-          })
-      return result
-    }
-
-    return { onChange, toArrayValue, toMapText, fromMapText }
-  }
+<script setup lang="ts">
+import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { Check, Maximize2, X } from '@lucide/vue'
+import SourceService from '@/services/source'
+import { FilterModel } from '@/model/filter'
+import type { ConfigureItem, NodeInstance } from './types'
+const props = defineProps<{ selectedNode: NodeInstance | null; expanded?: boolean; readonly?: boolean }>()
+const emit = defineEmits<{ 'update:node': [node: NodeInstance]; expand: []; close: [] }>()
+const { t, te } = useI18n()
+const tab = ref('basic'), form = ref<any>(), validated = ref(false), mapDrafts = ref<Record<string, string>>({})
+const values = computed(() => props.selectedNode?.data || {})
+const fields = computed(() => props.selectedNode?.configure || [])
+const sqlFields = computed(() => fields.value.filter(field => /query|sql$/i.test(field.field) && field.type === 'textarea'))
+const currentFields = computed(() => tab.value === 'sql' ? sqlFields.value : fields.value.filter(field => !sqlFields.value.includes(field) && (tab.value === 'advanced' ? !field.required : field.required)))
+const sources = ref<{ label: string; value: string }[]>([]), sourcesBusy = ref(false), sourcesFailed = ref(false), sourceSearch = ref(''), sourcePage = ref(1), sourceTotal = ref(0)
+let sourceTicket = 0
+async function loadSources(reset = true) {
+  const ticket = ++sourceTicket
+  sourcesBusy.value = true; sourcesFailed.value = false
+  const page = reset ? 1 : sourcePage.value + 1
+  try {
+    const response = await SourceService.getAll(Object.assign(new FilterModel(), { page, size: 20, keyword: sourceSearch.value }))
+    if (ticket !== sourceTicket) return
+    if (!response.status) throw Error(String(response.message))
+    const rows = response.data?.content || []
+    const options = rows.map((row: any) => ({ label: `${row.name} · ${row.type}`, value: row.code }))
+    sources.value = reset ? options : [...sources.value, ...options]; sourcePage.value = page; sourceTotal.value = response.data?.total || 0
+  } catch { if (ticket === sourceTicket) sourcesFailed.value = true }
+  finally { if (ticket === sourceTicket) sourcesBusy.value = false }
+}
+watch(() => props.selectedNode?.tid, () => { if (fields.value.some(field => field.type === 'source') && !sources.value.length) loadSources() }, { immediate: true })
+watch(() => props.selectedNode?.id, () => { tab.value = 'basic'; validated.value = false; mapDrafts.value = {}; form.value?.clearValidate?.() })
+function update(field: string, value: unknown) {
+  if (props.selectedNode) emit('update:node', { ...props.selectedNode, data: { ...values.value, [field]: value } })
+  validated.value = false
+}
+function setLabel(value: string) { if (props.selectedNode) emit('update:node', { ...props.selectedNode, label: value }) }
+const mapText = (value: unknown) => typeof value === 'string' ? value : value && typeof value === 'object' ? Object.entries(value).map(([key, val]) => `${key}=${val}`).join('\n') : ''
+const parseMap = (value: string) => Object.fromEntries(value.split('\n').filter(line => line.includes('=')).map(line => [line.slice(0, line.indexOf('=')).trim(), line.slice(line.indexOf('=') + 1).trim()]).filter(([key]) => key))
+function mapValue(text: string) {
+  const lines = text.split('\n').filter(line => line.trim())
+  const keys = lines.map(line => line.slice(0, line.indexOf('=')).trim())
+  return lines.every(line => line.indexOf('=') > 0 && line.slice(line.indexOf('=') + 1).trim()) && new Set(keys).size === keys.length ? parseMap(text) : text
+}
+function updateMap(field: string, text: string) { mapDrafts.value[field] = text; update(field, mapValue(text)) }
+watch(() => JSON.stringify(values.value), () => {
+  fields.value.filter(field => field.type === 'map').forEach(field => {
+    const raw = mapDrafts.value[field.field]
+    if (raw !== undefined && JSON.stringify(mapValue(raw)) !== JSON.stringify(values.value[field.field])) mapDrafts.value[field.field] = mapText(values.value[field.field])
+  })
 })
+const listValue = (value: unknown) => Array.isArray(value) ? value.map(String) : typeof value === 'string' ? value.split('\n').filter(Boolean) : []
+const rulesFor = (field: ConfigureItem) => [
+  ...(field.required ? [{ required: true, message: t('workflow.studio.required') }] : []),
+  ...(field.type === 'map' ? [{ validator: (value: unknown) => (!value && !field.required) || !!value && typeof value === 'object' && !Array.isArray(value) && (!field.required || Object.keys(value).length > 0) || t('workflow.studio.invalidMap') }] : []),
+  ...(field.type === 'array' ? [{ type: 'array' as const, required: field.required, message: t('workflow.studio.required') }] : []),
+]
+async function validate() {
+  try { await form.value?.validate(); validated.value = true } catch { validated.value = false }
+}
+const nodeDescription = computed(() => { const key = 'workflow.studio.nodeDescription.' + props.selectedNode?.tid; return te(key) ? t(key) : props.selectedNode?.description })
+const fieldDescription = (field: ConfigureItem) => { const key = 'workflow.studio.fieldDescription.' + field.field; return te(key) ? t(key) : field.description }
+const fieldLabel = (field: ConfigureItem) => { const key = 'workflow.studio.field.' + field.field; return te(key) ? t(key) : field.label }
 </script>
+<template>
+  <aside class="flex h-full min-h-0 flex-col border-l border-line bg-surface">
+    <div class="flex items-start justify-between border-b border-line px-4 py-3"><div class="min-w-0"><strong class="block truncate text-sm text-content">{{ selectedNode?.label || $t('workflow.studio.nodeConfig') }}</strong><p class="mt-1 text-xs text-content-tertiary">{{ $t('workflow.studio.nodeConfigHint') }}</p></div><div class="flex"><MfButton variant="ghost" size="sm" :aria-label="$t('workflow.studio.fullConfig')" @click="emit('expand')"><Maximize2 :size="14"/></MfButton><MfButton variant="ghost" size="sm" :aria-label="$t('common.close')" @click="emit('close')"><X :size="14"/></MfButton></div></div>
+    <template v-if="selectedNode">
+      <div class="flex shrink-0 border-b border-line px-3"><button v-for="item in ['basic', ...(sqlFields.length ? ['sql'] : []), 'advanced']" :key="item" type="button" class="flex-1 border-b-2 px-2 py-3 text-xs font-medium" :class="tab === item ? 'border-primary text-primary' : 'border-transparent text-content-tertiary hover:text-content'" @click="tab = item">{{ $t('workflow.studio.config.' + item) }}</button></div>
+      <div class="min-h-0 flex-1 overflow-y-auto p-4">
+        <MfForm ref="form" :model="values" layout="vertical" :key="`${selectedNode.id}-${tab}`">
+          <MfFormItem v-if="tab === 'basic'" :label="$t('workflow.studio.nodeName')"><MfInput :model-value="selectedNode.label" :disabled="readonly" @update:model-value="setLabel"/></MfFormItem>
+          <div v-if="tab === 'basic'" class="mb-5 rounded-mf-md bg-surface-hover px-3 py-2 text-xs leading-5 text-content-secondary">{{ nodeDescription }}</div>
+          <MfFormItem v-for="field in currentFields" :key="field.field" :name="field.field" :label="fieldLabel(field)" :rules="rulesFor(field)">
+            <div class="min-w-0 w-full">
+            <div v-if="field.type === 'source'" class="space-y-2">
+              <div class="flex gap-2"><MfInput v-model="sourceSearch" clearable :placeholder="$t('workflow.studio.searchSources')" @enter="loadSources()"/><MfButton size="sm" :loading="sourcesBusy" @click="loadSources()">{{ $t('common.search') }}</MfButton></div>
+              <MfSelect :model-value="values[field.field]" :disabled="readonly" class="w-full" :options="sources" :placeholder="$t('workflow.studio.selectSource')" @update:model-value="update(field.field, $event)"/>
+              <p v-if="values[field.field] && !sources.some(source => source.value === values[field.field])" class="break-all text-xs text-content-tertiary">{{ values[field.field] }}</p>
+              <MfButton v-if="sources.length < sourceTotal" size="sm" :loading="sourcesBusy" @click="loadSources(false)">{{ $t('workflow.studio.loadMore') }}</MfButton>
+              <MfAlert v-if="sourcesFailed" variant="danger" :title="$t('workflow.studio.sourcesFailed')"/>
+            </div>
+            <MfInputNumber v-else-if="field.type === 'number'" :model-value="Number(values[field.field]) || 0" :disabled="readonly" decimal-only commit-on-change class="w-full" :step="field.step || 1" :min="field.min" :max="field.max" @update:model-value="update(field.field, $event)"/>
+            <MfSwitch v-else-if="field.type === 'switch'" :model-value="values[field.field] === true" :disabled="readonly" @update:model-value="update(field.field, $event)"/>
+            <MfSelect v-else-if="field.type === 'select'" :model-value="values[field.field]" :disabled="readonly" class="w-full" :options="field.options || []" @update:model-value="update(field.field, $event)"/>
+            <MfSelect v-else-if="field.type === 'array'" :model-value="listValue(values[field.field])" :disabled="readonly" tags searchable class="w-full" :options="listValue(values[field.field]).map(value => ({ label: value, value }))" @update:model-value="update(field.field, $event)"/>
+            <MfTextarea v-else-if="field.type === 'map'" :model-value="mapDrafts[field.field] ?? mapText(values[field.field])" :disabled="readonly" :rows="6" placeholder="source_column=target_column" @update:model-value="updateMap(field.field, $event)"/>
+            <MfTextarea v-else-if="field.type === 'textarea'" :model-value="values[field.field]" :disabled="readonly" :rows="tab === 'sql' ? (expanded ? 18 : 10) : 4" class="font-mono text-xs" :placeholder="field.placeholder" @update:model-value="update(field.field, $event)"/>
+            <MfInput v-else :model-value="values[field.field]" :disabled="readonly" :type="field.type === 'password' ? 'password' : 'text'" :show-password="field.type === 'password'" :placeholder="field.placeholder" @update:model-value="update(field.field, $event)"/>
+            <p v-if="field.description" class="mt-1.5 text-[11px] leading-5 text-content-tertiary">{{ fieldDescription(field) }}</p>
+            </div>
+          </MfFormItem>
+          <MfEmpty v-if="!currentFields.length && tab !== 'basic'" size="sm" :title="$t('workflow.studio.noOptions')"/>
+        </MfForm>
+      </div>
+      <footer class="flex shrink-0 items-center justify-between gap-2 border-t border-line p-3"><span class="text-xs text-content-tertiary">{{ $t(validated ? 'workflow.studio.fieldsValid' : 'workflow.studio.autoApplied') }}</span><MfButton size="sm" :disabled="readonly" @click="validate"><Check :size="14"/>{{ $t('workflow.studio.checkFields') }}</MfButton></footer>
+    </template>
+    <MfEmpty v-else class="flex-1" :title="$t('workflow.placeholder.selectNode')" :description="$t('workflow.studio.configEmpty')"/>
+  </aside>
+</template>

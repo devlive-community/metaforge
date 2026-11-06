@@ -200,7 +200,9 @@ const createDefaultRouter = (router: Router) => {
             },
             {
                 path: 'workflow',
+                name: 'workflow',
                 meta: {
+                    workflowWorkspace: true,
                     title: 'common.workflow',
                     isRoot: false
                 },
@@ -208,11 +210,20 @@ const createDefaultRouter = (router: Router) => {
             },
             {
                 path: 'workflow/info/:code?',
+                name: 'workflow-info',
                 meta: {
+                    workflowWorkspace: true,
+                    workflowStudio: true,
                     title: 'common.workflow',
                     isRoot: false
                 },
                 component: () => import('@/views/pages/admin/wofkflow/WorkflowInfo.vue')
+            },
+            {
+                path: 'workflow/monitor/:code',
+                name: 'workflow-monitor',
+                meta: { workflowWorkspace: true, title: 'common.workflow', isRoot: false },
+                component: () => import('@/views/pages/admin/wofkflow/WorkflowMonitor.vue')
             }
         ]
     })

@@ -1,99 +1,70 @@
-import { ConfigureItem, NodeDefinition, NodeInstance, ValidationEntry, WorkflowConnection } from './types'
+import type { NodeDefinition, NodeInstance, ValidationEntry, WorkflowConnection } from './types'
 
-/**
- * Merges node definitions into node instances. Instances persisted in a saved
- * workflow only carry { id, tid, position, data } — definition fields
- * (label, ports, configure) are restored from the matching definition.
- */
-export const mergeDefinitions = (definitions: NodeDefinition[], instances: NodeInstance[]): NodeInstance[] => {
-  const definitionMap = new Map<string, NodeDefinition>()
-  definitions.forEach((definition) => definitionMap.set(definition.id, definition))
+export const nodeForPort = (port: string, nodes: NodeInstance[]) => nodes.find(node =>
+  (node.ports || []).some(item => port === `${node.id}-${item.id}`))
+export const mergeDefinitions = (definitions: NodeDefinition[], instances: NodeInstance[]): NodeInstance[] => instances.map((original, index) => {
+  const instance = { ...original, position: { x: Number.isFinite(original.position?.x) ? original.position.x : 60 + index * 280, y: Number.isFinite(original.position?.y) ? original.position.y : 180 } }
+  const definition = definitions.find(node => node.id === instance.tid)
+  if (!definition) return { ...instance, configure: [], ports: [] }
+  const data = { ...Object.fromEntries((definition.configure || []).filter(field => field.value !== undefined).map(field => [field.field, field.value])), ...instance.data }
+  return { ...instance, key: definition.key, category: definition.category, label: instance.label || definition.label,
+    description: instance.description ?? definition.description, ports: definition.ports || [], configure: definition.configure || [], data }
+})
+export const flattenNodes = (nodes: NodeInstance[]) => nodes.map(({ id, tid, category, position, key, data, label, description }) =>
+  ({ id, tid, category, position, key, data: { ...data }, label, description }))
 
-  return instances.map((instance) => {
-    const definition = definitionMap.get(instance.tid)
-    if (!definition) {
-      return instance
-    }
-
-    const configure: ConfigureItem[] = (definition.configure || []).map((item) => ({
-      ...item,
-      value: instance.data && instance.data[item.field] !== undefined ? instance.data[item.field] : item.value
-    }))
-
-    return {
-      ...instance,
-      label: definition.label,
-      key: definition.key,
-      description: definition.description,
-      category: instance.category || definition.category,
-      ports: definition.ports || [],
-      configure
-    }
-  })
+export function canConnect(nodes: NodeInstance[], connections: WorkflowConnection[], source: string, target: string): boolean {
+  const from = nodeForPort(source, nodes), to = nodeForPort(target, nodes)
+  if (!from || !to || from.id === to.id || !from.ports?.some(port => port.type === 'output' && source === `${from.id}-${port.id}`)
+    || !to.ports?.some(port => port.type === 'input' && target === `${to.id}-${port.id}`)) return false
+  if (connections.some(edge => edge.source === source || edge.target === target)) return false
+  const visited = new Set<string>()
+  const visit = (id: string): boolean => {
+    if (id === from.id) return true
+    if (visited.has(id)) return false
+    visited.add(id)
+    return connections.filter(edge => nodeForPort(edge.source, nodes)?.id === id)
+      .some(edge => { const next = nodeForPort(edge.target, nodes); return !!next && visit(next.id) })
+  }
+  return !visit(to.id)
 }
-
-/**
- * Flattens node configure values into the persisted data shape
- * { nodes: [{ id, tid, category, position, key, data }], connections }.
- */
-export const flattenNodes = (nodes: NodeInstance[]): Array<{ id: string; tid: string; category?: string; position: { x: number; y: number }; key?: string; data: Record<string, any> }> => {
-  return nodes.map((node) => {
-    const data: Record<string, any> = {}
-    if (node.data) {
-      Object.assign(data, node.data)
-    }
-    (node.configure || []).forEach((item) => {
-      data[item.field] = item.value
+export function validateWorkflow(nodes: NodeInstance[], connections: WorkflowConnection[], maxTransforms = 1): ValidationEntry[] {
+  const issues: ValidationEntry[] = []
+  if (nodes.filter(node => node.category === 'source').length !== 1 || nodes.filter(node => node.category === 'sink').length !== 1)
+    issues.push({ type: 'port', scope: '', message: 'workflow.studio.needEndpoints' })
+  if (nodes.filter(node => node.category === 'transform').length > maxTransforms)
+    issues.push({ type: 'port', scope: '', message: 'workflow.studio.transformLimit' })
+  nodes.forEach(node => {
+    if (!node.ports?.length) issues.push({ type: 'port', scope: node.id, message: 'workflow.studio.unsupportedNode' })
+    ;(node.configure || []).forEach(field => {
+      const value = node.data?.[field.field]
+      if (field.type === 'map' && value !== undefined && (typeof value !== 'object' || value === null || Array.isArray(value)))
+        issues.push({ type: 'configure', scope: node.id, message: 'workflow.studio.invalidMap' })
+      if (field.required && (value === undefined || value === null || String(value).trim() === '' ||
+        Array.isArray(value) && !value.length || typeof value === 'object' && !Object.keys(value).length))
+        issues.push({ type: 'configure', scope: node.id, message: `${node.label}: ${field.label}` })
     })
-    return {
-      id: node.id,
-      tid: node.tid,
-      category: node.category,
-      position: node.position,
-      key: node.key,
-      data
-    }
-  })
-}
-
-/**
- * Validates required configure fields and required ports against the
- * current connections, producing the workflow validation list.
- */
-export const validateWorkflow = (nodes: NodeInstance[], connections: WorkflowConnection[]): ValidationEntry[] => {
-  const validation: ValidationEntry[] = []
-
-  nodes.forEach((node) => {
-    (node.configure || []).forEach((item) => {
-      if (!item.required) {
-        return
-      }
-      const empty = item.value === undefined || item.value === null || item.value === ''
-          || (Array.isArray(item.value) && item.value.length === 0)
-      if (empty) {
-        validation.push({
-          type: 'configure',
-          scope: item.field,
-          message: item.message || `${ item.label } is required`
-        })
-      }
-    });
-
-    (node.ports || []).forEach((port) => {
-      if (!port.required) {
-        return
-      }
-      const portId = `${ node.id }-${ port.id }`
-      const connected = connections.some((connection) => connection.source === portId || connection.target === portId)
-      if (!connected) {
-        validation.push({
-          type: 'port',
-          scope: port.id,
-          message: `${ port.label || port.id } is required`
-        })
-      }
+    ;(node.ports || []).filter(port => port.required).forEach(port => {
+      if (!connections.some(edge => (port.type === 'output' ? edge.source : edge.target) === `${node.id}-${port.id}`))
+        issues.push({ type: 'port', scope: node.id, message: 'workflow.studio.disconnected' })
     })
   })
-
-  return validation
+  const accepted: WorkflowConnection[] = []
+  connections.forEach(edge => {
+    if (!canConnect(nodes, accepted, edge.source, edge.target)) issues.push({ type: 'port', scope: edge.id, message: 'workflow.studio.invalidConnection' })
+    else accepted.push(edge)
+  })
+  return issues
+}
+export function arrangeNodes(nodes: NodeInstance[], connections: WorkflowConnection[]): NodeInstance[] {
+  const ordered: NodeInstance[] = [], visited = new Set<string>()
+  const visit = (node: NodeInstance) => {
+    if (visited.has(node.id)) return
+    visited.add(node.id); ordered.push(node)
+    connections.filter(edge => nodeForPort(edge.source, nodes)?.id === node.id).forEach(edge => {
+      const next = nodeForPort(edge.target, nodes); if (next) visit(next)
+    })
+  }
+  nodes.filter(node => node.category === 'source').forEach(visit); nodes.forEach(visit)
+  return ordered.map((node, index) => ({ ...node, position: { x: 60 + index * 280, y: 180 } }))
 }

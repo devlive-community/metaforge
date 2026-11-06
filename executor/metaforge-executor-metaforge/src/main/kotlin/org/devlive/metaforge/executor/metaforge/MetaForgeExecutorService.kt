@@ -152,7 +152,42 @@ class MetaForgeExecutorService : ExecutorService
                 database, table, originColumns.size, batchSize, queueCapacity)
             val writer = outputPlugin.openBatchWriter(outputConfigure, database, table, originColumns.map { it.name }, batchSize)
             val channel = Channel(1, request.taskName, batchSize, queueCapacity, metrics, handle.cancellation, taskLog)
-            val written = channel.run(reader, writer)
+            val previewLimit = (options["previewRows"]?.toIntOrNull() ?: 0).coerceIn(0, 50)
+            val preview = mutableListOf<Map<String, Any?>>()
+            var previewBytes = 0
+            val sampledReader = object : SourceReader
+            {
+                override fun read(sink: RowSink)
+                {
+                    reader.read { row ->
+                        sink.accept(row)
+                        if (preview.size < previewLimit && previewBytes < 65536)
+                        {
+                            val sample = linkedMapOf<String, Any?>()
+                            originColumns.forEachIndexed { index, column ->
+                                if (previewBytes < 65536)
+                                {
+                                    val value = row.getOrNull(index)
+                                    val safe = when (value)
+                                    {
+                                        null, is Number, is Boolean -> value
+                                        is ByteArray -> "[binary]"
+                                        else -> value.toString().take(512)
+                                    }
+                                    previewBytes += column.name.length + (safe?.toString()?.length ?: 4)
+                                    sample[column.name] = safe
+                                }
+                            }
+                            preview.add(sample)
+                        }
+                    }
+                }
+            }
+            val written = channel.run(sampledReader, writer)
+            if (previewLimit > 0)
+            {
+                response.preview = preview
+            }
             stages.end(STAGE_TRANSFER)
 
             response.count = if (written > Int.MAX_VALUE.toLong()) Int.MAX_VALUE else written.toInt()

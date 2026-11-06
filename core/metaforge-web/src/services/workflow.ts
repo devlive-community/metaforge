@@ -12,6 +12,15 @@ class WorkflowService
         super(DEFAULT_PATH)
     }
 
+
+    publish(code: string): Promise<ResponseModel> { return new HttpUtils().put(`${DEFAULT_PATH}/publish/${encodeURIComponent(code)}`) }
+    catalog(): Promise<ResponseModel> { return new HttpUtils().get(`${DEFAULT_PATH}/catalog`) }
+    statistics(): Promise<ResponseModel> { return new HttpUtils().get(`${DEFAULT_PATH}/statistics`) }
+    validate(workflow: unknown): Promise<ResponseModel> { return new HttpUtils().post(`${DEFAULT_PATH}/validate`, workflow) }
+    getRun(code: string, run: string): Promise<ResponseModel> { return new HttpUtils().get(`${DEFAULT_PATH}/run/${encodeURIComponent(code)}/${encodeURIComponent(run)}`) }
+    runs(code: string): Promise<ResponseModel> { return new HttpUtils().get(`${DEFAULT_PATH}/runs/${encodeURIComponent(code)}`) }
+    runLog(code: string, run: string): Promise<ResponseModel> { return new HttpUtils().get(`${DEFAULT_PATH}/log/${encodeURIComponent(code)}/${encodeURIComponent(run)}`) }
+
     getLogger(code: string): Promise<ResponseModel>
     {
         return new HttpUtils().get(`${ DEFAULT_PATH }/log/${ code }`)

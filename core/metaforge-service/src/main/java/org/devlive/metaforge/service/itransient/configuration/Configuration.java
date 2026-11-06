@@ -26,4 +26,8 @@ public class Configuration
     private List<CategoryConfiguration> categories = new ArrayList<>();
     private List<NodeConfiguration> nodes = new ArrayList<>();
     private List<ConnectionConfiguration> connections;
+    private String description;
+    private Long timeout;
+    private Long publishedAt;
+    private Integer revision;
 }

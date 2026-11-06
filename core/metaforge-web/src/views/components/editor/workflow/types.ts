@@ -7,7 +7,7 @@ export interface ConfigureItem
 {
   field: string
   label: string
-  type: 'input' | 'number' | 'switch' | 'textarea' | 'password' | 'select' | 'array' | 'map'
+  type: 'input' | 'number' | 'switch' | 'textarea' | 'password' | 'select' | 'array' | 'map' | 'source'
   value?: any
   required?: boolean
   placeholder?: string
@@ -15,6 +15,9 @@ export interface ConfigureItem
   message?: string
   options?: Array<{ label: string; value: any }>
   disabled?: boolean
+  min?: number
+  max?: number
+  step?: number
   validated?: { valid: boolean; message?: string }
 }
 
@@ -36,6 +39,7 @@ export interface NodeDefinition
   category?: string
   configure?: ConfigureItem[]
   ports?: PortItem[]
+  supportExecutors?: string[]
 }
 
 export interface NodeInstance

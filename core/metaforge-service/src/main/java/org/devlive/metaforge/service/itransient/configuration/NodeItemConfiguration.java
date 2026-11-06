@@ -31,4 +31,7 @@ public class NodeItemConfiguration
     private Object value;
     private List<RuleConfiguration> rules;
     private List<OptionConfiguration> options;
+    private Double min;
+    private Double max;
+    private Double step;
 }

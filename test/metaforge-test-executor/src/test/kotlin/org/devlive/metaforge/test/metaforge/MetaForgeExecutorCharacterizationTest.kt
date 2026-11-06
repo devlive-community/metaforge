@@ -78,6 +78,25 @@ class MetaForgeExecutorCharacterizationTest
     }
 
     @Test
+    fun workflowPreviewContainsOnlyBoundedSuccessfullyWrittenRows()
+    {
+        val source = FakePluginService(streaming = true, headers = listOf("id", "name"),
+            streamRows = (1..80).map { listOf<Any?>(it, if (it == 1) null else "x".repeat(700)) })
+        val sink = FakePluginService(streaming = true)
+        val request = buildRequest(source, sink,
+            originColumns = linkedSetOf(OriginColumn("uid", "id"), OriginColumn("label", "name")))
+        request.options = request.options + ("previewRows" to "1000")
+        val response = MetaForgeExecutorService().start(request)
+        assertTrue(response.successful)
+        assertEquals(80, response.count)
+        assertEquals(50, response.preview!!.size)
+        assertEquals(1, response.preview!![0]["uid"])
+        assertEquals(null, response.preview!![0]["label"])
+        assertEquals(512, (response.preview!![1]["label"] as String).length)
+        assertEquals(80, sink.committedRows.size)
+    }
+
+    @Test
     fun streamingPreCountPopulatesProgressTotal()
     {
         val source = FakePluginService(

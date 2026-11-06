@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonEncoding;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
@@ -134,43 +135,9 @@ public class SeatunnelExecutorService
                 if (entry.getValue() instanceof Properties) {
                     Properties props = (Properties) entry.getValue();
                     for (Map.Entry<Object, Object> property : props.entrySet()) {
-                        String key = property.getKey().toString();
-                        Object value = property.getValue();
-
-                        if (value == null) {
-                            jsonGenerator.writeNullField(key);
-                        }
-                        else if (value instanceof Boolean) {
-                            jsonGenerator.writeBooleanField(key, (Boolean) value);
-                        }
-                        else if (value instanceof Number) {
-                            if (value instanceof Integer) {
-                                jsonGenerator.writeNumberField(key, (Integer) value);
-                            }
-                            else if (value instanceof Long) {
-                                jsonGenerator.writeNumberField(key, (Long) value);
-                            }
-                            else if (value instanceof Double) {
-                                jsonGenerator.writeNumberField(key, (Double) value);
-                            }
-                            else {
-                                jsonGenerator.writeStringField(key, value.toString());
-                            }
-                        }
-                        else {
-                            String strValue = value.toString();
-                            String[] split = strValue.split("\n");
-                            if (split.length > 1 && !key.equalsIgnoreCase("sql")) {
-                                jsonGenerator.writeArrayFieldStart(key);
-                                for (String line : split) {
-                                    jsonGenerator.writeString(line);
-                                }
-                                jsonGenerator.writeEndArray();
-                            }
-                            else {
-                                jsonGenerator.writeStringField(key, strValue);
-                            }
-                        }
+                        // Preserve arrays, nested connection properties, booleans and numeric values.
+                        // In particular, multiline SQL is a string rather than an array of lines.
+                        jsonGenerator.writeObjectField(property.getKey().toString(), property.getValue());
                     }
                 }
                 jsonGenerator.writeEndObject();
@@ -190,9 +157,9 @@ public class SeatunnelExecutorService
      * @param logger the Logger object for logging any errors that occur during the process
      * @return null if the configure file was generated successfully, or an error message if an exception occurred
      */
-    private String before(ExecutorRequest request, Logger logger)
+    String before(ExecutorRequest request, Logger logger)
     {
-        JsonFactory jsonFactory = new JsonFactory();
+        JsonFactory jsonFactory = new ObjectMapper().getFactory();
         String workFile = String.join(File.separator, request.getWorkHome(), request.getTaskName() + ".configure");
         try (JsonGenerator jsonGenerator = jsonFactory.createGenerator(new File(workFile), JsonEncoding.UTF8)) {
             jsonGenerator.setPrettyPrinter(new DefaultPrettyPrinter());
