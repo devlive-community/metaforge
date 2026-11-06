@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { Database, Download, Search, Settings2 } from '@lucide/vue'
+import { categoryLimit, type WorkflowExecutor } from '@/model/workflow'
 import type { NodeDefinition } from './types'
-const props = defineProps<{ nodes: NodeDefinition[]; executor: string; maxTransforms?: number; disabled?: boolean }>()
+const props = defineProps<{ executor: WorkflowExecutor; disabled?: boolean }>()
 const emit = defineEmits<{ add: [node: NodeDefinition] }>()
 const search = ref('')
-const groups = computed(() => ['source', 'transform', 'sink'].map(category => ({ category, nodes: props.nodes.filter(node => node.category === category
+const transforms = computed(() => categoryLimit(props.executor, 'transform'))
+const groups = computed(() => props.executor.categories.map(category => ({ category, nodes: props.executor.nodes.filter(node => node.category === category
   && `${node.label} ${node.key} ${node.description}`.toLowerCase().includes(search.value.trim().toLowerCase())) })).filter(group => group.nodes.length))
 function start(event: DragEvent, node: NodeDefinition) {
   if (props.disabled || !event.dataTransfer) { event.preventDefault(); return }
@@ -14,7 +16,7 @@ function start(event: DragEvent, node: NodeDefinition) {
 </script>
 <template>
   <aside class="flex h-full min-h-0 flex-col border-r border-line bg-surface">
-    <div class="border-b border-line px-4 py-3"><strong class="text-sm text-content">{{ $t('workflow.studio.library') }}</strong><p class="mt-1 text-xs text-content-tertiary">{{ executor }} · {{ $t('workflow.studio.dragHint') }}</p></div>
+    <div class="border-b border-line px-4 py-3"><strong class="text-sm text-content">{{ $t('workflow.studio.library') }}</strong><p class="mt-1 text-xs text-content-tertiary">{{ executor.name }} · {{ $t('workflow.studio.dragHint') }}</p></div>
     <div class="px-3 pt-3"><MfInput v-model="search" clearable :placeholder="$t('workflow.studio.searchNodes')"><template #prefix><Search :size="14"/></template></MfInput></div>
     <div class="min-h-0 flex-1 space-y-5 overflow-y-auto p-3">
       <section v-for="group in groups" :key="group.category"><h3 class="mb-2 px-1 text-xs font-semibold text-content-tertiary">{{ $t('workflow.studio.category.' + group.category) }}</h3>
@@ -26,6 +28,6 @@ function start(event: DragEvent, node: NodeDefinition) {
       </section>
       <MfEmpty v-if="!groups.length" size="sm" :title="$t('common.noData')"/>
     </div>
-    <p class="border-t border-line px-4 py-3 text-[11px] leading-5 text-content-tertiary">{{ $t(maxTransforms ? 'workflow.studio.pipelineHint' : 'workflow.studio.directPipelineHint', { count: maxTransforms || 0 }) }}</p>
+    <p class="border-t border-line px-4 py-3 text-[11px] leading-5 text-content-tertiary">{{ $t(transforms ? 'workflow.studio.pipelineHint' : 'workflow.studio.directPipelineHint', { count: transforms }) }}</p>
   </aside>
 </template>

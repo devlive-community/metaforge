@@ -4,9 +4,9 @@ import { useI18n } from 'vue-i18n'
 import { Grid2X2, Maximize, Minus, PanelLeftClose, PanelRightClose, Plus, Redo2, Undo2, Workflow } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
 import { usePanelWidth } from '@/composables/usePanelWidth'
-import type { WorkflowExecutor, WorkflowGraph } from '@/model/workflow'
+import { categoryLimit, type WorkflowExecutor, type WorkflowGraph } from '@/model/workflow'
 import type { NodeInstance, WorkflowConnection } from './types'
-import { arrangeNodes, canConnect, flattenNodes, mergeDefinitions } from './utils'
+import { arrangeNodes, canConnect, defaultValues, flattenNodes, mergeDefinitions } from './utils'
 import WorkflowCanvas from './WorkflowCanvas.vue'
 import WorkflowConfigure from './WorkflowConfigure.vue'
 import WorkflowPanel from './WorkflowPanel.vue'
@@ -39,10 +39,10 @@ function add(payload: { tid: string; position?: { x: number; y: number } }) {
   const definition = props.executor.nodes.find(node => node.id === payload.tid)
   if (!definition) return
   const count = nodes.value.filter(node => node.category === definition.category).length
-  const max = definition.category === 'transform' ? props.executor.maxTransforms : 1
+  const max = categoryLimit(props.executor, definition.category)
   if (count >= max) { MfMessage.warning(t('workflow.studio.nodeLimit', { count: max })); return }
   const node: NodeInstance = { id: crypto.randomUUID(), tid: definition.id, label: definition.label, key: definition.key, category: definition.category,
-    position: payload.position || { x: 60 + nodes.value.length * 270, y: 180 }, data: Object.fromEntries((definition.configure || []).filter(field => field.value !== undefined).map(field => [field.field, field.value])) }
+    position: payload.position || { x: 60 + nodes.value.length * 270, y: 180 }, data: defaultValues(definition.configure) }
   update([...nodes.value, node]); selected.value = node.id; right.value = true
   if (!payload.position) nextTick(() => canvas.value?.fit())
 }
@@ -60,7 +60,7 @@ defineExpose({ undo, redo, select: (id: string) => { selected.value = id; right.
 </script>
 <template>
   <div class="relative flex h-full min-h-0 min-w-0 overflow-hidden">
-    <WorkflowPanel v-if="left" class="shrink-0" :class="!wide && 'absolute inset-y-0 left-0 z-20 shadow-mf-lg'" :style="{ width: libraryWidth.width.value + 'px' }" :nodes="executor.nodes" :executor="executor.name" :max-transforms="executor.maxTransforms" :disabled="readonly" @add="add({ tid: $event.id })"/>
+    <WorkflowPanel v-if="left" class="shrink-0" :class="!wide && 'absolute inset-y-0 left-0 z-20 shadow-mf-lg'" :style="{ width: libraryWidth.width.value + 'px' }" :executor="executor" :disabled="readonly" @add="add({ tid: $event.id })"/>
     <MfResizeHandle v-if="left && wide" v-model="libraryWidth.width.value" :min="200" :max="360" :label="$t('workflow.studio.resizeLibrary')" @change="libraryWidth.save"/>
     <div class="flex min-w-0 flex-1 flex-col" :inert="!wide && (left || right)">
       <Teleport to="#workflow-tools"><div class="flex min-h-11 w-full shrink-0 flex-wrap items-center justify-between gap-2 bg-surface px-2 py-1 sm:px-4">

@@ -18,6 +18,8 @@ export interface ConfigureItem
   min?: number
   max?: number
   step?: number
+  /** Editor tab: basic, sql or advanced. Derived from the field when the declaration omits it. */
+  group?: 'basic' | 'sql' | 'advanced'
   validated?: { valid: boolean; message?: string }
 }
 
@@ -39,7 +41,6 @@ export interface NodeDefinition
   category?: string
   configure?: ConfigureItem[]
   ports?: PortItem[]
-  supportExecutors?: string[]
 }
 
 export interface NodeInstance
@@ -79,11 +80,4 @@ export interface WorkflowEditorModel
     connections: WorkflowConnection[]
   }
   validation?: ValidationEntry[]
-}
-
-export interface CategoryDefinition
-{
-  label: string
-  value: string
-  supportExecutors?: string[]
 }

@@ -1,4 +1,6 @@
-import type { NodeDefinition, NodeInstance, ValidationEntry, WorkflowConnection } from './types'
+import type { ConfigureItem, NodeDefinition, NodeInstance, ValidationEntry, WorkflowConnection } from './types'
+
+type Limits = Partial<Record<'sources' | 'transforms' | 'sinks', number>>
 
 export const nodeForPort = (port: string, nodes: NodeInstance[]) => nodes.find(node =>
   (node.ports || []).some(item => port === `${node.id}-${item.id}`))
@@ -6,7 +8,7 @@ export const mergeDefinitions = (definitions: NodeDefinition[], instances: NodeI
   const instance = { ...original, position: { x: Number.isFinite(original.position?.x) ? original.position.x : 60 + index * 280, y: Number.isFinite(original.position?.y) ? original.position.y : 180 } }
   const definition = definitions.find(node => node.id === instance.tid)
   if (!definition) return { ...instance, configure: [], ports: [] }
-  const data = { ...Object.fromEntries((definition.configure || []).filter(field => field.value !== undefined).map(field => [field.field, field.value])), ...instance.data }
+  const data = { ...defaultValues(definition.configure), ...instance.data }
   return { ...instance, key: definition.key, category: definition.category, label: instance.label || definition.label,
     description: instance.description ?? definition.description, ports: definition.ports || [], configure: definition.configure || [], data }
 })
@@ -28,22 +30,40 @@ export function canConnect(nodes: NodeInstance[], connections: WorkflowConnectio
   }
   return !visit(to.id)
 }
-export function validateWorkflow(nodes: NodeInstance[], connections: WorkflowConnection[], maxTransforms = 1): ValidationEntry[] {
+/** Declared default values of a field list, used for new nodes and empty settings. */
+export const defaultValues = (fields?: ConfigureItem[]): Record<string, any> =>
+  Object.fromEntries((fields || []).filter(field => field.value !== undefined).map(field => [field.field, field.value]))
+/** Editor tab of a field: the declared group, else SQL text areas, required fields, then the rest. */
+export const fieldGroup = (field: ConfigureItem): 'basic' | 'sql' | 'advanced' =>
+  field.group || (field.type === 'textarea' && /query|sql$/i.test(field.field) ? 'sql' : field.required ? 'basic' : 'advanced')
+const isEmpty = (value: unknown) => value === undefined || value === null || String(value).trim() === '' ||
+  Array.isArray(value) && !value.length || typeof value === 'object' && !Array.isArray(value) && !Object.keys(value as object).length
+/** Problems of values against declared fields, mirroring the server: required, maps, numeric bounds. */
+export function fieldIssues(fields: ConfigureItem[] | undefined, values: Record<string, any> | undefined, owner: string): string[] {
+  const issues: string[] = []
+  ;(fields || []).forEach(field => {
+    const value = values?.[field.field]
+    if (isEmpty(value)) { if (field.required) issues.push(`${owner}: ${field.label}`); return }
+    if (field.type === 'map' && (typeof value !== 'object' || Array.isArray(value))) issues.push('workflow.studio.invalidMap')
+    if (field.type === 'number' && (typeof value !== 'number' || field.min !== undefined && value < field.min || field.max !== undefined && value > field.max))
+      issues.push(`${owner}: ${field.label}`)
+  })
+  return issues
+}
+const limitOf = (limits: Limits, category: string) => {
+  const value = limits[`${category}s` as keyof Limits]
+  return typeof value === 'number' ? value : category === 'transform' ? 0 : 1
+}
+export function validateWorkflow(nodes: NodeInstance[], connections: WorkflowConnection[], limits: Limits = {}): ValidationEntry[] {
   const issues: ValidationEntry[] = []
-  if (nodes.filter(node => node.category === 'source').length !== 1 || nodes.filter(node => node.category === 'sink').length !== 1)
+  const count = (category: string) => nodes.filter(node => node.category === category).length
+  if (['source', 'sink'].some(category => count(category) < 1 || count(category) > limitOf(limits, category)))
     issues.push({ type: 'port', scope: '', message: 'workflow.studio.needEndpoints' })
-  if (nodes.filter(node => node.category === 'transform').length > maxTransforms)
+  if (count('transform') > limitOf(limits, 'transform'))
     issues.push({ type: 'port', scope: '', message: 'workflow.studio.transformLimit' })
   nodes.forEach(node => {
     if (!node.ports?.length) issues.push({ type: 'port', scope: node.id, message: 'workflow.studio.unsupportedNode' })
-    ;(node.configure || []).forEach(field => {
-      const value = node.data?.[field.field]
-      if (field.type === 'map' && value !== undefined && (typeof value !== 'object' || value === null || Array.isArray(value)))
-        issues.push({ type: 'configure', scope: node.id, message: 'workflow.studio.invalidMap' })
-      if (field.required && (value === undefined || value === null || String(value).trim() === '' ||
-        Array.isArray(value) && !value.length || typeof value === 'object' && !Object.keys(value).length))
-        issues.push({ type: 'configure', scope: node.id, message: `${node.label}: ${field.label}` })
-    })
+    fieldIssues(node.configure, node.data, node.label || node.tid).forEach(message => issues.push({ type: 'configure', scope: node.id, message }))
     ;(node.ports || []).filter(port => port.required).forEach(port => {
       if (!connections.some(edge => (port.type === 'output' ? edge.source : edge.target) === `${node.id}-${port.id}`))
         issues.push({ type: 'port', scope: node.id, message: 'workflow.studio.disconnected' })

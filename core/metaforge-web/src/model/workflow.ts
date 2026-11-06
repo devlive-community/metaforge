@@ -1,5 +1,5 @@
 import type { BaseModel } from '@/model/base'
-import type { NodeDefinition, NodeInstance, WorkflowConnection } from '@/views/components/editor/workflow/types'
+import type { ConfigureItem, NodeDefinition, NodeInstance, WorkflowConnection } from '@/views/components/editor/workflow/types'
 
 export interface WorkflowGraph {
   nodes: NodeInstance[]
@@ -8,6 +8,8 @@ export interface WorkflowGraph {
   timeout?: number
   publishedAt?: number
   revision?: number
+  /** Job settings declared by the executor (batch size, parallelism...). */
+  settings?: Record<string, unknown>
 }
 export interface WorkflowModel extends BaseModel {
   state?: string
@@ -17,11 +19,31 @@ export interface WorkflowModel extends BaseModel {
   executor?: string
   configure?: WorkflowGraph
 }
+export type WorkflowCategory = 'source' | 'transform' | 'sink'
+/** How a running workflow is stopped: by the executor itself, by interrupting the worker, or not at all. */
+export type WorkflowStopMode = 'cooperative' | 'interrupt' | 'none'
+export interface WorkflowCapabilities {
+  stop: WorkflowStopMode
+  rowCount: boolean
+  metrics: boolean
+  preview: boolean
+}
+/** An executor as declared by its plugin: the editor follows this declaration, and so does the server. */
 export interface WorkflowExecutor {
   name: string
+  description?: string
+  topology: 'pipeline'
+  capabilities: WorkflowCapabilities
+  /** Maximum nodes per category, keyed by `sources`, `transforms` and `sinks`. */
+  limits: Partial<Record<'sources' | 'transforms' | 'sinks', number>>
+  settings: ConfigureItem[]
   nodes: NodeDefinition[]
-  categories: string[]
-  maxTransforms: number
+  categories: WorkflowCategory[]
+}
+/** Maximum number of nodes of one category; inputs and outputs default to one, transforms to none. */
+export const categoryLimit = (executor: Pick<WorkflowExecutor, 'limits'> | undefined, category?: string): number => {
+  const value = executor?.limits?.[`${category}s` as keyof WorkflowExecutor['limits']]
+  return typeof value === 'number' ? Math.max(0, value) : category === 'transform' ? 0 : 1
 }
 export interface WorkflowRun {
   id: string
