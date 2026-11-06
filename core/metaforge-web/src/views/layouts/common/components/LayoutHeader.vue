@@ -1,10 +1,4 @@
 <template>
-  <MfAlert variant="info" closable class="dc-header-banner rounded-none!">
-    <router-link to="/chat" target="_blank" class="hover:text-primary">
-      Support ChatGPT
-    </router-link>
-  </MfAlert>
-
   <!-- 白底铺满整行：底色在宽屏下从两侧透出来 -->
   <div class="dc-header__bar">
     <div class="container dc-header__layout flex min-h-16 w-full items-center justify-between gap-6 py-3">
@@ -89,7 +83,7 @@
 
                   <MfMenuItem>
                     <router-link to="/account/profile" class="flex items-center space-x-2">
-                      <SettingOutlined :style="{ fontSize: '16px' }"/>
+                      <Settings :size="16"/>
                       <span>{{ $t('user.common.setting') }}</span>
                     </router-link>
                   </MfMenuItem>
@@ -117,7 +111,7 @@ import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { TokenUtils } from '@/utils/token'
 import router from '@/router'
-import { CircleHelp, LogOut } from '@lucide/vue'
+import { CircleHelp, LogOut, Settings } from '@lucide/vue'
 import { MENU_ICONS } from '@/config/menu-icons'
 
 defineOptions({ name: 'LayoutHeader' })

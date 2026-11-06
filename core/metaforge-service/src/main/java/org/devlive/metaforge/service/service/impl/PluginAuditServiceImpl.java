@@ -12,6 +12,7 @@ import org.devlive.metaforge.fs.FsResponse;
 import org.devlive.metaforge.fs.FsService;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.service.activity.HeatmapActivity;
+import org.devlive.metaforge.service.activity.QueryActivity;
 import org.devlive.metaforge.service.entity.PluginAuditEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
@@ -33,7 +34,9 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -65,6 +68,45 @@ public class PluginAuditServiceImpl
     public CommonResponse<Long> count()
     {
         return CommonResponse.success(this.pluginAuditRepository.countByUserId(UserDetailsService.getUser().getId()));
+    }
+
+    @Override
+    public CommonResponse<QueryActivity> getHomeActivity(int days)
+    {
+        if (days != 7 && days != 30) {
+            return CommonResponse.failure("Unsupported activity period");
+        }
+        Long userId = UserDetailsService.getUser().getId();
+        if (userId == null) {
+            return CommonResponse.failure("Query activity not found");
+        }
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.minusDays(days - 1L);
+        Map<String, Long> trend = new LinkedHashMap<>();
+        for (int day = 0; day < days; day++) {
+            trend.put(start.plusDays(day).toString(), 0L);
+        }
+        Map<String, Long> sources = new HashMap<>();
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("userId", userId);
+        parameters.put("from", Timestamp.valueOf(start.atStartOfDay()));
+        parameters.put("until", Timestamp.valueOf(today.plusDays(1).atStartOfDay()));
+        // Date grouping in Java keeps the same calendar boundaries on every metadata database.
+        jdbc.query("SELECT q.create_time, s.name FROM metaforge_source_query q "
+                        + "LEFT JOIN metaforge_source s ON q.source_id = s.id "
+                        + "WHERE q.user_id = :userId AND q.create_time >= :from AND q.create_time < :until",
+                parameters, (RowCallbackHandler) row -> {
+                    String date = row.getTimestamp(1).toLocalDateTime().toLocalDate().toString();
+                    trend.computeIfPresent(date, (key, count) -> count + 1);
+                    String name = row.getString(2);
+                    sources.merge(name == null ? "" : name, 1L, Long::sum);
+                });
+        List<QueryActivity.Day> points = trend.entrySet().stream()
+                .map(entry -> new QueryActivity.Day(entry.getKey(), entry.getValue())).collect(Collectors.toList());
+        List<QueryActivity.Source> distribution = sources.entrySet().stream()
+                .sorted(Map.Entry.<String, Long>comparingByValue(Comparator.reverseOrder()).thenComparing(Map.Entry.comparingByKey()))
+                .map(entry -> new QueryActivity.Source(entry.getKey(), entry.getValue())).collect(Collectors.toList());
+        return CommonResponse.success(new QueryActivity(days, sources.values().stream().mapToLong(Long::longValue).sum(), points, distribution));
     }
 
     @Override

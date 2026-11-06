@@ -97,6 +97,11 @@ class UserService
         return new HttpUtils().get(`${ DEFAULT_PATH_QUERY }/admin/contribution`)
     }
 
+    getHomeActivity(days: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH_QUERY }/admin/activity`, { days })
+    }
+
     getUserContributionRadar()
     {
         return new HttpUtils().get(`${ DEFAULT_PATH_QUERY }/admin/radar`)
