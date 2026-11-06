@@ -58,7 +58,8 @@ settings:
   - field: preCount
     label: Count rows first
     type: switch
-    description: Count the source rows before transferring to report progress.
+    value: true
+    description: Count the source rows before transferring, so the total and progress are known from the start. Turn it off for very large sources where counting is slow.
 nodes:
   - nodes/metaforge-source.yaml
   - nodes/metaforge-sink.yaml

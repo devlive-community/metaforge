@@ -14,7 +14,7 @@ const has = (...keys: string[]) => keys.every(key => props.declared?.includes(ke
 const label = (key: string) => te('workflow.studio.metric.' + key) ? t('workflow.studio.metric.' + key) : key
 const text = (key: string) => {
   const value = metricText(key, props.metrics)
-  // Without a pre-count the executor learns the source total only once the whole source is read.
+  // The total is counted before the run unless the workflow turned pre-counting off; it is then known once the run ends.
   if (value === undefined) return key === 'totalRows' ? t('workflow.studio.totalPending') : '—'
   return key === 'bottleneck' && te('workflow.studio.bottleneck.' + value) ? t('workflow.studio.bottleneck.' + value) : value
 }

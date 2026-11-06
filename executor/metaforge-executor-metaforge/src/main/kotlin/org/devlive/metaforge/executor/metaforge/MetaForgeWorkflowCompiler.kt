@@ -46,6 +46,12 @@ internal object MetaForgeWorkflowCompiler
         plan.settings.filterKeys { it in SETTINGS }.forEach { (key, value) ->
             value?.toString()?.takeIf { it.isNotBlank() }?.let { options[key] = it }
         }
+        // Workflows count the source first unless the workflow turns it off, so the total and progress
+        // are known before transferring; the executor-wide default stays off for dataset syncs.
+        if (plan.settings["preCount"] == null || plan.settings["preCount"].toString().isBlank())
+        {
+            options["preCount"] = "true"
+        }
         options["previewRows"] = PREVIEW_ROWS
 
         val request = ExecutorRequest(plan.taskName, plan.userName, input, output)

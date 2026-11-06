@@ -188,7 +188,7 @@ initialize()
       <div v-show="settingsTab === 'job'" class="min-h-80">
         <template v-if="current">
           <div class="mb-4 rounded-mf-md bg-surface-hover px-4 py-3"><strong class="text-sm text-content">{{ current.name }}</strong><p v-if="executorDescription" class="mt-1 text-xs leading-5 text-content-secondary">{{ executorDescription }}</p><div class="mt-2 flex flex-wrap gap-1.5"><MfTag v-for="item in capabilityTags" :key="item.key" size="sm" :variant="item.on ? 'success' : 'default'">{{ $t('workflow.studio.capability.' + item.key) }}</MfTag></div></div>
-          <MfFormItem v-for="field in current.settings" :key="field.field" :label="settingLabel(field)"><WorkflowField :field="field" :model-value="graph.settings?.[field.field]" :disabled="busy || publishing" @update:model-value="updateSetting(field.field, $event)"/></MfFormItem>
+          <MfFormItem v-for="field in current.settings" :key="field.field" :label="settingLabel(field)"><WorkflowField :field="field" :model-value="graph.settings?.[field.field] ?? field.value" :disabled="busy || publishing" @update:model-value="updateSetting(field.field, $event)"/></MfFormItem>
           <MfEmpty v-if="!current.settings.length" size="sm" :title="$t('workflow.studio.noJobSettings')"/>
         </template>
       </div>

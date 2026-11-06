@@ -56,7 +56,9 @@ class WorkflowCompileTest
         assertEquals("200", request.options["batchSize"])
         assertEquals("500", request.options["fetchSize"])
         assertFalse(request.options.containsKey("parallelism"))
-        assertFalse(request.options.containsKey("preCount"))
+        // Workflows count the source first unless the workflow turns it off.
+        assertEquals("true", request.options["preCount"])
+        assertEquals("false", MetaForgeExecutorService().compile(plan.copy(settings = mapOf("preCount" to false))).options["preCount"])
         assertEquals("50", request.options["previewRows"])
         assertEquals(120, request.timeout)
         assertEquals("run", request.taskName)
