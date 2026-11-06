@@ -19,9 +19,11 @@ const local = (event: { clientX: number; clientY: number }) => {
   const rect = root.value!.getBoundingClientRect()
   return { x: (event.clientX - rect.left - pan.value.x) / scale.value, y: (event.clientY - rect.top - pan.value.y) / scale.value }
 }
+/** Port circles are 20px wide and centred on the node edge; lines start and end at their outer rim. */
+const PORT_RADIUS = 10
 const endpoint = (id: string, output: boolean) => {
   const node = nodeForPort(id, nodes.value)
-  return node ? { x: node.position.x + (output ? 210 : 0), y: node.position.y + 44 } : { x: 0, y: 0 }
+  return node ? { x: node.position.x + (output ? 210 + PORT_RADIUS : -PORT_RADIUS), y: node.position.y + 44 } : { x: 0, y: 0 }
 }
 const curve = (from: { x: number; y: number }, to: { x: number; y: number }) => {
   const bend = Math.max(50, Math.abs(to.x - from.x) / 2)
@@ -147,7 +149,7 @@ defineExpose({ fit, zoom })
        @pointermove="pending && (pointer = local($event))" @dragover.prevent @drop.prevent="drop">
     <div class="absolute left-0 top-0 h-0 w-0 origin-top-left" :style="{ transform: `translate(${pan.x}px, ${pan.y}px) scale(${scale})` }">
       <svg class="pointer-events-none absolute h-px w-px overflow-visible" aria-hidden="true">
-        <defs><marker :id="marker" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10Z" fill="var(--mf-color-primary)" /></marker></defs>
+        <defs><marker :id="marker" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="8" markerHeight="8" markerUnits="userSpaceOnUse" orient="auto"><path d="M0 1L10 5L0 9Z" fill="var(--mf-color-primary)" /></marker></defs>
         <g v-for="edge in connections" :key="edge.id">
           <path :d="curve(endpoint(edge.source, true), endpoint(edge.target, false))" fill="none" stroke="var(--mf-color-primary)" :stroke-width="selectedEdge === edge.id ? 3 : 1.8" :marker-end="`url(#${marker})`" />
           <path :d="curve(endpoint(edge.source, true), endpoint(edge.target, false))" fill="none" stroke="transparent" stroke-width="15" class="pointer-events-auto cursor-pointer" @pointerdown.stop="selectedEdge = edge.id; emit('onNodeSelected', null); root?.focus()" />
