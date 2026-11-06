@@ -81,6 +81,12 @@ const createDefaultRouter = (router: Router) => {
                 component: () => import('@/views/pages/admin/dataset/DatasetDetail.vue')
             },
             {
+                // Sync records share the run page layout: the side menu stays, the content scrolls.
+                path: 'dataset/runs/:code',
+                meta: { workflowWorkspace: true, title: 'common.dataset', isRoot: false },
+                component: () => import('@/views/pages/admin/dataset/DatasetRuns.vue')
+            },
+            {
                 path: 'dataset/info/:code?',
                 meta: {
                     title: 'common.dataset',

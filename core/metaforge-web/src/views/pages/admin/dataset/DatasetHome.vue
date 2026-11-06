@@ -84,7 +84,7 @@
                     </div>
                   </MfMenuItem>
 
-                  <MfMenuItem key_="history" @click="visibleHistory(record, true)">
+                  <MfMenuItem key_="history" @click="router.push(`/dataset/runs/${record.code}`)">
                     <div class="flex items-center space-x-2">
                       <History :size="15" />
                       <span>{{ $t('dataset.common.history') }}</span>
@@ -132,11 +132,6 @@
                   :data="contextData"
                   @close="visibleRebuild(null, false)"/>
 
-  <DatasetHistory v-if="historyVisible"
-                  :is-visible="historyVisible"
-                  :info="contextData"
-                  @close="visibleHistory(null, false)"/>
-
   <DatasetSync v-if="syncDataVisible"
                :is-visible="syncDataVisible"
                :info="contextData"
@@ -171,7 +166,6 @@ import { useRouter } from 'vue-router'
 import DatasetService from '@/services/dataset'
 import DatasetState from '@/views/pages/admin/dataset/components/DatasetState.vue'
 import DatasetSync from '@/views/pages/admin/dataset/DatasetSync.vue'
-import DatasetHistory from '@/views/pages/admin/dataset/DatasetHistory.vue'
 import MarkdownPreview from '@/views/components/markdown/MarkdownView.vue'
 import DatasetRebuild from '@/views/pages/admin/dataset/DatasetRebuild.vue'
 import DatasetClear from '@/views/pages/admin/dataset/DatasetClear.vue'
@@ -192,7 +186,6 @@ const { getDatasetStateText } = useUtil()
 
 const contextData = ref<DatasetModel | null>(null)
 const rebuildVisible = ref(false)
-const historyVisible = ref(false)
 const syncDataVisible = ref(false)
 const clearDataVisible = ref(false)
 const errorVisible = ref(false)
@@ -255,10 +248,6 @@ const visibleRebuild = (record: DatasetModel | null, opened: boolean) => {
   contextData.value = record
 }
 
-const visibleHistory = (record: DatasetModel | null, opened: boolean) => {
-  contextData.value = record
-  historyVisible.value = opened
-}
 
 const visibleSyncData = (record: DatasetModel | null, opened: boolean) => {
   if (record && !isSuccess(record.state)) {
