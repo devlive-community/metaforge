@@ -439,4 +439,18 @@ public class WorkflowExecutionTest
         assertNull(rows.get(1).get("note"));
         assertEquals(2, ((List<?>) preview.getData().get("columns")).size());
     }
+    @Test
+    public void runTimesAreFormattedByTheServer() throws Exception
+    {
+        WorkflowRun run = new WorkflowRun();
+        run.setId(UUID.randomUUID().toString());
+        run.setStartedAt(1762354581000L);
+        ObjectMapper mapper = new ObjectMapper().setTimeZone(java.util.TimeZone.getTimeZone("GMT+8"));
+        String json = mapper.writeValueAsString(run);
+        assertTrue(json.contains("\"startTime\":\"2025-11-05 22:56:21\""), json);
+        assertTrue(json.contains("\"finishTime\":null"), json);
+        // Stored records with or without the derived fields read back.
+        assertEquals(1762354581000L, mapper.readValue(json, WorkflowRun.class).getStartedAt());
+        assertEquals(1762354581000L, mapper.readValue("{\"startedAt\":1762354581000}", WorkflowRun.class).getStartedAt());
+    }
 }
