@@ -797,6 +797,35 @@ public class DataSetServiceImpl
         }
     }
 
+    /**
+     * Records how the latest sync left the dataset's data: a successful sync completes the dataset,
+     * a failed one marks its data failed and withdraws the completion. A stop the user asked for
+     * leaves the state as it was. The dataset is re-read so fields saved during the sync survive.
+     */
+    private void recordDataState(Long datasetId, SyncJob job)
+    {
+        RunState state = job.getState();
+        if (datasetId == null || state != RunState.SUCCESS && state != RunState.FAILURE && state != RunState.TIMEOUT) {
+            return;
+        }
+        List<org.devlive.metaforge.service.dataset.sync.SyncTransition> transitions = job.getTransitions();
+        String reason = transitions.isEmpty() ? null : transitions.get(transitions.size() - 1).getMessage();
+        repository.findById(datasetId).ifPresent(dataset -> {
+            if (state == RunState.SUCCESS) {
+                completeState(dataset, DataSetState.DATA_SUCCESS);
+                completeState(dataset, DataSetState.COMPLETE_SUCCESS);
+                dataset.setMessage(null);
+            }
+            else {
+                dataset.setState(dataset.getState().stream().filter(item -> !item.name().startsWith("COMPLETE")).collect(Collectors.toList()));
+                completeState(dataset, DataSetState.DATA_FAILED);
+                // The dataset's error view shows why the latest sync failed.
+                dataset.setMessage(reason == null || reason.isBlank() ? state.name() : reason);
+            }
+            repository.save(dataset);
+        });
+    }
+
     /** Tells the user how a sync ended; one they stopped themselves needs no notice. */
     private void notifySynced(DataSetEntity entity, SyncJob job, UserEntity user)
     {
@@ -854,6 +883,7 @@ public class DataSetServiceImpl
                         setAuthenticationContext(currentUser);
                         try {
                             DataSetEntity result = runSync(entity, running, safeOverrides);
+                            recordDataState(result.getId(), running);
                             notifySynced(result, running, currentUser);
                         }
                         finally {

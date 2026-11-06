@@ -53,7 +53,7 @@
             <MfTooltip :content="$t('dataset.common.info')"><router-link :to="`/dataset/detail/${record.code}`"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.info')" shape="circle"><Eye :size="15"/></MfButton></router-link></MfTooltip>
             <MfTooltip :content="$t('dataset.common.modify')"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.modify')" @click="openWizard(record.code)" shape="circle"><Pencil :size="15"/></MfButton></MfTooltip>
             <MfTooltip :content="$t('dataset.common.adhoc')">
-              <router-link v-if="isSuccess(record?.state)" :to="`/dataset/adhoc/${ record?.code }`" target="_blank">
+              <router-link v-if="tableReady(record?.state)" :to="`/dataset/adhoc/${ record?.code }`" target="_blank">
                 <MfButton variant="ghost" size="sm" shape="circle">
                   <ChartColumn :size="15" />
                 </MfButton>
@@ -77,7 +77,7 @@
                     </router-link>
                   </MfMenuItem>
 
-                  <MfMenuItem key_="sync" :disabled="!isSuccess(record?.state)" @click="visibleSyncData(record, true)">
+                  <MfMenuItem key_="sync" :disabled="!tableReady(record?.state)" @click="visibleSyncData(record, true)">
                     <div class="flex items-center space-x-2">
                       <RefreshCw :size="15" />
                       <span>{{ $t('dataset.common.syncData') }}</span>
@@ -98,7 +98,7 @@
                     </div>
                   </MfMenuItem>
 
-                  <MfMenuItem key_="rebuild" :disabled="isSuccess(record?.state)" @click="visibleRebuild(record, true)">
+                  <MfMenuItem key_="rebuild" :disabled="tableReady(record?.state)" @click="visibleRebuild(record, true)">
                     <div class="flex items-center space-x-2">
                       <component :size="15" :is="record?.state === 'SUCCESS' ? CirclePlay : CirclePause" />
                       <span>{{ $t('dataset.common.rebuild') }}</span>
@@ -225,6 +225,9 @@ const {
     onData: rows => loadFieldCounts(rows)
   })
 
+/** Ad hoc queries and syncs need the dataset's table; a failed sync leaves it usable. */
+const tableReady = (state: Array<any> | null) => !!state?.includes('TABLE_SUCCESS')
+
 const isSuccess = (state: Array<any> | null) => {
   if (state && state.length > 0) {
     return state[state.length - 1].endsWith('SUCCESS')
@@ -240,8 +243,9 @@ const getState = (state: Array<any> | null): string | null => {
   return null
 }
 
+// Rebuilding recreates the metadata and table, so it is offered only when the build failed.
 const visibleRebuild = (record: DatasetModel | null, opened: boolean) => {
-  if (record && isSuccess(record.state)) {
+  if (record && tableReady(record.state)) {
     return
   }
   rebuildVisible.value = opened
@@ -250,7 +254,7 @@ const visibleRebuild = (record: DatasetModel | null, opened: boolean) => {
 
 
 const visibleSyncData = (record: DatasetModel | null, opened: boolean) => {
-  if (record && !isSuccess(record.state)) {
+  if (record && !tableReady(record.state)) {
     return
   }
   contextData.value = record
