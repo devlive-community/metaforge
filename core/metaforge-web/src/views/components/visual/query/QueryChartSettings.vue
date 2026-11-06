@@ -1,6 +1,8 @@
 <template>
-  <section v-for="group in groups" :key="group.title" class="space-y-3 border-t border-line pt-4 first:border-0 first:pt-0">
-    <h4 class="flex items-center gap-2 font-semibold"><span class="size-1.5 rounded-full bg-primary"/>{{ label(group.title) }}</h4>
+  <component :is="collapsible ? DashboardInspectorGroup : 'section'" v-for="group in groups" :key="group.title"
+             :title="collapsible ? label(group.title) : undefined" :icon="collapsible ? groupIcon(group.title) : undefined"
+             :class="!collapsible && 'space-y-3 border-t border-line pt-4 first:border-0 first:pt-0'">
+    <h4 v-if="!collapsible" class="flex items-center gap-2 font-semibold"><span class="size-1.5 rounded-full bg-primary"/>{{ label(group.title) }}</h4>
     <MfFormGrid>
     <div v-for="field in group.fields" :key="field.key" class="min-w-0" :class="(field.control === 'textarea' || field.key === 'colors') && 'col-span-full'">
       <label v-if="field.control === 'switch'" class="flex min-h-9 items-center justify-between gap-2 text-sm text-content-secondary">
@@ -17,13 +19,14 @@
       </MfFormItem>
     </div>
     </MfFormGrid>
-  </section>
+  </component>
 </template>
 
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { snapshotRowLimit, type QueryChartOptions } from '@/model/query-chart'
+import DashboardInspectorGroup from '@/views/pages/admin/dashboard/components/DashboardInspectorGroup.vue'
 
 type Key = keyof QueryChartOptions
 interface Field {
@@ -35,10 +38,11 @@ interface Field {
   precision?: number
   placeholder?: string
 }
-const props = defineProps<{ options: QueryChartOptions; panel: string; timeCategory: boolean }>()
+const props = withDefaults(defineProps<{ options: QueryChartOptions; panel: string; timeCategory: boolean; collapsible?: boolean }>(), { collapsible: false })
 const emit = defineEmits<{ change: [key: Key, value: unknown] }>()
 const { t } = useI18n()
 const label = (key: string) => t('queryChart.' + key)
+const groupIcon = (title: string) => /Axis/.test(title) ? 'layout' : /tooltip|Interaction/.test(title) ? 'interaction' : 'appearance'
 const select = (key: Key, choices: string[], literal = false): Field => ({
   key, control: 'select', choices: choices.map(value => ({ value, label: literal ? value : label('choice.' + key + '.' + value) }))
 })
