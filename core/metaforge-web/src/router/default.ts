@@ -3,6 +3,7 @@ import LayoutContainer from '@/views/layouts/common/LayoutContainer.vue'
 import ProfileContainer from '@/views/layouts/profile/LayoutContainer.vue'
 import { sourceManageLocation } from '@/model/source-manage'
 import { accountPages, businessPages, canonicalPagePath } from './navigation'
+import { useUserStore } from '@/stores/user'
 
 const createDefaultRouter = (router: Router) => {
     router.addRoute({
@@ -12,7 +13,17 @@ const createDefaultRouter = (router: Router) => {
         component: LayoutContainer,
         meta: { requiresAuth: true },
         children: [
-            { name: 'home', path: 'home', meta: { title: 'common.home' }, component: () => import('@/views/pages/default/dashboard/DashboardHome.vue') },
+            {
+                name: 'home', path: 'home', meta: { title: 'common.home' }, component: () => import('@/views/pages/default/dashboard/DashboardHome.vue'),
+                // A user who chose a data screen as their home page lands on it; ?default=1 still opens the default home.
+                beforeEnter: async to => {
+                    if (to.query.default) return true
+                    const code = await useUserStore().resolveHomePage()
+                    return code ? { name: 'home-screen', params: { code } } : true
+                }
+            },
+            // Keeps the navigation and gives the screen the rest of the viewport, like the run pages.
+            { name: 'home-screen', path: 'home/screen/:code', meta: { workflowWorkspace: true, title: 'common.home' }, component: () => import('@/views/pages/default/dashboard/HomeScreen.vue') },
             { name: 'store', path: 'store', meta: { title: 'common.store' }, component: () => import('@/views/pages/store/StoreHome.vue') },
             { name: 'notifications', path: 'notifications', meta: { title: 'notify.text.center' }, component: () => import('@/views/pages/notification/NotificationCenter.vue') },
             { name: 'workspace', path: 'workspace', redirect: '/query' },

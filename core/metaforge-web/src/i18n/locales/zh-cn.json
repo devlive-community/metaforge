@@ -4184,5 +4184,14 @@
   "dataTable.statePAUSED": "已暂停",
   "dataTable.stateRETRYING": "重试中",
   "dashboard.studio.resizeLibrary": "调整组件库宽度",
-  "dashboard.studio.resizeProperties": "调整属性配置宽度"
+  "dashboard.studio.resizeProperties": "调整属性配置宽度",
+  "dashboard.home.set": "设为主页",
+  "dashboard.home.unset": "取消设为主页",
+  "dashboard.home.tag": "主页",
+  "dashboard.home.saved": "已设为主页，点击“首页”即可打开",
+  "dashboard.home.cleared": "已恢复默认首页",
+  "dashboard.home.failed": "设置主页失败",
+  "dashboard.home.unavailable": "主页数据大屏无法打开",
+  "dashboard.home.unavailableHint": "它可能已被删除或尚未发布，可以打开默认首页或取消设为主页。",
+  "dashboard.home.openDefault": "打开默认首页"
 }

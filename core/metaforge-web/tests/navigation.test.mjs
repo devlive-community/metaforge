@@ -11,7 +11,10 @@ const { canonicalPagePath, normalizeNavigation, pageAccess } = await import(navi
 let routes = compile(await readFile(new URL('../src/router/default.ts', import.meta.url), 'utf8'))
 const manageUrl = moduleUrl(compile(await readFile(new URL('../src/model/source-manage.ts', import.meta.url), 'utf8')))
 const layoutUrl = moduleUrl('export default {render(){return null}}')
-routes = routes.replace(/from (['"])([^'"]+)\1/g, (_match, _quote, name) => `from ${JSON.stringify(name === './navigation' ? navigationUrl : name === '@/model/source-manage' ? manageUrl : layoutUrl)}`)
+// The home route asks the user store for the user's chosen home page; tests set it on globalThis.
+const storeUrl = moduleUrl('export const useUserStore = () => ({ resolveHomePage: async () => globalThis.__homePage || "" })')
+const stubs = { './navigation': navigationUrl, '@/model/source-manage': manageUrl, '@/stores/user': storeUrl }
+routes = routes.replace(/from (['"])([^'"]+)\1/g, (_match, _quote, name) => `from ${JSON.stringify(stubs[name] || layoutUrl)}`)
 routes = routes.replace(/import\((['"])@\/views\/[^'"]+\1\)/g, 'Promise.resolve({render(){return null}})')
 const { createDefaultRouter } = await import(moduleUrl(routes))
 const user = { token: 'test', roles: ['USER'] }
@@ -110,4 +113,24 @@ test('menu rows of retired pages are dropped even from a cached menu', () => {
         { code: 'SYSTEM_SETTINGS', url: '/admin/settings' },
     ] }], admin)
     assert.deepEqual(menus[0].children.map(menu => menu.code), ['USERS', 'SYSTEM_SETTINGS'])
+})
+
+test('a chosen data screen opens as the home page unless the default home is asked for', async () => {
+    try {
+        globalThis.__homePage = ''
+        const plain = routerFor(user)
+        await plain.push('/home')
+        assert.equal(plain.currentRoute.value.path, '/home')
+
+        globalThis.__homePage = 'SCREEN'
+        const chosen = routerFor(user)
+        await chosen.push('/home')
+        assert.equal(chosen.currentRoute.value.path, '/home/screen/SCREEN')
+        assert.equal(chosen.currentRoute.value.meta.workflowWorkspace, true)
+        await chosen.push('/home?default=1')
+        assert.equal(chosen.currentRoute.value.path, '/home')
+    }
+    finally {
+        delete globalThis.__homePage
+    }
 })

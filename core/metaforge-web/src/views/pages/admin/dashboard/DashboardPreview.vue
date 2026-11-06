@@ -15,6 +15,7 @@
         </div>
       </div>
       <div class="flex flex-wrap items-center gap-1.5">
+        <MfButton size="sm" :loading="homeBusy" :class="isHome && 'text-primary'" @click="toggleHome"><House :size="14"/>{{ $t(isHome ? 'dashboard.home.unset' : 'dashboard.home.set') }}</MfButton>
         <MfButton size="sm" @click="edit"><Pencil :size="14"/>{{ $t('dashboard.studio.backToEditor') }}</MfButton>
         <MfButton v-if="fullscreenAvailable" size="sm" @click="fullscreen">
           <Minimize v-if="fullscreenActive" :size="14"/><Maximize v-else :size="14"/>
@@ -32,7 +33,8 @@ import { computed, onMounted, onScopeDispose, ref, shallowRef, watch } from 'vue
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
-import { ArrowUpRight, Maximize, Minimize, Pencil } from '@lucide/vue'
+import { ArrowUpRight, House, Maximize, Minimize, Pencil } from '@lucide/vue'
+import { useUserStore } from '@/stores/user'
 import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
 import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
@@ -65,6 +67,20 @@ async function load() {
   }
   catch { if (id === request) failed.value = true }
   finally { if (id === request) loading.value = false }
+}
+const userStore = useUserStore()
+const homeBusy = ref(false)
+const isHome = computed(() => !!code.value && userStore.homePage === code.value)
+void userStore.resolveHomePage()
+async function toggleHome() {
+  if (homeBusy.value) return
+  homeBusy.value = true
+  const unset = isHome.value
+  try {
+    await userStore.setHomePage(unset ? null : code.value)
+    MfMessage.success(t(unset ? 'dashboard.home.cleared' : 'dashboard.home.saved'))
+  } catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.home.failed')) }
+  finally { homeBusy.value = false }
 }
 function edit() { void router.push('/dashboard/info/' + encodeURIComponent(code.value)) }
 async function share() {

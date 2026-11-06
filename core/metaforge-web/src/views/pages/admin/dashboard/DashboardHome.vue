@@ -22,12 +22,17 @@
           <div class="flex flex-1 flex-col gap-2 p-3">
             <div class="flex min-w-0 items-center gap-2">
               <RouterLink :to="item.link" class="min-w-0 flex-1 truncate font-semibold hover:text-primary">{{ item.name }}</RouterLink>
+              <MfTag v-if="item.code === userStore.homePage" size="sm" variant="primary"><House :size="12"/>{{ $t('dashboard.home.tag') }}</MfTag>
               <MfTag size="sm" :variant="item.published ? 'success' : 'primary'">{{ $t(item.published ? 'dashboard.studio.status.published' : 'dashboard.studio.status.draft') }}</MfTag>
             </div>
             <p v-if="item.description" class="line-clamp-2 text-xs text-content-secondary">{{ item.description }}</p>
             <div class="mt-auto flex items-center justify-between gap-2">
               <span class="min-w-0 truncate text-xs text-content-tertiary">{{ item.updateTime || item.createTime }}</span>
               <div class="flex shrink-0 items-center gap-1">
+                <MfTooltip v-if="item.published" :content="$t(item.code === userStore.homePage ? 'dashboard.home.unset' : 'dashboard.home.set')">
+                  <MfButton variant="ghost" size="sm" :class="item.code === userStore.homePage && 'text-primary'" :loading="homeBusy === item.code"
+                            :aria-label="$t(item.code === userStore.homePage ? 'dashboard.home.unset' : 'dashboard.home.set')" @click="toggleHome(item.code)"><House :size="15"/></MfButton>
+                </MfTooltip>
                 <MfButton variant="ghost" size="sm" :aria-label="$t('dashboard.common.modify')" @click="router.push(item.editor)"><Pencil :size="15"/></MfButton>
                 <MfButton variant="ghost" size="sm" :aria-label="$t('dashboard.common.delete')" class="text-danger" @click="deleteItem = item"><Trash2 :size="15"/></MfButton>
               </div>
@@ -46,7 +51,10 @@
 <script setup lang="ts">
 import { computed, onScopeDispose, ref, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
-import { LayoutDashboard, Monitor, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { House, LayoutDashboard, Monitor, Pencil, Plus, Trash2 } from '@lucide/vue'
+import { MfMessage } from 'metaforge-ui'
+import { useI18n } from 'vue-i18n'
+import { useUserStore } from '@/stores/user'
 import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'
@@ -54,6 +62,21 @@ import { FilterModel } from '@/model/filter'
 import DashboardDelete from './DashboardDelete.vue'
 
 const router = useRouter()
+const { t } = useI18n()
+const userStore = useUserStore()
+const homeBusy = ref('')
+void userStore.resolveHomePage()
+/** Makes a published data screen the home page, or restores the default home when it already is. */
+async function toggleHome(code?: string) {
+  if (!code || homeBusy.value) return
+  homeBusy.value = code
+  const unset = code === userStore.homePage
+  try {
+    await userStore.setHomePage(unset ? null : code)
+    MfMessage.success(t(unset ? 'dashboard.home.cleared' : 'dashboard.home.saved'))
+  } catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.home.failed')) }
+  finally { homeBusy.value = '' }
+}
 const loading = ref(false)
 const failed = ref(false)
 const page = ref(1)

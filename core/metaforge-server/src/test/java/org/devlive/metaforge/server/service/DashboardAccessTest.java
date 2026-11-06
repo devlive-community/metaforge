@@ -4,6 +4,7 @@ import org.devlive.metaforge.service.entity.DashboardEntity;
 import org.devlive.metaforge.service.entity.ReportEntity;
 import org.devlive.metaforge.service.repository.DashboardRepository;
 import org.devlive.metaforge.service.repository.ReportRepository;
+import org.devlive.metaforge.service.repository.UserRepository;
 import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.impl.DashboardServiceImpl;
@@ -75,5 +76,41 @@ public class DashboardAccessTest
         when(dashboards.save(draft)).thenReturn(DashboardEntity.builder().id(7L).build());
         assertTrue(service.saveOrUpdate(dashboards, draft).getStatus());
         verify(links).replaceDashboardReports(7L, List.of(9L));
+    }
+
+    @Test
+    public void onlyOwnPublishedDataScreensBecomeTheHomePage()
+    {
+        UserRepository users = mock(UserRepository.class);
+        service.setUsers(users);
+        when(dashboards.findByCode("FOREIGN")).thenReturn(Optional.of(DashboardEntity.builder().code("FOREIGN").userId(2L)
+                .configure("{\"version\":3,\"draft\":{},\"published\":{}}").build()));
+        when(dashboards.findByCode("DRAFT")).thenReturn(Optional.of(DashboardEntity.builder().code("DRAFT").userId(1L)
+                .configure("{\"version\":3,\"draft\":{}}").build()));
+        when(dashboards.findByCode("SCREEN")).thenReturn(Optional.of(DashboardEntity.builder().id(3L).code("SCREEN").userId(1L)
+                .configure("{\"version\":3,\"draft\":{},\"published\":{}}").build()));
+
+        assertFalse(service.setHomePage("FOREIGN").getStatus());
+        assertFalse(service.setHomePage("DRAFT").getStatus());
+        assertFalse(service.setHomePage("MISSING").getStatus());
+        verify(users, never()).updateHomePage(any(), any());
+
+        assertTrue(service.setHomePage("SCREEN").getStatus());
+        verify(users).updateHomePage(1L, "SCREEN");
+        assertTrue(service.setHomePage(null).getStatus());
+        verify(users).updateHomePage(1L, null);
+
+        assertTrue(service.deleteByCode(dashboards, "SCREEN").getStatus());
+        verify(users).clearHomePage("SCREEN");
+    }
+
+    @Test
+    public void publishedLayoutsAreRecognisedInBothDocumentFormats()
+    {
+        assertTrue(DashboardServiceImpl.published("{\"version\":3,\"draft\":{},\"published\":{\"boards\":{}}}"));
+        assertFalse(DashboardServiceImpl.published("{\"version\":3,\"draft\":{}}"));
+        assertTrue(DashboardServiceImpl.published("[{\"original\":{\"code\":\"R\"}}]"));
+        assertFalse(DashboardServiceImpl.published(null));
+        assertFalse(DashboardServiceImpl.published("not json"));
     }
 }

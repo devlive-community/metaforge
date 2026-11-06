@@ -82,6 +82,11 @@ public class UserEntity
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private UserEditorEntity editorConfigure;
 
+    // Code of the user's own published data screen opened as their home page; null for the default home.
+    @Column("home_page")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String homePage;
+
     @Column("avatar_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private AvatarEntity avatarConfigure;

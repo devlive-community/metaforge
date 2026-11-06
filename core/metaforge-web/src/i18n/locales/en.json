@@ -4184,5 +4184,14 @@
   "dataTable.statePAUSED": "Paused",
   "dataTable.stateRETRYING": "Retrying",
   "dashboard.studio.resizeLibrary": "Resize component library",
-  "dashboard.studio.resizeProperties": "Resize properties"
+  "dashboard.studio.resizeProperties": "Resize properties",
+  "dashboard.home.set": "Set as home page",
+  "dashboard.home.unset": "Remove as home page",
+  "dashboard.home.tag": "Home",
+  "dashboard.home.saved": "Set as your home page; Home now opens it",
+  "dashboard.home.cleared": "The default home page is back",
+  "dashboard.home.failed": "Unable to change the home page",
+  "dashboard.home.unavailable": "Your home data screen cannot be opened",
+  "dashboard.home.unavailableHint": "It may have been deleted or is not published. Open the default home page or remove it as your home page.",
+  "dashboard.home.openDefault": "Open default home page"
 }

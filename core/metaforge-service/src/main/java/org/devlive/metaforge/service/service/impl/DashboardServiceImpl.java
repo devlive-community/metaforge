@@ -1,5 +1,8 @@
 package org.devlive.metaforge.service.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.entity.DashboardEntity;
@@ -11,6 +14,7 @@ import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.repository.DashboardRepository;
 import org.devlive.metaforge.service.repository.ReportRepository;
+import org.devlive.metaforge.service.repository.UserRepository;
 import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.DashboardService;
@@ -30,6 +34,7 @@ import java.util.Set;
 public class DashboardServiceImpl
         implements DashboardService
 {
+    private static final ObjectMapper MAPPER = new ObjectMapper();
     private final DashboardRepository repository;
     private final ReportRepository reportRepository;
     private final LinkRepository linkRepository;
@@ -42,6 +47,13 @@ public class DashboardServiceImpl
     }
 
     private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+    private UserRepository users;
+
+    @Autowired
+    public void setUsers(UserRepository users)
+    {
+        this.users = users;
+    }
 
     @Autowired
     public void setNotifications(NotificationEventPublisher notifications)
@@ -130,7 +142,54 @@ public class DashboardServiceImpl
         }
         linkRepository.deleteDashboard(dashboard.getId());
         repository.delete(dashboard);
+        if (users != null) {
+            users.clearHomePage(code);
+        }
         return CommonResponse.success(code);
+    }
+
+    @Override
+    @Transactional
+    public CommonResponse<String> setHomePage(String code)
+    {
+        Long userId = UserDetailsService.getUser().getId();
+        if (userId == null || users == null) {
+            return CommonResponse.failure("Dashboard not found");
+        }
+        if (code != null) {
+            DashboardEntity dashboard = repository.findByCode(code)
+                    .filter(value -> Objects.equals(value.getUserId(), userId))
+                    .orElse(null);
+            if (dashboard == null) {
+                return CommonResponse.failure("Dashboard not found");
+            }
+            if (!published(dashboard.getConfigure())) {
+                return CommonResponse.failure("Publish the data screen before using it as the home page");
+            }
+        }
+        users.updateHomePage(userId, code);
+        return CommonResponse.success(code);
+    }
+
+    /**
+     * Whether a saved document has a published version, read the way the editor reads it: a
+     * version 3 document carries {@code published}; older layouts count as published once saved.
+     */
+    public static boolean published(String configure)
+    {
+        if (configure == null || configure.isBlank()) {
+            return false;
+        }
+        try {
+            JsonNode root = MAPPER.readTree(configure);
+            if (root != null && root.isObject() && root.path("version").asInt() == 3) {
+                return root.path("published").isObject();
+            }
+            return root != null && !root.isNull() && !root.isMissingNode();
+        }
+        catch (JsonProcessingException e) {
+            return false;
+        }
     }
 
     private CommonResponse<DashboardEntity> withReports(CommonResponse<DashboardEntity> response)
