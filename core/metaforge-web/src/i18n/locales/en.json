@@ -4101,5 +4101,16 @@
   "workflow.studio.metricRows": "Rows read and written",
   "workflow.studio.metricBytes": "Data read and written",
   "workflow.studio.metricWaits": "Reader and writer waits",
-  "workflow.studio.rateTrendPending": "The rate trend appears once samples are taken during a run"
+  "workflow.studio.rateTrendPending": "The rate trend appears once samples are taken during a run",
+  "workflow.studio.stage.PREPARE": "Prepare",
+  "workflow.studio.stage.PRECOUNT": "Count rows",
+  "workflow.studio.stage.PLAN": "Plan splits",
+  "workflow.studio.stage.TRANSFER": "Transfer",
+  "workflow.studio.stage.FINALIZE": "Finalize",
+  "workflow.studio.stageState.PENDING": "Pending",
+  "workflow.studio.stageState.RUNNING": "Running",
+  "workflow.studio.stageState.DONE": "Done",
+  "workflow.studio.stageState.FAILED": "Failed",
+  "workflow.studio.stageState.SKIPPED": "Skipped",
+  "source.data.dragColumn": "Drag to move {name}"
 }

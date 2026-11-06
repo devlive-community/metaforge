@@ -4101,5 +4101,16 @@
   "workflow.studio.metricRows": "读写行数",
   "workflow.studio.metricBytes": "读写数据量",
   "workflow.studio.metricWaits": "读写等待",
-  "workflow.studio.rateTrendPending": "运行中采样后显示速率趋势"
+  "workflow.studio.rateTrendPending": "运行中采样后显示速率趋势",
+  "workflow.studio.stage.PREPARE": "准备",
+  "workflow.studio.stage.PRECOUNT": "统计总行数",
+  "workflow.studio.stage.PLAN": "规划分片",
+  "workflow.studio.stage.TRANSFER": "数据传输",
+  "workflow.studio.stage.FINALIZE": "收尾",
+  "workflow.studio.stageState.PENDING": "等待中",
+  "workflow.studio.stageState.RUNNING": "进行中",
+  "workflow.studio.stageState.DONE": "已完成",
+  "workflow.studio.stageState.FAILED": "失败",
+  "workflow.studio.stageState.SKIPPED": "已跳过",
+  "source.data.dragColumn": "拖动调整 {name} 的位置"
 }
