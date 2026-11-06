@@ -28,6 +28,15 @@ public interface DashboardService
     /** Replaces how the owner shares a screen. */
     CommonResponse<DashboardShareBody> saveShare(String code, DashboardShareBody body);
 
+    /** A published screen behind an enabled, unexpired public link, as anonymous visitors see it. */
+    CommonResponse<Map<String, Object>> publicView(String token);
+
+    /** Refreshes a dynamic chart of a public screen; it runs as the owner. */
+    CommonResponse<List<Map<String, Object>>> publicRefresh(String token, String reportCode);
+
+    /** The frame-ancestors sources of an embeddable public screen; empty when it may not be framed. */
+    java.util.Optional<String> publicFrameAncestors(String token);
+
     /** Users and roles the owner can share with, matching a keyword. */
     CommonResponse<List<DashboardShareBody.Member>> shareCandidates(String keyword);
 }

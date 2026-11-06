@@ -12,12 +12,15 @@ import router from '@/router'
 import i18n from '@/i18n/I18n'
 import { createIcons } from '@/fontawesome'
 import MetaforgeUI from 'metaforge-ui'
-import { sharedReportPath } from '@/router/shared'
+import { sharedReportPath, sharedScreenPath } from '@/router/shared'
 import PublicReportApp from '@/views/public/PublicReportApp.vue'
+import PublicScreenApp from '@/views/public/PublicScreenApp.vue'
 
 // Shared report addresses open a standalone public page without the app router and sign-in.
-const shared = sharedReportPath(window.location.pathname)
-const app = shared ? createApp(PublicReportApp, shared) : createApp(App)
+const sharedScreen = sharedScreenPath(window.location.pathname)
+const sharedReport = sharedScreen ? null : sharedReportPath(window.location.pathname)
+const shared = sharedScreen || sharedReport
+const app = sharedScreen ? createApp(PublicScreenApp, sharedScreen) : sharedReport ? createApp(PublicReportApp, sharedReport) : createApp(App)
 createIcons(app)
 // Disable warnings
 app.config.warnHandler = () => null

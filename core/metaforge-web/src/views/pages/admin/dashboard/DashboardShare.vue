@@ -2,23 +2,77 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { Shield, Trash2, User } from '@lucide/vue'
+import useClipboard from 'vue-clipboard3'
+import { Copy, ExternalLink, RefreshCw, Shield, Trash2, User } from '@lucide/vue'
 import DashboardService from '@/services/dashboard'
+import { screenEmbedCode, screenShareUrl } from '@/router/shared'
+import { formatShareTime, isShareExpired, localDate, SHARE_ORIGIN, shareExpiresAt, type ShareExpiry } from '../report/ReportShareUtils'
 import type { DashboardGrant, DashboardModel, DashboardShare, DashboardShareMember } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'
 
 /**
  * How the owner shares a data screen: with whom and how much (members and every signed-in user),
- * and what viewers see (the whole screen or chosen widgets). Editors always see the whole screen.
+ * what viewers see (the whole screen or chosen widgets), and a public link for visitors who are not
+ * signed in. Editors always see the whole screen; the public link shows what viewers see.
  */
 const props = defineProps<{ dashboard: DashboardModel }>()
 const emit = defineEmits<{ close: [] }>()
-const { t } = useI18n()
+const { t, locale } = useI18n()
 const open = ref(true)
-const tab = ref<'members' | 'content'>('members')
-const loading = ref(true), saving = ref(false), failure = ref('')
+const tab = ref<'members' | 'content' | 'public'>('members')
+const loading = ref(true), saving = ref(false), rotating = ref(false), failure = ref('')
 const share = ref<DashboardShare>({ everyone: null, members: [], widgets: null, publicLink: { enabled: false, embed: false, origins: '' } })
 const form = ref<any>()
+
+// The public link as last saved: its address exists only after the first save.
+const saved = ref<{ token: string; enabled: boolean; embed: boolean; expiresAt: number | null }>({ token: '', enabled: false, embed: false, expiresAt: null })
+const expiry = ref<ShareExpiry>('never'), expiryDate = ref('')
+const today = localDate(Date.now())
+const shareUrl = computed(() => screenShareUrl(window.location.origin, saved.value.token))
+const embedCode = computed(() => screenEmbedCode(window.location.origin, saved.value.token, props.dashboard.name || ''))
+const expired = computed(() => saved.value.enabled && isShareExpired(saved.value.expiresAt))
+const expiryNote = computed(() => {
+  if (!saved.value.enabled || saved.value.expiresAt == null) return ''
+  const time = formatShareTime(saved.value.expiresAt)
+  return t(expired.value ? 'report.share.expiredAt' : 'report.share.expiresAt', { time })
+})
+const expiryOptions = computed(() => [
+  { label: t('report.share.expiryNever'), value: 'never' },
+  ...[1, 7, 30].map(days => ({ label: t('report.share.expiryDays', { days }), value: `${ days }d` })),
+  { label: t('report.share.expiryDate'), value: 'date' },
+])
+const expiryRules = computed(() => [{
+  validator: () => {
+    if (!share.value.publicLink.enabled || expiry.value !== 'date') return true
+    if (!expiryDate.value) return t('report.share.expiryRequired')
+    const at = shareExpiresAt('date', expiryDate.value)
+    return (at !== null && at > Date.now()) || t('report.share.expiryPast')
+  }
+}])
+const originRules = computed(() => [{
+  validator: () => !share.value.publicLink.embed || share.value.publicLink.origins.split(/[\s,]+/).filter(Boolean)
+    .every(item => SHARE_ORIGIN.test(item.replace(/\/$/, ''))) || t('report.share.originsInvalid')
+}])
+function expiresAt(): number | null {
+  // An untouched date keeps the exact saved moment instead of moving to the end of that day.
+  const kept = saved.value.expiresAt
+  return expiry.value === 'date' && kept != null && expiryDate.value === localDate(kept) ? kept : shareExpiresAt(expiry.value, expiryDate.value)
+}
+function apply(data: any) {
+  const members = (data?.members || []).map((member: DashboardShareMember) => ({ ...member, key: memberKey(member) }))
+  const link = { ...share.value.publicLink, ...(data?.publicLink || {}) }
+  link.origins = link.origins || ''
+  share.value = { ...share.value, ...data, members, publicLink: link }
+  saved.value = { token: link.token || '', enabled: !!link.enabled, embed: !!link.embed, expiresAt: link.expiresAt ?? null }
+  // A preset becomes its concrete date, so saving again does not push the expiry further out.
+  expiry.value = saved.value.expiresAt == null ? 'never' : 'date'
+  expiryDate.value = saved.value.expiresAt == null ? '' : localDate(saved.value.expiresAt)
+}
+async function copy(text: string) {
+  try { await useClipboard().toClipboard(text); MfMessage.success(t('report.share.copied')) }
+  catch { MfMessage.error(t('report.share.copyFailed')) }
+}
+function preview() { window.open(shareUrl.value, '_blank', 'noopener') }
 
 const grants: DashboardGrant[] = ['VIEW', 'EDIT', 'PUBLISH']
 const grantOptions = computed(() => grants.map(value => ({ label: t('dashboard.share.permission.' + value), value })))
@@ -85,22 +139,45 @@ async function load() {
   try {
     const [response] = await Promise.all([DashboardService.getShare(props.dashboard.code || ''), search()])
     if (!response.status) throw new Error(String(response.message || t('dashboard.share.loadFailed')))
-    const members = (response.data?.members || []).map((member: DashboardShareMember) => ({ ...member, key: memberKey(member) }))
-    share.value = { ...share.value, ...response.data, members, publicLink: { ...share.value.publicLink, ...(response.data?.publicLink || {}) } }
+    apply(response.data)
   } catch (error) { failure.value = error instanceof Error ? error.message : t('dashboard.share.loadFailed') }
   finally { loading.value = false }
 }
+async function validate() {
+  try { await form.value?.validate(); return true }
+  catch {
+    // Show the pane that holds the first problem.
+    if (scope.value === 'chosen' && !share.value.widgets?.length) tab.value = 'content'
+    else tab.value = 'public'
+    return false
+  }
+}
+async function submit(rotate: boolean) {
+  const response = await DashboardService.saveShare(props.dashboard.code || '', {
+    ...share.value, publicLink: { ...share.value.publicLink, expiresAt: expiresAt(), rotate },
+  })
+  if (!response.status) throw new Error(String(response.message || t('dashboard.share.saveFailed')))
+  apply(response.data)
+}
 async function save() {
-  if (saving.value) return
-  try { await form.value?.validate() } catch { tab.value = 'content'; return }
+  if (saving.value || rotating.value || !await validate()) return
+  // A link turned on for the first time stays on screen so the owner can copy it.
+  const fresh = share.value.publicLink.enabled && !(saved.value.enabled && saved.value.token)
   saving.value = true
   try {
-    const response = await DashboardService.saveShare(props.dashboard.code || '', { ...share.value, publicLink: { ...share.value.publicLink, rotate: false } })
-    if (!response.status) throw new Error(String(response.message || t('dashboard.share.saveFailed')))
+    await submit(false)
     MfMessage.success(t('dashboard.share.saved'))
-    open.value = false
+    if (fresh) tab.value = 'public'
+    else open.value = false
   } catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.share.saveFailed')) }
   finally { saving.value = false }
+}
+async function rotate() {
+  if (saving.value || rotating.value || !await validate()) return
+  rotating.value = true
+  try { await submit(true); MfMessage.success(t('report.share.rotated')) }
+  catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.share.saveFailed')) }
+  finally { rotating.value = false }
 }
 watch(open, value => { if (!value) emit('close') })
 void load()
@@ -115,6 +192,7 @@ void load()
         <MfTabs v-model:active-key="tab" class="mb-4 shrink-0">
           <MfTabPane item-key="members" :tab="$t('dashboard.share.tab.members')"/>
           <MfTabPane item-key="content" :tab="$t('dashboard.share.tab.content')"/>
+          <MfTabPane item-key="public" :tab="$t('dashboard.share.tab.public')"/>
         </MfTabs>
         <MfForm id="dashboard-share" ref="form" :model="share" layout="vertical" class="min-h-0 flex-1 overflow-y-auto" @finish="save">
           <!-- Both panes stay rendered so the widget choice is validated from either tab. -->
@@ -161,12 +239,64 @@ void load()
               </div>
             </MfFormItem>
           </div>
+          <div v-show="tab === 'public'">
+            <MfFormItem name="publicEnabled">
+              <div class="flex w-full items-center justify-between gap-4">
+                <div class="min-w-0">
+                  <div class="font-medium text-content">{{ $t('dashboard.share.public.enabled') }}</div>
+                  <div class="mt-0.5 text-xs text-content-tertiary">{{ $t(published ? 'dashboard.share.public.enabledHint' : 'dashboard.share.public.unpublished') }}</div>
+                </div>
+                <MfSwitch v-model="share.publicLink.enabled" class="shrink-0" :disabled="!published && !share.publicLink.enabled"/>
+              </div>
+            </MfFormItem>
+            <template v-if="share.publicLink.enabled">
+              <MfFormItem v-if="saved.token && saved.enabled" :label="$t('report.share.link')" name="publicLink">
+                <div class="w-full min-w-0">
+                  <MfInput :model-value="shareUrl" readonly class="w-full"/>
+                  <div class="mt-2 flex flex-wrap items-center gap-2">
+                    <MfButton size="sm" class="shrink-0" @click="copy(shareUrl)"><Copy :size="14"/>{{ $t('report.share.copy') }}</MfButton>
+                    <MfButton size="sm" class="shrink-0" :disabled="expired" @click="preview"><ExternalLink :size="14"/>{{ $t('report.share.preview') }}</MfButton>
+                    <MfButton size="sm" class="shrink-0" :loading="rotating" :disabled="saving" @click="rotate"><RefreshCw :size="14"/>{{ $t('report.share.rotate') }}</MfButton>
+                    <span v-if="expiryNote" class="min-w-0 text-xs" :class="expired ? 'text-warning' : 'text-content-tertiary'">{{ expiryNote }}</span>
+                  </div>
+                  <p class="mt-1.5 text-[11px] leading-5 text-content-tertiary">{{ $t('dashboard.share.public.contentHint') }}</p>
+                </div>
+              </MfFormItem>
+              <p v-else class="mb-4 text-xs text-content-tertiary">{{ $t('report.share.linkAfterSave') }}</p>
+              <MfFormItem :label="$t('report.share.expiry')" name="expiryDate" :rules="expiryRules">
+                <div class="flex flex-wrap items-center gap-2">
+                  <MfSelect v-model="expiry" :options="expiryOptions" class="w-40"/>
+                  <MfDatePicker v-if="expiry === 'date'" v-model="expiryDate" class="w-48" :min="today" :locale="locale"
+                                :label="$t('report.share.expiryDate')" :placeholder="$t('dataTable.selectDate')" :today-text="$t('dataTable.today')"
+                                :clear-text="$t('dataTable.clear')" :previous-text="$t('dataTable.previousMonth')" :next-text="$t('dataTable.nextMonth')"/>
+                </div>
+              </MfFormItem>
+              <MfFormItem name="publicEmbed">
+                <div class="flex w-full items-center justify-between gap-4">
+                  <div class="min-w-0">
+                    <div class="font-medium text-content">{{ $t('report.share.embed') }}</div>
+                    <div class="mt-0.5 text-xs text-content-tertiary">{{ $t('report.share.embedHint') }}</div>
+                  </div>
+                  <MfSwitch v-model="share.publicLink.embed" class="shrink-0"/>
+                </div>
+              </MfFormItem>
+              <template v-if="share.publicLink.embed">
+                <MfFormItem :label="$t('report.share.origins')" name="origins" :rules="originRules">
+                  <MfTextarea v-model="share.publicLink.origins" :rows="3" :placeholder="$t('report.share.originsPlaceholder')"/>
+                </MfFormItem>
+                <MfFormItem v-if="saved.token && saved.enabled && saved.embed" :label="$t('report.share.code')" name="code">
+                  <MfTextarea :model-value="embedCode" readonly :rows="3"/>
+                  <MfButton class="self-start" @click="copy(embedCode)"><Copy :size="15"/>{{ $t('report.share.copyCode') }}</MfButton>
+                </MfFormItem>
+              </template>
+            </template>
+          </div>
         </MfForm>
       </template>
     </div>
     <template #footer>
       <MfButton @click="open = false">{{ $t('common.cancel') }}</MfButton>
-      <MfButton type="submit" form="dashboard-share" variant="primary" :loading="saving" :disabled="loading || !!failure">{{ $t('common.save') }}</MfButton>
+      <MfButton type="submit" form="dashboard-share" variant="primary" :loading="saving" :disabled="loading || !!failure || rotating">{{ $t('common.save') }}</MfButton>
     </template>
   </MfModal>
 </template>

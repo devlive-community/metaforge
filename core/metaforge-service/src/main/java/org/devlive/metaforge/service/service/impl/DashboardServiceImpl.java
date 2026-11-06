@@ -63,6 +63,7 @@ public class DashboardServiceImpl
 {
     private static final ObjectMapper MAPPER = new ObjectMapper();
     private static final int CANDIDATES = 20;
+    private static final java.util.regex.Pattern PUBLIC_TOKEN = java.util.regex.Pattern.compile("^[A-Za-z0-9_-]{32}$");
     private final DashboardRepository repository;
     private final ReportRepository reportRepository;
     private final LinkRepository linkRepository;
@@ -404,6 +405,111 @@ public class DashboardServiceImpl
         return CommonResponse.success(result);
     }
 
+    @Override
+    public CommonResponse<Map<String, Object>> publicView(String token)
+    {
+        return publicly(() -> {
+            Optional<Shared> shared = publicScreen(token);
+            if (shared.isEmpty()) {
+                return CommonResponse.failure("Dashboard not found");
+            }
+            Set<String> codes = DashboardViewerDocument.reportCodes(shared.get().document);
+            List<Map<String, Object>> visible = new ArrayList<>();
+            reportRepository.findAllById(linkRepository.reportIdsOfDashboard(shared.get().dashboard.getId())).forEach(report -> {
+                if (Objects.equals(report.getUserId(), shared.get().dashboard.getUserId()) && codes.contains(report.getCode())) {
+                    // Anonymous visitors get what the charts draw: never SQL, data sources or the owner.
+                    Map<String, Object> item = new java.util.LinkedHashMap<>();
+                    item.put("code", report.getCode());
+                    item.put("name", report.getName());
+                    item.put("type", report.getType() == null ? null : report.getType().name());
+                    item.put("realtime", report.isRealtime());
+                    item.put("configure", report.getConfigure());
+                    visible.add(item);
+                }
+            });
+            Map<String, Object> view = new java.util.LinkedHashMap<>();
+            view.put("name", shared.get().dashboard.getName());
+            view.put("configure", shared.get().document);
+            view.put("reports", visible);
+            view.put("embed", shared.get().share.isPublicEmbed());
+            return CommonResponse.success(view);
+        });
+    }
+
+    @Override
+    public CommonResponse<List<Map<String, Object>>> publicRefresh(String token, String reportCode)
+    {
+        return publicly(() -> {
+            Optional<Shared> shared = publicScreen(token);
+            if (shared.isEmpty() || reports == null || !DashboardViewerDocument.reportCodes(shared.get().document).contains(reportCode)) {
+                return CommonResponse.failure("Dashboard report not found");
+            }
+            DashboardEntity dashboard = shared.get().dashboard;
+            boolean linked = reportRepository.findByCode(reportCode)
+                    .filter(value -> Objects.equals(value.getUserId(), dashboard.getUserId()))
+                    .filter(value -> linkRepository.reportIdsOfDashboard(dashboard.getId()).contains(value.getId()))
+                    .isPresent();
+            if (!linked) {
+                return CommonResponse.failure("Dashboard report not found");
+            }
+            UserEntity owner = users == null ? null : users.findById(dashboard.getUserId()).orElse(null);
+            return RunAs.user(owner, () -> reports.refreshChart(reportCode));
+        });
+    }
+
+    @Override
+    public Optional<String> publicFrameAncestors(String token)
+    {
+        try {
+            return publicScreen(token)
+                    .filter(shared -> shared.share.isPublicEmbed())
+                    .map(shared -> StringUtils.isBlank(shared.share.getPublicOrigins()) ? "*"
+                            : "'self' " + String.join(" ", shared.share.getPublicOrigins().split("\n")));
+        }
+        catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** A screen behind a public link, with the document anonymous visitors see. */
+    private static final class Shared
+    {
+        private final DashboardEntity dashboard;
+        private final DashboardShareRepository.Share share;
+        private final String document;
+
+        private Shared(DashboardEntity dashboard, DashboardShareRepository.Share share, String document)
+        {
+            this.dashboard = dashboard;
+            this.share = share;
+            this.document = document;
+        }
+    }
+
+    private Optional<Shared> publicScreen(String token)
+    {
+        if (shares == null || token == null || !PUBLIC_TOKEN.matcher(token).matches()) {
+            return Optional.empty();
+        }
+        return shares.findPublic(token)
+                .flatMap(id -> shares.find(id).filter(share -> share.isPublicEnabled() && token.equals(share.getPublicToken()))
+                        .filter(share -> share.getPublicExpiresAt() == null || share.getPublicExpiresAt().getTime() > System.currentTimeMillis())
+                        .flatMap(share -> repository.findById(id).filter(DashboardEntity::isActive)
+                                .flatMap(dashboard -> DashboardViewerDocument.of(dashboard.getConfigure(), visibleWidgets(id))
+                                        .map(document -> new Shared(dashboard, share, document)))));
+    }
+
+    /** Anonymous reads report a generic failure instead of internal errors such as SQL text. */
+    private static <T> CommonResponse<T> publicly(java.util.function.Supplier<CommonResponse<T>> action)
+    {
+        try {
+            return action.get();
+        }
+        catch (RuntimeException e) {
+            return CommonResponse.failure("Dashboard data is temporarily unavailable");
+        }
+    }
+
     /**
      * What the user may do with a screen: OWNER for its own user, otherwise the highest of a direct
      * grant, a grant to one of the user's roles and the grant to everyone; null when not shared.
@@ -556,7 +662,20 @@ public class DashboardServiceImpl
                     linked.add(report);
                 }
             });
-            dashboard.setReports(Persistence.references().load(linked));
+            Persistence.references().load(linked);
+            if (!SharePermission.OWNER.name().equals(dashboard.getPermission())) {
+                // Members see what the charts draw, never the owner's SQL, data sources or report links.
+                linked.forEach(report -> {
+                    report.setQuery(null);
+                    report.setSource(null);
+                    report.setSourceId(null);
+                    report.setUser(null);
+                    report.setShareToken(null);
+                    report.setShareEnabled(false);
+                    report.setShareOrigins(null);
+                });
+            }
+            dashboard.setReports(linked);
         }
         return response;
     }

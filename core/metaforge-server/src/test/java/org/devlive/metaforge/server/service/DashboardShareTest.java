@@ -10,6 +10,9 @@ import org.devlive.metaforge.service.entity.DashboardEntity;
 import org.devlive.metaforge.service.entity.ReportEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.enums.SharePermission;
+import org.devlive.metaforge.service.persistence.FilterQuery;
+import org.devlive.metaforge.service.persistence.Persistence;
+import org.devlive.metaforge.service.persistence.References;
 import org.devlive.metaforge.service.repository.DashboardRepository;
 import org.devlive.metaforge.service.repository.ReportRepository;
 import org.devlive.metaforge.service.repository.RoleRepository;
@@ -65,6 +68,8 @@ public class DashboardShareTest
     @BeforeEach
     public void setup()
     {
+        // Persistence is a static holder other tests may leave pointing at a closed database; each test gets its own.
+        new Persistence(mock(FilterQuery.class), mock(References.class));
         service.setUsers(users);
         service.setRoles(roles);
         service.setShares(shares);
@@ -273,5 +278,71 @@ public class DashboardShareTest
         assertEquals("VIEW", listed.get(0).getPermission());
         assertEquals("owner", listed.get(0).getOwnerName());
         assertFalse(listed.get(0).getConfigure().contains("secret"), "viewers list without the draft");
+    }
+
+    private DashboardShareRepository.Share publicLink(String widgets, Long expiresAt, boolean embed, String origins)
+    {
+        DashboardShareRepository.Share share = new DashboardShareRepository.Share();
+        share.setDashboardId(9L);
+        share.setWidgets(widgets);
+        share.setPublicEnabled(true);
+        share.setPublicToken(TOKEN);
+        share.setPublicEmbed(embed);
+        share.setPublicOrigins(origins);
+        share.setPublicExpiresAt(expiresAt == null ? null : new java.util.Date(expiresAt));
+        when(shares.findPublic(TOKEN)).thenReturn(Optional.of(9L));
+        when(shares.find(9L)).thenReturn(Optional.of(share));
+        screen.setActive(true);
+        return share;
+    }
+
+    private static final String TOKEN = "abcdefghijklmnopqrstuvwxyzABCDEF";
+
+    @Test
+    @SuppressWarnings("unchecked")
+    public void publicLinksShowTheChosenWidgetsWithoutSqlAndExpire()
+    {
+        SecurityContextHolder.clearContext();
+        ReportEntity sales = ReportEntity.builder().id(31L).code("SALES").userId(2L).query("select secret from sales").configure("{\"queryChart\":{}}").build();
+        ReportEntity costs = ReportEntity.builder().id(32L).code("COSTS").userId(2L).query("select * from costs").build();
+        when(reportRepository.findAllById(any())).thenReturn(List.of(sales, costs));
+        publicLink("[\"row\"]", null, false, null);
+
+        CommonResponse<Map<String, Object>> view = service.publicView(TOKEN);
+        assertTrue(view.getStatus());
+        assertFalse(view.getData().get("configure").toString().contains("secret"), "no draft");
+        List<Map<String, Object>> visible = (List<Map<String, Object>>) view.getData().get("reports");
+        assertEquals(List.of("SALES"), visible.stream().map(item -> item.get("code")).collect(java.util.stream.Collectors.toList()));
+        assertFalse(visible.toString().contains("select"), "no SQL reaches anonymous visitors");
+
+        AtomicReference<Long> runAs = new AtomicReference<>();
+        when(reports.refreshChart("SALES")).thenAnswer(call -> {
+            runAs.set(UserDetailsService.getUser().getId());
+            return CommonResponse.success(List.of());
+        });
+        assertTrue(service.publicRefresh(TOKEN, "SALES").getStatus());
+        assertEquals(2L, runAs.get());
+        assertFalse(service.publicRefresh(TOKEN, "COSTS").getStatus(), "hidden widgets stay closed");
+        assertEquals(Optional.empty(), service.publicFrameAncestors(TOKEN), "not embeddable");
+
+        publicLink(null, System.currentTimeMillis() - 1000, true, null);
+        assertFalse(service.publicView(TOKEN).getStatus(), "expired");
+        publicLink(null, null, true, "https://a.example.com\nhttps://b.example.com");
+        assertEquals(Optional.of("'self' https://a.example.com https://b.example.com"), service.publicFrameAncestors(TOKEN));
+        assertFalse(service.publicView("not-a-token").getStatus());
+        publicLink(null, null, true, null).setPublicEnabled(false);
+        assertFalse(service.publicView(TOKEN).getStatus(), "disabled");
+    }
+
+    @Test
+    public void membersNeverReceiveTheOwnersSql()
+    {
+        ReportEntity sales = ReportEntity.builder().id(31L).code("SALES").userId(2L).query("select secret").shareToken("owner-token").build();
+        when(reportRepository.findAllById(any())).thenReturn(List.of(sales));
+        grantRole("EDIT", null);
+        DashboardEntity loaded = service.getByCode(dashboards, "SCREEN").getData();
+        ReportEntity report = loaded.getReports().iterator().next();
+        assertNull(report.getQuery());
+        assertNull(report.getShareToken());
     }
 }

@@ -52,7 +52,8 @@ test('expiry times use dashes, not the browser locale', () => {
 test('shared addresses mount the standalone public app and keep the address as shared', async () => {
   const { readFile } = await import('node:fs/promises')
   const main = await readFile(new URL('../src/main.ts', import.meta.url), 'utf8')
-  assert.match(main, /createApp\(PublicReportApp, shared\)/)
+  assert.match(main, /createApp\(PublicReportApp, sharedReport\)/)
+  assert.match(main, /createApp\(PublicScreenApp, sharedScreen\)/)
   assert.match(main, /if \(!shared\) app\.use\(router\)/, 'the hash router never runs on a shared address')
   assert.doesNotMatch(main, /replaceState/)
 })

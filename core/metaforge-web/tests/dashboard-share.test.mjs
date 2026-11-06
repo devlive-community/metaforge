@@ -15,3 +15,22 @@ test('screen permissions order VIEW < EDIT < PUBLISH < OWNER', () => {
   // Screens read before sharing existed carry no permission and belong to the user.
   assert.equal(permits(undefined, 'OWNER'), true)
 })
+
+const { sharedScreenPath, sharedReportPath, screenShareUrl, screenEmbedCode } = await sourceModule('../../metaforge-web/src/router/shared.ts')
+const TOKEN = 'abcdefghijklmnopqrstuvwxyz012-_9'
+
+test('public screen links open on their own page, apart from reports', () => {
+  assert.deepEqual(sharedScreenPath(`/share/screen/${TOKEN}`), { token: TOKEN, embed: false })
+  assert.deepEqual(sharedScreenPath(`/embed/screen/${TOKEN}/`), { token: TOKEN, embed: true })
+  assert.equal(sharedScreenPath(`/share/report/${TOKEN}`), null)
+  assert.equal(sharedReportPath(`/share/screen/${TOKEN}`), null)
+  assert.equal(sharedScreenPath('/share/screen/short'), null)
+  assert.equal(sharedScreenPath(`/screen/${TOKEN}`), null)
+})
+
+test('public screen addresses escape the title in the embed code', () => {
+  assert.equal(screenShareUrl('https://bi.example.com', TOKEN), `https://bi.example.com/share/screen/${TOKEN}`)
+  const code = screenEmbedCode('https://bi.example.com', TOKEN, 'Sales "Q1" <b>')
+  assert.match(code, new RegExp(`src="https://bi.example.com/embed/screen/${TOKEN}"`))
+  assert.match(code, /title="Sales &quot;Q1&quot; &lt;b>"/)
+})

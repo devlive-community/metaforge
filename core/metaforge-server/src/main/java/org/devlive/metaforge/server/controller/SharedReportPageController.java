@@ -1,6 +1,7 @@
 package org.devlive.metaforge.server.controller;
 
 import org.devlive.metaforge.server.web.WebUiDocument;
+import org.devlive.metaforge.service.service.DashboardService;
 import org.devlive.metaforge.service.service.ReportShareService;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
@@ -21,12 +22,27 @@ import java.nio.charset.StandardCharsets;
 public class SharedReportPageController
 {
     private final ReportShareService service;
+    private final DashboardService screens;
     private final WebUiDocument document;
 
-    public SharedReportPageController(ReportShareService service, WebUiDocument document)
+    public SharedReportPageController(ReportShareService service, DashboardService screens, WebUiDocument document)
     {
         this.service = service;
+        this.screens = screens;
         this.document = document;
+    }
+
+    @GetMapping("/share/screen/{token}")
+    public ResponseEntity<String> shareScreen(@PathVariable("token") String token)
+    {
+        return page(HttpStatus.OK, "frame-ancestors 'self'");
+    }
+
+    @GetMapping("/embed/screen/{token}")
+    public ResponseEntity<String> embedScreen(@PathVariable("token") String token)
+    {
+        // Unknown, private or non-embeddable screens render the "not available" view and refuse framing.
+        return page(HttpStatus.OK, "frame-ancestors " + screens.publicFrameAncestors(token).orElse("'none'"));
     }
 
     @GetMapping("/share/report/{token}")
