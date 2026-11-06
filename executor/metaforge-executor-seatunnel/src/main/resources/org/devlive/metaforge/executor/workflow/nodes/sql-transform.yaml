@@ -7,7 +7,7 @@ category: transform
 configure:
     - field: query
       label: Query
-      type: textarea
+      type: sql
       placeholder: SELECT * FROM ${input}
       required: true
       group: sql

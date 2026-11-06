@@ -29,4 +29,10 @@ public interface WorkflowService
     CommonResponse<Map<String, Long>> statistics();
 
     CommonResponse<WorkflowEntity> publish(String code);
+
+    /** Column names and types a query on a saved data source returns, without reading rows. */
+    CommonResponse<List<Map<String, String>>> queryColumns(String source, String query);
+
+    /** Columns and the first rows of a query on a saved data source, for previewing it in the editor. */
+    CommonResponse<Map<String, Object>> queryPreview(String source, String query);
 }

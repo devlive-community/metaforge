@@ -66,7 +66,7 @@ configure:
       type: password
     - field: query
       label: Query
-      type: textarea
+      type: sql
       placeholder: Please input query
     - field: compatible_mode
       label: Compatible mode
@@ -164,7 +164,7 @@ configure:
           value: ERROR_WHEN_DATA_EXISTS
     - field: custom_sql
       label: Custom sql
-      type: textarea
+      type: sql
       placeholder: Please input custom sql
     - field: enable_upsert
       label: Enable upsert

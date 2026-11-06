@@ -1,5 +1,6 @@
 package org.devlive.metaforge.executor.metaforge
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.OriginColumn
 import org.devlive.metaforge.executor.workflow.WorkflowPlan
@@ -11,6 +12,8 @@ import org.devlive.metaforge.executor.workflow.WorkflowPlan
  * Compiles a "saved source query → batch write" workflow into a MetaForge request. The executor
  * expects the target database/table, query and column mapping on the input, as dataset sync does.
  */
+// BC_BAD_CAST_TO_ABSTRACT_COLLECTION: Kotlin's inlined filter()/mapTo() return their List/Set destinations.
+@SuppressFBWarnings(value = ["BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
 internal object MetaForgeWorkflowCompiler
 {
     /** 输出样本行数上限 / maximum number of written rows returned as the output sample */

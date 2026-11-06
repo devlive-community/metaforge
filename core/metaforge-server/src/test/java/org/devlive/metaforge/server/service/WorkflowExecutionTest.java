@@ -373,4 +373,68 @@ public class WorkflowExecutionTest
         }
     }
 
+    @Test
+    public void queryColumnsComeFromThePluginSchemaWithoutReadingRows()
+    {
+        Plugin connector = mock(Plugin.class);
+        PluginService driver = mock(PluginService.class);
+        when(connector.getService(PluginService.class)).thenReturn(driver);
+        when(driver.supportsStreaming()).thenReturn(true);
+        when(plugins.getPlugin("MockJdbc")).thenReturn(Optional.of(connector));
+        SourceEntity source = new SourceEntity();
+        source.setCode("SOURCE"); source.setUserId(1L); source.setType("MockJdbc");
+        when(sources.findByCode("SOURCE")).thenReturn(Optional.of(source));
+        AtomicReference<String> statement = new AtomicReference<>();
+        List<Object> rowsRead = new java.util.ArrayList<>();
+        org.mockito.Mockito.doAnswer(call -> {
+            statement.set(call.getArgument(1));
+            org.devlive.metaforge.spi.adapter.RowCallback callback = call.getArgument(3);
+            callback.onSchema(List.of("id", "name"), List.of("BIGINT", "VARCHAR"));
+            rowsRead.add("row");
+            callback.onRow(List.of(1, "a"));
+            return null;
+        }).when(driver).executeStream(any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), any());
+        CommonResponse<List<Map<String, String>>> columns = service.queryColumns("SOURCE", "select id, name from events;");
+        assertTrue(columns.getStatus(), String.valueOf(columns.getMessage()));
+        assertEquals(List.of(Map.of("name", "id", "type", "BIGINT"), Map.of("name", "name", "type", "VARCHAR")), columns.getData());
+        assertEquals("select id, name from events", statement.get());
+        assertTrue(rowsRead.isEmpty());
+        assertFalse(service.queryColumns("SOURCE", "  ").getStatus());
+        SourceEntity foreign = new SourceEntity();
+        foreign.setCode("FOREIGN"); foreign.setUserId(2L); foreign.setType("MockJdbc");
+        when(sources.findByCode("FOREIGN")).thenReturn(Optional.of(foreign));
+        assertFalse(service.queryColumns("FOREIGN", "select 1").getStatus());
+    }
+    @Test
+    @SuppressWarnings("unchecked")
+    public void queryPreviewStopsAfterTheRowLimit()
+    {
+        Plugin connector = mock(Plugin.class);
+        PluginService driver = mock(PluginService.class);
+        when(connector.getService(PluginService.class)).thenReturn(driver);
+        when(driver.supportsStreaming()).thenReturn(true);
+        when(plugins.getPlugin("MockJdbc")).thenReturn(Optional.of(connector));
+        SourceEntity source = new SourceEntity();
+        source.setCode("SOURCE"); source.setUserId(1L); source.setType("MockJdbc");
+        when(sources.findByCode("SOURCE")).thenReturn(Optional.of(source));
+        java.util.concurrent.atomic.AtomicInteger delivered = new java.util.concurrent.atomic.AtomicInteger();
+        org.mockito.Mockito.doAnswer(call -> {
+            org.devlive.metaforge.spi.adapter.RowCallback callback = call.getArgument(3);
+            callback.onSchema(List.of("id", "note"), List.of("BIGINT", "TEXT"));
+            for (int index = 0; index < 500; index++) {
+                delivered.incrementAndGet();
+                callback.onRow(java.util.Arrays.asList(index, index == 0 ? "x".repeat(5000) : null));
+            }
+            return null;
+        }).when(driver).executeStream(any(), anyString(), org.mockito.ArgumentMatchers.anyInt(), any());
+        CommonResponse<Map<String, Object>> preview = service.queryPreview("SOURCE", "select id, note from events");
+        assertTrue(preview.getStatus(), String.valueOf(preview.getMessage()));
+        List<Map<String, Object>> rows = (List<Map<String, Object>>) preview.getData().get("rows");
+        assertEquals(50, rows.size());
+        assertEquals(50, delivered.get());
+        assertEquals(0, rows.get(0).get("id"));
+        assertEquals(1001, rows.get(0).get("note").toString().length());
+        assertNull(rows.get(1).get("note"));
+        assertEquals(2, ((List<?>) preview.getData().get("columns")).size());
+    }
 }

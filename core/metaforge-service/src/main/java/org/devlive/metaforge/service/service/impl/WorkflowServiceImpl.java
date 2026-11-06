@@ -29,6 +29,7 @@ import org.devlive.metaforge.service.workflow.WorkflowCatalog;
 import org.devlive.metaforge.service.workflow.WorkflowExecutorDefinition;
 import org.devlive.metaforge.service.workflow.WorkflowRun;
 import org.devlive.metaforge.spi.PluginService;
+import org.devlive.metaforge.spi.adapter.RowCallback;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -65,6 +66,8 @@ import java.util.stream.Stream;
 public class WorkflowServiceImpl
         implements WorkflowService
 {
+    /** Rows returned by a query preview in the editor. */
+    private static final int PREVIEW_ROWS = 50;
     private final InitializerConfigure initializer;
     private final PluginManager plugins;
     private final WorkflowRepository repository;
@@ -329,6 +332,127 @@ public class WorkflowServiceImpl
         }
         catch (Exception e) {
             return CommonResponse.failure(e.getMessage());
+        }
+    }
+
+    @Override
+    public CommonResponse<List<Map<String, String>>> queryColumns(String source, String query)
+    {
+        CommonResponse<Map<String, Object>> read = readQuery(source, query, 0);
+        if (!Boolean.TRUE.equals(read.getStatus())) {
+            return CommonResponse.failure(String.valueOf(read.getMessage()));
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> columns = (List<Map<String, String>>) read.getData().get("columns");
+        return CommonResponse.success(columns);
+    }
+
+    @Override
+    public CommonResponse<Map<String, Object>> queryPreview(String source, String query)
+    {
+        return readQuery(source, query, PREVIEW_ROWS);
+    }
+
+    /**
+     * Reads the columns and at most {@code limit} rows of a query through the data source plugin's
+     * streaming read, stopping as soon as enough is known; the query itself is never rewritten.
+     */
+    private CommonResponse<Map<String, Object>> readQuery(String source, String query, int limit)
+    {
+        String statement = query == null ? "" : query.strip().replaceAll("[;\\s]+$", "");
+        if (source == null || source.isBlank() || statement.isEmpty()) {
+            return CommonResponse.failure("Select a data source and enter a query");
+        }
+        try {
+            ExecutorConfigure configure = source(source, UserDetailsService.getUser());
+            PluginService plugin = configure.getPlugin();
+            if (plugin == null || !plugin.supportsStreaming()) {
+                return CommonResponse.failure("The data source cannot describe query columns");
+            }
+            List<Map<String, String>> columns = new ArrayList<>();
+            List<Map<String, Object>> rows = new ArrayList<>();
+            List<String> names = new ArrayList<>();
+            long started = System.currentTimeMillis();
+            try {
+                plugin.executeStream(configure.getOriginConfigure(), statement, Math.max(1, limit), new RowCallback()
+                {
+                    @Override
+                    public void onStatement(java.sql.Statement jdbc)
+                    {
+                        try {
+                            jdbc.setMaxRows(Math.max(1, limit));
+                        }
+                        catch (java.sql.SQLException ignored) {
+                            // Not every driver supports a row limit; reading stops after the limit either way.
+                        }
+                    }
+
+                    @Override
+                    public void onSchema(List<String> headers, List<String> types)
+                    {
+                        for (int index = 0; index < headers.size(); index++) {
+                            Map<String, String> column = new LinkedHashMap<>();
+                            column.put("name", headers.get(index));
+                            column.put("type", types != null && index < types.size() && types.get(index) != null ? types.get(index) : "");
+                            columns.add(column);
+                            names.add(headers.get(index));
+                        }
+                        if (limit <= 0) {
+                            throw new SchemaRead();
+                        }
+                    }
+
+                    @Override
+                    public void onRow(List<Object> row)
+                    {
+                        if (rows.size() >= limit) {
+                            throw new SchemaRead();
+                        }
+                        Map<String, Object> values = new LinkedHashMap<>();
+                        for (int index = 0; index < names.size(); index++) {
+                            Object value = index < row.size() ? row.get(index) : null;
+                            // Driver types such as timestamps or blobs are shown as text.
+                            values.put(names.get(index), value == null || value instanceof Number || value instanceof Boolean ? value : abbreviate(value.toString()));
+                        }
+                        rows.add(values);
+                        if (rows.size() >= limit) {
+                            throw new SchemaRead();
+                        }
+                    }
+                });
+            }
+            catch (RuntimeException stopped) {
+                // Expected once enough is read; plugins may wrap the stop in their own exception.
+                if (!(stopped instanceof SchemaRead) && columns.isEmpty()) {
+                    throw stopped;
+                }
+            }
+            Map<String, Object> result = new LinkedHashMap<>();
+            result.put("columns", columns);
+            result.put("rows", rows);
+            result.put("elapsed", System.currentTimeMillis() - started);
+            return CommonResponse.success(result);
+        }
+        catch (RuntimeException e) {
+            log.warn("Cannot read a workflow query", e);
+            return CommonResponse.failure(e.getMessage());
+        }
+    }
+
+    private static String abbreviate(String value)
+    {
+        return value.length() > 1000 ? value.substring(0, 1000) + "…" : value;
+    }
+
+    /** Stops a schema-only read once the plugin has reported the columns. */
+    private static final class SchemaRead
+            extends RuntimeException
+    {
+        private static final long serialVersionUID = 1L;
+
+        private SchemaRead()
+        {
+            super(null, null, false, false);
         }
     }
 

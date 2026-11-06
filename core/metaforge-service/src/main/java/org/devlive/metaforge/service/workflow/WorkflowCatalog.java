@@ -372,6 +372,7 @@ public class WorkflowCatalog
                     }
                     break;
                 case "map":
+                case "mapping":
                     if (!(value instanceof Map)) {
                         errors.add(name + " must be a map");
                     }

@@ -20,7 +20,7 @@ configure:
     message: Database is required
   - field: sql
     label: SQL
-    type: textarea
+    type: sql
     required: true
     placeholder: The query sql used to search data though Clickhouse server.
     description: The query sql used to search data though Clickhouse server.

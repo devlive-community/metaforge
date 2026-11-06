@@ -83,6 +83,18 @@ public class WorkflowController
         return service.restart(code);
     }
 
+    @PostMapping(value = "query-columns")
+    public CommonResponse<List<Map<String, String>>> queryColumns(@RequestBody Map<String, String> body)
+    {
+        return service.queryColumns(body.get("source"), body.get("query"));
+    }
+
+    @PostMapping(value = "query-preview")
+    public CommonResponse<Map<String, Object>> queryPreview(@RequestBody Map<String, String> body)
+    {
+        return service.queryPreview(body.get("source"), body.get("query"));
+    }
+
     @PutMapping(value = "publish/{code}")
     public CommonResponse<WorkflowEntity> publish(@PathVariable String code)
     {
