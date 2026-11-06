@@ -35,26 +35,68 @@ export const defaultValues = (fields?: ConfigureItem[]): Record<string, any> =>
   Object.fromEntries((fields || []).filter(field => field.value !== undefined).map(field => [field.field, field.value]))
 /** Editor tab of a field: the declared group, else SQL text areas, required fields, then the rest. */
 export const fieldGroup = (field: ConfigureItem): 'basic' | 'sql' | 'advanced' =>
-  field.group || (field.type === 'textarea' && /query|sql$/i.test(field.field) ? 'sql' : field.required ? 'basic' : 'advanced')
+  field.group || (field.type === 'sql' || field.type === 'textarea' && /query|sql$/i.test(field.field) ? 'sql' : field.required ? 'basic' : 'advanced')
 const isEmpty = (value: unknown) => value === undefined || value === null || String(value).trim() === '' ||
   Array.isArray(value) && !value.length || typeof value === 'object' && !Array.isArray(value) && !Object.keys(value as object).length
 /** Problems of values against declared fields, mirroring the server: required, maps, numeric bounds. */
-export function fieldIssues(fields: ConfigureItem[] | undefined, values: Record<string, any> | undefined, owner: string): string[] {
+export function fieldIssues(fields: ConfigureItem[] | undefined, values: Record<string, any> | undefined, owner: string,
+  label: (field: ConfigureItem) => string = field => field.label): string[] {
   const issues: string[] = []
   ;(fields || []).forEach(field => {
     const value = values?.[field.field]
-    if (isEmpty(value)) { if (field.required) issues.push(`${owner}: ${field.label}`); return }
-    if (field.type === 'map' && (typeof value !== 'object' || Array.isArray(value))) issues.push('workflow.studio.invalidMap')
+    if (isEmpty(value)) { if (field.required) issues.push(`${owner}: ${label(field)}`); return }
+    if ((field.type === 'map' || field.type === 'mapping') && (typeof value !== 'object' || Array.isArray(value))) issues.push('workflow.studio.invalidMap')
     if (field.type === 'number' && (typeof value !== 'number' || field.min !== undefined && value < field.min || field.max !== undefined && value > field.max))
-      issues.push(`${owner}: ${field.label}`)
+      issues.push(`${owner}: ${label(field)}`)
   })
   return issues
+}
+/** Fields to clear after `changed` changes: everything that reads its choices from it, transitively. */
+export function dependentFields(fields: ConfigureItem[] | undefined, changed: string): string[] {
+  const cleared = new Set<string>(), queue = [changed]
+  while (queue.length) {
+    const current = queue.shift()!
+    ;(fields || []).filter(field => Object.values(field.from || {}).includes(current) && !cleared.has(field.field))
+      .forEach(field => { cleared.add(field.field); queue.push(field.field) })
+  }
+  return [...cleared]
+}
+/** The node connected to the input of `nodeId`, whose output feeds it. */
+export const upstreamOf = (nodes: NodeInstance[], connections: WorkflowConnection[], nodeId?: string): NodeInstance | undefined => {
+  const edge = connections.find(item => nodeForPort(item.target, nodes)?.id === nodeId)
+  return edge ? nodeForPort(edge.source, nodes) : undefined
+}
+/** Values of the named fields, or undefined while any of them is still empty. */
+export function resolveFrom(from: Record<string, string> | undefined, values: Record<string, any> | undefined): Record<string, string> | undefined {
+  if (!from) return undefined
+  const resolved: Record<string, string> = {}
+  for (const [key, field] of Object.entries(from)) {
+    const value = values?.[field]
+    if (value === undefined || value === null || String(value).trim() === '') return undefined
+    resolved[key] = String(value)
+  }
+  return resolved
+}
+/**
+ * Maps incoming columns onto target columns with the same name (case-insensitive), keeping mappings
+ * the user already chose. The result is `incoming=target`, the shape the executors read.
+ */
+export function matchColumns(targets: string[], incoming: string[], current: Record<string, string> = {}): Record<string, string> {
+  const result: Record<string, string> = {}
+  const mapped = new Set(Object.values(current))
+  Object.entries(current).forEach(([source, target]) => { if (targets.includes(target)) result[source] = target })
+  targets.filter(target => !mapped.has(target)).forEach(target => {
+    const source = incoming.find(name => name.toLowerCase() === target.toLowerCase() && !(name in result))
+    if (source) result[source] = target
+  })
+  return result
 }
 const limitOf = (limits: Limits, category: string) => {
   const value = limits[`${category}s` as keyof Limits]
   return typeof value === 'number' ? value : category === 'transform' ? 0 : 1
 }
-export function validateWorkflow(nodes: NodeInstance[], connections: WorkflowConnection[], limits: Limits = {}): ValidationEntry[] {
+export function validateWorkflow(nodes: NodeInstance[], connections: WorkflowConnection[], limits: Limits = {},
+  label?: (field: ConfigureItem) => string): ValidationEntry[] {
   const issues: ValidationEntry[] = []
   const count = (category: string) => nodes.filter(node => node.category === category).length
   if (['source', 'sink'].some(category => count(category) < 1 || count(category) > limitOf(limits, category)))
@@ -63,7 +105,7 @@ export function validateWorkflow(nodes: NodeInstance[], connections: WorkflowCon
     issues.push({ type: 'port', scope: '', message: 'workflow.studio.transformLimit' })
   nodes.forEach(node => {
     if (!node.ports?.length) issues.push({ type: 'port', scope: node.id, message: 'workflow.studio.unsupportedNode' })
-    fieldIssues(node.configure, node.data, node.label || node.tid).forEach(message => issues.push({ type: 'configure', scope: node.id, message }))
+    fieldIssues(node.configure, node.data, node.label || node.tid, label).forEach(message => issues.push({ type: 'configure', scope: node.id, message }))
     ;(node.ports || []).filter(port => port.required).forEach(port => {
       if (!connections.some(edge => (port.type === 'output' ? edge.source : edge.target) === `${node.id}-${port.id}`))
         issues.push({ type: 'port', scope: node.id, message: 'workflow.studio.disconnected' })

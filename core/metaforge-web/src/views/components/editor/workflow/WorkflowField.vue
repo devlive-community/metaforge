@@ -2,13 +2,22 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SourceService from '@/services/source'
+import MetadataService from '@/services/metadata'
 import { FilterModel } from '@/model/filter'
+import { useSourceDatabasesStore } from '@/stores/source-databases'
 import type { ConfigureItem } from './types'
+import { resolveFrom } from './utils'
+import WorkflowColumnMapping from './WorkflowColumnMapping.vue'
+import WorkflowSqlField from './WorkflowSqlField.vue'
 /**
  * Renders one declared executor field (node parameter or job setting) by its type, so every
  * executor plugin gets a consistent form without editor changes.
  */
-const props = defineProps<{ field: ConfigureItem; modelValue: unknown; disabled?: boolean; rows?: number }>()
+const props = defineProps<{
+  field: ConfigureItem; modelValue: unknown; disabled?: boolean; rows?: number
+  /** Values of the field's own node and of the node feeding it, for fields whose choices depend on them. */
+  context?: { values?: Record<string, any>; upstream?: Record<string, any> }
+}>()
 const emit = defineEmits<{ 'update:modelValue': [value: unknown] }>()
 const { t, te } = useI18n()
 
@@ -44,6 +53,36 @@ async function loadSources(reset = true) {
   finally { if (ticket === sourceTicket) sourcesBusy.value = false }
 }
 watch(() => props.field.type, type => { if (type === 'source' && !sources.value.length) loadSources() }, { immediate: true })
+
+/** Database and table choices are read from the data source chosen in the same node. */
+const dependency = computed(() => resolveFrom(props.field.from, props.context?.values))
+const upstream = computed(() => resolveFrom(props.field.upstream, props.context?.upstream))
+const databases = useSourceDatabasesStore()
+const tables = ref<string[]>([]), tablesBusy = ref(false), tablesError = ref('')
+let tableTicket = 0
+async function loadTables() {
+  const ticket = ++tableTicket, from = dependency.value
+  tables.value = []; tablesError.value = ''
+  if (!from?.source || !from.database) return
+  tablesBusy.value = true
+  try {
+    const response = await MetadataService.getTablesByDatabase(from.source, from.database)
+    if (ticket !== tableTicket) return
+    if (!response.status || response.data?.isSuccessful === false) throw Error(String(response.data?.message || response.message))
+    tables.value = (response.data?.columns || []).map((row: any) => row.object_name).filter(Boolean)
+  } catch (error) { if (ticket === tableTicket) tablesError.value = error instanceof Error ? error.message : String(error) }
+  finally { if (ticket === tableTicket) tablesBusy.value = false }
+}
+watch(() => props.field.type === 'database' ? dependency.value?.source : undefined, source => { if (source) databases.load(source) }, { immediate: true })
+watch(() => props.field.type === 'table' ? JSON.stringify(dependency.value || null) : undefined, value => { if (value !== undefined) loadTables() }, { immediate: true })
+const databaseEntry = computed(() => dependency.value?.source ? databases.entryOf(dependency.value.source) : undefined)
+/** Keep a saved value selectable even when the list no longer contains it. */
+const withCurrent = (options: { label: string; value: string }[]) => {
+  const current = typeof props.modelValue === 'string' ? props.modelValue : ''
+  return current && !options.some(option => option.value === current) ? [{ label: current, value: current }, ...options] : options
+}
+const databaseOptions = computed(() => withCurrent(databaseEntry.value?.options || []))
+const tableOptions = computed(() => withCurrent(tables.value.map(table => ({ label: table, value: table }))))
 </script>
 <template>
   <div class="min-w-0 w-full">
@@ -54,6 +93,16 @@ watch(() => props.field.type, type => { if (type === 'source' && !sources.value.
       <MfButton v-if="sources.length < sourceTotal" size="sm" :loading="sourcesBusy" @click="loadSources(false)">{{ $t('workflow.studio.loadMore') }}</MfButton>
       <MfAlert v-if="sourcesFailed" variant="danger" :title="$t('workflow.studio.sourcesFailed')"/>
     </div>
+    <template v-else-if="field.type === 'database' || field.type === 'table'">
+      <MfSelect :model-value="(modelValue as string) ?? ''" class="w-full" searchable :disabled="disabled || !dependency"
+                :loading="field.type === 'database' ? databaseEntry?.loading : tablesBusy"
+                :options="field.type === 'database' ? databaseOptions : tableOptions"
+                :placeholder="$t(dependency ? (field.type === 'database' ? 'workflow.studio.selectDatabase' : 'workflow.studio.selectTable') : 'workflow.studio.chooseDependency')"
+                @update:model-value="emit('update:modelValue', $event)"/>
+      <MfAlert v-if="field.type === 'database' ? databaseEntry?.error : tablesError" class="mt-2" variant="danger" :title="$t('workflow.studio.metadataFailed')"><span class="break-all">{{ field.type === 'database' ? databaseEntry?.error : tablesError }}</span></MfAlert>
+    </template>
+    <WorkflowSqlField v-else-if="field.type === 'sql'" :model-value="modelValue" :source="dependency?.source" :disabled="disabled" :height="`${Math.max(10, rows || 10) * 22}px`" @update:model-value="emit('update:modelValue', $event)"/>
+    <WorkflowColumnMapping v-else-if="field.type === 'mapping'" :model-value="modelValue" :target="dependency" :upstream="upstream" :disabled="disabled" @update:model-value="emit('update:modelValue', $event)"/>
     <MfInputNumber v-else-if="field.type === 'number'" :model-value="numberValue" :disabled="disabled" decimal-only commit-on-change class="w-full" :step="field.step || 1" :min="field.min" :max="field.max" @update:model-value="emit('update:modelValue', $event)"/>
     <MfSwitch v-else-if="field.type === 'switch'" :model-value="modelValue === true" :disabled="disabled" @update:model-value="emit('update:modelValue', $event)"/>
     <MfSelect v-else-if="field.type === 'select'" :model-value="modelValue" :disabled="disabled" class="w-full" :options="field.options || []" @update:model-value="emit('update:modelValue', $event)"/>

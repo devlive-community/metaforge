@@ -2,7 +2,8 @@
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ArrowLeft, ArrowUpRight, CheckCheck, Play, Save, Settings2, Square } from '@lucide/vue'
+import { ArrowUpRight, CheckCheck, Play, Save, Settings2, Square } from '@lucide/vue'
+import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
 import { MfMessage } from 'metaforge-ui'
 import WorkflowService from '@/services/workflow'
 import type { WorkflowExecutor, WorkflowGraph, WorkflowModel } from '@/model/workflow'
@@ -25,7 +26,6 @@ const publishing = ref(false)
 const original = ref(''), ticket = ref(0), drafts = new Map<string, WorkflowGraph>()
 const snapshot = () => JSON.stringify({ name: record.value.name, executor: record.value.executor, graph: graph.value })
 const dirty = computed(() => !!original.value && snapshot() !== original.value)
-const expanded = computed(() => route.query.view === 'config')
 async function initialize() {
   const request = ++ticket.value; loading.value = true; failure.value = ''; drafts.clear()
   try {
@@ -66,10 +66,11 @@ function selectExecutor(value: string) {
 }
 async function check() {
   issues.value = current.value
-    ? [...fieldIssues(current.value.settings, graph.value.settings, t('workflow.studio.jobSettings')).map(message => ({ scope: '', message })),
-      ...validateWorkflow(mergeDefinitions(current.value.nodes, graph.value.nodes), graph.value.connections, current.value.limits)]
+    ? [...fieldIssues(current.value.settings, graph.value.settings, t('workflow.studio.jobSettings'), settingLabel).map(message => ({ scope: '', message })),
+      ...validateWorkflow(mergeDefinitions(current.value.nodes, graph.value.nodes), graph.value.connections, current.value.limits, nodeFieldLabel)]
     : [{ scope: '', message: 'workflow.studio.noExecutor' }]
   checked.value = true
+  consolePanel.value?.showValidation()
   if (issues.value.length) return false
   checking.value = true
   try {
@@ -127,11 +128,13 @@ async function run() {
     const response = await WorkflowService.restart(code.value)
     if (!response.status) throw Error(String(response.message))
     record.value.state = 'RUNNING'
-    consolePanel.value?.open(); await consolePanel.value?.refresh()
+    consolePanel.value?.open('logs'); await consolePanel.value?.refresh()
   } catch (error) { MfMessage.error(error instanceof Error ? error.message : t('workflow.studio.runFailed')) }
   finally { busy.value = false }
 }
 /** Job settings and executor descriptions come from the executor plugin; translations override them when present. */
+/** Node field labels as the inspector shows them, so validation messages read the same. */
+const nodeFieldLabel = (field: ConfigureItem) => { const key = 'workflow.studio.field.' + field.field; return te(key) ? t(key) : field.label }
 const settingLabel = (field: ConfigureItem) => { const key = 'workflow.studio.setting.' + field.field; return te(key) ? t(key) : field.label }
 const executorDescription = computed(() => { const key = 'workflow.studio.executorDescription.' + current.value?.name; return te(key) ? t(key) : current.value?.description })
 function updateSetting(field: string, value: unknown) { graph.value = { ...graph.value, settings: { ...(graph.value.settings || {}), [field]: value } } }
@@ -141,7 +144,6 @@ const capabilityTags = computed(() => current.value ? [
   { key: 'metrics', on: current.value.capabilities.metrics },
   { key: 'preview', on: current.value.capabilities.preview },
 ] : [])
-function expand(node?: string) { router.replace({ path: route.path, query: expanded.value ? {} : { view: 'config', ...(node ? { node } : {}) } }) }
 watch(graph, () => { checked.value = false; issues.value = [] }, { deep: true })
 watch(() => route.params.code, (next, previous) => { if (!previous && record.value.code === next) return; initialize() })
 const leaving = ref(false); let leaveResolve: ((answer: boolean) => void) | undefined
@@ -158,15 +160,14 @@ initialize()
     <div v-else-if="failure" class="flex flex-1 flex-col items-center justify-center gap-4"><MfEmpty variant="error" :title="$t('workflow.studio.loadFailed')" :description="failure"/><MfButton @click="initialize">{{ $t('common.refresh') }}</MfButton></div>
     <template v-else>
       <header class="relative z-20 flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-line bg-surface px-4 py-2 shadow-mf-sm">
-        <div class="flex min-w-0 items-center gap-3"><router-link to="/workflow"><MfButton size="sm" :aria-label="$t('workflow.studio.list')"><ArrowLeft :size="15"/></MfButton></router-link><div class="min-w-0"><div class="flex items-center gap-2"><h1 class="truncate text-sm font-semibold text-content sm:text-base">{{ record.name || $t('workflow.text.create') }}</h1><MfTag size="sm" :variant="graph.publishedAt && !dirty ? 'success' : 'primary'">{{ $t(dirty ? 'workflow.studio.unsaved' : graph.publishedAt ? 'workflow.studio.publishedStatus' : 'workflow.studio.draft') }}</MfTag><span v-if="graph.revision" class="text-xs text-content-tertiary">v{{ graph.revision }}</span></div><p class="mt-1 text-xs text-content-tertiary">{{ graph.nodes.length }} {{ $t('workflow.studio.nodes') }} · {{ graph.connections.length }} {{ $t('workflow.studio.connections') }}</p></div></div>
+        <div class="flex min-w-0 items-center gap-2.5"><StudioBackLink to="/workflow" :label="$t('workflow.studio.backToList')"/><div class="min-w-0"><div class="flex items-center gap-2"><h1 class="truncate text-sm font-semibold text-content sm:text-base">{{ record.name || $t('workflow.text.create') }}</h1><MfTag size="sm" :variant="graph.publishedAt && !dirty ? 'success' : 'primary'">{{ $t(dirty ? 'workflow.studio.unsaved' : graph.publishedAt ? 'workflow.studio.publishedStatus' : 'workflow.studio.draft') }}</MfTag><span v-if="graph.revision" class="text-xs text-content-tertiary">v{{ graph.revision }}</span></div><p class="mt-1 text-xs text-content-tertiary">{{ graph.nodes.length }} {{ $t('workflow.studio.nodes') }} · {{ graph.connections.length }} {{ $t('workflow.studio.connections') }}</p></div></div>
         <div class="flex shrink-0 flex-wrap items-center gap-2 max-sm:w-full"><MfSelect :model-value="record.executor" :disabled="busy || publishing || record.state === 'RUNNING'" class="w-36" :options="catalog.map(item => ({ label: item.name, value: item.name }))" @update:model-value="selectExecutor(String($event))"/><MfButton size="sm" :disabled="busy || publishing || record.state === 'RUNNING'" :aria-label="$t('workflow.studio.settings')" @click="settings = true"><Settings2 :size="15"/></MfButton><MfButton size="sm" :loading="checking" :disabled="busy || publishing" @click="check"><CheckCheck :size="15"/>{{ $t('workflow.studio.validate') }}</MfButton><MfButton size="sm" :loading="busy" :disabled="publishing || checking || !current || record.state === 'RUNNING'" @click="save"><Save :size="15"/>{{ $t('workflow.studio.saveDraft') }}</MfButton><MfButton v-if="record.state !== 'RUNNING'" size="sm" :loading="busy" :disabled="publishing || !current" @click="run"><Play :size="15"/>{{ $t('workflow.studio.run') }}</MfButton><MfButton v-else variant="danger" size="sm" :loading="busy" :disabled="current?.capabilities.stop === 'none'" @click="stop"><Square :size="14"/>{{ $t('workflow.studio.stop') }}</MfButton><MfButton variant="primary" size="sm" :loading="publishing" :disabled="busy || checking || !current || record.state === 'RUNNING'" @click="publish"><ArrowUpRight :size="15"/>{{ $t('workflow.studio.publish') }}</MfButton></div>
       </header>
       <div id="workflow-tools" class="relative z-10 shrink-0 border-b border-line bg-surface"/>
       <MfAlert v-if="record.state === 'RUNNING'" variant="info" :title="$t('workflow.studio.runningLocked')"/>
-      <WorkflowEditor v-if="current" ref="editor" v-model="graph" class="min-h-0 flex-1" :executor="current" :expanded="expanded" :requested-node="String(route.query.node || '')" :readonly="record.state === 'RUNNING' || busy || publishing" @expand="expand">
+      <WorkflowEditor v-if="current" ref="editor" v-model="graph" class="min-h-0 flex-1" :executor="current" :requested-node="String(route.query.node || '')" :readonly="record.state === 'RUNNING' || busy || publishing">
         <template #bottom>
-          <div v-if="checked" class="max-h-32 shrink-0 overflow-y-auto border-t border-line bg-surface p-3"><MfAlert v-if="!issues.length" variant="success" :title="$t('workflow.studio.valid')"/><button v-for="(issue, index) in issues" :key="index" type="button" class="block w-full rounded-mf-md px-2 py-1 text-left text-xs text-danger hover:bg-danger-light" @click="issue.scope && editor?.select(issue.scope)">{{ issue.message.startsWith('workflow.') ? $t(issue.message) : issue.message }}</button></div>
-          <WorkflowConsole ref="consolePanel" :code="code" :capabilities="current.capabilities" @state="record.state = $event"/>
+          <WorkflowConsole ref="consolePanel" :code="code" :capabilities="current.capabilities" :issues="issues" :checked="checked" :checking="checking" @state="record.state = $event" @select="editor?.select($event)"/>
         </template>
       </WorkflowEditor>
       <MfEmpty v-else class="flex-1" :title="$t('workflow.studio.noExecutor')" :description="$t('workflow.studio.installExecutor')"/>

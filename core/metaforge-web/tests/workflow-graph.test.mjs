@@ -9,6 +9,15 @@ const instances = ['reader', 'sql', 'writer'].map((tid, i) => ({ id: `67b2a012-9
 const nodes = mergeDefinitions(definitions, instances)
 const edge = (from, to) => ({ id: `${from}-${to}`, source: nodes[from].id + '-output', target: nodes[to].id + '-input' })
 
+test('component categories keep pipeline order when declarations are unordered', async () => {
+  const { workflowCategories } = await sourceModule('../../metaforge-web/src/model/workflow.ts')
+  const executor = { categories: ['source', 'sink', 'transform'], nodes: definitions, limits: { sources: 1, transforms: 3, sinks: 1 } }
+  assert.deepEqual(workflowCategories(executor), ['source', 'transform', 'sink'])
+  assert.deepEqual(workflowCategories({ ...executor, categories: ['sink', 'source'] }), ['source', 'sink'])
+  assert.deepEqual(workflowCategories({ ...executor, limits: { ...executor.limits, transforms: 0 } }), ['source', 'sink'])
+  assert.deepEqual(workflowCategories({ ...executor, nodes: definitions.filter(node => node.category !== 'transform') }), ['source', 'sink'])
+})
+
 test('UUID node identifiers survive connection matching and deletion', () => {
   assert.equal(nodeForPort(nodes[0].id + '-output', nodes)?.id, nodes[0].id)
   assert.equal(nodeForPort(nodes[0].id + '-missing', nodes), undefined)
@@ -61,4 +70,19 @@ test('declared fields drive editor tabs, defaults and bounds', () => {
   assert.deepEqual(fieldIssues(settings, {}, 'Settings'), [], 'optional settings may stay empty')
   assert.deepEqual(fieldIssues(settings, { batchSize: 0 }, 'Settings'), ['Settings: Batch size'])
   assert.deepEqual(fieldIssues(settings, { batchSize: 10 }, 'Settings'), [])
+})
+
+test('metadata-driven fields clear dependents, resolve their inputs and match columns', async () => {
+  const { dependentFields, resolveFrom, upstreamOf, matchColumns } = await sourceModule('../../metaforge-web/src/views/components/editor/workflow/utils.ts')
+  const fields = [{ field: 'source' }, { field: 'database', from: { source: 'source' } }, { field: 'table', from: { source: 'source', database: 'database' } },
+    { field: 'columns', from: { source: 'source', database: 'database', table: 'table' } }, { field: 'note' }]
+  assert.deepEqual(dependentFields(fields, 'source'), ['database', 'table', 'columns'])
+  assert.deepEqual(dependentFields(fields, 'table'), ['columns'])
+  assert.deepEqual(dependentFields(fields, 'note'), [])
+  assert.deepEqual(resolveFrom({ source: 'source', database: 'database' }, { source: 'S', database: 'dw' }), { source: 'S', database: 'dw' })
+  assert.equal(resolveFrom({ source: 'source', database: 'database' }, { source: 'S', database: ' ' }), undefined)
+  assert.equal(upstreamOf(nodes, [edge(0, 1), edge(1, 2)], nodes[2].id)?.id, nodes[1].id)
+  assert.equal(upstreamOf(nodes, [edge(0, 1)], nodes[0].id), undefined)
+  assert.deepEqual(matchColumns(['ID', 'name', 'created'], ['id', 'name', 'other']), { id: 'ID', name: 'name' })
+  assert.deepEqual(matchColumns(['id', 'name'], ['id', 'name', 'alias'], { alias: 'name', gone: 'missing' }), { alias: 'name', id: 'id' })
 })

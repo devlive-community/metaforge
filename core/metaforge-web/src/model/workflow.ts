@@ -45,6 +45,13 @@ export const categoryLimit = (executor: Pick<WorkflowExecutor, 'limits'> | undef
   const value = executor?.limits?.[`${category}s` as keyof WorkflowExecutor['limits']]
   return typeof value === 'number' ? Math.max(0, value) : category === 'transform' ? 0 : 1
 }
+/** Display the supported palette types in pipeline order, independent of declaration order. */
+export function workflowCategories(executor: Pick<WorkflowExecutor, 'categories' | 'nodes' | 'limits'>): WorkflowCategory[] {
+  const order: WorkflowCategory[] = ['source', 'transform', 'sink']
+  return order.filter(category => executor.categories.includes(category)
+    && categoryLimit(executor, category) > 0
+    && executor.nodes.some(node => node.category === category))
+}
 export interface WorkflowRun {
   id: string
   code: string
