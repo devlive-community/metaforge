@@ -48,7 +48,7 @@ let cleanup: (() => void) | undefined
 function drag(event: PointerEvent, node?: NodeInstance) {
   if (event.button !== 0 || (event.target as HTMLElement).closest('button')) return
   if (node && props.readonly) { emit('onNodeSelected', node); return }
-  cleanup?.(); pending.value = undefined; selectedEdge.value = undefined
+  cleanup?.(); pending.value = undefined; pendingType.value = undefined; selectedEdge.value = undefined
   if (node) emit('onNodeSelected', node)
   else { automaticFit = false; emit('onNodeSelected', null) }
   root.value?.focus({ preventScroll: true })
@@ -65,14 +65,56 @@ function drag(event: PointerEvent, node?: NodeInstance) {
   cleanup = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', finish); window.removeEventListener('pointercancel', finish); cleanup = undefined }
   window.addEventListener('pointermove', move); window.addEventListener('pointerup', finish); window.addEventListener('pointercancel', finish)
 }
-function port(node: NodeInstance, type: 'input' | 'output') {
-  if (props.readonly) return
-  const id = `${node.id}-${type}`
-  if (type === 'output') { pending.value = pending.value === id ? undefined : id; pointer.value = endpoint(id, true) }
-  else if (pending.value) {
-    emit('onConnectionCreated', { id: crypto.randomUUID(), source: pending.value, target: id }); pending.value = undefined
-  }
+/** The port id of the connection being drawn and its direction; either end may start it. */
+const pendingType = ref<'input' | 'output'>()
+const portOf = (target: EventTarget | null) => (target as HTMLElement | null)?.closest<HTMLElement>('[data-port]')
+function finishConnection(id: string, type: 'input' | 'output') {
+  if (!pending.value || type === pendingType.value) return false
+  const [source, target] = pendingType.value === 'output' ? [pending.value, id] : [id, pending.value]
+  emit('onConnectionCreated', { id: crypto.randomUUID(), source, target })
+  pending.value = undefined; pendingType.value = undefined
+  return true
 }
+/**
+ * Connects ports by dragging from one port to another, or by clicking one port and then another.
+ * A drag ends on a different element than it started on, so it cannot rely on click events.
+ */
+function startConnection(event: PointerEvent, node: NodeInstance, type: 'input' | 'output', portId: string) {
+  if (props.readonly || event.button !== 0) return
+  const id = `${node.id}-${portId}`
+  selectedEdge.value = undefined
+  if (finishConnection(id, type)) return
+  cleanup?.()
+  pending.value = id; pendingType.value = type; pointer.value = endpoint(id, type === 'output')
+  root.value?.focus({ preventScroll: true })
+  const start = { x: event.clientX, y: event.clientY }
+  let moved = false
+  const move = (e: PointerEvent) => {
+    if (Math.abs(e.clientX - start.x) + Math.abs(e.clientY - start.y) > 4) moved = true
+    pointer.value = local(e)
+  }
+  const finish = (e: PointerEvent) => {
+    cleanup?.()
+    const hit = portOf(document.elementFromPoint(e.clientX, e.clientY))
+    if (hit?.dataset.port && hit.dataset.port !== id && finishConnection(hit.dataset.port, hit.dataset.portType as 'input' | 'output')) return
+    // A press without movement keeps the port armed for click-to-connect; a drag to nowhere cancels.
+    if (moved) { pending.value = undefined; pendingType.value = undefined }
+  }
+  cleanup = () => { window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', finish); window.removeEventListener('pointercancel', finish); cleanup = undefined }
+  window.addEventListener('pointermove', move); window.addEventListener('pointerup', finish); window.addEventListener('pointercancel', finish)
+}
+/** Keyboard: Enter on one port, then Enter on a port of the other direction. */
+function armPort(node: NodeInstance, type: 'input' | 'output', portId: string) {
+  if (props.readonly) return
+  const id = `${node.id}-${portId}`
+  if (finishConnection(id, type)) return
+  pending.value = id; pendingType.value = type; pointer.value = endpoint(id, type === 'output')
+}
+const pendingPath = computed(() => {
+  if (!pending.value) return ''
+  const anchor = endpoint(pending.value, pendingType.value === 'output')
+  return pendingType.value === 'output' ? curve(anchor, pointer.value) : curve(pointer.value, anchor)
+})
 function wheel(event: WheelEvent) {
   if (event.ctrlKey || event.metaKey) zoom(scale.value - event.deltaY * .002)
   else { automaticFit = false; pan.value = { x: pan.value.x - event.deltaX, y: pan.value.y - event.deltaY } }
@@ -87,7 +129,7 @@ function drop(event: DragEvent) {
 }
 function key(event: KeyboardEvent) {
   if ((event.target as HTMLElement).closest('button,input,textarea,select') || props.readonly) return
-  if (event.key === 'Escape') { pending.value = undefined; selectedEdge.value = undefined; emit('onNodeSelected', null) }
+  if (event.key === 'Escape') { pending.value = undefined; pendingType.value = undefined; selectedEdge.value = undefined; emit('onNodeSelected', null) }
   if (['Delete', 'Backspace'].includes(event.key)) {
     event.preventDefault()
     if (selectedEdge.value) { emit('onConnectionRemoved', selectedEdge.value); selectedEdge.value = undefined }
@@ -110,7 +152,7 @@ defineExpose({ fit, zoom })
           <path :d="curve(endpoint(edge.source, true), endpoint(edge.target, false))" fill="none" stroke="var(--mf-color-primary)" :stroke-width="selectedEdge === edge.id ? 3 : 1.8" :marker-end="`url(#${marker})`" />
           <path :d="curve(endpoint(edge.source, true), endpoint(edge.target, false))" fill="none" stroke="transparent" stroke-width="15" class="pointer-events-auto cursor-pointer" @pointerdown.stop="selectedEdge = edge.id; emit('onNodeSelected', null); root?.focus()" />
         </g>
-        <path v-if="pending" :d="curve(endpoint(pending, true), pointer)" stroke="var(--mf-color-primary)" stroke-dasharray="5 5" fill="none" />
+        <path v-if="pending" :d="pendingPath" stroke="var(--mf-color-primary)" stroke-dasharray="5 5" fill="none" />
       </svg>
       <div v-for="node in nodes" :key="node.id" :data-node-id="node.id" role="button" tabindex="0" :aria-label="node.label"
            class="absolute flex h-[88px] w-[210px] cursor-grab select-none items-center gap-3 rounded-mf-lg border bg-surface px-4 shadow-mf-sm transition-[border-color,box-shadow]"
@@ -119,8 +161,10 @@ defineExpose({ fit, zoom })
         <div class="rounded-mf-md bg-primary-light p-2 text-primary"><component :is="node.category === 'source' ? Database : node.category === 'sink' ? Download : Settings2" :size="17" /></div>
         <div class="min-w-0 flex-1"><div class="truncate text-sm font-semibold text-content">{{ node.label }}</div><div class="mt-1 truncate text-xs text-content-tertiary">{{ node.key }}</div></div>
         <button v-if="selectedNodeId === node.id && !readonly" type="button" class="absolute right-1 top-1 rounded p-1 text-content-tertiary hover:bg-danger-light hover:text-danger" :aria-label="$t('common.delete')" @click.stop="emit('onNodeDeleted', node)"><Trash2 :size="12"/></button>
-        <button v-for="item in node.ports || []" :key="item.id" type="button" :aria-label="`${node.label} ${item.type}`" class="absolute top-[36px] h-4 w-4 rounded-full border-2 border-primary bg-surface hover:bg-primary-light"
-                :class="item.type === 'input' ? '-left-2' : '-right-2'" @click.stop="port(node, item.type)" />
+        <button v-for="item in node.ports || []" :key="item.id" type="button" :data-port="`${node.id}-${item.id}`" :data-port-type="item.type" :aria-label="`${node.label} ${item.type}`"
+                class="absolute top-[34px] h-5 w-5 cursor-crosshair touch-none rounded-full border-2 border-primary transition-colors hover:bg-primary-light"
+                :class="[item.type === 'input' ? '-left-2.5' : '-right-2.5', pending === `${node.id}-${item.id}` ? 'bg-primary' : pending && pendingType !== item.type ? 'bg-primary-light' : 'bg-surface']"
+                @pointerdown.stop.prevent="startConnection($event, node, item.type, item.id)" @keydown.enter.stop.prevent="armPort(node, item.type, item.id)" />
       </div>
     </div>
     <div v-if="!nodes.length" class="pointer-events-none absolute inset-0 flex items-center justify-center"><MfEmpty :title="$t('workflow.studio.emptyCanvas')" :description="$t('workflow.studio.dragHint')" /></div>

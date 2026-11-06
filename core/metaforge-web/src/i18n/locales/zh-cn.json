@@ -3841,7 +3841,7 @@
   "workflow.studio.category.transform": "数据处理",
   "workflow.studio.category.sink": "数据输出",
   "workflow.studio.emptyCanvas": "开始构建工作流",
-  "workflow.studio.connectHint": "点击目标组件的输入端口完成连线，Esc 取消",
+  "workflow.studio.connectHint": "拖到或点击另一个组件的端口完成连线，Esc 取消",
   "workflow.studio.deleteConnection": "删除连线",
   "workflow.studio.resizeLibrary": "调整组件库宽度",
   "workflow.studio.resizeInspector": "调整组件配置宽度",

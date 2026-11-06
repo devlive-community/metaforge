@@ -3841,7 +3841,7 @@
   "workflow.studio.category.transform": "Data transforms",
   "workflow.studio.category.sink": "Data outputs",
   "workflow.studio.emptyCanvas": "Start building your workflow",
-  "workflow.studio.connectHint": "Click an input port to finish the connection. Escape to cancel.",
+  "workflow.studio.connectHint": "Drag to or click a port of another component to connect. Esc cancels.",
   "workflow.studio.deleteConnection": "Delete connection",
   "workflow.studio.resizeLibrary": "Resize component library",
   "workflow.studio.resizeInspector": "Resize component properties",
