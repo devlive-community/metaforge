@@ -105,6 +105,7 @@ const createDefaultRouter = (router: Router) => {
             {
                 path: 'dataset/adhoc/:code',
                 meta: {
+                    datasetStudio: true,
                     title: 'common.dataset',
                     isRoot: false
                 },
@@ -113,6 +114,7 @@ const createDefaultRouter = (router: Router) => {
             {
                 path: 'dataset/adhoc/:code/:id',
                 meta: {
+                    datasetStudio: true,
                     title: 'common.dataset',
                     isRoot: false
                 },

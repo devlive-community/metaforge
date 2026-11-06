@@ -55,6 +55,7 @@ import { Configuration } from './Configuration'
 import VisualChart from './components/VisualChart.vue'
 import VisualTable from '@/views/components/visual/components/VisualTable.vue'
 import DatasetService from '@/services/dataset'
+import { adhocRows } from '@/model/dataset-adhoc'
 import ExecuteService from '@/services/execute.ts'
 import { ExecuteModel } from '@/model/execute.ts'
 
@@ -104,13 +105,16 @@ async function refreshChart() {
   const run = generation
   refreshing.value = true
   try {
-    const response = props.shareToken ? await PublicReportService.refresh(props.shareToken) : await ReportService.refreshChart(code)
+    const datasetReport = props.type === 'DATASET'
+    const response = datasetReport
+      ? props.shareToken ? await PublicReportService.data(props.shareToken) : await DatasetService.adhoc(props.code!, props.query)
+      : props.shareToken ? await PublicReportService.refresh(props.shareToken) : await ReportService.refreshChart(code)
     if (run !== generation) return
-    if (!response.status || !Array.isArray(response.data)) {
+    if (!response.status || (datasetReport ? response.data?.isSuccessful === false || !Array.isArray(response.data?.columns) : !Array.isArray(response.data))) {
       refreshFailed.value = true
       return
     }
-    refreshedRows.value = response.data
+    refreshedRows.value = datasetReport ? adhocRows(response.data.headers || [], response.data.columns) : response.data
     refreshedAt.value = formatClock(new Date())
     refreshFailed.value = false
   }
