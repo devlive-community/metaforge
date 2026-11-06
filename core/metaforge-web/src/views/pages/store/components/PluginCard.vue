@@ -27,7 +27,7 @@
     <template v-if="layout === 'grid'">
       <p class="pointer-events-none mt-3 line-clamp-2 min-h-10 text-xs leading-5 text-content-secondary">{{ description }}</p>
       <div class="pointer-events-none mt-auto flex min-h-8 items-center gap-3 border-t border-line pt-3 text-[11px] text-content-tertiary">
-        <span :class="plugin.rating != null && 'font-semibold text-warning'">★ {{ plugin.rating ?? '—' }}</span>
+        <span class="inline-flex items-center gap-1" :class="plugin.rating != null && 'font-semibold text-warning'"><Star :size="12" aria-hidden="true"/>{{ plugin.rating ?? '—' }}</span>
         <span class="flex items-center gap-1"><Download :size="12"/>{{ store.downloadsLabel(plugin) }}</span>
         <MfTag v-if="plugin.hasUpdate" variant="warning" size="sm" class="ml-auto">{{ $t('store.badge.updatable') }}</MfTag>
       </div>
@@ -61,7 +61,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Download, RefreshCw } from '@lucide/vue'
+import { Download, RefreshCw, Star } from '@lucide/vue'
 import type { StoreLayout, StorePlugin } from '@/model/store'
 import type { PluginStoreContext } from '@/composables/usePluginStore'
 import PluginSymbol from './PluginSymbol.vue'

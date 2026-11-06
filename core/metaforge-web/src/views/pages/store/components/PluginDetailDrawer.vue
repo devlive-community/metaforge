@@ -31,7 +31,7 @@
 
         <div class="mt-4 grid grid-cols-3 gap-2 text-center">
           <div class="rounded-xl bg-surface-hover p-3">
-            <div class="font-bold text-content">{{ plugin.rating == null ? '—' : plugin.rating + ' ★' }}</div>
+            <div class="flex items-center justify-center gap-1 font-bold text-content">{{ plugin.rating ?? '—' }}<Star v-if="plugin.rating != null" :size="14" aria-hidden="true"/></div>
             <div class="text-[11px] text-content-tertiary">{{ $t('store.drawer.rating') }}</div>
           </div>
           <div class="rounded-xl bg-surface-hover p-3">
@@ -216,6 +216,7 @@ import {
   Puzzle,
   RefreshCw,
   ShieldCheck,
+  Star,
   Trash2,
 } from '@lucide/vue'
 import type { PluginStoreContext } from '@/composables/usePluginStore'

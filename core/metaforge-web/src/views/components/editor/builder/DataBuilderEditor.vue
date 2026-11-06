@@ -66,7 +66,7 @@
           <span v-if="selectedId === component.id"
                 class="absolute -top-2 -right-2 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center cursor-pointer"
                 @mousedown.stop
-                @click.stop="onDelete(component)">✕</span>
+                @click.stop="onDelete(component)"><X :size="12" aria-hidden="true"/></span>
         </div>
       </div>
     </div>
@@ -118,7 +118,7 @@
 <script lang="ts">
 import { defineComponent, ref, computed, onBeforeUnmount, PropType } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
-import { LayoutGrid } from '@lucide/vue'
+import { LayoutGrid, X } from '@lucide/vue'
 
 interface BuilderPanelItem
 {
@@ -143,7 +143,7 @@ interface PlacedComponent
 }
 
 export default defineComponent({
-  components: { LayoutGrid },
+  components: { LayoutGrid, X },
     props: {
     panelWidth: {
       type: Number,

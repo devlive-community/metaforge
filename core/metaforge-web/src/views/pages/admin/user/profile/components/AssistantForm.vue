@@ -32,11 +32,7 @@
               </MfFormItem>
 
               <MfFormItem name="token" :rules="[{ required: true, message: $t('user.validation.required') }]" :label="$t('user.common.apiToken')" :tip="$t('user.tip.token')">
-                <MfInput v-model="formState.token" name="assistant-token" autocomplete="new-password" type="password" show-password>
-                  <template #suffix>
-                    <span class="dc-ai__kbd">🔑</span>
-                  </template>
-                </MfInput>
+                <MfInput v-model="formState.token" name="assistant-token" autocomplete="new-password" type="password" show-password/>
               </MfFormItem>
 
               <MfFormItem name="timeout" :rules="[{ required: true, message: $t('user.validation.required') }]" :label="$t('user.common.timeoutSeconds')" :tip="$t('user.tip.timeout')">
