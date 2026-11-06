@@ -22,7 +22,7 @@ const graph = ref<WorkflowGraph>({ nodes: [], connections: [], timeout: 600, des
 const current = computed(() => catalog.value.find(item => item.name === record.value.executor))
 const code = computed(() => record.value.code)
 const issues = ref<{ scope: string; message: string }[]>([]), checked = ref(false)
-const publishing = ref(false)
+const publishing = ref(false), settingsTab = ref('basic')
 const original = ref(''), ticket = ref(0), drafts = new Map<string, WorkflowGraph>()
 const snapshot = () => JSON.stringify({ name: record.value.name, executor: record.value.executor, graph: graph.value })
 const dirty = computed(() => !!original.value && snapshot() !== original.value)
@@ -83,8 +83,8 @@ async function check() {
 }
 async function save() {
   if (busy.value) return false
-  try { await form.value?.validate() } catch { settings.value = true; return false }
-  if (!record.value.name?.trim()) { settings.value = true; await nextTick(); try { await form.value?.validate() } catch { /* Show the inline name error. */ }; return false }
+  try { await form.value?.validate() } catch { settings.value = true; settingsTab.value = 'basic'; return false }
+  if (!record.value.name?.trim()) { settings.value = true; settingsTab.value = 'basic'; await nextTick(); try { await form.value?.validate() } catch { /* Show the inline name error. */ }; return false }
   busy.value = true
   try {
     const response = await WorkflowService.saveOrUpdate({ ...record.value, configure: graph.value })
@@ -173,18 +173,27 @@ initialize()
       <MfEmpty v-else class="flex-1" :title="$t('workflow.studio.noExecutor')" :description="$t('workflow.studio.installExecutor')"/>
     </template>
   </WorkflowShell>
-  <MfModal v-model:open="settings" :title="$t('workflow.studio.settings')">
-    <MfForm ref="form" :model="record" layout="vertical" @finish="save">
-      <MfFormItem name="name" :label="$t('common.name')" :rules="[{ required: true, message: $t('workflow.studio.nameRequired') }]"><MfInput v-model="record.name" :disabled="busy || publishing" :maxlength="200"/></MfFormItem>
-      <MfFormItem :label="$t('workflow.studio.description')"><MfTextarea v-model="graph.description" :disabled="busy || publishing" :rows="3"/></MfFormItem>
-      <MfFormItem :label="$t('workflow.studio.timeout')"><MfInputNumber v-model="graph.timeout" :disabled="busy || publishing" class="w-full" :min="1" :max="86400" decimal-only commit-on-change/></MfFormItem>
-      <template v-if="current">
-        <div class="mb-4 border-t border-line pt-4"><strong class="text-sm text-content">{{ $t('workflow.studio.jobSettings') }} · {{ current.name }}</strong><p v-if="executorDescription" class="mt-1 text-xs leading-5 text-content-tertiary">{{ executorDescription }}</p><div class="mt-2 flex flex-wrap gap-1.5"><MfTag v-for="item in capabilityTags" :key="item.key" size="sm" :variant="item.on ? 'success' : 'default'">{{ $t('workflow.studio.capability.' + item.key) }}</MfTag></div></div>
-        <MfFormItem v-for="field in current.settings" :key="field.field" :label="settingLabel(field)"><WorkflowField :field="field" :model-value="graph.settings?.[field.field]" :disabled="busy || publishing" @update:model-value="updateSetting(field.field, $event)"/></MfFormItem>
-        <p v-if="!current.settings.length" class="mb-4 text-xs text-content-tertiary">{{ $t('workflow.studio.noJobSettings') }}</p>
-      </template>
-      <div class="flex justify-end"><MfButton type="submit" variant="primary" :loading="busy">{{ $t('common.save') }}</MfButton></div>
+  <MfModal v-model:open="settings" width="560px" :title="$t('workflow.studio.settings')">
+    <MfTabs v-model:active-key="settingsTab" class="mb-4">
+      <MfTabPane item-key="basic" :tab="$t('workflow.studio.settingsTab.basic')"/>
+      <MfTabPane item-key="job" :tab="$t('workflow.studio.settingsTab.job')"/>
+    </MfTabs>
+    <MfForm id="workflow-settings" ref="form" :model="record" layout="vertical" @finish="save">
+      <!-- Both panes stay rendered so the name is validated whichever tab is open. -->
+      <div v-show="settingsTab === 'basic'" class="min-h-80">
+        <MfFormItem name="name" :label="$t('common.name')" :rules="[{ required: true, message: $t('workflow.studio.nameRequired') }]"><MfInput v-model="record.name" :disabled="busy || publishing" :maxlength="200"/></MfFormItem>
+        <MfFormItem :label="$t('workflow.studio.description')"><MfTextarea v-model="graph.description" :disabled="busy || publishing" :rows="3"/></MfFormItem>
+        <MfFormItem :label="$t('workflow.studio.timeout')"><MfInputNumber v-model="graph.timeout" :disabled="busy || publishing" class="w-full" :min="1" :max="86400" decimal-only commit-on-change/></MfFormItem>
+      </div>
+      <div v-show="settingsTab === 'job'" class="min-h-80">
+        <template v-if="current">
+          <div class="mb-4 rounded-mf-md bg-surface-hover px-4 py-3"><strong class="text-sm text-content">{{ current.name }}</strong><p v-if="executorDescription" class="mt-1 text-xs leading-5 text-content-secondary">{{ executorDescription }}</p><div class="mt-2 flex flex-wrap gap-1.5"><MfTag v-for="item in capabilityTags" :key="item.key" size="sm" :variant="item.on ? 'success' : 'default'">{{ $t('workflow.studio.capability.' + item.key) }}</MfTag></div></div>
+          <MfFormItem v-for="field in current.settings" :key="field.field" :label="settingLabel(field)"><WorkflowField :field="field" :model-value="graph.settings?.[field.field]" :disabled="busy || publishing" @update:model-value="updateSetting(field.field, $event)"/></MfFormItem>
+          <MfEmpty v-if="!current.settings.length" size="sm" :title="$t('workflow.studio.noJobSettings')"/>
+        </template>
+      </div>
     </MfForm>
+    <template #footer><MfButton @click="settings = false">{{ $t('common.cancel') }}</MfButton><MfButton type="submit" form="workflow-settings" variant="primary" :loading="busy">{{ $t('common.save') }}</MfButton></template>
   </MfModal>
   <MfModal :open="leaving" :title="$t('workflow.studio.unsaved')" @close="leave(false)"><p class="text-sm text-content-secondary">{{ $t('workflow.studio.leaveHint') }}</p><template #footer><MfButton @click="leave(false)">{{ $t('common.cancel') }}</MfButton><MfButton variant="danger" @click="leave(true)">{{ $t('workflow.studio.discard') }}</MfButton></template></MfModal>
 </template>

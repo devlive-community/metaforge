@@ -4088,5 +4088,18 @@
   "workflow.studio.bottleneck.NONE": "无",
   "workflow.studio.bottleneck.SOURCE": "源端读取",
   "workflow.studio.bottleneck.TARGET": "目标写入",
-  "workflow.studio.bottleneck.THROTTLE": "限流"
+  "workflow.studio.bottleneck.THROTTLE": "限流",
+  "workflow.studio.runTab.overview": "概览",
+  "workflow.studio.runTab.metrics": "运行指标",
+  "workflow.studio.runTab.logs": "运行日志",
+  "workflow.studio.runTab.output": "输出数据",
+  "workflow.studio.runTab.history": "历史运行",
+  "workflow.studio.settingsTab.basic": "基本信息",
+  "workflow.studio.settingsTab.job": "作业参数",
+  "workflow.studio.metricAverage": "平均",
+  "workflow.studio.metricPeak": "峰值",
+  "workflow.studio.metricRows": "读写行数",
+  "workflow.studio.metricBytes": "读写数据量",
+  "workflow.studio.metricWaits": "读写等待",
+  "workflow.studio.rateTrendPending": "运行中采样后显示速率趋势"
 }

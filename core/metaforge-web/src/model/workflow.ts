@@ -63,6 +63,9 @@ export interface WorkflowRun {
   state: string
   startedAt: number
   finishedAt?: number
+  /** Start and finish time formatted by the server (YYYY-MM-DD HH:mm:ss). */
+  startTime?: string
+  finishTime?: string
   elapsed: number
   message?: string
   count?: number

@@ -4088,5 +4088,18 @@
   "workflow.studio.bottleneck.NONE": "None",
   "workflow.studio.bottleneck.SOURCE": "Source read",
   "workflow.studio.bottleneck.TARGET": "Target write",
-  "workflow.studio.bottleneck.THROTTLE": "Throttled"
+  "workflow.studio.bottleneck.THROTTLE": "Throttled",
+  "workflow.studio.runTab.overview": "Overview",
+  "workflow.studio.runTab.metrics": "Metrics",
+  "workflow.studio.runTab.logs": "Log",
+  "workflow.studio.runTab.output": "Output",
+  "workflow.studio.runTab.history": "History",
+  "workflow.studio.settingsTab.basic": "Basics",
+  "workflow.studio.settingsTab.job": "Job settings",
+  "workflow.studio.metricAverage": "Average",
+  "workflow.studio.metricPeak": "Peak",
+  "workflow.studio.metricRows": "Rows read and written",
+  "workflow.studio.metricBytes": "Data read and written",
+  "workflow.studio.metricWaits": "Reader and writer waits",
+  "workflow.studio.rateTrendPending": "The rate trend appears once samples are taken during a run"
 }
