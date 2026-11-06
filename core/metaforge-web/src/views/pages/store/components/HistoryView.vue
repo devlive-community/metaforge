@@ -30,6 +30,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDateTime } from '@/utils/date'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Store } from '@lucide/vue'
@@ -40,8 +41,8 @@ defineOptions({ name: 'HistoryView' })
 
 const props = defineProps<{ store: PluginStoreContext }>()
 const store = props.store
-const { t, locale } = useI18n()
-const formatTime = (time: string) => new Date(time).toLocaleString(locale.value, { hour12: false })
+const { t } = useI18n()
+const formatTime = (time: string) => formatDateTime(time)
 
 const columns = computed<MfTableColumn[]>(() => [
   { title: t('store.column.time'), dataIndex: 'time', key: 'time', width: 180 },

@@ -287,6 +287,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDateTime } from '@/utils/date'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
@@ -567,7 +568,7 @@ const onFetchUrl = () => {
 const readPickedFile = (file: File) => {
   fileName.value = file.name
   fileSize.value = file.size
-  fileDate.value = new Date().toLocaleString()
+  fileDate.value = formatDateTime(new Date())
   file.text()
       .then(text => {
         fileText.value = text

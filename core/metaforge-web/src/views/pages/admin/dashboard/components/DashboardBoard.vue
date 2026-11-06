@@ -140,6 +140,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDateTime } from '@/utils/date'
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Box, ChartNoAxesCombined, Check, Group, Layers, Maximize, Move, MoveDiagonal2, RefreshCw, Sparkles, Trash2, Ungroup } from '@lucide/vue'
@@ -160,7 +161,7 @@ const emit = defineEmits<{
   select: [id: string, additive?: boolean]; place: [id: string, rect: DashboardRect]; add: [value: string, position?: Pick<DashboardRect, 'x' | 'y'>, parentId?: string];
   group: [ids: string[]]; ungroup: [id: string]; remove: [id: string]
 }>()
-const { t, locale } = useI18n()
+const { t } = useI18n()
 const surface = ref<HTMLElement>()
 const expanded = ref('')
 const days = ref(0)
@@ -182,7 +183,7 @@ const live = computed(() => !props.editable)
 const assets = computed(() => new Map(props.reports.map(report => [report.code, report])))
 const snapshots = computed(() => new Map(props.reports.map(report => [report.code, dashboardSnapshot(report)])))
 const data = useDashboardReports(board, reports, live)
-const refreshTime = computed(() => data.refreshedAt.value ? new Date(data.refreshedAt.value).toLocaleString(locale.value, { hour12: false }) : '')
+const refreshTime = computed(() => data.refreshedAt.value ? formatDateTime(data.refreshedAt.value) : '')
 const expandedWidget = computed(() => board.value.widgets.find(widget => widget.id === expanded.value))
 const hasDate = computed(() => board.value.widgets.some(widget => {
   const snapshot = snapshots.value.get(widget.reportCode)

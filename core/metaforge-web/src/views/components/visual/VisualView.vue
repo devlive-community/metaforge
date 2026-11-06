@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatClock } from '@/utils/date'
 import { computed, defineAsyncComponent, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
 import { MfMessage } from 'metaforge-ui'
 import { RefreshCw } from '@lucide/vue'
@@ -110,7 +111,7 @@ async function refreshChart() {
       return
     }
     refreshedRows.value = response.data
-    refreshedAt.value = new Date().toLocaleTimeString()
+    refreshedAt.value = formatClock(new Date())
     refreshFailed.value = false
   }
   catch { if (run === generation) refreshFailed.value = true }

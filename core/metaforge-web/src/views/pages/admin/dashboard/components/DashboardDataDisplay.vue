@@ -33,7 +33,7 @@
   <ol v-else-if="kind === 'dataTimeline'" class="h-full overflow-auto px-2 py-1">
     <li v-for="(item, index) in timeline" :key="index" class="relative border-l border-line pb-4 pl-4 last:pb-0">
       <span class="absolute top-1 -left-1 size-2 rounded-full bg-primary"/>
-      <time class="text-xs text-content-tertiary">{{ dateFormat.format(item.timestamp) }}</time>
+      <time class="text-xs text-content-tertiary">{{ formatDate(item.timestamp, 'YYYY-MM-DD HH:mm', { timeZone: options.timezone }) }}</time>
       <p class="mt-1 break-words text-sm">{{ cellText(item.row[field || timelineLabel]) }}</p>
     </li>
   </ol>
@@ -46,6 +46,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from '@/utils/date'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import ResultTable from '@/views/components/table/ResultTable.vue'
@@ -69,7 +70,6 @@ const record = computed(() => result.value.filtered[(props.recordIndex ?? 1) - 1
 const limitedPoints = computed(() => result.value.points.slice(0, 50))
 const timelineField = computed(() => props.timeField || props.options.fields.find(field => chartFieldKind(props.rows, field) === 'date') || '')
 const timelineLabel = computed(() => props.options.fields.find(field => field !== timelineField.value) || timelineField.value)
-const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'medium', timeStyle: 'short', timeZone: props.options.timezone }))
 const timeline = computed(() => result.value.filtered.map(row => ({ row, timestamp: new Date(String(row[timelineField.value] ?? '')).getTime() }))
   .filter(item => Number.isFinite(item.timestamp)).sort((left, right) => right.timestamp - left.timestamp).slice(0, 50))
 const summary = computed(() => [

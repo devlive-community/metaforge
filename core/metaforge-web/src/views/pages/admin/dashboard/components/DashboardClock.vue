@@ -6,16 +6,13 @@
 </template>
 
 <script setup lang="ts">
+import { formatClock, formatDay } from '@/utils/date'
 import { computed, onMounted, onScopeDispose, shallowRef } from 'vue'
-import { useI18n } from 'vue-i18n'
 
 defineProps<{ showDate: boolean }>()
-const { locale } = useI18n()
 const now = shallowRef(new Date())
-const timeFormat = computed(() => new Intl.DateTimeFormat(locale.value, { timeStyle: 'medium' }))
-const dateFormat = computed(() => new Intl.DateTimeFormat(locale.value, { dateStyle: 'long' }))
-const time = computed(() => timeFormat.value.format(now.value))
-const date = computed(() => dateFormat.value.format(now.value))
+const time = computed(() => formatClock(now.value))
+const date = computed(() => formatDay(now.value))
 let interval: number | undefined
 onMounted(() => { interval = window.setInterval(() => { now.value = new Date() }, 1000) })
 onScopeDispose(() => window.clearInterval(interval))
