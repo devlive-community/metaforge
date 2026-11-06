@@ -19,6 +19,8 @@ public interface DashboardService
     /** Screens other users share with the signed-in user, each with the user's permission. */
     CommonResponse<List<DashboardEntity>> shared();
 
+    CommonResponse<List<DashboardEntity>> shared(String keyword, String sort);
+
     /** Refreshes a dynamic chart of a screen for anyone who may see it; reports run as the owner. */
     CommonResponse<List<Map<String, Object>>> refreshChart(String code, String reportCode);
 

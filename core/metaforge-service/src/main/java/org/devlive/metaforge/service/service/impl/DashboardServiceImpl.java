@@ -273,6 +273,29 @@ public class DashboardServiceImpl
     }
 
     @Override
+    public CommonResponse<List<DashboardEntity>> shared(String keyword, String sort)
+    {
+        if (sort == null || !List.of("updated", "created", "name").contains(sort) || (keyword != null && keyword.length() > 200)) {
+            return CommonResponse.failure("Unsupported screen search");
+        }
+        CommonResponse<List<DashboardEntity>> response = shared();
+        if (!Boolean.TRUE.equals(response.getStatus())) {
+            return response;
+        }
+        String query = keyword == null ? "" : keyword.trim().toLowerCase(java.util.Locale.ROOT);
+        Comparator<DashboardEntity> order = "name".equals(sort)
+                ? Comparator.comparing(item -> item.getName() == null ? "" : item.getName(), String.CASE_INSENSITIVE_ORDER)
+                : Comparator.comparing((DashboardEntity item) -> {
+                    Date date = "created".equals(sort) ? item.getCreateTime() : item.getUpdateTime();
+                    return date == null ? new Date(0) : date;
+                }).reversed();
+        // Search only the already-authorized result, including the viewer's widget restrictions.
+        return CommonResponse.success(response.getData().stream()
+                .filter(item -> query.isEmpty() || (item.getName() != null && item.getName().toLowerCase(java.util.Locale.ROOT).contains(query)))
+                .sorted(order).collect(Collectors.toList()));
+    }
+
+    @Override
     public CommonResponse<List<Map<String, Object>>> refreshChart(String code, String reportCode)
     {
         Long userId = UserDetailsService.getUser().getId();

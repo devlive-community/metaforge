@@ -33,7 +33,7 @@ const createDefaultRouter = (router: Router) => {
             { name: 'workspace', path: 'workspace', redirect: '/query' },
             { name: 'analysis', path: 'analysis', redirect: SCREEN_LIST_PATH },
             // Data screens: list, designer (new and existing) and the published view, which has no toolbar.
-            { name: 'screen', path: 'screen', meta: { title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardHome.vue') },
+            { name: 'screen', path: 'screen', meta: { title: 'common.dashboard', isRoot: false, workspace: true }, component: () => import('@/views/pages/admin/dashboard/DashboardHome.vue') },
             { name: 'screen-design-new', path: 'screen/design', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardInfo.vue') },
             { name: 'screen-design', path: 'screen/:code/design', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardInfo.vue') },
             { name: 'screen-view', path: 'screen/:code', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardPreview.vue') },

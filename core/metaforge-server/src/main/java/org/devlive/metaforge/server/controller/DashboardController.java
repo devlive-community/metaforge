@@ -50,9 +50,10 @@ public class DashboardController
 
     /** Screens other users share with the signed-in user. */
     @GetMapping(value = "shared")
-    public CommonResponse<List<DashboardEntity>> shared()
+    public CommonResponse<List<DashboardEntity>> shared(@RequestParam(defaultValue = "") String keyword,
+            @RequestParam(defaultValue = "updated") String sort)
     {
-        return service.shared();
+        return service.shared(keyword, sort);
     }
 
     /** Users and roles to share with. */

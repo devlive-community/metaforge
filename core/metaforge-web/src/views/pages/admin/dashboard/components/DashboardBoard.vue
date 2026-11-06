@@ -1,19 +1,19 @@
 <template>
   <section class="dashboard-frame relative isolate min-w-0" :class="[wall ? ['wall-frame', 'wall-' + board.theme] : 'dashboard-paper', editable && 'is-editing', board.grid && editable && 'show-grid']"
            :style="[frameStyle, transparent && { backgroundColor: 'transparent' }]" @dragover="onDragOver" @drop="onDrop" @click.self="emit('select', '')">
-    <DashboardCanvasBackground v-if="editable" :board="board" class="-z-10"/>
+    <DashboardCanvasBackground v-if="editable || thumbnail" :board="board" class="-z-10"/>
     <header v-if="wall && board.showTitle" class="wall-heading">
       <span/>
       <h2 class="truncate text-center font-bold" :title="design.name">{{ design.name || $t('dashboard.studio.untitledWall') }}</h2>
       <span/>
       <time v-if="refreshTime" class="wall-timestamp" :title="$t('queryChart.refreshedAt', { time: refreshTime })">{{ refreshTime }}</time>
     </header>
-    <header v-else-if="!wall && (board.showTitle || (!editable && (hasDate || data.policies.value.size)))" class="flex shrink-0 flex-wrap items-start justify-between gap-3 px-1 pb-3">
+    <header v-else-if="!wall && (board.showTitle || (!editable && !thumbnail && (hasDate || data.policies.value.size)))" class="flex shrink-0 flex-wrap items-start justify-between gap-3 px-1 pb-3">
       <div v-if="board.showTitle" class="min-w-0">
         <h2 class="break-words text-xl font-bold">{{ design.name || $t('dashboard.studio.untitled') }}</h2>
         <p v-if="design.description" class="mt-1 whitespace-pre-wrap break-words text-xs text-content-tertiary">{{ design.description }}</p>
       </div>
-      <div v-if="!editable && (hasDate || data.policies.value.size)" class="ml-auto flex flex-wrap items-center gap-2">
+      <div v-if="!editable && !thumbnail && (hasDate || data.policies.value.size)" class="ml-auto flex flex-wrap items-center gap-2">
         <MfSelect v-if="hasDate" :model-value="days" :options="periods" class="w-32" size="sm"
                   :aria-label="$t('dashboard.studio.period')" @update:model-value="selectPeriod"/>
         <MfButton v-if="data.policies.value.size" size="sm" :loading="data.pending.value.size > 0"
@@ -156,7 +156,7 @@ import DashboardCanvasBackground from './DashboardCanvasBackground.vue'
 import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIcon.vue'
 import './dashboard-motion.css'
 
-const props = defineProps<{ design: DashboardDesign; reports: ReportModel[]; editable?: boolean; selectedId?: string; selectedIds?: string[]; wallFullscreen?: boolean; transparent?: boolean }>()
+const props = defineProps<{ design: DashboardDesign; reports: ReportModel[]; editable?: boolean; selectedId?: string; selectedIds?: string[]; wallFullscreen?: boolean; transparent?: boolean; thumbnail?: boolean }>()
 const emit = defineEmits<{
   select: [id: string, additive?: boolean]; place: [id: string, rect: DashboardRect]; add: [value: string, position?: Pick<DashboardRect, 'x' | 'y'>, parentId?: string];
   group: [ids: string[]]; ungroup: [id: string]; remove: [id: string]
@@ -179,7 +179,7 @@ const wallSelection = computed<DragTarget | undefined>(() => {
     resizable: members.every(widget => widget.resizable) } : regularWidgets.value.find(widget => widget.id === props.selectedId)
 })
 const reports = computed(() => props.reports)
-const live = computed(() => !props.editable)
+const live = computed(() => !props.editable && !props.thumbnail)
 const assets = computed(() => new Map(props.reports.map(report => [report.code, report])))
 const snapshots = computed(() => new Map(props.reports.map(report => [report.code, dashboardSnapshot(report)])))
 const data = useDashboardReports(board, reports, live)

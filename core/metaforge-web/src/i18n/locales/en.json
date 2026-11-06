@@ -4249,5 +4249,18 @@
   "dashboard.share.sharedWithMe": "Shared with me",
   "dashboard.share.noShared": "Nobody has shared a data screen with you yet",
   "dashboard.share.from": "From {owner}",
-  "dashboard.share.action": "Share"
+  "dashboard.share.action": "Share",
+  "screenLibrary.create": "New screen",
+  "screenLibrary.total": "{count} screens",
+  "screenLibrary.search": "Search screens...",
+  "screenLibrary.sort.updated": "Recently updated",
+  "screenLibrary.sort.created": "Recently created",
+  "screenLibrary.sort.name": "Name",
+  "screenLibrary.grid": "Grid view",
+  "screenLibrary.list": "List view",
+  "screenLibrary.view": "View",
+  "screenLibrary.continueEdit": "Continue editing",
+  "screenLibrary.more": "More actions",
+  "screenLibrary.previewUnavailable": "Preview unavailable",
+  "screenLibrary.noMatch": "No matching screens"
 }

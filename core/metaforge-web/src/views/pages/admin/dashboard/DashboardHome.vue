@@ -1,149 +1,90 @@
-<template>
-  <section class="flex min-h-[70vh] flex-col gap-4">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <h1 class="text-xl font-bold">{{ $t('dashboard.common.list') }}</h1>
-      <MfButton variant="primary" @click="router.push(SCREEN_NEW_PATH)"><Plus :size="16"/>{{ $t('dashboard.common.create') }}</MfButton>
-    </div>
-    <MfTabs :active-key="view" @update:active-key="selectView(String($event))">
-      <MfTabPane item-key="mine" :tab="$t('dashboard.share.mine')"/>
-      <MfTabPane item-key="shared" :tab="$t('dashboard.share.sharedWithMe')"/>
-    </MfTabs>
-
-    <div v-if="loading" class="flex min-h-60 flex-1 items-center justify-center"><MfSpinner size="lg"/></div>
-    <div v-else-if="failed" class="flex min-h-60 flex-1 items-center justify-center">
-      <MfAlert variant="danger" :title="$t('dashboard.studio.loadFailed')"><MfButton size="sm" @click="load">{{ $t('common.refresh') }}</MfButton></MfAlert>
-    </div>
-    <MfEmpty v-else-if="!data.length" class="min-h-60 flex-1" :title="$t(view === 'shared' ? 'dashboard.share.noShared' : 'dashboard.studio.noDashboards')"/>
-    <template v-else>
-      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
-        <article v-for="item in dashboards" :key="item.code" class="flex min-w-0 flex-col rounded-mf-lg border border-line bg-surface">
-          <RouterLink :to="item.link" class="relative flex aspect-[2/1] items-center justify-center overflow-hidden rounded-t-mf-lg border-b border-line"
-                      :class="item.mode === 'wall' ? 'bg-[#071b2d] text-[#15e5d1]' : 'bg-primary/6 text-primary'">
-            <img v-if="item.avatar?.path" :src="item.avatar.path" :alt="item.name" class="size-full object-cover"/>
-            <Monitor v-else-if="item.mode === 'wall'" :size="40"/>
-            <LayoutDashboard v-else :size="40"/>
-          </RouterLink>
-          <div class="flex flex-1 flex-col gap-2 p-3">
-            <div class="flex min-w-0 items-center gap-2">
-              <RouterLink :to="item.link" class="min-w-0 flex-1 truncate font-semibold hover:text-primary">{{ item.name }}</RouterLink>
-              <MfTag v-if="item.code === userStore.homePage" size="sm" variant="primary"><House :size="12"/>{{ $t('dashboard.home.tag') }}</MfTag>
-              <MfTag v-if="!item.own" size="sm">{{ $t('dashboard.share.permission.' + item.permission) }}</MfTag>
-              <MfTag size="sm" :variant="item.published ? 'success' : 'primary'">{{ $t(item.published ? 'dashboard.studio.status.published' : 'dashboard.studio.status.draft') }}</MfTag>
-            </div>
-            <p v-if="item.description" class="line-clamp-2 text-xs text-content-secondary">{{ item.description }}</p>
-            <div class="mt-auto flex items-center justify-between gap-2">
-              <span class="min-w-0 truncate text-xs text-content-tertiary">{{ item.own ? item.updateTime || item.createTime : $t('dashboard.share.from', { owner: item.ownerName || '—' }) }}</span>
-              <div class="flex shrink-0 items-center gap-1">
-                <MfTooltip v-if="item.published" :content="$t(item.code === userStore.homePage ? 'dashboard.home.unset' : 'dashboard.home.set')">
-                  <MfButton variant="ghost" size="sm" :class="item.code === userStore.homePage && 'text-primary'" :loading="homeBusy === item.code"
-                            :aria-label="$t(item.code === userStore.homePage ? 'dashboard.home.unset' : 'dashboard.home.set')" @click="toggleHome(item.code)"><House :size="15"/></MfButton>
-                </MfTooltip>
-                <MfTooltip v-if="item.own" :content="$t('dashboard.share.action')">
-                  <MfButton variant="ghost" size="sm" :aria-label="$t('dashboard.share.action')" @click="shareItem = item"><Share2 :size="15"/></MfButton>
-                </MfTooltip>
-                <MfButton v-if="item.editable" variant="ghost" size="sm" :aria-label="$t('dashboard.common.modify')" @click="router.push(item.editor)"><Pencil :size="15"/></MfButton>
-                <MfButton v-if="item.own" variant="ghost" size="sm" :aria-label="$t('dashboard.common.delete')" class="text-danger" @click="deleteItem = item"><Trash2 :size="15"/></MfButton>
-              </div>
-            </div>
-          </div>
-        </article>
-      </div>
-      <MfPagination v-if="view === 'mine'" class="mt-auto justify-end" :current="page" :page-size="size" :total="total" show-size :page-sizes="[12, 24, 36]"
-                    @change="changePage"/>
-    </template>
-  </section>
-
-  <DashboardDelete v-if="deleteItem" :is-visible="true" :data="deleteItem" @close="deleteItem = undefined; load()"/>
-  <DashboardShare v-if="shareItem" :dashboard="shareItem" @close="shareItem = undefined"/>
-</template>
-
 <script setup lang="ts">
-import { SCREEN_NEW_PATH, screenDesignPath, screenViewPath } from '@/model/screen-route'
-import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
+import { computed, ref, shallowRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { House, LayoutDashboard, Monitor, Pencil, Plus, Share2, Trash2 } from '@lucide/vue'
+import { Clock, Grid2X2, House, List, Plus, RefreshCw, Search } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
 import { useI18n } from 'vue-i18n'
 import { useUserStore } from '@/stores/user'
-import DashboardService from '@/services/dashboard'
-import { permits, type DashboardModel } from '@/model/dashboard'
-import { readDashboardDocument } from '@/model/dashboard-layout'
-import { FilterModel } from '@/model/filter'
+import { useScreenLibrary } from '@/composables/useScreenLibrary'
+import { SCREEN_NEW_PATH } from '@/model/screen-route'
+import { screenEntry } from '@/model/screen-entry'
+import type { DashboardModel } from '@/model/dashboard'
 import DashboardDelete from './DashboardDelete.vue'
 import DashboardShare from './DashboardShare.vue'
+import ScreenThumbnail from './components/ScreenThumbnail.vue'
+import ScreenActions from './components/ScreenActions.vue'
+import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 
-const router = useRouter()
-const route = useRoute()
-// My screens, or the ones others share with me; the choice is kept in the address.
+const router = useRouter(), route = useRoute(), { t } = useI18n(), userStore = useUserStore()
 const view = computed(() => route.query.tab === 'shared' ? 'shared' : 'mine')
-function selectView(value: string) {
-  void router.replace({ path: route.path, query: value === 'shared' ? { tab: 'shared' } : {} })
-}
-const shareItem = shallowRef<DashboardModel>()
-const { t } = useI18n()
-const userStore = useUserStore()
-const homeBusy = ref('')
+const { data, loading, failed, page, size, total, keyword, sort, layout, load, changePage } = useScreenLibrary(view)
+const dashboards = computed(() => data.value.map(screenEntry))
+const shareItem = shallowRef<DashboardModel>(), deleteItem = shallowRef<DashboardModel>(), homeBusy = ref('')
+const sortOptions = computed(() => ['updated', 'created', 'name'].map(value => ({ value, label: t('screenLibrary.sort.' + value) })))
+function selectView(value: string | number) { void router.replace({ path: route.path, query: { ...route.query, tab: value === 'shared' ? 'shared' : undefined } }) }
 void userStore.resolveHomePage()
-/** Makes a published data screen the home page, or restores the default home when it already is. */
 async function toggleHome(code?: string) {
   if (!code || homeBusy.value) return
   homeBusy.value = code
   const unset = code === userStore.homePage
-  try {
-    await userStore.setHomePage(unset ? null : code)
-    MfMessage.success(t(unset ? 'dashboard.home.cleared' : 'dashboard.home.saved'))
-  } catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.home.failed')) }
+  try { await userStore.setHomePage(unset ? null : code); MfMessage.success(t(unset ? 'dashboard.home.cleared' : 'dashboard.home.saved')) }
+  catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dashboard.home.failed')) }
   finally { homeBusy.value = '' }
 }
-const loading = ref(false)
-const failed = ref(false)
-const page = ref(1)
-const size = ref(12)
-const total = ref(0)
-const data = shallowRef<DashboardModel[]>([])
-const deleteItem = shallowRef<DashboardModel>()
-const dashboards = computed(() => data.value.map(item => {
-  const document = readDashboardDocument(item.configure, item.name, item.description)
-  const published = !!document.published
-  const editor = screenDesignPath(item.code)
-  const own = !item.permission || item.permission === 'OWNER'
-  const editable = permits(item.permission, 'EDIT')
-  return { ...item, published, own, editable, mode: (document.published ?? document.draft).mode, editor,
-    link: published || !editable ? screenViewPath(item.code || '') : editor }
-}))
-let request = 0
-async function load() {
-  const id = ++request
-  loading.value = true
-  failed.value = false
-  try {
-    if (view.value === 'shared') {
-      const response = await DashboardService.shared()
-      if (id !== request) return
-      if (!response.status || !Array.isArray(response.data)) throw new Error('Unable to load shared dashboards')
-      data.value = response.data
-      total.value = response.data.length
-      return
-    }
-    const response = await DashboardService.getAll({ ...new FilterModel(), page: page.value, size: size.value })
-    if (id !== request) return
-    if (!response.status || !Array.isArray(response.data?.content)) throw new Error('Unable to load dashboards')
-    data.value = response.data.content
-    total.value = response.data.total
-    if (!data.value.length && page.value > 1 && total.value > 0) {
-      page.value = Math.max(1, Math.ceil(total.value / size.value))
-      await load()
-    }
-  }
-  catch { if (id === request) failed.value = true }
-  finally { if (id === request) loading.value = false }
-}
-function changePage(current: number, pageSize: number) {
-  page.value = pageSize === size.value ? current : 1
-  size.value = pageSize
-  void load()
-}
-watch(view, () => { page.value = 1; void load() })
-void load()
-onScopeDispose(() => { request++ })
+const columns = computed(() => [
+  { key: 'preview', title: '', width: 144 },
+  { key: 'name', title: t('common.name'), ellipsis: true },
+  { key: 'state', title: t('common.state'), width: 110 },
+  { key: 'updated', title: t('common.updateTime'), width: 180 },
+  { key: 'actions', title: t('common.action'), width: 220 },
+])
 </script>
+
+<template>
+  <section class="flex h-full min-h-0 min-w-0 flex-col gap-3 px-2 py-3 text-content sm:px-4">
+    <header class="flex shrink-0 flex-wrap items-center justify-between gap-3">
+      <div class="flex min-w-0 items-center gap-3"><h1 class="text-2xl font-semibold">{{ $t('dashboard.common.list') }}</h1><span v-if="!loading && !failed" class="text-xs text-content-tertiary">{{ $t('screenLibrary.total', { count: total }) }}</span></div>
+      <MfButton variant="primary" @click="router.push(SCREEN_NEW_PATH)"><Plus :size="16"/>{{ $t('screenLibrary.create') }}</MfButton>
+    </header>
+    <MfRadioGroup :model-value="view" variant="button" class="self-start" :aria-label="$t('dashboard.common.list')" @update:model-value="selectView"><MfRadio value="mine" :label="$t('dashboard.share.mine')"/><MfRadio value="shared" :label="$t('dashboard.share.sharedWithMe')"/></MfRadioGroup>
+    <div class="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-line pt-3">
+      <label class="block w-full sm:w-72"><span class="sr-only">{{ $t('screenLibrary.search') }}</span><MfInput v-model="keyword" class="w-full" :maxlength="200" :placeholder="$t('screenLibrary.search')" clearable><template #prefix><Search :size="15"/></template></MfInput></label>
+      <div class="ml-auto flex max-w-full items-center gap-2">
+        <MfSelect v-model="sort" class="w-36" :options="sortOptions" :aria-label="$t('common.sort')"/>
+        <MfButton :disabled="loading" :aria-label="$t('common.refresh')" @click="load"><RefreshCw :size="15"/></MfButton>
+        <div class="flex gap-1 rounded-mf-md border border-line bg-surface p-1"><MfButton v-for="mode in (['grid','list'] as const)" :key="mode" size="sm" :variant="layout === mode ? 'primary' : 'ghost'" :aria-label="$t('screenLibrary.' + mode)" :aria-pressed="layout === mode" @click="layout = mode"><Grid2X2 v-if="mode === 'grid'" :size="15"/><List v-else :size="15"/></MfButton></div>
+      </div>
+    </div>
+    <div class="min-h-0 flex-1 overflow-y-auto p-1">
+      <div v-if="loading" class="flex h-full min-h-60 items-center justify-center"><MfSpinner size="lg"/></div>
+      <MfEmpty v-else-if="failed" class="h-full min-h-60" :title="$t('dashboard.studio.loadFailed')"><template #extra><MfButton @click="load">{{ $t('common.refresh') }}</MfButton></template></MfEmpty>
+      <MfEmpty v-else-if="!dashboards.length" class="h-full min-h-60" :title="$t(keyword ? 'screenLibrary.noMatch' : view === 'shared' ? 'dashboard.share.noShared' : 'dashboard.studio.noDashboards')"><template v-if="view === 'mine' && !keyword" #extra><MfButton variant="primary" @click="router.push(SCREEN_NEW_PATH)"><Plus :size="15"/>{{ $t('screenLibrary.create') }}</MfButton></template></MfEmpty>
+      <div v-else-if="layout === 'grid'" class="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <article v-for="item in dashboards" :key="item.code" class="group flex min-w-0 flex-col overflow-hidden rounded-mf-lg border border-line bg-surface shadow-mf-sm transition-shadow hover:shadow-mf-md">
+          <RouterLink :to="item.link" class="relative block aspect-[2/1] overflow-hidden border-b border-line" :aria-label="item.name">
+            <ScreenThumbnail :screen="item"/>
+            <span v-if="item.code === userStore.homePage" class="absolute left-3 top-3 inline-flex items-center gap-1 rounded-mf-md bg-primary px-2 py-1 text-xs text-on-primary shadow-mf-sm"><House :size="12"/>{{ $t('dashboard.home.tag') }}</span>
+          </RouterLink>
+          <div class="flex flex-1 flex-col gap-2 px-3 pb-2 pt-3">
+            <div class="flex min-w-0 items-center gap-2"><RouterLink :to="item.link" class="min-w-0 flex-1 truncate font-semibold text-content hover:text-primary" :title="item.name">{{ item.name }}</RouterLink><MfTag size="sm" :variant="item.published ? 'success' : 'warning'">{{ $t(item.published ? 'dashboard.studio.status.published' : 'dashboard.studio.status.draft') }}</MfTag></div>
+            <div v-if="!item.own" class="flex min-w-0 items-center gap-2 text-xs text-content-tertiary"><span class="truncate">{{ $t('dashboard.share.from', { owner: item.ownerName || '--' }) }}</span><MfTag size="sm">{{ $t('dashboard.share.permission.' + item.permission) }}</MfTag></div>
+            <div class="mt-auto flex min-w-0 flex-wrap items-center justify-between gap-1 border-t border-line/60 pt-1.5">
+              <span class="flex min-w-0 items-center gap-1 text-[11px] text-content-tertiary"><Clock :size="12" class="shrink-0"/><span class="truncate">{{ item.updateTime || item.createTime || '--' }}</span></span>
+              <ScreenActions :screen="item" :home-page="userStore.homePage" :home-busy="homeBusy" @home="toggleHome(item.code)" @share="shareItem = item" @remove="deleteItem = item"/>
+            </div>
+          </div>
+        </article>
+      </div>
+      <MfTable v-else :columns="columns" :data-source="dashboards" row-key="code">
+        <template #cell-preview="{ record }"><RouterLink :to="record.link" class="block aspect-[2/1] w-28 overflow-hidden rounded-mf-md"><ScreenThumbnail :screen="record"/></RouterLink></template>
+        <template #cell-name="{ record }"><RouterLink :to="record.link" class="block text-sm font-semibold text-content hover:text-primary"><EllipsisCell :text="record.name"/></RouterLink><span v-if="record.code === userStore.homePage" class="text-xs text-primary">{{ $t('dashboard.home.tag') }}</span></template>
+        <template #cell-state="{ record }"><MfTag size="sm" :variant="record.published ? 'success' : 'warning'">{{ $t(record.published ? 'dashboard.studio.status.published' : 'dashboard.studio.status.draft') }}</MfTag></template>
+        <template #cell-updated="{ record }">{{ record.updateTime || record.createTime || '--' }}</template>
+        <template #cell-actions="{ record }"><ScreenActions :screen="record" :home-page="userStore.homePage" :home-busy="homeBusy" @home="toggleHome(record.code)" @share="shareItem = record" @remove="deleteItem = record"/></template>
+      </MfTable>
+    </div>
+    <MfPagination v-if="view === 'mine' && total > 0 && !failed" class="shrink-0 justify-end" :current="page" :page-size="size" :total="total" show-size :page-sizes="[6,12,24]" @change="changePage"/>
+    <DashboardDelete v-if="deleteItem" :is-visible="true" :data="deleteItem" @close="deleteItem = undefined; load()"/>
+    <DashboardShare v-if="shareItem" :dashboard="shareItem" @close="shareItem = undefined"/>
+  </section>
+</template>

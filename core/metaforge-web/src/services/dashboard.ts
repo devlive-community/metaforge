@@ -19,9 +19,9 @@ export class DashboardService
     }
 
     /** Screens other users share with the signed-in user. */
-    shared(): Promise<ResponseModel>
+    shared(keyword = '', sort = 'updated'): Promise<ResponseModel>
     {
-        return new HttpUtils().get(`${ DEFAULT_PATH }/shared`)
+        return new HttpUtils().get(`${ DEFAULT_PATH }/shared`, { keyword, sort })
     }
 
     getShare(code: string): Promise<ResponseModel>

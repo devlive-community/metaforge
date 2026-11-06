@@ -4249,5 +4249,18 @@
   "dashboard.share.sharedWithMe": "共享给我",
   "dashboard.share.noShared": "还没有人共享数据大屏给你",
   "dashboard.share.from": "来自 {owner}",
-  "dashboard.share.action": "共享"
+  "dashboard.share.action": "共享",
+  "screenLibrary.create": "新建大屏",
+  "screenLibrary.total": "共 {count} 个",
+  "screenLibrary.search": "搜索大屏名称...",
+  "screenLibrary.sort.updated": "最近更新",
+  "screenLibrary.sort.created": "最近创建",
+  "screenLibrary.sort.name": "名称排序",
+  "screenLibrary.grid": "卡片视图",
+  "screenLibrary.list": "列表视图",
+  "screenLibrary.view": "查看",
+  "screenLibrary.continueEdit": "继续编辑",
+  "screenLibrary.more": "更多操作",
+  "screenLibrary.previewUnavailable": "预览暂不可用",
+  "screenLibrary.noMatch": "没有匹配的大屏"
 }

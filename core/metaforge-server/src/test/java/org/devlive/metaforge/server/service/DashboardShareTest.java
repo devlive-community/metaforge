@@ -280,6 +280,26 @@ public class DashboardShareTest
         assertFalse(listed.get(0).getConfigure().contains("secret"), "viewers list without the draft");
     }
 
+    @Test
+    public void sharedSearchAndSortOnlyExposeAuthorizedScreens()
+    {
+        DashboardEntity second = DashboardEntity.builder().id(10L).code("OTHER").name("Accounts").userId(2L).configure(SCREEN).build();
+        screen.setUpdateTime(new java.util.Date(2000));
+        second.setUpdateTime(new java.util.Date(1000));
+        when(shares.sharedWith(anyLong(), any())).thenReturn(Map.of(9L, SharePermission.VIEW, 10L, SharePermission.EDIT));
+        when(dashboards.findAllById(any())).thenReturn(List.of(screen, second));
+        grantRole("VIEW", null);
+        assertEquals(List.of("SCREEN", "OTHER"), service.shared("", "updated").getData().stream().map(DashboardEntity::getCode).toList());
+        assertEquals(List.of("OTHER", "SCREEN"), service.shared("", "name").getData().stream().map(DashboardEntity::getCode).toList());
+        List<DashboardEntity> filtered = service.shared(" SAL ", "updated").getData();
+        assertEquals(List.of("SCREEN"), filtered.stream().map(DashboardEntity::getCode).toList());
+        assertFalse(filtered.get(0).getConfigure().contains("secret"), "search never bypasses widget visibility");
+        assertTrue(service.shared("not found", "updated").getData().isEmpty());
+        assertFalse(service.shared("", "invalid").getStatus());
+        assertFalse(service.shared("", null).getStatus());
+        assertFalse(service.shared("x".repeat(201), "name").getStatus());
+    }
+
     private DashboardShareRepository.Share publicLink(String widgets, Long expiresAt, boolean embed, String origins)
     {
         DashboardShareRepository.Share share = new DashboardShareRepository.Share();
