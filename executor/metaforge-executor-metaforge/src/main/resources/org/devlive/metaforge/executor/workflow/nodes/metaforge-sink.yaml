@@ -4,15 +4,15 @@ label: Batch write
 key: Sink
 category: sink
 description: Write query columns to a streaming-capable saved data source.
-supportExecutors: [MetaForge]
 configure:
-  - {field: source, label: Data source, type: source, required: true}
-  - {field: database, label: Target database, type: input, required: true}
-  - {field: table, label: Target table, type: input, required: true}
+  - {field: source, label: Data source, type: source, required: true, group: basic}
+  - {field: database, label: Target database, type: input, required: true, group: basic}
+  - {field: table, label: Target table, type: input, required: true, group: basic}
   - field: columns
     label: Column mapping
     type: map
     required: true
+    group: basic
     description: 'One source=target column mapping per line. Only mapped columns are written.'
 ports:
   - {id: input, label: Input, type: input, required: true}

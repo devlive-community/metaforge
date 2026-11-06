@@ -1,0 +1,36 @@
+id: sql-transform
+label: Sql
+tid: sql-transform
+key: Sql
+description: SQL transform
+category: transform
+configure:
+    - field: query
+      label: Query
+      type: textarea
+      placeholder: SELECT * FROM ${input}
+      required: true
+      group: sql
+      description: |
+        The query SQL; write ${input} for the result of the previous component. Only simple SQL with functions and filters is supported: multi-table JOIN and AGGREGATE operations are not.
+    - field: source_table_name
+      label: Source table name
+      type: input
+      placeholder: Connected automatically
+      description: Optional name of the incoming result table. Leave empty to connect to the previous component automatically.
+    - field: result_table_name
+      label: Result table name
+      type: input
+      placeholder: Connected automatically
+      description: Optional name of the produced result table. Leave empty to connect to the next component automatically.
+ports:
+    - id: input
+      label: Input
+      type: input
+      required: true
+      message: Input is required
+    - id: output
+      label: Output
+      type: output
+      required: true
+      message: Output is required

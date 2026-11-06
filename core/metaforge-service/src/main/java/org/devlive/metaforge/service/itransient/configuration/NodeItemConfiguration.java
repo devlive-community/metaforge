@@ -34,4 +34,6 @@ public class NodeItemConfiguration
     private Double min;
     private Double max;
     private Double step;
+    /** Editor tab of the field: basic, sql or advanced. Derived from the field when absent. */
+    private String group;
 }

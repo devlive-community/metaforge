@@ -6,6 +6,7 @@ import org.devlive.metaforge.executor.common.RunState
 import org.devlive.metaforge.executor.configure.ExecutorRequest
 import org.devlive.metaforge.executor.configure.ExecutorResponse
 import org.devlive.metaforge.executor.configure.TotalSource
+import org.devlive.metaforge.executor.workflow.WorkflowPlan
 import org.devlive.metaforge.lib.logger.LoggerExecutor
 import org.devlive.metaforge.lib.logger.logback.LogbackExecutor
 import org.devlive.metaforge.spi.PluginService
@@ -258,6 +259,8 @@ class MetaForgeExecutorService : ExecutorService
             null
         }
     }
+
+    override fun compile(plan: WorkflowPlan): ExecutorRequest = MetaForgeWorkflowCompiler.compile(plan)
 
     override fun stop(request: ExecutorRequest): ExecutorResponse
     {

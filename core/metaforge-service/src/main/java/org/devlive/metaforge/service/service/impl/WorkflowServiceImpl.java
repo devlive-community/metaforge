@@ -11,7 +11,7 @@ import org.devlive.metaforge.executor.common.RunState;
 import org.devlive.metaforge.executor.configure.ExecutorConfigure;
 import org.devlive.metaforge.executor.configure.ExecutorRequest;
 import org.devlive.metaforge.executor.configure.ExecutorResponse;
-import org.devlive.metaforge.executor.configure.OriginColumn;
+import org.devlive.metaforge.executor.workflow.WorkflowPlan;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.service.entity.SourceEntity;
@@ -19,7 +19,6 @@ import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.entity.WorkflowEntity;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.itransient.configuration.Configuration;
-import org.devlive.metaforge.service.itransient.configuration.NodeConfiguration;
 import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.repository.WorkflowRepository;
@@ -27,6 +26,7 @@ import org.devlive.metaforge.service.security.UserDetailsService;
 import org.devlive.metaforge.service.service.RuntimeConfigureService;
 import org.devlive.metaforge.service.service.WorkflowService;
 import org.devlive.metaforge.service.workflow.WorkflowCatalog;
+import org.devlive.metaforge.service.workflow.WorkflowExecutorDefinition;
 import org.devlive.metaforge.service.workflow.WorkflowRun;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
@@ -50,8 +50,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Properties;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
@@ -117,7 +115,7 @@ public class WorkflowServiceImpl
             return CommonResponse.failure("Workflow name is required and must not exceed 200 characters");
         }
         try {
-            catalog.definitions(form.getExecutor());
+            catalog.executor(form.getExecutor());
             entity.setCode(form.getCode() == null ? CodeUtils.generateCode(false) : form.getCode());
             entity.setName(form.getName().trim());
             entity.setExecutor(form.getExecutor());
@@ -204,8 +202,8 @@ public class WorkflowServiceImpl
         }
         try {
             UserEntity user = UserDetailsService.getUser();
-            Plugin plugin = plugins.getPlugin(entity.getExecutor()).orElseThrow(() -> new IllegalArgumentException("Executor unavailable"));
-            ExecutorService service = plugin.getService(ExecutorService.class);
+            WorkflowCatalog.WorkflowExecutor executor = catalog.executor(entity.getExecutor());
+            Plugin plugin = executor.plugin();
             WorkflowRun run = new WorkflowRun();
             run.setId(UUID.randomUUID().toString());
             run.setCode(code);
@@ -217,10 +215,9 @@ public class WorkflowServiceImpl
                     "id", node.getId(), "label", node.getLabel() == null ? node.getTid() : node.getLabel(),
                     "category", node.getCategory())).collect(Collectors.toList()));
             entity.setWork(workHome(user, entity));
-            ExecutorRequest request = request(entity, user, run.getId());
             Map<String, String> options = new HashMap<>(runtime.getEffective(RuntimeConfigureService.CATEGORY_EXECUTOR, plugin.getName(), plugin.runtimeConfigures()));
-            options.put("previewRows", "50");
-            request.setOptions(options);
+            WorkflowPlan plan = catalog.plan(entity, run.getId(), user.getUsername(), options, sourceCode -> source(sourceCode, user));
+            ExecutorRequest request = executor.service().compile(plan);
             request.setPluginManager(plugins);
             request.setMetricsListener(metrics -> run.setMetrics(metrics));
             Files.createDirectories(Path.of(entity.getWork()));
@@ -229,7 +226,7 @@ public class WorkflowServiceImpl
             entity.setMessage(null);
             entity.setElapsed(null);
             repository.save(entity);
-            ActiveRun handle = new ActiveRun(run, request, service);
+            ActiveRun handle = new ActiveRun(run, request, executor.service(), executor.definition().getCapabilities());
             active.put(code, handle);
             try {
                 handle.future = workers.submit(() -> execute(entity, handle));
@@ -259,7 +256,8 @@ public class WorkflowServiceImpl
             ExecutorResponse response = handle.service.start(handle.request);
             synchronized (this) {
                 handle.run.setMetrics(response.getMetrics());
-                boolean hasCount = "MetaForge".equals(handle.run.getExecutor()) || response.getMetrics() != null || response.getCount() > 0;
+                // Executors that do not report row counts leave the count unknown rather than zero.
+                boolean hasCount = handle.capabilities.isRowCount() || response.getMetrics() != null || response.getCount() > 0;
                 handle.run.setCount(hasCount ? response.getCount() : null);
                 handle.run.setPreview(response.getPreview());
                 if (handle.run.getState() == RunState.RUNNING) {
@@ -308,8 +306,11 @@ public class WorkflowServiceImpl
         if (handle == null) {
             return CommonResponse.failure("Workflow is not running on this server");
         }
+        if (!handle.capabilities.stoppable()) {
+            return CommonResponse.failure("This executor cannot stop a running workflow");
+        }
         try {
-            boolean cooperative = handle.started && "MetaForge".equals(entity.getExecutor());
+            boolean cooperative = handle.started && handle.capabilities.cooperativeStop();
             if (cooperative) {
                 ExecutorResponse response = handle.service.stop(handle.request);
                 if (!response.getSuccessful()) {
@@ -331,59 +332,10 @@ public class WorkflowServiceImpl
         }
     }
 
-    private ExecutorRequest request(WorkflowEntity workflow, UserEntity user, String runId)
+    /** A saved data source the user owns or that is published, with its plugin and connection configuration. */
+    private ExecutorConfigure source(String code, UserEntity user)
     {
-        List<NodeConfiguration> nodes = workflow.getConfigure().getNodes();
-        NodeConfiguration input = nodes.stream().filter(node -> "source".equals(node.getCategory())).findFirst().orElseThrow();
-        NodeConfiguration output = nodes.stream().filter(node -> "sink".equals(node.getCategory())).findFirst().orElseThrow();
-        ExecutorConfigure from;
-        ExecutorConfigure to;
-        if ("MetaForge".equals(workflow.getExecutor())) {
-            from = source(input, user);
-            to = source(output, user);
-            PluginService targetPlugin = to.getPlugin();
-            if (targetPlugin == null || !targetPlugin.supportsStreaming()) {
-                throw new IllegalArgumentException("Target data source does not support batch writing");
-            }
-            from.setQuery(String.valueOf(input.getData().get("query")));
-            from.setDatabase(String.valueOf(output.getData().get("database")));
-            from.setTable(String.valueOf(output.getData().get("table")));
-            Object mapping = output.getData().get("columns");
-            if (!(mapping instanceof Map) || ((Map<?, ?>) mapping).isEmpty()) {
-                throw new IllegalArgumentException("Add source-to-target column mappings");
-            }
-            Set<OriginColumn> columns = ((Map<?, ?>) mapping).entrySet().stream()
-                    .map(entry -> new OriginColumn(entry.getValue().toString(), entry.getKey().toString()))
-                    .collect(Collectors.toCollection(java.util.LinkedHashSet::new));
-            from.setOriginColumns(columns);
-        }
-        else {
-            from = connector(input);
-            to = connector(output);
-        }
-        ExecutorRequest request = new ExecutorRequest(runId, user.getUsername(), from, to);
-        request.setWorkHome(workflow.getWork());
-        request.setTimeout(Optional.ofNullable(workflow.getConfigure().getTimeout()).orElse(600L));
-        nodes.stream().filter(node -> "transform".equals(node.getCategory())).findFirst().ifPresent(node -> {
-            ExecutorConfigure transform = connector(node);
-            String inputTable = String.valueOf(transform.getConfigure().getOrDefault("source_table_name", "workflow_input"));
-            String outputTable = String.valueOf(transform.getConfigure().getOrDefault("result_table_name", "workflow_output"));
-            from.getConfigure().put("result_table_name", inputTable);
-            transform.getConfigure().put("source_table_name", inputTable);
-            transform.getConfigure().put("result_table_name", outputTable);
-            Object query = transform.getConfigure().get("query");
-            if (query != null) {
-                transform.getConfigure().put("query", query.toString().replace("${input}", inputTable));
-            }
-            to.getConfigure().put("source_table_name", outputTable);
-            request.setTransform(transform);
-        });
-        return request;
-    }
-
-    private ExecutorConfigure source(NodeConfiguration node, UserEntity user)
-    {
-        SourceEntity source = sources.findByCode(String.valueOf(node.getData().get("source")))
+        SourceEntity source = sources.findByCode(code)
                 .filter(value -> Objects.equals(value.getUserId(), user.getId()) || Boolean.TRUE.equals(value.getPublish()))
                 .orElseThrow(() -> new IllegalArgumentException("Data source is unavailable"));
         Plugin plugin = plugins.getPlugin(source.getType()).orElseThrow(() -> new IllegalArgumentException("Data source plugin is unavailable"));
@@ -393,17 +345,6 @@ public class WorkflowServiceImpl
         origin.setPluginManager(plugins);
         configure.setOriginConfigure(origin);
         return configure;
-    }
-
-    private ExecutorConfigure connector(NodeConfiguration node)
-    {
-        Properties properties = new Properties();
-        node.getData().forEach((key, value) -> {
-            if (value != null && (!(value instanceof String) || !((String) value).isBlank())) {
-                properties.put(key, value);
-            }
-        });
-        return new ExecutorConfigure(node.getKey(), properties, Set.of());
     }
 
     @Override
@@ -611,7 +552,7 @@ public class WorkflowServiceImpl
     public synchronized void close()
     {
         for (ActiveRun handle : active.values()) {
-            if ("MetaForge".equals(handle.run.getExecutor())) {
+            if (handle.started && handle.capabilities.cooperativeStop()) {
                 handle.service.stop(handle.request);
             }
         }
@@ -633,14 +574,16 @@ public class WorkflowServiceImpl
         private final WorkflowRun run;
         private final ExecutorRequest request;
         private final ExecutorService service;
+        private final WorkflowExecutorDefinition.Capabilities capabilities;
         private Future<?> future;
         private boolean started;
 
-        private ActiveRun(WorkflowRun run, ExecutorRequest request, ExecutorService service)
+        private ActiveRun(WorkflowRun run, ExecutorRequest request, ExecutorService service, WorkflowExecutorDefinition.Capabilities capabilities)
         {
             this.run = run;
             this.request = request;
             this.service = service;
+            this.capabilities = capabilities;
         }
     }
 }

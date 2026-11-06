@@ -7,7 +7,6 @@ import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.devlive.metaforge.executor.ExecutorService;
 import org.devlive.metaforge.executor.common.RunEngine;
@@ -19,7 +18,7 @@ import org.devlive.metaforge.executor.configure.ExecutorRequest;
 import org.devlive.metaforge.executor.configure.ExecutorResponse;
 import org.devlive.metaforge.executor.seatunnel.connector.Connector;
 import org.devlive.metaforge.executor.seatunnel.connector.ConnectorFactory;
-import org.devlive.metaforge.executor.seatunnel.connector.ConnectorType;
+import org.devlive.metaforge.executor.workflow.WorkflowPlan;
 import org.devlive.metaforge.lib.logger.LoggerExecutor;
 import org.devlive.metaforge.lib.logger.logback.LogbackExecutor;
 import org.devlive.metaforge.lib.shell.ShellCommander;
@@ -30,8 +29,10 @@ import org.slf4j.Logger;
 
 import java.io.File;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.TreeMap;
 
 @SuppressFBWarnings(value = {"RCN_REDUNDANT_NULLCHECK_WOULD_HAVE_BEEN_A_NPE"})
 @Slf4j
@@ -101,36 +102,34 @@ public class SeatunnelExecutorService
                 runEngine);
     }
 
+    @Override
+    public List<String> validate(WorkflowPlan plan)
+    {
+        return SeatunnelWorkflowCompiler.validate(plan);
+    }
+
+    @Override
+    public ExecutorRequest compile(WorkflowPlan plan)
+    {
+        return SeatunnelWorkflowCompiler.compile(plan);
+    }
+
     /**
-     * Writes a child element to the JSON output using the specified type, JSON generator, and executor configure.
-     *
-     * @param type the type of the child element
-     * @param jsonGenerator the JSON generator to write the child element to
-     * @param configure the executor configure to use for formatting the child element
-     * @throws Exception if there is an error writing the child element
+     * Writes one job block ({@code source}, {@code transform} or {@code sink}) holding one entry per
+     * configured plugin, keyed by the SeaTunnel plugin name.
      */
-    private void writeChild(String type, JsonGenerator jsonGenerator, ExecutorConfigure configure)
+    private void writeBlock(String type, JsonGenerator jsonGenerator, List<ExecutorConfigure> configures)
             throws Exception
     {
         jsonGenerator.writeFieldName(type);
-        if (ObjectUtils.isNotEmpty(configure)) {
+        jsonGenerator.writeStartObject();
+        for (ExecutorConfigure configure : configures) {
             String protocol = configure.getType();
-
             if (protocol == null || protocol.trim().isEmpty()) {
                 protocol = "Jdbc";
             }
-            else {
-                try {
-                    ConnectorType.valueOf(protocol);
-                }
-                catch (IllegalArgumentException e) {
-                    protocol = configure.getType();
-                }
-            }
-
             Connector factory = ConnectorFactory.createFormatter(protocol, configure);
             for (Map.Entry<String, Object> entry : factory.formatToMap().entrySet()) {
-                jsonGenerator.writeStartObject();
                 jsonGenerator.writeObjectFieldStart(entry.getKey());
                 if (entry.getValue() instanceof Properties) {
                     Properties props = (Properties) entry.getValue();
@@ -142,12 +141,33 @@ public class SeatunnelExecutorService
                 }
                 jsonGenerator.writeEndObject();
             }
-            jsonGenerator.writeEndObject();
         }
-        else {
-            jsonGenerator.writeStartObject();
-            jsonGenerator.writeEndObject();
+        jsonGenerator.writeEndObject();
+    }
+
+    /** Writes the env block from options prefixed with {@code env.}; numeric and boolean values stay typed. */
+    private void writeEnv(JsonGenerator jsonGenerator, Map<String, String> options)
+            throws Exception
+    {
+        jsonGenerator.writeFieldName("env");
+        jsonGenerator.writeStartObject();
+        for (Map.Entry<String, String> option : new TreeMap<>(options).entrySet()) {
+            if (!option.getKey().startsWith(SeatunnelWorkflowCompiler.ENV_PREFIX) || option.getValue() == null) {
+                continue;
+            }
+            String key = option.getKey().substring(SeatunnelWorkflowCompiler.ENV_PREFIX.length());
+            String value = option.getValue().trim();
+            if (value.matches("-?\\d+")) {
+                jsonGenerator.writeNumberField(key, Long.parseLong(value));
+            }
+            else if (value.equals("true") || value.equals("false")) {
+                jsonGenerator.writeBooleanField(key, Boolean.parseBoolean(value));
+            }
+            else {
+                jsonGenerator.writeStringField(key, value);
+            }
         }
+        jsonGenerator.writeEndObject();
     }
 
     /**
@@ -164,12 +184,13 @@ public class SeatunnelExecutorService
         try (JsonGenerator jsonGenerator = jsonFactory.createGenerator(new File(workFile), JsonEncoding.UTF8)) {
             jsonGenerator.setPrettyPrinter(new DefaultPrettyPrinter());
             jsonGenerator.writeStartObject();
-            this.writeChild("env", jsonGenerator, null);
-            this.writeChild("source", jsonGenerator, request.getInput());
-            if (request.getTransform() != null) {
-                this.writeChild("transform", jsonGenerator, request.getTransform());
+            this.writeEnv(jsonGenerator, request.getOptions());
+            this.writeBlock("source", jsonGenerator, List.of(request.getInput()));
+            List<ExecutorConfigure> transforms = request.transformChain();
+            if (!transforms.isEmpty()) {
+                this.writeBlock("transform", jsonGenerator, transforms);
             }
-            this.writeChild("sink", jsonGenerator, request.getOutput());
+            this.writeBlock("sink", jsonGenerator, List.of(request.getOutput()));
             jsonGenerator.writeEndObject();
             return null;
         }

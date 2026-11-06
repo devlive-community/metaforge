@@ -1,15 +1,17 @@
 package org.devlive.metaforge.server.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.executor.ExecutorService;
 import org.devlive.metaforge.executor.common.RunState;
 import org.devlive.metaforge.executor.configure.ExecutorMetrics;
 import org.devlive.metaforge.executor.configure.ExecutorRequest;
 import org.devlive.metaforge.executor.configure.ExecutorResponse;
+import org.devlive.metaforge.executor.workflow.WorkflowPlan;
 import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
+import org.devlive.metaforge.plugin.PluginMetadata;
+import org.devlive.metaforge.plugin.PluginType;
 import org.devlive.metaforge.server.support.PersistenceContext;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.FilterCriterionBody;
@@ -22,7 +24,6 @@ import org.devlive.metaforge.service.itransient.configuration.NodeConfiguration;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.repository.WorkflowRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
-import org.devlive.metaforge.service.service.ConfigureService;
 import org.devlive.metaforge.service.service.RuntimeConfigureService;
 import org.devlive.metaforge.service.service.impl.WorkflowServiceImpl;
 import org.devlive.metaforge.service.workflow.WorkflowCatalog;
@@ -35,7 +36,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -45,7 +45,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -67,12 +66,11 @@ public class WorkflowExecutionTest
     private final WorkflowRepository repository = mock(WorkflowRepository.class);
     private final SourceRepository sources = mock(SourceRepository.class);
     private final PluginManager plugins = mock(PluginManager.class);
-    private final ConfigureService configures = mock(ConfigureService.class);
     private final RuntimeConfigureService runtime = mock(RuntimeConfigureService.class);
     private final ExecutorService executor = mock(ExecutorService.class);
+    private final ExecutorService seatunnel = mock(ExecutorService.class);
     private WorkflowServiceImpl service;
     private WorkflowCatalog catalog;
-    private Configuration definitions;
 
     @BeforeEach
     public void setup() throws Exception
@@ -81,26 +79,42 @@ public class WorkflowExecutionTest
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(user, "", user.getAuthorities()));
         InitializerConfigure initializer = mock(InitializerConfigure.class);
         when(initializer.getDataHome()).thenReturn(home.toString());
-        Plugin engine = mock(Plugin.class);
-        when(engine.getName()).thenReturn("MetaForge");
-        when(engine.getService(ExecutorService.class)).thenReturn(executor);
-        when(engine.runtimeConfigures()).thenReturn(List.of());
-        when(plugins.getPlugin("MetaForge")).thenReturn(Optional.of(engine));
-        when(plugins.getPlugin("Seatunnel")).thenReturn(Optional.of(engine));
-        when(runtime.getEffective(anyString(), anyString(), any())).thenReturn(Map.of());
-        definitions = new Configuration();
-        Path directory = Path.of("../../configure/etc/conf/executor");
-        ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-        try (Stream<Path> files = Files.list(directory)) {
-            definitions.setNodes(files.filter(path -> !path.getFileName().toString().equals("category.yaml")).map(path -> {
-                try { return mapper.readValue(path.toFile(), NodeConfiguration.class); }
-                catch (Exception e) { throw new IllegalStateException(e); }
-            }).collect(Collectors.toList()));
-        }
-        when(configures.getExecutor()).thenReturn(CommonResponse.success(definitions));
-        catalog = new WorkflowCatalog(configures, plugins);
+        engine("MetaForge", executor, "metaforge-executor-metaforge");
+        engine("Seatunnel", seatunnel, "metaforge-executor-seatunnel");
+        when(plugins.getPluginInfos()).thenReturn(List.of(
+                PluginMetadata.builder().name("Seatunnel").type(PluginType.EXECUTOR).build(),
+                PluginMetadata.builder().name("MetaForge").type(PluginType.EXECUTOR).build(),
+                PluginMetadata.builder().name("MockJdbc").type(PluginType.CONNECTOR).build()));
+        when(runtime.getEffective(anyString(), anyString(), any())).thenReturn(Map.of("batchSize", "1000"));
+        // Compilation belongs to each executor and is tested with it; here it only has to reach the executor.
+        when(executor.compile(any())).thenAnswer(call -> request(call.getArgument(0)));
+        when(seatunnel.compile(any())).thenAnswer(call -> request(call.getArgument(0)));
+        catalog = new WorkflowCatalog(plugins);
         service = new WorkflowServiceImpl(initializer, plugins, repository, sources, runtime, catalog);
         when(repository.save(any())).thenAnswer(call -> call.getArgument(0));
+    }
+
+    /** Registers an executor plugin serving the declaration that ships in the executor module. */
+    private void engine(String name, ExecutorService service, String module) throws Exception
+    {
+        Plugin plugin = mock(Plugin.class);
+        when(plugin.getName()).thenReturn(name);
+        when(plugin.getType()).thenReturn(PluginType.EXECUTOR);
+        when(plugin.getService(ExecutorService.class)).thenReturn(service);
+        when(plugin.runtimeConfigures()).thenReturn(List.of());
+        when(plugins.getPlugin(name)).thenReturn(Optional.of(plugin));
+        Path declaration = Path.of("../../executor", module, "src/main/resources/org/devlive/metaforge/executor/workflow/workflow.yaml");
+        when(service.workflowDeclaration()).thenReturn(declaration.toUri().toURL());
+    }
+
+    private static ExecutorRequest request(WorkflowPlan plan)
+    {
+        ExecutorRequest request = new ExecutorRequest(plan.getTaskName(), plan.getUserName(),
+                plan.source().getSources().isEmpty() ? new org.devlive.metaforge.executor.configure.ExecutorConfigure("Jdbc") : plan.source().source("source"),
+                plan.sink().getSources().isEmpty() ? new org.devlive.metaforge.executor.configure.ExecutorConfigure("Jdbc") : plan.sink().source("source"));
+        request.setWorkHome(plan.getWorkHome());
+        request.setOptions(plan.getOptions());
+        return request;
     }
 
     @AfterEach
@@ -139,8 +153,13 @@ public class WorkflowExecutionTest
     @Test
     public void catalogAndGraphValidationFollowTheExecutor()
     {
+        assertEquals(List.of("MetaForge", "Seatunnel"), catalog.executors().stream().map(item -> item.definition().getName()).collect(Collectors.toList()));
         assertEquals(List.of("metaforge-sink", "metaforge-source"), catalog.definitions("MetaForge").stream().map(NodeConfiguration::getId).sorted().collect(Collectors.toList()));
         assertTrue(catalog.definitions("Seatunnel").stream().noneMatch(node -> node.getId().startsWith("metaforge")));
+        assertTrue(catalog.executor("MetaForge").definition().getCapabilities().cooperativeStop());
+        assertFalse(catalog.executor("Seatunnel").definition().getCapabilities().isRowCount());
+        assertEquals(0, catalog.executor("MetaForge").definition().limit("transform"));
+        assertEquals(3, catalog.executor("Seatunnel").definition().limit("transform"));
         WorkflowEntity workflow = workflow();
         assertTrue(catalog.validate(workflow).isEmpty());
         workflow.getConfigure().getConnections().get(0).setTarget(workflow.getConfigure().getNodes().get(0).getId() + "-input");
@@ -148,6 +167,22 @@ public class WorkflowExecutionTest
         workflow = workflow();
         workflow.getConfigure().getNodes().get(0).setTid("sql-transform");
         assertFalse(catalog.validate(workflow).isEmpty());
+        workflow = workflow();
+        workflow.getConfigure().setSettings(Map.of("batchSize", 0));
+        assertTrue(catalog.validate(workflow).stream().anyMatch(error -> error.contains("out of range")));
+        workflow.getConfigure().setSettings(Map.of("batchSize", 200));
+        assertTrue(catalog.validate(workflow).isEmpty());
+    }
+
+    @Test
+    public void executorSpecificValidationRunsAfterTheGenericChecks()
+    {
+        WorkflowEntity workflow = workflow();
+        when(executor.validate(any())).thenReturn(List.of("Executor rejected the pipeline"));
+        assertEquals(List.of("Executor rejected the pipeline"), catalog.validate(workflow));
+        WorkflowEntity broken = workflow();
+        broken.getConfigure().setConnections(List.of());
+        assertFalse(catalog.validate(broken).contains("Executor rejected the pipeline"));
     }
 
     @Test
@@ -221,9 +256,12 @@ public class WorkflowExecutionTest
         assertEquals(RunState.SUCCESS, run.getState());
         assertEquals(7, run.getCount());
         assertEquals(3, run.getPreview().get(0).get("event_id"));
-        assertEquals("warehouse", submitted.get().getInput().getDatabase());
-        assertEquals("event_id", submitted.get().getInput().getOriginColumns().iterator().next().getName());
-        assertEquals("50", submitted.get().getOptions().get("previewRows"));
+        verify(executor).compile(org.mockito.ArgumentMatchers.argThat(plan -> plan.getTaskName().equals(started.getData())
+                && plan.getNodes().size() == 2 && "source".equals(plan.getNodes().get(0).getCategory().getValue())
+                && plan.source().getSources().containsKey("source") && plan.sink().getSources().containsKey("source")
+                && "warehouse".equals(plan.sink().getValues().get("database"))
+                && "1000".equals(plan.getOptions().get("batchSize"))));
+        assertEquals(started.getData(), submitted.get().getTaskName());
         assertNull(service.runs("WORKFLOW").getData().get(0).getPreview());
         Path persisted = Path.of(workflow.getWork(), "run-" + started.getData() + ".json");
         WorkflowRun disk;
@@ -285,7 +323,7 @@ public class WorkflowExecutionTest
             node.setData(Map.of("url", "jdbc:example:test", "driver", "com.mysql.jdbc.Driver"));
         }
         when(repository.findByCode("WORKFLOW")).thenReturn(Optional.of(workflow));
-        when(executor.start(any())).thenReturn(new ExecutorResponse(false, true, RunState.SUCCESS, null));
+        when(seatunnel.start(any())).thenReturn(new ExecutorResponse(false, true, RunState.SUCCESS, null));
         CommonResponse<String> started = service.restart("WORKFLOW");
         assertTrue(started.getStatus(), String.valueOf(started.getMessage()));
         long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(3);
@@ -296,6 +334,7 @@ public class WorkflowExecutionTest
         } while (run.getState() != RunState.SUCCESS && System.nanoTime() < deadline);
         assertEquals(RunState.SUCCESS, run.getState());
         assertNull(run.getCount());
+        verify(executor, never()).start(any());
     }
 
     @Test
