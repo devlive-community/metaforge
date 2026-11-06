@@ -12,6 +12,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -118,7 +119,13 @@ public final class JdbcStreamAdapter
             throw new IllegalStateException("Open jdbc connection failed: "
                     + Optional.ofNullable(jdbcConnection.getResponse().getMessage()).orElse("unknown"));
         }
-        return new JdbcBatchWriter(jdbcConnection, connection, database, table, columns, effectiveBatchSize);
+        return batchWriter(connection, jdbcConnection::destroy, database, table, columns, effectiveBatchSize);
+    }
+
+    /** A batch writer on an open connection; {@code release} runs once the writer is closed. */
+    static BatchWriter batchWriter(Connection connection, Runnable release, String database, String table, List<String> columns, int batchSize)
+    {
+        return new JdbcBatchWriter(release, connection, database, table, columns, batchSize > 0 ? batchSize : DEFAULT_BATCH_SIZE);
     }
 
     private static JdbcConnection openConnection(PluginService plugin, RuntimeConfigure configure)
@@ -157,7 +164,7 @@ public final class JdbcStreamAdapter
     private static final class JdbcBatchWriter
             implements BatchWriter
     {
-        private final JdbcConnection jdbcConnection;
+        private final Runnable release;
         private final Connection connection;
         private final PreparedStatement statement;
         private final int columnCount;
@@ -166,28 +173,40 @@ public final class JdbcStreamAdapter
         private long written;
         private boolean originalAutoCommit = true;
         private boolean restoreAutoCommit;
+        /**
+         * Whether each batch is committed in a transaction. Engines without transactions (ClickHouse
+         * and other analytical stores) write on executeBatch and reject commit(), so they run with
+         * the driver's auto-commit instead.
+         */
+        private boolean transactional;
 
         JdbcBatchWriter(
-                JdbcConnection jdbcConnection,
+                Runnable release,
                 Connection connection,
                 String database,
                 String table,
                 List<String> columns,
                 int batchSize)
         {
-            this.jdbcConnection = jdbcConnection;
+            this.release = release;
             this.connection = connection;
             this.columnCount = columns.size();
             this.batchSize = batchSize;
 
             try {
                 this.originalAutoCommit = connection.getAutoCommit();
-                if (this.originalAutoCommit) {
-                    connection.setAutoCommit(false);
-                    this.restoreAutoCommit = true;
+                if (supportsTransactions(connection)) {
+                    if (this.originalAutoCommit) {
+                        connection.setAutoCommit(false);
+                        this.restoreAutoCommit = true;
+                    }
+                    this.transactional = true;
                 }
             }
-            catch (SQLException ignore) {
+            catch (SQLException ex) {
+                // A driver that cannot switch auto-commit off keeps writing with auto-commit.
+                log.debug("Batch writer falls back to auto-commit: {}", ex.getMessage());
+                this.transactional = false;
             }
 
             String sql = buildInsertTemplate(database, table, columns);
@@ -254,7 +273,23 @@ public final class JdbcStreamAdapter
                 throws SQLException
         {
             statement.executeBatch();
-            connection.commit();
+            if (transactional) {
+                try {
+                    connection.commit();
+                }
+                catch (SQLFeatureNotSupportedException ex) {
+                    // The driver advertised transactions but cannot commit: the batch is already written.
+                    log.warn("Driver does not support commit(); continuing with auto-commit: {}", ex.getMessage());
+                    transactional = false;
+                    try {
+                        connection.setAutoCommit(true);
+                        restoreAutoCommit = !originalAutoCommit;
+                    }
+                    catch (SQLException ignored) {
+                        // Nothing more to do: the driver writes on executeBatch.
+                    }
+                }
+            }
             written += pending;
             pending = 0;
             statement.clearBatch();
@@ -277,7 +312,18 @@ public final class JdbcStreamAdapter
             }
             catch (SQLException ignore) {
             }
-            jdbcConnection.destroy();
+            release.run();
+        }
+
+        private static boolean supportsTransactions(Connection connection)
+        {
+            try {
+                return connection.getMetaData() == null || connection.getMetaData().supportsTransactions();
+            }
+            catch (SQLException | RuntimeException ex) {
+                // Unknown: keep the transactional path, which still degrades if commit() is unsupported.
+                return true;
+            }
         }
     }
 
