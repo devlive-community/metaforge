@@ -1,6 +1,7 @@
 <template>
   <div class="inline-flex">
-    <MfBadge :count="store.summary.unread">
+    <!-- The badge sits on the bell glyph's corner, inside the 36px button's 8px padding. -->
+    <MfBadge :count="store.summary.unread" :max="99" :offset="[8, 8]">
       <button ref="trigger"
               type="button"
               class="dc-bell"
