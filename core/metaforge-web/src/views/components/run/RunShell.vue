@@ -9,7 +9,9 @@ import { workflowStateVariant } from '@/model/workflow'
  * `studio` gives the whole viewport to a full-screen editor instead.
  */
 const props = defineProps<{
-  name?: string; state?: string; studio?: boolean; icon?: Component
+  name?: string; studio?: boolean; icon?: Component
+  /** A run state (RunState) shown with its standard label; or pass `stateLabel` / `stateVariant` for other state sets. */
+  state?: string; stateLabel?: string; stateVariant?: 'success' | 'danger' | 'primary' | 'default'
   back?: { to: string; label: string }
   items?: { key: string; label: string; href: string; icon: Component }[]
 }>()
@@ -27,7 +29,7 @@ const selected = computed(() => props.items?.find(item => route.path === item.hr
         <span class="flex size-9 shrink-0 items-center justify-center rounded-mf-md bg-primary-light text-primary"><component :is="icon || Workflow" :size="18"/></span>
         <div class="min-w-0">
           <div class="truncate text-sm font-semibold text-content" :title="name">{{ name || '—' }}</div>
-          <MfTag v-if="state" class="mt-1" size="sm" :variant="workflowStateVariant(state)">{{ $t('dataTable.state' + state) }}</MfTag>
+          <MfTag v-if="stateLabel || state" class="mt-1 max-w-full truncate" size="sm" :variant="stateVariant || workflowStateVariant(state)">{{ stateLabel || $t('dataTable.state' + state) }}</MfTag>
         </div>
       </div>
       <MfMenu mode="inline" :selected-keys="[selected]">

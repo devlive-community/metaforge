@@ -13,6 +13,7 @@ import RunShell from '@/views/components/run/RunShell.vue'
 import RunLog from '@/views/components/run/RunLog.vue'
 import RunMetrics from '@/views/components/run/RunMetrics.vue'
 import RunStages from '@/views/components/run/RunStages.vue'
+import { useUtil } from '@/utils/common'
 
 /**
  * Sync records of a dataset, laid out like workflow run records: the dataset's executor reports
@@ -29,7 +30,7 @@ interface SyncView {
 }
 const route = useRoute(), router = useRouter(), { t } = useI18n()
 const code = computed(() => String(route.params.code || ''))
-const dataset = ref<{ name?: string; executor?: string; state?: string }>()
+const dataset = ref<{ name?: string; executor?: string; state?: string[] }>()
 const records = ref<SyncRecord[]>([]), view = ref<SyncView>(), logs = ref<string[]>([])
 const loading = ref(true), refreshing = ref(false), failure = ref(''), busy = ref(false)
 const logsLoading = ref(false), logFailure = ref('')
@@ -46,6 +47,10 @@ const active = computed(() => !!state.value && !TERMINAL.includes(state.value))
 const metrics = computed(() => view.value?.metrics || undefined)
 const declared = computed(() => executors.value.find(item => item.name === dataset.value?.executor)?.metrics || [])
 const stateText = (value?: string) => t('dataTable.state' + (value || 'CREATED'))
+// The dataset's own build state is the last of its recorded steps, labelled as on the detail page.
+const { getDatasetStateText } = useUtil()
+const datasetState = computed(() => Array.isArray(dataset.value?.state) ? dataset.value!.state.at(-1) || '' : '')
+const datasetVariant = computed(() => datasetState.value === 'COMPLETE_SUCCESS' ? 'primary' : datasetState.value.endsWith('FAILED') ? 'danger' : 'default')
 const elapsedText = (ms?: number) => ms == null || !Number.isFinite(ms) ? '—' : duration(ms)
 const durationMs = computed(() => metricNumber(metrics.value, 'elapsedMs', (selected.value?.elapsed ?? NaN) * 1000))
 const finishTime = (record?: SyncRecord) => record && TERMINAL.includes(record.state) ? record.updateTime || '—' : '—'
@@ -149,7 +154,7 @@ async function stop() {
 onBeforeUnmount(() => { alive = false; generation++; logGeneration++; clearTimeout(timer) })
 </script>
 <template>
-  <RunShell :name="dataset?.name" :state="dataset?.state" :icon="Database" :items="menu" :back="{ to: '/dataset', label: $t('dataset.runs.list') }">
+  <RunShell :name="dataset?.name" :state-label="getDatasetStateText(datasetState)" :state-variant="datasetVariant" :icon="Database" :items="menu" :back="{ to: '/dataset', label: $t('dataset.runs.list') }">
     <template v-if="!loading" #header>
       <header class="flex flex-wrap items-center justify-between gap-3">
         <div class="min-w-0">
