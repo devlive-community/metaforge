@@ -5,6 +5,7 @@
     <MfEmpty v-else class="h-full" size="sm" :title="$t(emptyMessage)"/>
   </template>
   <DashboardUtilityContent v-else-if="widget.kind === 'statusLegend' || widget.kind === 'copyText'" :widget="widget" :editable="editable"/>
+  <DashboardInspectionChecklist v-else-if="widget.kind === 'inspectionChecklist'" :widget="widget" :editable="editable"/>
   <div v-else-if="widget.kind === 'metric'" class="flex h-full min-h-0 flex-col justify-center px-1">
     <strong class="truncate text-3xl font-extrabold tabular-nums" :title="metricValue">{{ metricValue }}</strong>
     <span class="mt-1 truncate text-xs text-content-tertiary">{{ report?.name || $t('dashboard.studio.chooseAsset') }}</span>
@@ -58,6 +59,7 @@
   <DashboardContentView v-else-if="['imageText', 'bulletList', 'linkList', 'countdown', 'icon'].includes(widget.kind)" :widget="widget"/>
   <DashboardAdvancedDecoration v-else-if="dashboardAdvancedDecorationTools.some(kind => kind === widget.kind)" :widget="widget" :editable="editable"/>
   <DashboardDecoration v-else-if="['borderFrame', 'gridPanel', 'gradientPanel', 'horizontalArrow', 'verticalArrow', 'glowLine', 'glowRing', 'dotMatrix', 'cornerAccent', 'ripple', 'ribbon'].includes(widget.kind)" :widget="widget"/>
+  <DashboardOperationsView v-else-if="options && dashboardOperationDataTool(widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
   <DashboardMonitoring v-else-if="options && dashboardMonitoringTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
   <DashboardExtendedData v-else-if="options && dashboardExtendedDataTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
   <DashboardAdvancedData v-else-if="options && dashboardAdvancedDataTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows"/>
@@ -93,13 +95,15 @@ import DashboardExtendedContent from './DashboardExtendedContent.vue'
 import DashboardFilterControl from './DashboardFilterControl.vue'
 import DashboardMonitoring from './DashboardMonitoring.vue'
 import DashboardUtilityContent from './DashboardUtilityContent.vue'
+import DashboardOperationsView from './DashboardOperationsView.vue'
+import DashboardInspectionChecklist from './DashboardInspectionChecklist.vue'
 import DashboardAdvancedDecoration from './DashboardAdvancedDecoration.vue'
 import ChartLoading from '@/views/components/visual/ChartLoading.vue'
 import ChartError from '@/views/components/visual/ChartError.vue'
 import EChart from '@/views/components/visual/EChart.vue'
 import type { EChartsOption } from 'echarts'
 import { aggregateQueryChart, chartFieldKind, defaultQueryChart, type QueryChartConfiguration, type QueryChartRow } from '@/model/query-chart'
-import { dashboardExtendedDataTools, dashboardExtendedContentTools, dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardFilterTool, dashboardMetric, dashboardMetricTool, dashboardMonitoringTools, dashboardResourceUrl, dashboardRowsInPeriod, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
+import { dashboardExtendedDataTools, dashboardExtendedContentTools, dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardFilterTool, dashboardMetric, dashboardMetricTool, dashboardMonitoringTools, dashboardOperationDataTool, dashboardResourceUrl, dashboardRowsInPeriod, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
 import type { ReportModel } from '@/model/report'
 import type { Configuration } from '@/views/components/visual/Configuration'
 

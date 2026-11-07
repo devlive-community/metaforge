@@ -182,6 +182,9 @@
             </MfFormItem>
           </DashboardInspectorGroup>
 
+          <DashboardOperationsSettings v-if="widget && operationData && snapshot" :widget="widget" :fields="chartFields" :dates="chartDateFields" :numbers="chartNumericFields"
+                                       @change="emit('widget', $event)"/>
+
           <DashboardInspectorGroup v-if="widget && advancedData" icon="data" :title="$t('dashboard.studio.dataDisplaySettings')">
             <MfFormItem v-if="['comparisonTable','radialProgress','thresholdCards','sparklineGrid'].includes(widget.kind)" :label="$t('dashboard.studio.dataCategory')">
               <MfSelect :model-value="widget.chartOptions?.category ?? snapshot?.queryChart.options.category" :options="chartFields" searchable @update:model-value="value => changeMappings({ category: String(value ?? '') })"/>
@@ -322,6 +325,10 @@
             </MfFormItem>
             <DashboardLinkEditor v-else-if="['linkList','iconLinks'].includes(widget.kind)" :mode="widget.kind === 'iconLinks' ? 'icons' : 'links'" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
             <DashboardLinkEditor v-else-if="widget.kind === 'statusLegend'" mode="legend" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
+            <template v-else-if="widget.kind === 'inspectionChecklist'">
+              <DashboardLinkEditor mode="entries" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
+              <p class="text-xs text-content-tertiary">{{ $t('dashboard.studio.ops.checklistHint') }}</p>
+            </template>
             <DashboardLinkEditor v-else-if="['imageCarousel','imageGallery','announcement','tabsContent','accordion','stepGuide','imageCompare'].includes(widget.kind)" :model-value="widget.links ?? []"
                                  :max-items="widget.kind === 'imageCompare' ? 2 : 20" :mode="['imageCarousel','imageGallery','imageCompare'].includes(widget.kind) ? 'gallery' : 'entries'" @update:model-value="emit('widget', { links: $event })"/>
             <template v-else-if="widget.kind === 'countdown'">
@@ -524,6 +531,7 @@ import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIc
 import { chartFieldKind, queryChartTypes, type QueryChartType } from '@/model/query-chart'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import DashboardInspectorGroup from './DashboardInspectorGroup.vue'
+import DashboardOperationsSettings from './DashboardOperationsSettings.vue'
 import DashboardPanelHeader from './DashboardPanelHeader.vue'
 import DashboardLinkEditor from './DashboardLinkEditor.vue'
 import { MENU_ICONS } from '@/config/menu-icons'
@@ -531,7 +539,7 @@ import { apiBaseUrl } from '@/utils/http'
 import { TokenUtils } from '@/utils/token'
 import { dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardContentSettings, dashboardDataSettings,
   dashboardDecorationSettings, dashboardScreenEffectSizeLimit, type DashboardContentOptions, type DashboardDataOptions, type DashboardDecorationOptions } from '@/model/dashboard-layout'
-import { dashboardFilterTool, dashboardResourceUrl, type DashboardMode } from '@/model/dashboard-layout'
+import { dashboardFilterTool, dashboardOperationDataTool, dashboardOperationsSettings, dashboardResourceUrl, type DashboardMode } from '@/model/dashboard-layout'
 import { dashboardAnimationDefaults, dashboardAnimationEffects, dashboardCanContain, dashboardCanvasColor, dashboardCanvasNumber, dashboardCanvasNumbers, dashboardChartMappings, dashboardContainerTool, dashboardDataAggregationTool, dashboardDataTool, dashboardDecorationTools, dashboardLayoutSettings, dashboardMetricTool, dashboardPaddingEdges, dashboardRadiusCorners, dashboardScreenEffectPresets, dashboardScreenEffectQuantityLimit, dashboardScreenEffectSettings, dashboardScreenEffectTool, dashboardSnapshot, dashboardTools, dashboardWallPresets, dashboardWallResolution, dashboardWidgetLabelKey, dashboardWidgetUsesAsset, type DashboardAction, type DashboardAnimation, type DashboardBoard, type DashboardChartOverrides, type DashboardDeadline, type DashboardDesign, type DashboardInsets, type DashboardLayoutOptions, type DashboardRect, type DashboardRefresh, type DashboardScreenEffectOptions, type DashboardWidget } from '@/model/dashboard-layout'
 
 const props = defineProps<{ design: DashboardDesign; board: DashboardBoard; widget?: DashboardWidget; groupRect?: DashboardRect;
@@ -584,6 +592,7 @@ function backgroundUploaded(info: { file: { uid: string; status?: string; respon
 function setBackgroundFit(value: unknown) { if (value === 'cover' || value === 'contain' || value === 'stretch' || value === 'tile') emit('board', { backgroundFit: value }) }
 function setBackgroundPosition(value: unknown) { if (value === 'center' || value === 'top' || value === 'bottom') emit('board', { backgroundPosition: value }) }
 const advancedData = computed(() => dashboardAdvancedDataTools.some(kind => kind === props.widget?.kind))
+const operationData = computed(() => dashboardOperationDataTool(props.widget?.kind))
 const advancedContent = computed(() => dashboardAdvancedContentTools.some(kind => kind === props.widget?.kind))
 const advancedDecoration = computed(() => dashboardAdvancedDecorationTools.some(kind => kind === props.widget?.kind))
 const dataSettings = computed(() => { const value = dashboardDataSettings(props.widget?.dataOptions); return props.widget?.kind === 'radialProgress' ? { ...value, limit: Math.min(5, value.limit) } : value })
@@ -603,7 +612,7 @@ const decorationNumbers = computed(() => [
   { key: 'rotation' as const, min: -180, max: 180 }, { key: 'opacity' as const, min: 0, max: 100 },
 ])
 const textContent = computed(() => !!props.widget && ['markdown', 'codeBlock', 'worldClock', 'sectionBanner', 'text', 'heading', 'note', 'badge', 'sectionDivider', 'imageText', 'bulletList', 'ribbon', 'textTicker', 'quote', 'actionButton', 'tagCloud', 'titlePlate', 'badgeSeal', 'copyText'].includes(props.widget.kind))
-const configurableContent = computed(() => !!props.widget && (advancedContent.value || textContent.value || ['image', 'video', 'audio', 'clock', 'link', 'shape', 'linkList', 'countdown', 'icon', 'statusLegend'].includes(props.widget.kind)))
+const configurableContent = computed(() => !!props.widget && (advancedContent.value || textContent.value || ['image', 'video', 'audio', 'clock', 'link', 'shape', 'linkList', 'countdown', 'icon', 'statusLegend', 'inspectionChecklist'].includes(props.widget.kind)))
 const coloredContent = computed(() => !!props.widget && ['calendarHeatmap', 'radialProgress', 'markdown', 'worldClock', 'imageCompare', 'iconLinks', 'stepGuide', 'shape', 'panel', 'progress', 'gauge', 'progressList', 'icon', 'borderFrame', 'gridPanel', 'gradientPanel', 'horizontalArrow', 'verticalArrow', 'quote', 'textTicker', 'announcement', 'tabsContent', 'accordion', 'tagCloud', ...dashboardDecorationTools].some(kind => kind === props.widget?.kind))
 const usesAsset = computed(() => !!props.widget && dashboardWidgetUsesAsset(props.widget.kind))
 const filterWidget = computed(() => !!props.widget && dashboardFilterTool(props.widget.kind))
@@ -693,6 +702,7 @@ function changeAsset(value: unknown) {
   const mapGeoJson = props.widget?.chartOptions?.mapGeoJson
   emit('widget', { reportCode: typeof value === 'string' && value ? value : undefined, field: '', displayFields: undefined, recordIndex: undefined, timeField: undefined,
     dataOptions: props.widget?.dataOptions ? { ...dataSettings.value, baselineField: '', statusField: '' } : undefined,
+    operationsOptions: operationData.value ? dashboardOperationsSettings(props.widget?.kind, { ...props.widget?.operationsOptions, labelField: '', statusField: '', detailsField: '', endField: '' }) : undefined,
     chartOptions: mapGeoJson === undefined ? undefined : { mapGeoJson } })
 }
 function setDataAggregation(value: unknown) {
@@ -729,6 +739,7 @@ function changeKind(value: unknown) {
   const effect = dashboardScreenEffectTool(kind)
   const modeDefaults = effect || effectKind.value ? { movable: !effect, resizable: !effect, showCard: !effect, showTitle: !effect } : {}
   emit('widget', { ...modeDefaults, kind, chartOptions: undefined, field: '', reportCode: dashboardWidgetUsesAsset(kind) ? props.widget.reportCode : undefined,
+    operationsOptions: dashboardOperationDataTool(kind) ? dashboardOperationsSettings(kind) : undefined,
     screenEffect: effect ? dashboardScreenEffectSettings(kind) : undefined })
 }
 function setRefreshMinutes(value: number | undefined) {

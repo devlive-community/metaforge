@@ -83,8 +83,8 @@ import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DashboardPanelHeader from './DashboardPanelHeader.vue'
 import DashboardLayers from './DashboardLayers.vue'
-import { ArrowDown, ArrowRight, AudioLines, Blend, CalendarRange, ChartNoAxesCombined, Clock, CloudRain, Columns2, Copy, Flower2, Frame, Gauge, Grid2x2, Heading, Image, Layers,
-  LayoutGrid, Link, List, ListOrdered, ListRestart, ListFilter, MessageSquare, Minus, MousePointer2, Network, PanelTop, PartyPopper, Plus, Search, Shapes, SlidersHorizontal, Snowflake, Sparkles, Square, SquareDashed, Star,
+import { Activity, ArrowDown, ArrowRight, AudioLines, Blend, CalendarClock, CalendarRange, ChartNoAxesCombined, ClipboardCheck, Clock, CloudRain, Columns2, Copy, Flower2, Frame, Gauge, Grid2x2, Heading, Image, Layers,
+  LayoutGrid, Link, List, ListOrdered, ListRestart, ListFilter, MessageSquare, Minus, MousePointer2, Network, PanelTop, PartyPopper, Plus, Search, Shapes, SlidersHorizontal, Snowflake, Sparkles, Square, SquareDashed, Star, TriangleAlert,
   Table2, Tag, Terminal, Timer, Type, Video, Waves } from '@lucide/vue'
 import { queryChartTypes, type QueryChartType } from '@/model/query-chart'
 import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIcon.vue'
@@ -128,6 +128,11 @@ const toolGroups = [
     { kind: 'metricTicker', icon: Square }, { kind: 'metricComparison', icon: ChartNoAxesCombined }, { kind: 'metricTrend', icon: ChartNoAxesCombined },
     { kind: 'bulletMetric', icon: Minus }, { kind: 'radialProgress', icon: Shapes }, { kind: 'thresholdCards', icon: MessageSquare },
     { kind: 'periodComparison', icon: CalendarRange }, { kind: 'dataFreshness', icon: Clock }, { kind: 'sparklineGrid', icon: ChartNoAxesCombined },
+  ] },
+  { title: 'operationsTools', icon: Activity, items: [
+    { kind: 'incidentFeed', icon: ListOrdered }, { kind: 'outlierQueue', icon: TriangleAlert },
+    { kind: 'runHistory', icon: Activity }, { kind: 'slaScorecard', icon: Gauge }, { kind: 'latencyPercentiles', icon: ChartNoAxesCombined },
+    { kind: 'maintenanceWindow', icon: CalendarClock }, { kind: 'recordLookup', icon: Search }, { kind: 'inspectionChecklist', icon: ClipboardCheck },
   ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
@@ -179,6 +184,7 @@ const toolGroups = [
     { kind: 'warpStars', icon: Star }, { kind: 'oceanWaves', icon: Waves }, { kind: 'sunRays', icon: Sparkles },
     { kind: 'matrixGrid', icon: Grid2x2 }, { kind: 'searchBeams', icon: Sparkles }, { kind: 'floatingHexagons', icon: Shapes }, { kind: 'digitalScan', icon: Type },
     { kind: 'waterCaustics', icon: Waves }, { kind: 'lightTrails', icon: Sparkles },
+    { kind: 'pulseGrid', icon: Grid2x2 }, { kind: 'contourLines', icon: Waves },
   ] },
 ] as const
 

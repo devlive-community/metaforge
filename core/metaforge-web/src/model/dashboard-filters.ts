@@ -23,6 +23,14 @@ export function dashboardDateRangeValid(start: string, end: string) {
   return (!start || dashboardDateKey(start) === start) && (!end || dashboardDateKey(end) === end) && (!start || !end || start <= end)
 }
 
+/** Parse a date-only cell in the viewer's local time, or honor the offset of a timestamp. */
+export function dashboardTimestamp(value: unknown) {
+  const day = dashboardDateKey(value)
+  if (!day) return
+  const time = value instanceof Date ? value.getTime() : Date.parse(value === day ? day + 'T00:00:00' : String(value).replace(' ', 'T'))
+  return Number.isFinite(time) ? time : undefined
+}
+
 function scalar(value: unknown) {
   return typeof value === 'string' || typeof value === 'number' && Number.isFinite(value) || typeof value === 'boolean' ? String(value) : ''
 }
@@ -31,7 +39,7 @@ export function dashboardValueMissing(value: unknown) {
   return value == null || typeof value === 'string' && !value.trim()
 }
 
-function numericValue(value: unknown): number | undefined {
+export function dashboardNumericValue(value: unknown): number | undefined {
   if (typeof value !== 'number' && (typeof value !== 'string' || !/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim()))) return
   const number = Number(value)
   return Number.isFinite(number) ? number : undefined
@@ -78,7 +86,7 @@ export function dashboardFilteredReports(filters: Iterable<DashboardFilter>, row
     } else if (filter.kind === 'numberRangeFilter') {
       const { min, max } = filter
       match = row => {
-        const value = numericValue(row[field])
+        const value = dashboardNumericValue(row[field])
         return value !== undefined && (min === undefined || value >= min) && (max === undefined || value <= max)
       }
     } else if (filter.kind === 'multiValueFilter') {

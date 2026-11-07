@@ -72,6 +72,38 @@ export function createAdditionalScreenPainters(env: ScreenEnvironment, position:
       }
       ctx.stroke()
     },
+    pulseGrid(ctx, p, time) {
+      const step = Math.max(8, env.size)
+      const x = Math.floor(p.x * env.width / step) * step
+      const y = Math.floor(p.y * env.height / step) * step
+      for (let row = -1; row <= 1; row++) for (let column = -1; column <= 1; column++) {
+        const distance = Math.hypot(row, column)
+        const phase = time * (.7 + p.depth * .4) - distance + p.phase + env.wind * column / 130
+        ctx.globalAlpha = .08 + (.5 + .5 * Math.sin(phase)) ** 3 * .62 / (1 + distance)
+        ctx.lineWidth = 1
+        ctx.strokeRect(x + column * step + 2, y + row * step + 2, step - 4, step - 4)
+        if (distance === 0) {
+          ctx.globalAlpha *= .4
+          ctx.fillRect(x + 2, y + 2, step - 4, step - 4)
+        }
+      }
+    },
+    contourLines(ctx, p, time) {
+      const base = p.y * env.height
+      const amplitude = env.size * (.55 + p.depth)
+      const shift = time * (.12 + env.wind / 1100)
+      ctx.globalAlpha = .14 + p.depth * .34
+      ctx.lineWidth = Math.max(.6, env.size / 42)
+      ctx.beginPath()
+      for (let step = 0; step <= 48; step++) {
+        const x = step / 48
+        const fold = Math.sin(x * 7 + shift) * .65 + Math.sin(x * 13 - shift + base / 120) * .35
+        const y = base + fold * amplitude
+        if (step === 0) ctx.moveTo(0, y)
+        else ctx.lineTo(x * env.width, y)
+      }
+      ctx.stroke()
+    },
     fog(ctx, p, time) { mist(ctx, wrap(p.x + time * env.wind / 5000) * env.width, p.y * env.height, env.size * (1 + p.depth), .5) },
     smoke(ctx, p, time) {
       const at = position(p, time, -.04, .035)

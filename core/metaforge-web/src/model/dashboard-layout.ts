@@ -6,13 +6,15 @@ export const dashboardMode = ['dashboard', 'wall'] as const
 export type DashboardMode = typeof dashboardMode[number]
 export const dashboardExtendedDataTools = ['rollingTable', 'comparisonTable', 'statisticList', 'calendarHeatmap', 'radialProgress', 'thresholdCards'] as const
 export const dashboardMonitoringTools = ['dataQuality', 'periodComparison', 'dataFreshness', 'sparklineGrid'] as const
+export const dashboardOperationDataTools = ['incidentFeed', 'outlierQueue', 'runHistory', 'slaScorecard', 'latencyPercentiles', 'maintenanceWindow', 'recordLookup'] as const
+export function dashboardOperationDataTool(kind?: DashboardWidgetKind) { return dashboardOperationDataTools.some(tool => tool === kind) }
 export const dashboardAdvancedDataTools = ['metricTicker', 'metricComparison', 'metricTrend', 'bulletMetric', 'rankList', 'distributionList', 'statusGrid', 'recordCards', ...dashboardExtendedDataTools, ...dashboardMonitoringTools] as const
-const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools] as const
+const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools] as const
 export type DashboardDataTool = typeof dataDisplays[number]
 export const dashboardExtendedContentTools = ['markdown', 'codeBlock', 'imageCompare', 'iconLinks', 'stepGuide', 'worldClock'] as const
 export const dashboardAdvancedContentTools = ['imageCarousel', 'imageGallery', 'announcement', 'textTicker', 'tabsContent', 'accordion', 'quote', 'embed', 'actionButton', 'tagCloud', ...dashboardExtendedContentTools] as const
 export const dashboardContentTools = ['text', 'heading', 'note', 'badge', 'image', 'video', 'audio', 'clock', 'link',
-  'imageText', 'bulletList', 'linkList', 'countdown', 'icon', 'statusLegend', 'copyText', ...dashboardAdvancedContentTools] as const
+  'imageText', 'bulletList', 'linkList', 'countdown', 'icon', 'statusLegend', 'copyText', 'inspectionChecklist', ...dashboardAdvancedContentTools] as const
 export const dashboardFilterTools = ['selectFilter', 'searchFilter', 'dateRangeFilter', 'clearFilters', 'multiValueFilter', 'numberRangeFilter', 'valueStateFilter'] as const
 export type DashboardFilterTool = typeof dashboardFilterTools[number]
 export function dashboardFilterTool(kind: DashboardWidgetKind): kind is DashboardFilterTool {
@@ -24,7 +26,7 @@ export const dashboardLayoutTools = ['shape', 'container', 'panel', 'divider', '
 export const dashboardAdvancedDecorationTools = ['doubleLine', 'dashedLine', 'chevrons', 'zigzag', 'waveLine', 'bracketPair', 'titlePlate', 'badgeSeal', 'hexagon', 'honeycomb', 'radarSweep', 'scanFrame', 'circuitPattern', 'orbitalRings', 'cornerFrame', 'sectionBanner', 'techRuler', 'bezierConnector'] as const
 export const dashboardDecorationTools = ['glowLine', 'glowRing', 'dotMatrix', 'cornerAccent', 'ripple', 'ribbon', ...dashboardAdvancedDecorationTools] as const
 export const dashboardScreenEffectTools = ['snow', 'rain', 'stars', 'meteors', 'fireflies', 'bubbles', 'confetti', 'petals', 'particleNetwork', 'aurora',
-  'fog', 'smoke', 'clouds', 'sandstorm', 'embers', 'leaves', 'hearts', 'sparkles', 'lightning', 'fireworks', 'risingDigits', 'warpStars', 'oceanWaves', 'sunRays', 'matrixGrid', 'searchBeams', 'floatingHexagons', 'digitalScan', 'waterCaustics', 'lightTrails'] as const
+  'fog', 'smoke', 'clouds', 'sandstorm', 'embers', 'leaves', 'hearts', 'sparkles', 'lightning', 'fireworks', 'risingDigits', 'warpStars', 'oceanWaves', 'sunRays', 'matrixGrid', 'searchBeams', 'floatingHexagons', 'digitalScan', 'waterCaustics', 'lightTrails', 'pulseGrid', 'contourLines'] as const
 export type DashboardScreenEffectKind = typeof dashboardScreenEffectTools[number]
 export interface DashboardScreenEffectOptions {
   quantity: number
@@ -57,6 +59,8 @@ export const dashboardScreenEffectPresets: Record<DashboardScreenEffectKind, { q
   sunRays: { quantity: 10, size: 40, color: '#E2C68E', maxQuantity: 24, maxSize: 160 },
   waterCaustics: { quantity: 18, size: 80, color: '#65D7DD', maxQuantity: 36, maxSize: 160 },
   lightTrails: { quantity: 24, size: 40, color: '#8AA9FF', maxQuantity: 80, maxSize: 120 },
+  pulseGrid: { quantity: 14, size: 26, color: '#56C8AB', maxQuantity: 26, maxSize: 60 },
+  contourLines: { quantity: 10, size: 35, color: '#9BAFF6', maxQuantity: 24, maxSize: 120 },
 }
 export const dashboardAnimationEffects = ['none', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'rotate', 'pulse', 'bounce', 'float', 'shake', 'flip', 'glow'] as const
 export interface DashboardAnimation {
@@ -111,6 +115,12 @@ export interface DashboardDataOptions { year: number; periodDays: number; staleH
 export interface DashboardContentOptions { comparePosition: number; language: 'text' | 'sql' | 'json'; timezone: string; activeIndex: number; direction: 'horizontal' | 'vertical'; fontSize: number; fontWeight: 'normal' | 'medium' | 'bold'; lineHeight: number; fit: 'cover' | 'contain'; interval: number; autoplay: boolean; attribution: string; pauseOnHover: boolean }
 export interface DashboardLayoutOptions { itemHeight: number; columns: number; gap: number; padding: number; ratio: number; header: number; minWidth: number }
 export interface DashboardDecorationOptions { count: number; rotation: number; filled: boolean; opacity: number; animate: boolean }
+export const dashboardThresholdComparators = ['above', 'atLeast', 'below', 'atMost'] as const
+export interface DashboardOperationsOptions {
+  labelField: string; statusField: string; detailsField: string; endField: string;
+  healthyValues: string; failureValues: string; comparator: typeof dashboardThresholdComparators[number];
+  threshold: number; goal: number
+}
 export interface DashboardWidget extends DashboardRect {
   id: string
   groupId?: string
@@ -144,6 +154,7 @@ export interface DashboardWidget extends DashboardRect {
   animation?: DashboardAnimation
   screenEffect?: DashboardScreenEffectOptions
   dataOptions?: DashboardDataOptions
+  operationsOptions?: DashboardOperationsOptions
   contentOptions?: DashboardContentOptions
   layoutOptions?: DashboardLayoutOptions
   decorationOptions?: DashboardDecorationOptions
@@ -476,6 +487,19 @@ export function dashboardDataSettings(value?: unknown): DashboardDataOptions {
     decimals: integer(raw.decimals, 2, 0, 8), prefix: text(raw.prefix).slice(0, 30), suffix: text(raw.suffix).slice(0, 30),
     positiveValues: text(raw.positiveValues, 'SUCCESS,ONLINE,ACTIVE,正常,成功,true,1').slice(0, 500) }
 }
+export function dashboardOperationsSettings(kind?: DashboardWidgetKind, value?: unknown): DashboardOperationsOptions {
+  const raw = record(value) ?? {}
+  const bounded = (input: unknown, fallback: number, min: number, max: number) =>
+    typeof input === 'number' && Number.isFinite(input) ? Math.max(min, Math.min(max, input)) : fallback
+  return {
+    labelField: text(raw.labelField).slice(0, 500), statusField: text(raw.statusField).slice(0, 500),
+    detailsField: text(raw.detailsField).slice(0, 500), endField: text(raw.endField).slice(0, 500),
+    healthyValues: text(raw.healthyValues, 'success,succeeded,ok,passed,healthy,成功,正常').slice(0, 500),
+    failureValues: text(raw.failureValues, 'error,failed,critical,breach,失败,异常,严重').slice(0, 500),
+    comparator: dashboardThresholdComparators.find(item => item === raw.comparator) ?? (kind === 'slaScorecard' ? 'atMost' : 'above'),
+    threshold: bounded(raw.threshold, 100, -1e12, 1e12), goal: bounded(raw.goal, 99, 0, 100),
+  }
+}
 export function dashboardContentSettings(value?: unknown): DashboardContentOptions {
   const raw = record(value) ?? {}
   let timezone = text(raw.timezone, 'UTC').slice(0,100)
@@ -591,6 +615,7 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       animation: readWidgetAnimation(item.animation),
       screenEffect: dashboardScreenEffectTool(kind) ? dashboardScreenEffectSettings(kind, item.screenEffect) : undefined,
       dataOptions: record(item.dataOptions) ? dashboardDataSettings(item.dataOptions) : widget.dataOptions,
+      operationsOptions: dashboardOperationDataTool(kind) ? dashboardOperationsSettings(kind, item.operationsOptions) : undefined,
       contentOptions: record(item.contentOptions) ? dashboardContentSettings(item.contentOptions) : undefined,
       layoutOptions: record(item.layoutOptions) ? dashboardLayoutSettings(item.layoutOptions) : widget.layoutOptions,
       decorationOptions: record(item.decorationOptions) ? dashboardDecorationSettings(item.decorationOptions) : undefined,

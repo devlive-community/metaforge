@@ -21,7 +21,7 @@ export function screenPreview(screen: DashboardModel) {
     board.widgets = board.widgets.filter(widget => !dashboardScreenEffectTool(widget.kind)).map(widget => {
       const chart = queryChartTypes.some(kind => kind === widget.kind) || widget.kind === 'report' || dashboardDataTool(widget.kind) || ['metric', 'progress'].includes(widget.kind)
       const simple = ['text', 'heading', 'note', 'badge', 'shape', 'panel', 'divider', 'verticalDivider', 'sectionDivider', 'spacer', 'image', 'markdown', 'codeBlock', 'stepGuide', 'iconLinks', 'imageCompare', 'statusLegend'].includes(widget.kind)
-      const safe = dashboardContainerTool(widget.kind) || simple || (chart && !['dataFreshness', 'sparklineGrid'].includes(widget.kind) && ++plots <= 12)
+      const safe = dashboardContainerTool(widget.kind) || simple || (chart && !['dataFreshness', 'sparklineGrid', 'maintenanceWindow', 'recordLookup'].includes(widget.kind) && ++plots <= 12)
       return { ...widget, ...(safe ? {} : { kind: 'text' as const, text: widget.name, showTitle: false }),
         ...(['rollingTable','carouselContainer'].includes(widget.kind) ? { contentOptions: { ...dashboardContentSettings(widget.contentOptions), autoplay: false } } : {}),
         animation: { ...dashboardAnimationDefaults, ...widget.animation, effect: 'none' as const }, expandable: false, action: 'none' as const }

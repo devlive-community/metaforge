@@ -1,4 +1,4 @@
-import { dashboardDateKey, dashboardValueMissing } from './dashboard-filters'
+import { dashboardDateKey, dashboardTimestamp, dashboardValueMissing } from './dashboard-filters'
 import { dashboardMetric, type DashboardWidget } from './dashboard-layout'
 import type { QueryChartRow } from './query-chart'
 
@@ -59,10 +59,8 @@ export function dashboardPeriodComparison(rows: readonly QueryChartRow[], dateFi
 export function dashboardFreshness(rows: readonly QueryChartRow[], field: string, now: number, staleHours: number) {
   let latest = -Infinity
   for (const row of rows) {
-    const value = row[field], day = dashboardDateKey(value)
-    if (!day) continue
-    const time = value instanceof Date ? value.getTime() : Date.parse(value === day ? day + 'T00:00:00' : String(value).replace(' ', 'T'))
-    if (Number.isFinite(time)) latest = Math.max(latest, time)
+    const time = dashboardTimestamp(row[field])
+    if (time !== undefined) latest = Math.max(latest, time)
   }
   if (!Number.isFinite(latest)) return
   const age = (now - latest) / 3_600_000
