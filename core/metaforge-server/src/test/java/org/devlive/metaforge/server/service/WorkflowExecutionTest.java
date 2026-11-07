@@ -266,12 +266,20 @@ public class WorkflowExecutionTest
         assertEquals(started.getData(), submitted.get().getTaskName());
         assertNull(service.runs("WORKFLOW").getData().get(0).getPreview());
         Path persisted = Path.of(workflow.getWork(), "run-" + started.getData() + ".json");
-        WorkflowRun disk;
+        // The service flips the in-memory state before it writes the run file, so the
+        // file can lag the SUCCESS state and the poll has to tolerate a missing file.
+        WorkflowRun disk = null;
         do {
-            disk = new ObjectMapper().readValue(persisted.toFile(), WorkflowRun.class);
-            if (disk.getState() != RunState.SUCCESS) { Thread.sleep(5); }
-        } while (disk.getState() != RunState.SUCCESS && System.nanoTime() < deadline);
-        assertEquals(RunState.SUCCESS, disk.getState());
+            try {
+                disk = new ObjectMapper().readValue(persisted.toFile(), WorkflowRun.class);
+                if (disk.getState() == RunState.SUCCESS) { break; }
+            }
+            catch (java.io.FileNotFoundException missing) {
+                // Not written yet; retry within the deadline.
+            }
+            Thread.sleep(5);
+        } while (System.nanoTime() < deadline);
+        assertTrue(disk != null && disk.getState() == RunState.SUCCESS, "the run file was not persisted in time");
         assertEquals(7, disk.getMetrics().getRowsWritten());
         assertEquals(3, disk.getPreview().get(0).get("event_id"));
         assertFalse(service.log("WORKFLOW", "../../secrets").getStatus());
