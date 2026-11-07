@@ -63,7 +63,7 @@ public class PrestoE2ETest
             // (the announcement is live, the node manager consumes it late and flaps), and the
             // retried statements below still fail while it is empty; skip the e2e in that
             // environment instead of failing it, it runs where the container cooperates.
-            long deadline = System.currentTimeMillis() + Duration.ofSeconds(90);
+            long deadline = System.currentTimeMillis() + Duration.ofSeconds(90).toMillis();
             boolean scheduled = false;
             while (System.currentTimeMillis() < deadline) {
                 Response ping = service.execute(configure, "SELECT node_id FROM system.runtime.nodes");
