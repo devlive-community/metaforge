@@ -284,10 +284,9 @@ public class ConfigureUtils
         }
 
         List<PluginConfigureExecutorField> fields = Lists.newArrayList();
-        Optional<PluginConfigureExecutor> configureExecutor = yamlConfigure.getPipelines()
-                .stream()
-                .filter(v -> v.getExecutor().equals(executor) && v.getType().equals(pipelineType))
-                .findFirst();
+        // 只有依赖外部引擎的执行器才声明管道配置；MetaForge 执行器直接经插件读写，没有声明时这里什么也不用做
+        // Only executors driving an external engine declare pipelines; the MetaForge executor reads and writes through plugins.
+        Optional<PluginConfigureExecutor> configureExecutor = Optional.ofNullable(yamlConfigure == null ? null : findPipelineExecutor(yamlConfigure, executor, pipelineType));
         if (!configureExecutor.isPresent()) {
             String message = String.format("Source [ %s ] type [ %s ] is not supported pipeline type [ %s ]", entity.getId(), entity.getType(), pipelineType);
             Preconditions.checkArgument(!message.isEmpty(), message);
@@ -366,10 +365,7 @@ public class ConfigureUtils
     {
         Set<String> fromOptions = Sets.newHashSet();
         PluginConfigure yamlConfigure = resolvePluginConfigure(pluginManager, entity.getType());
-        yamlConfigure.getPipelines()
-                .stream()
-                .filter(v -> v.getExecutor().equals(executor) && v.getType().equals(pipelineType))
-                .findFirst()
+        Optional.ofNullable(yamlConfigure == null ? null : findPipelineExecutor(yamlConfigure, executor, pipelineType))
                 .ifPresent(iConfigureExecutor -> iConfigureExecutor
                         .getFields()
                         .stream()

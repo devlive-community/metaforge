@@ -686,11 +686,18 @@ public class WorkflowServiceImpl
     @EventListener(ApplicationReadyEvent.class)
     public void recoverInterrupted()
     {
-        repository.findAllByState(RunState.RUNNING).forEach(entity -> {
-            entity.setState(RunState.INTERRUPTED);
-            entity.setMessage("Execution interrupted by server restart");
-            repository.save(entity);
-        });
+        try {
+            repository.findAllByState(RunState.RUNNING).forEach(entity -> {
+                entity.setState(RunState.INTERRUPTED);
+                entity.setMessage("Execution interrupted by server restart");
+                repository.save(entity);
+            });
+        }
+        catch (org.springframework.dao.DataAccessException ex) {
+            // 未安装的空库还没有表，安装向导完成前没有可恢复的运行；不能因此让服务退出
+            // A database that is not installed yet has no tables and nothing to recover; the server must still start.
+            log.warn("Workflow recovery skipped: {}", ex.getMostSpecificCause().getMessage());
+        }
     }
 
     private static class ActiveRun
