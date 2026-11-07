@@ -56,6 +56,9 @@ public class DorisE2ETest
                 // Docker's VM keeps vm.max_map_count below what the backend checks for at startup
                 .withEnv("SKIP_CHECK_ULIMIT", "true")
                 .withExposedPorts(9030)
+                // The images size their internals from the host RAM; a runner running the whole
+                // suite dies when a container claims several gigabytes, so cap them.
+                .withCreateContainerCmdModifier(cmd -> cmd.withMemory(4L * 1024 * 1024 * 1024).withMemorySwap(4L * 1024 * 1024 * 1024))
                 .waitingFor(Wait.forListeningPorts(9030).withStartupTimeout(Duration.ofMinutes(5)))) {
             container.start();
             PluginService service = new DorisService();

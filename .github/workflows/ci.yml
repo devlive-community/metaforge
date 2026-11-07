@@ -110,8 +110,18 @@ jobs:
           -DskipTests -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
           -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
 
+      # The e2e modules pull ten-plus engine images; without reclaiming the
+      # preinstalled SDKs the runner's disk runs out mid-suite and the job dies
+      # without any error in the log.
+      - name: Free the runner disk for the e2e images
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --force || true
+          df -h /
+
       - name: Run the JUnit 5 suite
         run: >
           ./mvnw -B org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
           -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
           -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+          -DargLine=-Xmx1g
