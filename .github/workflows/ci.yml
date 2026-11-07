@@ -83,7 +83,9 @@ jobs:
   tests:
     name: Backend tests
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    # The plugin e2e modules alone need well over half an hour: every scheduler-based
+    # engine (presto, trino) starts its own container per documented version.
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
 

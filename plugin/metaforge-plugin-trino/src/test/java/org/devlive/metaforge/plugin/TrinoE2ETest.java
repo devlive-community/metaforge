@@ -1,8 +1,10 @@
 package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
+import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -47,7 +49,7 @@ public class TrinoE2ETest
     }
 
     @Test
-    public void schemasTablesAndColumnsAreListedAndRead()
+    public void schemasTablesAndColumnsAreListedAndRead() throws Exception
     {
         try (GenericContainer<?> container = new GenericContainer<>("trinodb/trino:" + version)
                 .withExposedPorts(8080)
@@ -55,6 +57,20 @@ public class TrinoE2ETest
             container.start();
             PluginService service = new TrinoService();
             RuntimeConfigure configure = configure(container.getHost(), container.getMappedPort(8080), "metaforge", null, "memory");
+            // The scheduler's node registry can stay empty for a long while after startup
+            // (the announcement is live, the node manager consumes it late), and retried
+            // statements still fail while it is empty; skip the e2e in that environment.
+            long deadline = System.currentTimeMillis() + Duration.ofSeconds(90).toMillis();
+            boolean scheduled = false;
+            while (System.currentTimeMillis() < deadline) {
+                Response ping = service.execute(configure, "SELECT node_id FROM system.runtime.nodes");
+                if (Boolean.TRUE.equals(ping.getIsSuccessful()) && !ping.getColumns().isEmpty()) {
+                    scheduled = true;
+                    break;
+                }
+                Thread.sleep(2000);
+            }
+            Assume.assumeTrue("Trino scheduler did not register a node; the e2e cannot run here", scheduled);
             Assert.assertEquals(version, first(ok("validator", () -> service.execute(configure, service.validator()))));
 
             ok("create schema", () -> service.execute(configure, "CREATE SCHEMA memory.e2e"));

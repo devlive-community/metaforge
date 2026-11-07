@@ -127,7 +127,7 @@ public final class PluginE2E
      */
     public static Response ok(String what, Supplier<Response> call)
     {
-        long deadline = System.currentTimeMillis() + Duration.ofMinutes(2).toMillis();
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(60).toMillis();
         Response response = call.get();
         while (!Boolean.TRUE.equals(response.getIsSuccessful())
                 && String.valueOf(response.getMessage()).contains("No nodes available")
