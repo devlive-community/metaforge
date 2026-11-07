@@ -274,7 +274,13 @@ public class SyncJobManagerTest
         awaitState(job.getHistoryId(), RunState.SUCCESS);
         awaitFinished(job);
         assertEquals(2, runs.get());
-        assertFalse(manager.isActive(9L));
+        // jobs 和 activeByDataset 在收尾时先后清理，两个 map 的清空之间有观察窗口
+        // jobs and activeByDataset are cleared one after the other; poll for the release
+        long released = System.currentTimeMillis() + 10_000;
+        while (manager.isActive(9L) && System.currentTimeMillis() < released) {
+            Thread.onSpinWait();
+        }
+        assertFalse(manager.isActive(9L), "the finished sync must release the dataset");
         assertFalse(manager.resume(job), "only a paused sync can resume");
     }
 
