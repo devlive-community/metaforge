@@ -184,6 +184,8 @@
 
           <DashboardOperationsSettings v-if="widget && operationData && snapshot" :widget="widget" :fields="chartFields" :dates="chartDateFields" :numbers="chartNumericFields"
                                        @change="emit('widget', $event)"/>
+          <DashboardBusinessSettings v-if="widget && businessData && snapshot" :widget="widget" :fields="chartFields" :dates="chartDateFields" :numbers="chartNumericFields"
+                                     :rows="snapshot.columns" @change="emit('widget', $event)"/>
 
           <DashboardInspectorGroup v-if="widget && advancedData" icon="data" :title="$t('dashboard.studio.dataDisplaySettings')">
             <MfFormItem v-if="['comparisonTable','radialProgress','thresholdCards','sparklineGrid'].includes(widget.kind)" :label="$t('dashboard.studio.dataCategory')">
@@ -325,6 +327,7 @@
             </MfFormItem>
             <DashboardLinkEditor v-else-if="['linkList','iconLinks'].includes(widget.kind)" :mode="widget.kind === 'iconLinks' ? 'icons' : 'links'" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
             <DashboardLinkEditor v-else-if="widget.kind === 'statusLegend'" mode="legend" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
+            <DashboardLinkEditor v-else-if="widget.kind === 'definitionList'" mode="entries" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
             <template v-else-if="widget.kind === 'inspectionChecklist'">
               <DashboardLinkEditor mode="entries" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
               <p class="text-xs text-content-tertiary">{{ $t('dashboard.studio.ops.checklistHint') }}</p>
@@ -532,6 +535,7 @@ import { chartFieldKind, queryChartTypes, type QueryChartType } from '@/model/qu
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import DashboardInspectorGroup from './DashboardInspectorGroup.vue'
 import DashboardOperationsSettings from './DashboardOperationsSettings.vue'
+import DashboardBusinessSettings from './DashboardBusinessSettings.vue'
 import DashboardPanelHeader from './DashboardPanelHeader.vue'
 import DashboardLinkEditor from './DashboardLinkEditor.vue'
 import { MENU_ICONS } from '@/config/menu-icons'
@@ -539,7 +543,7 @@ import { apiBaseUrl } from '@/utils/http'
 import { TokenUtils } from '@/utils/token'
 import { dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardContentSettings, dashboardDataSettings,
   dashboardDecorationSettings, dashboardScreenEffectSizeLimit, type DashboardContentOptions, type DashboardDataOptions, type DashboardDecorationOptions } from '@/model/dashboard-layout'
-import { dashboardFilterTool, dashboardOperationDataTool, dashboardOperationsSettings, dashboardResourceUrl, type DashboardMode } from '@/model/dashboard-layout'
+import { dashboardBusinessSettings, dashboardBusinessTool, dashboardFilterTool, dashboardOperationDataTool, dashboardOperationsSettings, dashboardResourceUrl, type DashboardMode } from '@/model/dashboard-layout'
 import { dashboardAnimationDefaults, dashboardAnimationEffects, dashboardCanContain, dashboardCanvasColor, dashboardCanvasNumber, dashboardCanvasNumbers, dashboardChartMappings, dashboardContainerTool, dashboardDataAggregationTool, dashboardDataTool, dashboardDecorationTools, dashboardLayoutSettings, dashboardMetricTool, dashboardPaddingEdges, dashboardRadiusCorners, dashboardScreenEffectPresets, dashboardScreenEffectQuantityLimit, dashboardScreenEffectSettings, dashboardScreenEffectTool, dashboardSnapshot, dashboardTools, dashboardWallPresets, dashboardWallResolution, dashboardWidgetLabelKey, dashboardWidgetUsesAsset, type DashboardAction, type DashboardAnimation, type DashboardBoard, type DashboardChartOverrides, type DashboardDeadline, type DashboardDesign, type DashboardInsets, type DashboardLayoutOptions, type DashboardRect, type DashboardRefresh, type DashboardScreenEffectOptions, type DashboardWidget } from '@/model/dashboard-layout'
 
 const props = defineProps<{ design: DashboardDesign; board: DashboardBoard; widget?: DashboardWidget; groupRect?: DashboardRect;
@@ -593,6 +597,7 @@ function setBackgroundFit(value: unknown) { if (value === 'cover' || value === '
 function setBackgroundPosition(value: unknown) { if (value === 'center' || value === 'top' || value === 'bottom') emit('board', { backgroundPosition: value }) }
 const advancedData = computed(() => dashboardAdvancedDataTools.some(kind => kind === props.widget?.kind))
 const operationData = computed(() => dashboardOperationDataTool(props.widget?.kind))
+const businessData = computed(() => dashboardBusinessTool(props.widget?.kind))
 const advancedContent = computed(() => dashboardAdvancedContentTools.some(kind => kind === props.widget?.kind))
 const advancedDecoration = computed(() => dashboardAdvancedDecorationTools.some(kind => kind === props.widget?.kind))
 const dataSettings = computed(() => { const value = dashboardDataSettings(props.widget?.dataOptions); return props.widget?.kind === 'radialProgress' ? { ...value, limit: Math.min(5, value.limit) } : value })
@@ -612,7 +617,7 @@ const decorationNumbers = computed(() => [
   { key: 'rotation' as const, min: -180, max: 180 }, { key: 'opacity' as const, min: 0, max: 100 },
 ])
 const textContent = computed(() => !!props.widget && ['markdown', 'codeBlock', 'worldClock', 'sectionBanner', 'text', 'heading', 'note', 'badge', 'sectionDivider', 'imageText', 'bulletList', 'ribbon', 'textTicker', 'quote', 'actionButton', 'tagCloud', 'titlePlate', 'badgeSeal', 'copyText'].includes(props.widget.kind))
-const configurableContent = computed(() => !!props.widget && (advancedContent.value || textContent.value || ['image', 'video', 'audio', 'clock', 'link', 'shape', 'linkList', 'countdown', 'icon', 'statusLegend', 'inspectionChecklist'].includes(props.widget.kind)))
+const configurableContent = computed(() => !!props.widget && (advancedContent.value || textContent.value || ['image', 'video', 'audio', 'clock', 'link', 'shape', 'linkList', 'countdown', 'icon', 'statusLegend', 'inspectionChecklist', 'definitionList'].includes(props.widget.kind)))
 const coloredContent = computed(() => !!props.widget && ['calendarHeatmap', 'radialProgress', 'markdown', 'worldClock', 'imageCompare', 'iconLinks', 'stepGuide', 'shape', 'panel', 'progress', 'gauge', 'progressList', 'icon', 'borderFrame', 'gridPanel', 'gradientPanel', 'horizontalArrow', 'verticalArrow', 'quote', 'textTicker', 'announcement', 'tabsContent', 'accordion', 'tagCloud', ...dashboardDecorationTools].some(kind => kind === props.widget?.kind))
 const usesAsset = computed(() => !!props.widget && dashboardWidgetUsesAsset(props.widget.kind))
 const filterWidget = computed(() => !!props.widget && dashboardFilterTool(props.widget.kind))
@@ -628,7 +633,7 @@ const containerFields = computed(() => {
   if (['splitContainer','sidebarContainer'].includes(props.widget?.kind || '')) fields.push({ key: 'ratio', min: 10, max: 90 })
   if (['headerContainer','footerContainer'].includes(props.widget?.kind || '')) fields.push({ key: 'header', min: 10, max: 70 })
   if (props.widget?.kind === 'responsiveContainer') fields.push({ key: 'minWidth', min: 80, max: 600 })
-  if (props.widget?.kind === 'scrollContainer') fields.push({ key: 'itemHeight', min: 48, max: 800 })
+  if (props.widget?.kind === 'scrollContainer' || props.widget?.kind === 'accordionContainer') fields.push({ key: 'itemHeight', min: 48, max: 800 })
   return fields
 })
 function updateLayout(change: Partial<DashboardLayoutOptions>) { emit('widget', { layoutOptions: dashboardLayoutSettings({ ...layout.value, ...change }) }) }
@@ -703,6 +708,7 @@ function changeAsset(value: unknown) {
   emit('widget', { reportCode: typeof value === 'string' && value ? value : undefined, field: '', displayFields: undefined, recordIndex: undefined, timeField: undefined,
     dataOptions: props.widget?.dataOptions ? { ...dataSettings.value, baselineField: '', statusField: '' } : undefined,
     operationsOptions: operationData.value ? dashboardOperationsSettings(props.widget?.kind, { ...props.widget?.operationsOptions, labelField: '', statusField: '', detailsField: '', endField: '' }) : undefined,
+    businessOptions: businessData.value ? dashboardBusinessSettings({ ...props.widget?.businessOptions, groupField: '', subgroupField: '', referenceField: '', entityField: '', stageOrder: [] }) : undefined,
     chartOptions: mapGeoJson === undefined ? undefined : { mapGeoJson } })
 }
 function setDataAggregation(value: unknown) {
@@ -740,6 +746,7 @@ function changeKind(value: unknown) {
   const modeDefaults = effect || effectKind.value ? { movable: !effect, resizable: !effect, showCard: !effect, showTitle: !effect } : {}
   emit('widget', { ...modeDefaults, kind, chartOptions: undefined, field: '', reportCode: dashboardWidgetUsesAsset(kind) ? props.widget.reportCode : undefined,
     operationsOptions: dashboardOperationDataTool(kind) ? dashboardOperationsSettings(kind) : undefined,
+    businessOptions: dashboardBusinessTool(kind) ? dashboardBusinessSettings() : undefined,
     screenEffect: effect ? dashboardScreenEffectSettings(kind) : undefined })
 }
 function setRefreshMinutes(value: number | undefined) {

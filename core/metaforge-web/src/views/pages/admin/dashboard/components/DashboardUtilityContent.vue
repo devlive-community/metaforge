@@ -5,6 +5,15 @@
     </div>
     <MfEmpty v-else class="h-full" size="sm" :title="$t('dashboard.studio.copyTextPrompt')"/>
   </template>
+  <template v-else-if="widget.kind === 'definitionList'">
+    <dl v-if="entries.length" class="h-full min-h-0 divide-y divide-line overflow-auto rounded-mf-md border border-line text-sm">
+      <div v-for="(entry, index) in entries" :key="entry.id + index" class="grid grid-cols-[minmax(0,1fr)_minmax(0,2fr)] gap-3 px-3 py-2">
+        <dt class="break-words font-medium text-content">{{ entry.label }}</dt>
+        <dd class="whitespace-pre-wrap break-words text-content-secondary">{{ entry.text || '—' }}</dd>
+      </div>
+    </dl>
+    <MfEmpty v-else class="h-full" size="sm" :title="$t('dashboard.studio.business.definitionEmpty')"/>
+  </template>
   <ul v-else-if="entries.length" class="grid h-full min-h-0 content-start gap-2 overflow-auto">
     <li v-for="(entry, index) in entries" :key="entry.id + index" class="flex min-w-0 flex-wrap items-start gap-2">
       <MfTag size="sm" :variant="entry.tone" class="max-w-full"><span class="truncate" :title="entry.label">{{ entry.label }}</span></MfTag>

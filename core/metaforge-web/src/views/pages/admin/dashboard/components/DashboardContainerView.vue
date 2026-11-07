@@ -5,6 +5,21 @@
       <div class="h-full min-h-0" :style="{ padding: layout.padding + 'px' }"><RenderChild :child="child"/></div>
     </MfTabPane>
   </MfTabs>
+  <div v-else-if="widget.kind === 'accordionContainer'" class="flex h-full min-h-0 min-w-0 flex-col overflow-auto"
+       :style="{ padding: layout.padding + 'px', gap: layout.gap + 'px' }">
+    <section v-for="(child, index) in children" :key="child.id" class="min-w-0 shrink-0 rounded-mf-md border border-line">
+      <MfButton :id="accordionId + '-button-' + index" class="w-full justify-between rounded-mf-sm" variant="ghost"
+                :aria-controls="accordionId + '-panel-' + index" :aria-expanded="activeAccordion === child.id"
+                @click="openAccordion(activeAccordion === child.id ? null : child.id)">
+        <span class="min-w-0 flex-1 truncate text-left" :title="child.name">{{ child.name }}</span>
+        <ChevronDown :size="15" class="shrink-0 transition-transform motion-reduce:transition-none" :class="activeAccordion === child.id && 'rotate-180'"/>
+      </MfButton>
+      <div v-show="activeAccordion === child.id" :id="accordionId + '-panel-' + index" :aria-labelledby="accordionId + '-button-' + index"
+           role="region" class="min-w-0 border-t border-line" :style="{ height: layout.itemHeight + 'px' }">
+        <RenderChild v-if="visitedAccordion.has(child.id)" :child="child" hide-title/>
+      </div>
+    </section>
+  </div>
   <div v-else-if="widget.kind === 'carouselContainer'" class="flex h-full min-h-0 flex-col" @mouseenter="hovered = true" @mouseleave="hovered = false">
     <div class="relative min-h-0 flex-1 overflow-hidden">
       <div v-for="(child,index) in children" v-show="index === carouselIndex" :key="child.id" class="absolute inset-0 min-h-0" :style="{ padding: layout.padding + 'px' }"><RenderChild :child="child"/></div>
@@ -30,10 +45,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineComponent, getCurrentInstance, h, onScopeDispose, ref, watch } from 'vue'
+import { computed, defineComponent, getCurrentInstance, h, onScopeDispose, ref, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfButton } from 'metaforge-ui'
-import { ChevronLeft, ChevronRight, Maximize } from '@lucide/vue'
+import { ChevronDown, ChevronLeft, ChevronRight, Maximize } from '@lucide/vue'
 import { dashboardCardStyle, dashboardContentSettings, dashboardContainerTool, dashboardDescendantIds, dashboardLayoutSettings, dashboardMotionStyle, dashboardSnapshot,
   type DashboardWidget } from '@/model/dashboard-layout'
 import type { QueryChartRow } from '@/model/query-chart'
@@ -49,6 +64,19 @@ const ContainerComponent = getCurrentInstance()!.type
 const children = computed(() => props.widgets.filter(widget => widget.parentId === props.widget.id))
 const layout = computed(() => dashboardLayoutSettings(props.widget.layoutOptions))
 const activeTab = ref('')
+const accordionId = useId()
+const activeAccordion = ref<string | null>(null)
+const visitedAccordion = ref(new Set<string>())
+function openAccordion(id: string | null) {
+  activeAccordion.value = id
+  if (id) visitedAccordion.value.add(id)
+}
+watch([() => props.widget.kind, children], ([kind, items], [previousKind, previous]) => {
+  if (kind !== 'accordionContainer') return
+  if (previousKind !== kind || !previous?.length || activeAccordion.value !== null && !items.some(item => item.id === activeAccordion.value))
+    openAccordion(items[0]?.id ?? null)
+  for (const id of visitedAccordion.value) if (!items.some(item => item.id === id)) visitedAccordion.value.delete(id)
+}, { immediate: true })
 const carouselIndex = ref(0), hovered = ref(false)
 const playback = computed(() => dashboardContentSettings(props.widget.contentOptions))
 function advance(delta: number) { if (children.value.length) carouselIndex.value = (carouselIndex.value + delta + children.value.length) % children.value.length }
@@ -63,7 +91,11 @@ onScopeDispose(() => clearInterval(timer))
 watch(children, items => { if (!items.some(item => item.id === activeTab.value)) activeTab.value = items[0]?.id ?? '' }, { immediate: true })
 watch(() => props.selectedId, id => {
   const branch = children.value.find(child => id && dashboardDescendantIds(props.widgets, [child.id]).has(id))
-  if (branch) { activeTab.value = branch.id; carouselIndex.value = children.value.indexOf(branch) }
+  if (branch) {
+    activeTab.value = branch.id
+    carouselIndex.value = children.value.indexOf(branch)
+    if (props.widget.kind === 'accordionContainer') openAccordion(branch.id)
+  }
 })
 const reports = computed(() => new Map(props.reports.map(report => [report.code, report])))
 const layoutStyle = computed(() => {
@@ -79,12 +111,13 @@ const layoutStyle = computed(() => {
     gridAutoRows: props.widget.kind === 'scrollContainer' ? layout.value.itemHeight + 'px' : 'minmax(0, 1fr)' }
 })
 const RenderChild = defineComponent({
-  props: { child: { type: Object, required: true } },
-  setup: (childProps: { child: DashboardWidget }) => () => {
+  props: { child: { type: Object, required: true }, hideTitle: Boolean },
+  setup: (childProps: { child: DashboardWidget; hideTitle?: boolean }) => () => {
     const child = childProps.child
     const report = reports.value.get(child.reportCode)
-    const heading = child.showTitle || (!props.editable && child.expandable) ? h('div', { class: 'mb-1 flex shrink-0 items-center gap-1' }, [
-      child.showTitle ? h('h3', { class: 'min-w-0 flex-1 truncate font-semibold', title: child.name, style: { fontSize: child.titleSize + 'px' } }, child.name) : h('span', { class: 'flex-1' }),
+    const showTitle = child.showTitle && !childProps.hideTitle
+    const heading = showTitle || (!props.editable && child.expandable) ? h('div', { class: 'mb-1 flex shrink-0 items-center gap-1' }, [
+      showTitle ? h('h3', { class: 'min-w-0 flex-1 truncate font-semibold', title: child.name, style: { fontSize: child.titleSize + 'px' } }, child.name) : h('span', { class: 'flex-1' }),
       !props.editable && child.expandable ? h(MfButton, { size: 'sm', variant: 'ghost', shape: 'circle', 'aria-label': t('dashboard.studio.expandWidget'), onClick: () => emit('expand', child.id) }, () => h(Maximize, { size: 13 })) : null,
     ]) : null
     const content = dashboardContainerTool(child.kind)

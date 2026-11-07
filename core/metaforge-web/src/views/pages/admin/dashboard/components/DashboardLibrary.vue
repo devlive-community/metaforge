@@ -134,6 +134,11 @@ const toolGroups = [
     { kind: 'runHistory', icon: Activity }, { kind: 'slaScorecard', icon: Gauge }, { kind: 'latencyPercentiles', icon: ChartNoAxesCombined },
     { kind: 'maintenanceWindow', icon: CalendarClock }, { kind: 'recordLookup', icon: Search }, { kind: 'inspectionChecklist', icon: ClipboardCheck },
   ] },
+  { title: 'businessTools', icon: ChartNoAxesCombined, items: [
+    { kind: 'stageConversion', icon: ListFilter }, { kind: 'targetGap', icon: Gauge }, { kind: 'segmentSummary', icon: Table2 },
+    { kind: 'paretoTable', icon: ListOrdered }, { kind: 'varianceDrivers', icon: Columns2 }, { kind: 'cohortRetention', icon: Grid2x2 },
+    { kind: 'recencyDistribution', icon: CalendarRange }, { kind: 'valueBands', icon: SlidersHorizontal },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },
@@ -141,7 +146,7 @@ const toolGroups = [
     { kind: 'announcement', icon: MessageSquare },
     { kind: 'textTicker', icon: Type }, { kind: 'tabsContent', icon: PanelTop }, { kind: 'accordion', icon: List },
     { kind: 'quote', icon: Type }, { kind: 'tagCloud', icon: Tag }, { kind: 'markdown', icon: Type }, { kind: 'codeBlock', icon: Terminal },
-    { kind: 'stepGuide', icon: ListOrdered }, { kind: 'worldClock', icon: Clock }, { kind: 'statusLegend', icon: Tag },
+    { kind: 'stepGuide', icon: ListOrdered }, { kind: 'worldClock', icon: Clock }, { kind: 'statusLegend', icon: Tag }, { kind: 'definitionList', icon: List },
   ] },
   { title: 'mediaTools', icon: Image, items: [
     { kind: 'image', icon: Image }, { kind: 'video', icon: Video }, { kind: 'audio', icon: AudioLines }, { kind: 'imageText', icon: Image },
@@ -163,7 +168,7 @@ const toolGroups = [
     { kind: 'headerContainer', icon: PanelTop }, { kind: 'responsiveContainer', icon: LayoutGrid },
     { kind: 'footerContainer', icon: PanelTop }, { kind: 'sidebarContainer', icon: Columns2 },
     { kind: 'scrollContainer', icon: List }, { kind: 'carouselContainer', icon: Layers },
-    { kind: 'spotlightContainer', icon: LayoutGrid },
+    { kind: 'spotlightContainer', icon: LayoutGrid }, { kind: 'accordionContainer', icon: Layers },
   ] },
   { title: 'decorationTools', icon: Sparkles, items: [
     { kind: 'glowLine', icon: Minus }, { kind: 'glowRing', icon: Shapes }, { kind: 'dotMatrix', icon: Grid2x2 },
