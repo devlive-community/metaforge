@@ -177,7 +177,7 @@
               <span v-if="!runtimeItems.some(entry => entry.category === group)" class="px-3 text-xs text-content-tertiary">{{ $t('settings.runtime.none') }}</span>
             </div>
           </nav>
-          <div class="flex min-w-0 flex-col gap-4 rounded-mf-md border border-line p-4">
+          <div class="flex min-w-0 flex-col gap-4">
             <div v-if="runtimeLoading" class="flex items-center justify-center py-12"><MfSpinner/></div>
             <MfEmpty v-else-if="!runtimeCurrent" size="sm" :title="$t('settings.runtime.choose')"/>
             <template v-else>
@@ -185,7 +185,7 @@
                 <span class="truncate text-sm font-semibold text-content">{{ runtimeCurrent.item.name }}</span>
                 <MfTag size="sm">{{ $t(`settings.runtime.category.${runtimeCurrent.item.category}`) }}</MfTag>
               </div>
-              <RuntimeFields :fields="runtimeCurrent.schema" :values="runtimeCurrent.values" @change="(name, value) => runtimeCurrent && (runtimeCurrent.values[name] = value)"/>
+              <RuntimeFields :key="runtimeSelected" collapsible :fields="runtimeCurrent.schema" :values="runtimeCurrent.values" @change="(name, value) => runtimeCurrent && (runtimeCurrent.values[name] = value)"/>
             </template>
           </div>
         </div>

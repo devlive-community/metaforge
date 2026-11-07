@@ -4184,6 +4184,7 @@
   "dataset.runs.id": "同步编号",
   "dataset.runs.mode": "同步方式",
   "dataset.runs.attempt": "尝试次数",
+  "settings.runtime.group.ungrouped": "基础配置",
   "settings.runtime.group.parallel": "并发与分片",
   "settings.runtime.group.throughput": "吞吐与限流",
   "settings.runtime.group.fault": "容错与重试",

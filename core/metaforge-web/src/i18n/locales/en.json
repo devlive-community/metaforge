@@ -4184,6 +4184,7 @@
   "dataset.runs.id": "Sync ID",
   "dataset.runs.mode": "Sync mode",
   "dataset.runs.attempt": "Attempts",
+  "settings.runtime.group.ungrouped": "Basic settings",
   "settings.runtime.group.parallel": "Concurrency and splitting",
   "settings.runtime.group.throughput": "Throughput and limits",
   "settings.runtime.group.fault": "Fault tolerance and retries",
