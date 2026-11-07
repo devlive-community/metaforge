@@ -13,7 +13,7 @@ export function useDatasetHeaders()
     const headers = computed(() => [
         { title: t('common.name'), dataIndex: 'name', key: 'name', width: 200, ellipsis: true },
         { title: t('common.source'), key: 'source', width: '320px' },
-        { title: t('common.state'), key: 'state', width: '110px' },
+        { title: t('common.state'), key: 'state', width: '180px' },
         { title: t('dataset.common.syncMode'), key: 'syncMode', width: '96px' },
         { title: t('dataset.prototype.fieldCount'), dataIndex: 'columnCount', key: 'columnCount', width: '80px' },
         { title: t('dataset.common.totalRows'), dataIndex: 'totalRows', key: 'totalRows', width: '90px' },

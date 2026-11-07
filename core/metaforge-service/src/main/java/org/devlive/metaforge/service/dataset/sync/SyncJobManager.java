@@ -175,6 +175,12 @@ public class SyncJobManager
         return state != RunState.INTERRUPTED && (history.getRowsWritten() == null || history.getRowsWritten() == 0);
     }
 
+    /** 所有未结束的同步，包括排队和暂停的 / every unfinished sync, queued and paused ones included */
+    public List<SyncJob> active()
+    {
+        return List.copyOf(jobs.values());
+    }
+
     /** 该数据集是否有排队或运行中的同步 / whether the dataset has a queued or running sync */
     public boolean isActive(Long datasetId)
     {

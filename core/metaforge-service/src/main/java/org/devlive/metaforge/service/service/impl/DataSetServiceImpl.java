@@ -37,6 +37,7 @@ import org.devlive.metaforge.service.body.adhoc.Adhoc;
 import org.devlive.metaforge.service.common.ConfigureUtils;
 import org.devlive.metaforge.service.common.FolderUtils;
 import org.devlive.metaforge.service.dataset.DatasetVirtualColumns;
+import org.devlive.metaforge.service.dataset.sync.SyncActiveView;
 import org.devlive.metaforge.service.dataset.sync.SyncJob;
 import org.devlive.metaforge.service.dataset.sync.SyncJobManager;
 import org.devlive.metaforge.service.dataset.sync.SyncMetricsView;
@@ -513,6 +514,24 @@ public class DataSetServiceImpl
                     return CommonResponse.<Boolean>failure(stopResponse.getMessage() == null ? "Stop failed" : stopResponse.getMessage());
                 })
                 .orElseGet(() -> CommonResponse.<Boolean>failure(String.format("Sync history [ %d ] not found", id)));
+    }
+
+    @Override
+    public CommonResponse<List<SyncActiveView>> getActiveSyncs()
+    {
+        List<SyncActiveView> views = Lists.newArrayList();
+        for (SyncJob job : syncJobManager.active()) {
+            repository.findById(job.getDatasetId())
+                    .filter(org.devlive.metaforge.service.service.BaseService::ownedBySelf)
+                    .ifPresent(dataset -> {
+                        org.devlive.metaforge.executor.configure.ExecutorMetrics metrics = job.getMetrics();
+                        views.add(new SyncActiveView(dataset.getCode(), job.getHistoryId(), job.getState(),
+                                metrics == null ? -1 : metrics.getProgress(),
+                                metrics == null ? 0 : metrics.getRowsWritten(),
+                                metrics == null ? 0 : metrics.getWriteRowsPerSecond()));
+                    });
+        }
+        return CommonResponse.success(views);
     }
 
     @Override

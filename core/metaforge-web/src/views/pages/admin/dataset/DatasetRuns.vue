@@ -8,7 +8,7 @@ import DatasetService from '@/services/dataset'
 import WorkflowService from '@/services/workflow'
 import { FilterModel } from '@/model/filter'
 import { workflowStateVariant, type WorkflowExecutor } from '@/model/workflow'
-import { duration, metricNumber, type WorkflowMetricsSnapshot } from '@/model/workflow-metrics'
+import { duration, metricNumber, metricText, type WorkflowMetricsSnapshot } from '@/model/workflow-metrics'
 import RunShell from '@/views/components/run/RunShell.vue'
 import RunLog from '@/views/components/run/RunLog.vue'
 import RunMetrics from '@/views/components/run/RunMetrics.vue'
@@ -22,7 +22,7 @@ import { useUtil } from '@/utils/common'
  */
 interface SyncRecord {
   id: number; state: string; mode?: string; elapsed?: number; count?: number; message?: string
-  rowsRead?: number; rowsWritten?: number; attempt?: number; createTime?: string; updateTime?: string
+  rowsRead?: number; rowsWritten?: number; rowsSkipped?: number; progress?: number; totalCount?: number; attempt?: number; createTime?: string; updateTime?: string
 }
 interface SyncView {
   state?: string; attempt?: number; live?: boolean; retryable?: boolean; message?: string; metrics?: WorkflowMetricsSnapshot | null
@@ -88,8 +88,14 @@ function rows(key: 'rowsRead' | 'rowsWritten', recorded?: number) {
 const columns = computed(() => [
   { title: t('dataset.runs.id'), dataIndex: 'id', key: 'id' }, { title: t('common.state'), dataIndex: 'state', key: 'state' },
   { title: t('workflow.studio.startedAt'), dataIndex: 'createTime', key: 'createTime' }, { title: t('workflow.studio.finishedAt'), dataIndex: 'updateTime', key: 'finishTime' },
-  { title: t('common.elapsed'), dataIndex: 'elapsed', key: 'elapsed' }, { title: t('workflow.studio.written'), dataIndex: 'count', key: 'count' },
+  { title: t('workflow.studio.metric.progress'), dataIndex: 'progress', key: 'progress' },
+  { title: t('workflow.studio.metric.rowsRead'), dataIndex: 'rowsRead', key: 'rowsRead' }, { title: t('workflow.studio.written'), dataIndex: 'count', key: 'count' },
+  { title: t('workflow.studio.metric.rowsSkipped'), dataIndex: 'rowsSkipped', key: 'rowsSkipped' }, { title: t('workflow.studio.metric.avgWriteRowsPerSecond'), key: 'rate' },
+  { title: t('common.elapsed'), dataIndex: 'elapsed', key: 'elapsed' }, { title: t('dataset.runs.attempt'), dataIndex: 'attempt', key: 'attempt' },
 ])
+const recordWritten = (row: any) => row.rowsWritten ?? row.count
+const recordProgress = (row: any) => { const value = Number(row.progress); return Number.isFinite(value) && row.progress != null ? Math.min(100, Math.max(0, value)) : undefined }
+const recordRate = (row: any) => { const seconds = Number(row.elapsed), written = Number(recordWritten(row)); return seconds > 0 && written > 0 ? metricText('writeRowsPerSecond', { writeRowsPerSecond: written / seconds }) : '—' }
 
 let generation = 0, logGeneration = 0, timer: ReturnType<typeof setTimeout> | undefined, alive = true
 async function refresh(initial = false) {
@@ -201,7 +207,17 @@ onBeforeUnmount(() => { alive = false; generation++; logGeneration++; clearTimeo
           <template #cell-createTime="{ record: row }"><span class="tabular-nums">{{ row.createTime || '—' }}</span></template>
           <template #cell-finishTime="{ record: row }"><span class="tabular-nums">{{ finishTime(row) }}</span></template>
           <template #cell-elapsed="{ record: row }">{{ elapsedText(row.elapsed == null ? undefined : Number(row.elapsed) * 1000) }}</template>
-          <template #cell-count="{ record: row }"><span class="tabular-nums">{{ row.count ?? '—' }}</span></template>
+          <template #cell-progress="{ record: row }">
+            <div class="flex w-32 items-center gap-2">
+              <span class="h-1.5 min-w-0 flex-1 overflow-hidden rounded-mf-full bg-surface-active"><span class="block h-full rounded-mf-full bg-primary" :style="{ width: (recordProgress(row) ?? 0) + '%' }"/></span>
+              <span class="shrink-0 text-xs tabular-nums text-content-secondary">{{ recordProgress(row) === undefined ? '—' : Math.round(recordProgress(row) as number) + '%' }}</span>
+            </div>
+          </template>
+          <template #cell-rowsRead="{ record: row }"><span class="tabular-nums">{{ row.rowsRead?.toLocaleString?.() ?? '—' }}</span></template>
+          <template #cell-count="{ record: row }"><span class="tabular-nums">{{ recordWritten(row)?.toLocaleString?.() ?? '—' }}</span></template>
+          <template #cell-rowsSkipped="{ record: row }"><span class="tabular-nums">{{ row.rowsSkipped?.toLocaleString?.() ?? '—' }}</span></template>
+          <template #cell-rate="{ record: row }"><span class="tabular-nums">{{ recordRate(row) }}</span></template>
+          <template #cell-attempt="{ record: row }"><span class="tabular-nums">{{ row.attempt ?? 1 }}</span></template>
         </MfTable>
       </section>
       <MfEmpty v-else-if="!selected" class="my-12" :title="$t('dataset.runs.noRuns')" :description="$t('dataset.runs.noRunsHint')"/>

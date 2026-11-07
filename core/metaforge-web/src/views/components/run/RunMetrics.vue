@@ -17,7 +17,7 @@ const text = (key: string) => {
   const value = metricText(key, props.metrics)
   // The total is counted before the run unless the workflow turned pre-counting off; it is then known once the run ends.
   if (value === undefined) return key === 'totalRows' ? t('workflow.studio.totalPending') : '—'
-  return key === 'bottleneck' && te('workflow.studio.bottleneck.' + value) ? t('workflow.studio.bottleneck.' + value) : value
+  return te(`workflow.studio.${ key }.${ value }`) ? t(`workflow.studio.${ key }.${ value }`) : value
 }
 // Every value goes through metricNumber / ratePoints: older records and other executors may omit fields.
 const num = (key: keyof WorkflowMetricsSnapshot, fallback = 0) => metricNumber(props.metrics, key, fallback)
@@ -112,7 +112,7 @@ const trendChart = computed(() => {
 })
 /** Small figures beside a chart: only declared metrics, in the given order. */
 const chips = (keys: string[]) => keys.filter(key => has(key)).map(key => ({ key, label: label(key), value: text(key) }))
-const volumeChips = computed(() => chips(['totalRows', 'etaSeconds', 'rowsSkipped', 'rowsFailed']))
+const volumeChips = computed(() => chips(['totalRows', 'totalSource', 'elapsedMs', 'etaSeconds', 'rowsSkipped', 'rowsFailed']))
 const rateChips = computed(() => chips(['readRowsPerSecond', 'writeRowsPerSecond', 'avgWriteRowsPerSecond', 'peakWriteRowsPerSecond', 'readBytesPerSecond', 'writeBytesPerSecond']))
 const pipelineChips = computed(() => chips(['batchesCommitted', 'batchRetries', 'avgBatchMs', 'channels', 'throttleWaitMs']))
 // Splits: only worth a table when the run really split the query; rejected rows only when there are any.

@@ -367,6 +367,11 @@ class DatasetSyncServerE2ETest
         assertTrue(live.get("throttleWaitMs").asLong() > 0)
         assertTrue(live.get("bytesWritten").asLong() > 0)
         assertTrue(live.get("series").size() > 0)
+        // 列表页的行内进度 / the progress on the list page
+        val listed = api("GET", "/api/v1/dataset/sync/active").first { it.get("datasetCode").asText() == code }
+        assertEquals(id, listed.get("historyId").asLong())
+        assertEquals("RUNNING", listed.get("state").asText())
+        assertTrue(listed.get("rowsWritten").asLong() > 0)
 
         api("PUT", "/api/v1/dataset/history/pause/$id")
         val paused = waitState(id, "PAUSED")
@@ -389,6 +394,7 @@ class DatasetSyncServerE2ETest
 
         api("PUT", "/api/v1/dataset/history/retry/$id")
         val finished = waitState(id, "SUCCESS")
+        assertFalse("a finished sync leaves the list", api("GET", "/api/v1/dataset/sync/active").any { it.get("datasetCode").asText() == code })
         assertEquals(2, finished.get("attempt").asInt())
         assertFalse(finished.get("retryable").asBoolean())
         val metrics = finished.get("metrics")

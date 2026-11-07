@@ -19,6 +19,8 @@ metrics:
   - rowsSkipped
   - rowsFailed
   - totalRows
+  - totalSource
+  - elapsedMs
   - progress
   - etaSeconds
   - bytesRead

@@ -266,6 +266,7 @@ public class SyncJobManagerTest
         }
 
         assertTrue(manager.isActive(9L), "a paused sync still holds the dataset");
+        assertTrue(manager.active().stream().anyMatch(active -> active.getHistoryId().equals(job.getHistoryId())), "and is listed as unfinished");
         assertTrue(manager.find(job.getHistoryId()).isPresent());
         assertTrue(submit(9, running -> {}).isEmpty());
 

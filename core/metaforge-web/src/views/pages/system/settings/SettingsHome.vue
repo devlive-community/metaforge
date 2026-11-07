@@ -185,20 +185,7 @@
                 <span class="truncate text-sm font-semibold text-content">{{ runtimeCurrent.item.name }}</span>
                 <MfTag size="sm">{{ $t(`settings.runtime.category.${runtimeCurrent.item.category}`) }}</MfTag>
               </div>
-              <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div v-for="field in runtimeCurrent.schema" :key="field.name" class="flex min-w-0 flex-col gap-1.5">
-                  <span class="flex items-center gap-1.5 text-sm font-medium text-content">{{ field.name }}
-                    <MfTooltip v-if="field.description" :content="field.description"><CircleHelp :size="13" class="text-content-tertiary"/></MfTooltip>
-                  </span>
-                  <MfSwitch v-if="field.type === 'BOOLEAN'" :model-value="runtimeCurrent.values[field.name] === 'true'" :aria-label="field.name"
-                            @update:model-value="value => runtimeCurrent && (runtimeCurrent.values[field.name] = value ? 'true' : 'false')"/>
-                  <MfInputNumber v-else-if="field.type === 'NUMBER'" class="w-full" :model-value="numberOf(runtimeCurrent.values[field.name])" :aria-label="field.name"
-                                 @update:model-value="value => runtimeCurrent && (runtimeCurrent.values[field.name] = value === null || value === undefined ? '' : String(value))"/>
-                  <MfSelect v-else-if="field.type === 'SELECT'" v-model="runtimeCurrent.values[field.name]" class="w-full" :aria-label="field.name"
-                            :options="(field.options || []).map(value => ({ label: value, value }))"/>
-                  <MfInput v-else v-model="runtimeCurrent.values[field.name]" :show-password="field.type === 'PASSWORD'" :aria-label="field.name"/>
-                </div>
-              </div>
+              <RuntimeFields :fields="runtimeCurrent.schema" :values="runtimeCurrent.values" @change="(name, value) => runtimeCurrent && (runtimeCurrent.values[name] = value)"/>
             </template>
           </div>
         </div>
@@ -212,7 +199,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { CircleHelp, Copy, Cpu, FlaskConical, HardDrive, KeyRound, Mail, Save, ShieldCheck, SlidersHorizontal } from '@lucide/vue'
+import { Copy, Cpu, FlaskConical, HardDrive, KeyRound, Mail, Save, ShieldCheck, SlidersHorizontal } from '@lucide/vue'
 import SystemSettingService from '@/services/system-setting'
 import RuntimeConfigureService from '@/services/runtimeConfigure'
 import { apiBaseUrl } from '@/utils/http'
@@ -222,6 +209,8 @@ import {
 } from '@/model/system-setting'
 import type { OAuthProviderId, OAuthSettings } from '@/model/system-setting'
 import AuthProviderIcon from '@/views/auth/components/AuthProviderIcon.vue'
+import type { RuntimeField } from '@/model/runtime-fields'
+import RuntimeFields from '@/views/components/runtime/RuntimeFields.vue'
 
 defineOptions({ name: 'SettingsHome' })
 
@@ -249,7 +238,6 @@ const siteRef = ref()
 const fs = ref(defaultFsSettings())
 
 // Runtime settings: the executors and the dataset target, each its own row of metaforge_configure.
-interface RuntimeField { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'PASSWORD' | 'SELECT'; defaultValue: string; description: string; options?: string[] }
 interface RuntimeItem { category: 'EXECUTOR' | 'DATASET'; name: string }
 interface RuntimeEntry { item: RuntimeItem; schema: RuntimeField[]; values: Record<string, string>; saved: Record<string, string> }
 const RUNTIME_CATEGORIES = ['EXECUTOR', 'DATASET'] as const
@@ -260,7 +248,6 @@ const runtimeLoading = ref(false)
 const runtimeKey = (item: RuntimeItem) => `${ item.category }/${ item.name }`
 const runtimeCurrent = computed(() => runtimeEntries.value[runtimeSelected.value] || null)
 const runtimeChanged = computed(() => Object.entries(runtimeEntries.value).filter(([, entry]) => JSON.stringify(entry.values) !== JSON.stringify(entry.saved)).map(([key]) => key))
-const numberOf = (value: string | undefined) => value === undefined || value === '' || Number.isNaN(Number(value)) ? undefined : Number(value)
 
 async function loadRuntime() {
   const lists = await Promise.all(RUNTIME_CATEGORIES.map(category => RuntimeConfigureService.list(category)))

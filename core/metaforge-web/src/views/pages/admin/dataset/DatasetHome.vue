@@ -47,6 +47,17 @@
             </template>
             <span class="cursor-pointer">{{ getState(record?.state) }}</span>
           </MfPopover>
+          <!-- An unfinished sync: its state, progress and write rate, linking to the run -->
+          <router-link v-if="activeSyncs[record.code]" :to="`/dataset/runs/${record.code}?run=${activeSyncs[record.code].historyId}`" class="mt-1 block min-w-0">
+            <span class="flex items-center justify-between gap-2 text-xs text-content-secondary">
+              <span class="shrink-0">{{ $t('dataTable.state' + activeSyncs[record.code].state) }}</span>
+              <span class="min-w-0 truncate tabular-nums">{{ syncRate(activeSyncs[record.code]) }}</span>
+            </span>
+            <span class="mt-1 block h-1 overflow-hidden rounded-mf-full bg-surface-active">
+              <span class="block h-full rounded-mf-full bg-primary transition-[width]" :class="activeSyncs[record.code].progress < 0 && 'w-full animate-pulse'"
+                    :style="activeSyncs[record.code].progress >= 0 ? { width: activeSyncs[record.code].progress + '%' } : undefined"/>
+            </span>
+          </router-link>
         </template>
         <template v-else-if="column.key === 'action'">
           <MfSpace :wrap="false" :size="2">
@@ -154,7 +165,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { metricText } from '@/model/workflow-metrics'
 import { useDatasetHeaders } from './DatasetUtils'
 import { DatasetModel } from '@/model/dataset'
 import { useUtil } from '@/utils/common'
@@ -222,8 +234,44 @@ const {
     onPageChange,
     onSizeChange
   } = usePagedList<any>(filter => DatasetService.getAll(filter), {
-    onData: rows => loadFieldCounts(rows)
+    onData: rows => {
+      loadFieldCounts(rows)
+      loadActiveSyncs()
+    }
   })
+
+// Progress of unfinished syncs, refreshed while there are any; the list reloads once they end.
+const ACTIVE_REFRESH_MS = 3000
+interface ActiveSync { datasetCode: string; historyId: number; state: string; progress: number; rowsWritten: number; writeRowsPerSecond: number }
+const activeSyncs = ref<Record<string, ActiveSync>>({})
+let activeTimer: ReturnType<typeof setTimeout> | undefined
+let activeRequest = 0
+const syncRate = (sync: ActiveSync) => sync.state === 'RUNNING' ? metricText('writeRowsPerSecond', sync) : undefined
+async function loadActiveSyncs()
+{
+  const request = ++activeRequest
+  clearTimeout(activeTimer)
+  const hadActive = Object.keys(activeSyncs.value).length > 0
+  const response = await DatasetService.getActiveSyncs().catch(() => null)
+  if (request !== activeRequest || !response?.status) {
+    return
+  }
+  const next: Record<string, ActiveSync> = {}
+  for (const sync of response.data || []) {
+    next[sync.datasetCode] = sync
+  }
+  activeSyncs.value = next
+  if (Object.keys(next).length > 0) {
+    activeTimer = setTimeout(() => (document.hidden ? (activeTimer = setTimeout(loadActiveSyncs, ACTIVE_REFRESH_MS)) : loadActiveSyncs()), ACTIVE_REFRESH_MS)
+  }
+  else if (hadActive) {
+    initialize()
+  }
+}
+onBeforeUnmount(() => {
+  activeRequest++
+  clearTimeout(activeTimer)
+})
 
 /** Ad hoc queries and syncs need the dataset's table; a failed sync leaves it usable. */
 const tableReady = (state: Array<any> | null) => !!state?.includes('TABLE_SUCCESS')

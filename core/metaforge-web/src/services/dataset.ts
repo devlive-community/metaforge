@@ -101,6 +101,12 @@ export class DatasetService
         return new HttpUtils().put(`${ DEFAULT_PATH }/history/stop/${ id }`)
     }
 
+    /** The signed-in user's unfinished syncs, for the progress on the list page. */
+    getActiveSyncs(): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH }/sync/active`)
+    }
+
     /** Pause a running sync; only a sync split by a key column can pause. */
     pauseHistory(id: number): Promise<ResponseModel>
     {

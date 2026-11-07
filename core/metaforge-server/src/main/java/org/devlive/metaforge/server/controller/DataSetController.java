@@ -6,6 +6,7 @@ import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.adhoc.Adhoc;
 import org.devlive.metaforge.service.dataset.DatasetVirtualColumns;
+import org.devlive.metaforge.service.dataset.sync.SyncActiveView;
 import org.devlive.metaforge.service.dataset.sync.SyncMetricsView;
 import org.devlive.metaforge.service.entity.DataSetColumnEntity;
 import org.devlive.metaforge.service.entity.DataSetEntity;
@@ -151,6 +152,12 @@ public class DataSetController
     public CommonResponse<Boolean> historyStop(@PathVariable Long id)
     {
         return this.service.stopHistory(id);
+    }
+
+    @GetMapping(value = "sync/active")
+    public CommonResponse<List<SyncActiveView>> activeSyncs()
+    {
+        return this.service.getActiveSyncs();
     }
 
     @PutMapping(value = "history/pause/{id}")

@@ -20,7 +20,7 @@ export interface WorkflowMetricsSnapshot {
 }
 
 export type WorkflowMetricGroup = 'volume' | 'throughput' | 'pipeline'
-type Format = 'count' | 'bytes' | 'rowsRate' | 'bytesRate' | 'ms' | 'eta' | 'percent' | 'queue' | 'bottleneck'
+type Format = 'count' | 'bytes' | 'rowsRate' | 'bytesRate' | 'ms' | 'eta' | 'percent' | 'queue' | 'enum'
 
 /** Card metrics by group, in display order. `stages` and `series` are charts, not cards. */
 export const WORKFLOW_METRICS: Record<string, { group: WorkflowMetricGroup; format: Format }> = {
@@ -29,6 +29,8 @@ export const WORKFLOW_METRICS: Record<string, { group: WorkflowMetricGroup; form
   rowsFailed: { group: 'volume', format: 'count' },
   rowsSkipped: { group: 'volume', format: 'count' },
   totalRows: { group: 'volume', format: 'count' },
+  totalSource: { group: 'volume', format: 'enum' },
+  elapsedMs: { group: 'volume', format: 'ms' },
   progress: { group: 'volume', format: 'percent' },
   etaSeconds: { group: 'volume', format: 'eta' },
   bytesRead: { group: 'volume', format: 'bytes' },
@@ -48,7 +50,7 @@ export const WORKFLOW_METRICS: Record<string, { group: WorkflowMetricGroup; form
   readerWaitMs: { group: 'pipeline', format: 'ms' },
   writerWaitMs: { group: 'pipeline', format: 'ms' },
   throttleWaitMs: { group: 'pipeline', format: 'ms' },
-  bottleneck: { group: 'pipeline', format: 'bottleneck' },
+  bottleneck: { group: 'pipeline', format: 'enum' },
 }
 /** Declared metrics drawn as charts rather than cards. */
 export const WORKFLOW_METRIC_CHARTS = ['stages', 'series', 'splits', 'dirtySamples'] as const
@@ -80,7 +82,7 @@ export function metricText(key: string, metrics: WorkflowMetricsSnapshot | undef
     return typeof metrics.queueDepth === 'number' && metrics.queueCapacity ? `${metrics.queueDepth} / ${metrics.queueCapacity}` : undefined
   }
   const value = (metrics as Record<string, unknown>)[key]
-  if (definition.format === 'bottleneck') return typeof value === 'string' ? value : undefined
+  if (definition.format === 'enum') return typeof value === 'string' ? value : undefined
   if (typeof value !== 'number' || !Number.isFinite(value) || value < 0) return undefined
   switch (definition.format) {
     case 'bytes': return bytes(value)

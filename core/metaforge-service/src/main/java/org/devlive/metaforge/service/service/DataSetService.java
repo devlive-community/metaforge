@@ -78,6 +78,12 @@ public interface DataSetService
     CommonResponse<Boolean> pauseHistory(Long id);
 
     /**
+     * 当前用户未结束的同步，供列表页显示进度。
+     * The signed-in user's unfinished syncs, for the progress on the list page.
+     */
+    CommonResponse<List<org.devlive.metaforge.service.dataset.sync.SyncActiveView>> getActiveSyncs();
+
+    /**
      * 继续已暂停的同步，回到队列后从断点续传。
      * Resume a paused sync: back into the queue, continuing from its checkpoint.
      */

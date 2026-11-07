@@ -50,6 +50,21 @@ test('metrics render only what is known and declared', () => {
   assert.deepEqual(metricGroups([]), [])
 })
 
+test('runtime fields group in a fixed order with ungrouped fields last', async () => {
+  const { groupRuntimeFields } = await sourceModule('../../metaforge-web/src/model/runtime-fields.ts')
+  assert.deepEqual(groupRuntimeFields(undefined), [])
+  const fields = [{ name: 'home' }, { name: 'timeout', group: 'general' }, { name: 'custom', group: 'other' }, { name: 'retries', group: 'fault' }, { name: 'concurrency', group: 'parallel' }, { name: 'splitColumn', group: 'parallel' }, { name: 'batchSize', group: 'throughput' }]
+  assert.deepEqual(groupRuntimeFields(fields).map(item => [item.group, item.fields.map(field => field.name)]), [
+    ['parallel', ['concurrency', 'splitColumn']], ['throughput', ['batchSize']], ['fault', ['retries']], ['general', ['timeout']], ['other', ['custom']], [null, ['home']],
+  ])
+})
+
+test('the total source reads as an enumeration', () => {
+  assert.equal(metricText('totalSource', { totalSource: 'SPLITS' }), 'SPLITS')
+  assert.equal(metricText('totalSource', {}), undefined)
+  assert.equal(metricText('elapsedMs', { elapsedMs: 2500 }), '2.5s')
+})
+
 test('splits and rejected rows tolerate partial and malformed reports', async () => {
   const { splitList, dirtyList } = await sourceModule('../../metaforge-web/src/model/workflow-metrics.ts')
   for (const metrics of [undefined, null, {}, { splits: 'x', dirtySamples: 5 }]) {
