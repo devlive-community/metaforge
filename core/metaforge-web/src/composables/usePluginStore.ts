@@ -2,7 +2,6 @@ import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
 import PluginService from '@/services/plugin'
-import { storedMetadataUrl } from '@/model/store-metadata'
 import { formatPackageSize, mergeStorePlugins, normalizePluginType, readStoreCatalogue } from '@/model/store'
 import type {
     StoreAction, StoreDrawerTab, StoreInstalledPlugin, StoreLayout, StoreMetadataItem, StoreOperationLog,
@@ -43,7 +42,6 @@ export function usePluginStore()
     const logs = ref<StoreOperationLog[]>([])
     let logId = 0
     let disposed = false
-    let catalogueRequest: AbortController | undefined
 
     const plugins = computed(() => mergeStorePlugins(catalogue.value, installed.value, references.value, downloads.value)
         .map(row => ({ ...row, loading: pending.value?.pluginKey === row.key })))
@@ -187,13 +185,13 @@ export function usePluginStore()
 
     async function loadMetadata(): Promise<void>
     {
-        const request = new AbortController()
-        catalogueRequest = request
-        const timer = window.setTimeout(() => request.abort(), 5000)
         try {
-            const response = await fetch(storedMetadataUrl(), { signal: request.signal })
-            if (!response.ok) throw new Error('Catalogue unavailable')
-            const entries = readStoreCatalogue(await response.json())
+            // The catalogue comes from the server, which fetches the configured remote URL:
+            // no cross-origin requests and no per-user catalogue addresses.
+            const response = await PluginService.getCatalogue()
+            if (disposed) return
+            if (!response.status || !response.data) throw new Error('Catalogue unavailable')
+            const entries = readStoreCatalogue(response.data)
             if (!disposed) {
                 catalogue.value = entries
                 catalogFailed.value = false
@@ -207,10 +205,6 @@ export function usePluginStore()
                 if (!disposed) catalogue.value = readStoreCatalogue(fallback.default)
             }
             catch { /* Keep the previous catalogue or just the installed plugins. */ }
-        }
-        finally {
-            window.clearTimeout(timer)
-            if (catalogueRequest === request) catalogueRequest = undefined
         }
     }
 
@@ -376,7 +370,6 @@ export function usePluginStore()
     watch(hasRatings, available => { if (!available && sort.value === 'rating') sort.value = 'popular' })
     onScopeDispose(() => {
         disposed = true
-        catalogueRequest?.abort()
     })
 
     return {

@@ -10,6 +10,12 @@ class PluginService
         return new HttpUtils().get(`${ DEFAULT_PATH }`, { hasConfigure })
     }
 
+    /** The remote catalogue fetched server-side; the store never makes cross-origin requests. */
+    getCatalogue(): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH }/catalogue`)
+    }
+
     /** With a version the server downloads through the statistics service and verifies sha256/size. */
     install(configure: { name: string, url: string, version?: string, sha256?: string, size?: number }): Promise<ResponseModel>
     {

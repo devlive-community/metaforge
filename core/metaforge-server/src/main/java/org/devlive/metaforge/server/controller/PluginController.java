@@ -1,5 +1,6 @@
 package org.devlive.metaforge.server.controller;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -103,6 +104,16 @@ public class PluginController
                         ? CommonResponse.success(true) : CommonResponse.failure("Unable to install the plugin package"),
                 NotificationScene.PLUGIN_INSTALLED, request.getName(), String.format("插件 %s 已安装", request.getName()),
                 String.format("插件 %s 已安装。", request.getName()));
+    }
+
+    // 商店目录由服务端拉取远端清单后返回，浏览器不做跨域请求；拉取失败时前端回退到内置目录
+    // The store catalogue is fetched server-side so the browser makes no cross-origin request;
+    // on failure the frontend falls back to its bundled catalogue
+    @GetMapping(value = "catalogue")
+    public CommonResponse<JsonNode> catalogue()
+    {
+        JsonNode catalogue = store.catalogue();
+        return catalogue == null ? CommonResponse.failure("The plugin catalogue is unavailable") : CommonResponse.success(catalogue);
     }
 
     // 商店下载量来自统计服务，未知插件不返回（前端显示为未知而不是 0）

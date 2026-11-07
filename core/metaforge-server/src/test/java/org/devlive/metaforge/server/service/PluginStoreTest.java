@@ -21,12 +21,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class PluginStoreTest
 {
     private static final byte[] PACKAGE = "metaforge plugin archive".getBytes(StandardCharsets.UTF_8);
+    private static final String CATALOGUE = "{\"key\":\"plugin\",\"children\":[{\"key\":\"metaforge-plugin-mysql\",\"label\":\"MySQL\"}]}";
 
     private HttpServer server;
     private String base;
@@ -68,6 +70,16 @@ class PluginStoreTest
                 exchange.sendResponseHeaders(200, body.length);
                 exchange.getResponseBody().write(body);
             }
+            else if (path.equals("/catalogue.json")) {
+                byte[] body = CATALOGUE.getBytes(StandardCharsets.UTF_8);
+                exchange.sendResponseHeaders(200, body.length);
+                exchange.getResponseBody().write(body);
+            }
+            else if (path.equals("/catalogue-broken.json")) {
+                byte[] body = "not json at all".getBytes(StandardCharsets.UTF_8);
+                exchange.sendResponseHeaders(200, body.length);
+                exchange.getResponseBody().write(body);
+            }
             else if (path.endsWith(".tar.gz")) {
                 exchange.sendResponseHeaders(200, PACKAGE.length);
                 try (OutputStream out = exchange.getResponseBody()) {
@@ -90,7 +102,12 @@ class PluginStoreTest
 
     private PluginStore store(String source, String mirror)
     {
-        return new PluginStore(base, "metaforge", source, mirror, HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build(), false);
+        return store(source, mirror, base + "/catalogue.json");
+    }
+
+    private PluginStore store(String source, String mirror, String metadataUrl)
+    {
+        return new PluginStore(base, "metaforge", source, mirror, metadataUrl, HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NEVER).build(), false);
     }
 
     private static PluginStore.Package target()
@@ -172,7 +189,7 @@ class PluginStoreTest
     void anUnreachableServiceStillInstalls()
             throws IOException
     {
-        PluginStore offline = new PluginStore("http://127.0.0.1:1", "metaforge", "maven", "", HttpClient.newHttpClient(), false);
+        PluginStore offline = new PluginStore("http://127.0.0.1:1", "metaforge", "maven", "", "", HttpClient.newHttpClient(), false);
         PluginStore.Package direct = PluginStore.Package.builder().key("metaforge-plugin-mysql").version("2026.0.0").url(base + "/direct/pkg.tar.gz").build();
         assertTrue(offline.install(direct, (archive, name) -> true));
         assertEquals(Map.of(), offline.downloads(List.of("metaforge-plugin-mysql")));
@@ -197,6 +214,17 @@ class PluginStoreTest
             context.refresh();
             assertTrue(context.getBean(PluginStore.class).downloads(List.of("BAD KEY")).isEmpty());
         }
+    }
+
+    @Test
+    void theCatalogueIsFetchedCachedAndValidated()
+    {
+        PluginStore store = store("maven", "");
+        assertEquals("MySQL", store.catalogue().get("children").get(0).get("label").asText());
+        assertEquals("MySQL", store.catalogue().get("children").get(0).get("label").asText());
+        assertEquals(1, requests.stream().filter(r -> r.equals("GET /catalogue.json")).count(), "the catalogue is cached briefly");
+        assertNull(store("maven", "", base + "/catalogue-broken.json").catalogue(), "a non-JSON catalogue is refused");
+        assertNull(new PluginStore(base, "metaforge", "maven", "", "", HttpClient.newHttpClient(), false).catalogue(), "an empty URL disables the catalogue");
     }
 
     @Test

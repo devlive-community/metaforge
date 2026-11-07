@@ -55,38 +55,44 @@ public class PluginStore
     private static final Pattern SHA256 = Pattern.compile("^[0-9a-f]{64}$");
     private static final List<String> SOURCES = List.of("maven", "cdn");
     private static final Duration COUNTS_TTL = Duration.ofSeconds(60);
+    private static final Duration CATALOGUE_TTL = Duration.ofSeconds(60);
+    private static final int MAX_CATALOGUE_SIZE = 16 * 1024 * 1024;
 
     private final String statsUrl;
     private final String app;
     private final String source;
     private final String mirror;
+    private final String metadataUrl;
     private final HttpClient http;
     // Redirect targets must be HTTPS; tests against a local server relax this.
     private final boolean requireHttps;
     private final ObjectMapper json = new ObjectMapper();
     private final SecureRandom random = new SecureRandom();
     private final Map<String, CachedCount> counts = new ConcurrentHashMap<>();
+    private volatile CachedCatalogue catalogue;
 
     // Two constructors: Spring must be told which one to use, or it looks for a no-argument one.
     @Autowired
     public PluginStore(@Value("${plugin.store.stats-url:https://stats.devlive.org}") String statsUrl,
             @Value("${plugin.store.app:metaforge}") String app,
             @Value("${plugin.store.source:maven}") String source,
-            @Value("${plugin.store.mirror:}") String mirror)
+            @Value("${plugin.store.mirror:}") String mirror,
+            @Value("${plugin.store.metadata-url:https://cdn.north.devlive.org/applications/metaforge/metadata/metadata.json}") String metadataUrl)
     {
-        this(statsUrl, app, source, mirror, HttpClient.newBuilder()
+        this(statsUrl, app, source, mirror, metadataUrl, HttpClient.newBuilder()
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .connectTimeout(Duration.ofSeconds(5))
                 .build(), true);
     }
 
-    PluginStore(String statsUrl, String app, String source, String mirror, HttpClient http, boolean requireHttps)
+    PluginStore(String statsUrl, String app, String source, String mirror, String metadataUrl, HttpClient http, boolean requireHttps)
     {
         this.requireHttps = requireHttps;
         this.statsUrl = trimSlash(statsUrl);
         this.app = app == null ? "" : app.trim();
         this.source = source == null || source.isBlank() ? "maven" : source.trim().toLowerCase(Locale.ROOT);
         this.mirror = trimSlash(mirror);
+        this.metadataUrl = metadataUrl == null ? "" : metadataUrl.trim();
         this.http = http;
         if ("mirror".equals(this.source) && this.mirror.isEmpty()) {
             log.warn("plugin.store.source=mirror needs plugin.store.mirror; downloads use the default source");
@@ -344,6 +350,76 @@ public class PluginStore
     }
 
     /**
+     * The remote store catalogue, served to the browser through the controller so the store
+     * never makes cross-origin requests. Cached briefly; {@code null} when the URL is unset
+     * or the catalogue cannot be fetched, which lets the store fall back to its bundled copy.
+     */
+    public JsonNode catalogue()
+    {
+        if (metadataUrl.isEmpty()) {
+            return null;
+        }
+        CachedCatalogue cached = catalogue;
+        if (cached != null && System.nanoTime() - cached.at < CATALOGUE_TTL.toNanos()) {
+            return cached.value;
+        }
+        synchronized (this) {
+            cached = catalogue;
+            if (cached != null && System.nanoTime() - cached.at < CATALOGUE_TTL.toNanos()) {
+                return cached.value;
+            }
+            JsonNode fetched = fetchCatalogue();
+            if (fetched != null) {
+                catalogue = new CachedCatalogue(fetched, System.nanoTime());
+            }
+            return fetched;
+        }
+    }
+
+    private JsonNode fetchCatalogue()
+    {
+        try {
+            HttpRequest request = HttpRequest.newBuilder(URI.create(metadataUrl))
+                    .timeout(Duration.ofSeconds(8))
+                    .header("User-Agent", "metaforge-server")
+                    .GET()
+                    .build();
+            HttpClient client = HttpClient.newBuilder()
+                    .followRedirects(HttpClient.Redirect.NORMAL)
+                    .connectTimeout(Duration.ofSeconds(10))
+                    .build();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() != 200) {
+                log.info("The plugin catalogue answered {} for {}", response.statusCode(), metadataUrl);
+                return null;
+            }
+            String body = response.body();
+            if (body == null || body.isBlank()) {
+                log.warn("The plugin catalogue is empty: {}", metadataUrl);
+                return null;
+            }
+            if (body.length() > MAX_CATALOGUE_SIZE) {
+                log.warn("The plugin catalogue exceeds {} bytes: {}", MAX_CATALOGUE_SIZE, metadataUrl);
+                return null;
+            }
+            JsonNode value = json.readTree(body);
+            if (!value.isObject()) {
+                log.warn("The plugin catalogue is not a JSON object: {}", metadataUrl);
+                return null;
+            }
+            return value;
+        }
+        catch (IOException | IllegalArgumentException e) {
+            log.info("The plugin catalogue is unavailable: {}", e.getMessage());
+            return null;
+        }
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return null;
+        }
+    }
+
+    /**
      * Total confirmed downloads per plugin key, as decimal strings. Keys the service does not
      * know, or every key when it is unreachable, are absent: the store shows them as unknown.
      */
@@ -468,6 +544,18 @@ public class PluginStore
         private final long at;
 
         private CachedCount(String value, long at)
+        {
+            this.value = value;
+            this.at = at;
+        }
+    }
+
+    private static final class CachedCatalogue
+    {
+        private final JsonNode value;
+        private final long at;
+
+        private CachedCatalogue(JsonNode value, long at)
         {
             this.value = value;
             this.at = at;
