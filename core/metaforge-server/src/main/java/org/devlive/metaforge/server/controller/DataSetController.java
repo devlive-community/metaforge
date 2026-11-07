@@ -51,6 +51,12 @@ public class DataSetController
         this.initializer = initializer;
     }
 
+    @GetMapping(value = "count")
+    public CommonResponse<Long> count()
+    {
+        return service.count();
+    }
+
     @PostMapping(value = "validateColumns")
     public CommonResponse<Boolean> validateColumns(@RequestBody List<DataSetColumnEntity> columns)
     {

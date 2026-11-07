@@ -13,6 +13,11 @@ export class DatasetService
         super(DEFAULT_PATH)
     }
 
+    getCount(): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${DEFAULT_PATH}/count`)
+    }
+
     preview(code: string): Promise<ResponseModel>
     {
         return new HttpUtils().get(`${DEFAULT_PATH}/preview/${encodeURIComponent(code)}`)

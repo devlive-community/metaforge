@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.devlive.metaforge.common.enums.DataSetState;
+import org.devlive.metaforge.common.enums.ServiceState;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.common.sql.SqlBuilder;
 import org.devlive.metaforge.common.sql.configure.SqlBody;
@@ -137,6 +138,16 @@ public class DataSetServiceImpl
         this.eventPublisher = eventPublisher;
         this.runtimeConfigureService = runtimeConfigureService;
         this.syncJobManager = syncJobManager;
+    }
+
+    @Override
+    public CommonResponse<Long> count()
+    {
+        Long userId = UserDetailsService.getUser().getId();
+        if (userId == null) {
+            return CommonResponse.failure(ServiceState.USER_UNAUTHORIZED);
+        }
+        return CommonResponse.success(repository.countByUserId(userId));
     }
 
     @Transactional

@@ -46,7 +46,15 @@ export function useHomeWorkspace() {
     target.value = { ...target.value, loading: true, failed: false }
     const filter = { ...new FilterModel(), size: 4, orders: [{ column: 'updateTime', order: 'DESC' }] }
     try {
-      const response = await (key === 'datasets' ? DatasetService : DashboardService).getAll(filter)
+      // Counting does not require loading legacy rows or their source/user references.
+      if (key === 'datasets') {
+        const response = await DatasetService.getCount()
+        if (request !== requests[key]) return
+        if (!response.status || !validCount(response.data)) throw Error('Invalid dataset count')
+        target.value = { items: [], total: response.data, loading: false, failed: false }
+        return
+      }
+      const response = await DashboardService.getAll(filter)
       if (request !== requests[key]) return
       if (!response.status || !Array.isArray(response.data?.content) || !validCount(response.data.total)) throw Error('Invalid resources')
       const items = response.data.content
