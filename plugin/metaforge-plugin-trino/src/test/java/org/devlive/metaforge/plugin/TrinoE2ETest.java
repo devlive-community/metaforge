@@ -53,6 +53,10 @@ public class TrinoE2ETest
     {
         try (GenericContainer<?> container = new GenericContainer<>("trinodb/trino:" + version)
                 .withExposedPorts(8080)
+                // The images size their heap from the host RAM (MaxRAMPercentage); a runner
+                // running the whole suite gets the container OOM-killed (exit 137) without
+                // an explicit cgroup limit, which the scheduler reports as "No nodes available".
+                .withCreateContainerCmdModifier(cmd -> cmd.withMemory(4L * 1024 * 1024 * 1024).withMemorySwap(4L * 1024 * 1024 * 1024))
                 .waitingFor(Wait.forLogMessage(".*SERVER STARTED.*", 1).withStartupTimeout(Duration.ofMinutes(5)))) {
             container.start();
             PluginService service = new TrinoService();
