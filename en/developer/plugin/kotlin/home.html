@@ -1311,14 +1311,14 @@
         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
         </svg>
-        <span>15 分钟阅读</span>
+        <span>10 分钟阅读</span>
         
             <span class="mx-1">•</span>
             <span>
                 
                 
                 
-                    2792 词
+                    1447 词
                 
             </span>
         
@@ -1338,21 +1338,49 @@
             
         <div class="space-y-4"></div>
     
-        <span class="leading-7">MetaForge supports custom plug-ins, and users can write their own plug-ins and integrate them into the system. This document mainly explains how to quickly integrate a plug-in into the MetaForge system.</span>
+        <span class="leading-7">Plugins can also be written in Kotlin (e.g. </span>
     
-        <div class="rounded-lg my-2 overflow-hidden border border-purple-200">
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">plugin/metaforge-plugin-mongo-community</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">plugin/metaforge-plugin-doris</code>
+    
+        <span class="leading-7">). The rules, layout, SPI registration, capability declaration, e2e test and docs requirements are the same as in the </span>
+    
+        <a class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200 cursor-pointer"
+           href="../java/home.md"
+           target="_self"
+           title="">
+            Java Implementation
+        </a>
+    
+        <span class="leading-7">; this page only shows the Kotlin way.</span>
+    
+        <div class="space-y-4"></div>
+    
+        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
         
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-purple-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Note</h3>
+        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
+               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
            </div>
                    
             <div class="w-full px-5 py-3">
-                <div class="text-sm text-purple-700">
+                <div class="text-sm text-yellow-700">
                     
         <div class="space-y-4"></div>
     
-        <span class="leading-7">This article demonstrates by integrating the StarRocks data storage system based on the JDBC protocol.</span>
+        <span class="leading-7">Every plugin reaches its source only through JDBC and uses the same metadata management (database picker, table tree, columns). See the </span>
+    
+        <a class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200 cursor-pointer"
+           href="../java/home.md"
+           target="_self"
+           title="">
+            Java Implementation
+        </a>
+    
+        <span class="leading-7">.</span>
     
                 </div>
             </div>
@@ -1360,13 +1388,23 @@
     
         <div class="space-y-4"></div>
     
-        <h3 id="pomxmlDepend">
+        <h3 id="pomxmldependencies">
             
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">pom.xml</code>
     
-        <span class="leading-7"> Depend</span>
+        <span class="leading-7"> dependencies</span>
     
         </h3>
+    
+        <span class="leading-7">Add the Kotlin reflection library to the Java plugin dependencies and keep sources in </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">src/main/kotlin</code>
+    
+        <span class="leading-7"> (the Kotlin compiler plugin is configured in the parent </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">pom.xml</code>
+    
+        <span class="leading-7">):</span>
     <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
             
             <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">xml</div>
@@ -1384,72 +1422,17 @@
                 
                 <div class="!flex-1">
                     <pre class="!px-3 !py-2.5 !m-0"><code class="language-xml"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.devlive.metaforge<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>metaforge-spi<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>scope</span><span class="token punctuation">></span></span>provided<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>scope</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.devlive.metaforge<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>metaforge-common<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>commons-beanutils<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>commons-beanutils<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.slf4j<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>slf4j-api<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.slf4j<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>slf4j-simple<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>scope</span><span class="token punctuation">></span></span>test<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>scope</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.testcontainers<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>testcontainers<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>scope</span><span class="token punctuation">></span></span>test<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>scope</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.jetbrains.kotlin<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>kotlin-reflect<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span></code></pre>
                 </div>
             </div>
         </div>
         <div class="space-y-4"></div>
     
-        <span class="leading-7">The above configuration adds </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-spi</code>
-    
-        <span class="leading-7"> and </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-common</code>
-    
-        <span class="leading-7"> modules, and others are some auxiliary dependencies.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-yellow-700">
-                    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">It should be noted that if you open the project separately, you need to specify the version number of each dependency.</span>
-    
-                </div>
-            </div>
-        </div>
-    
-        <div class="space-y-4"></div>
-    
-        <h3 id="PluginLoader">
+        <h3 id="Pluginclass">
             
-        <span class="leading-7">Plugin Loader</span>
+        <span class="leading-7">Plugin class</span>
     
         </h3>
     <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
@@ -1468,24 +1451,18 @@
             <div class="!overflow-x-auto !flex">
                 
                 <div class="!flex-1">
-                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-kotlin"><span class="token keyword">class</span> StarRocksPluginModule <span class="token operator">:</span> <span class="token function">AbstractPluginModule</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> PluginModule <span class="token punctuation">{</span>
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> String <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token string-literal singleline"><span class="token string">"StarRocks"</span></span>
-    <span class="token punctuation">}</span>
-
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">getType</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> PluginType <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> PluginType<span class="token punctuation">.</span>JDBC
-    <span class="token punctuation">}</span>
-
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token keyword">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> AbstractPluginModule <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token keyword">this</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">configure</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-        <span class="token keyword">val</span> module <span class="token operator">=</span> Multibinder<span class="token punctuation">.</span><span class="token function">newSetBinder</span><span class="token punctuation">(</span><span class="token function">binder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> String<span class="token operator">::</span><span class="token keyword">class</span><span class="token punctuation">.</span>java<span class="token punctuation">)</span>
-        module<span class="token punctuation">.</span><span class="token function">addBinding</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">toInstance</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>javaClass<span class="token punctuation">.</span>simpleName<span class="token punctuation">)</span>
-        <span class="token keyword">val</span> plugin<span class="token operator">:</span> Multibinder<span class="token operator">&lt;</span>Plugin<span class="token operator">></span> <span class="token operator">=</span> Multibinder<span class="token punctuation">.</span><span class="token function">newSetBinder</span><span class="token punctuation">(</span><span class="token function">binder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> Plugin<span class="token operator">::</span><span class="token keyword">class</span><span class="token punctuation">.</span>java<span class="token punctuation">)</span>
-        plugin<span class="token punctuation">.</span><span class="token function">addBinding</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">to</span><span class="token punctuation">(</span>StarRocksPlugin<span class="token operator">::</span><span class="token keyword">class</span><span class="token punctuation">.</span>java<span class="token punctuation">)</span>
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-kotlin"><span class="token keyword">class</span> MongoCommunityPlugin <span class="token operator">:</span> <span class="token function">Plugin</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">describe</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> PluginConfigure
+    <span class="token punctuation">{</span>
+        <span class="token keyword">val</span> configure <span class="token operator">=</span> PluginConfigure<span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string-literal singleline"><span class="token string">"MongoCommunity"</span></span><span class="token punctuation">,</span> <span class="token function">listOf</span><span class="token punctuation">(</span>
+            PluginConfigureField<span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span>PluginConfigureFieldName<span class="token punctuation">.</span>name<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span>PluginConfigureFieldType<span class="token punctuation">.</span>String<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">required</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            PluginConfigureField<span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span>PluginConfigureFieldName<span class="token punctuation">.</span>host<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span>PluginConfigureFieldType<span class="token punctuation">.</span>String<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">required</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">value</span><span class="token punctuation">(</span><span class="token string-literal singleline"><span class="token string">"127.0.0.1"</span></span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            PluginConfigureField<span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span>PluginConfigureFieldName<span class="token punctuation">.</span>port<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span>PluginConfigureFieldType<span class="token punctuation">.</span>Number<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">required</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">value</span><span class="token punctuation">(</span><span class="token number">27017</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+            PluginConfigureField<span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span>PluginConfigureFieldName<span class="token punctuation">.</span>database<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span>PluginConfigureFieldType<span class="token punctuation">.</span>String<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">value</span><span class="token punctuation">(</span><span class="token string-literal singleline"><span class="token string">"admin"</span></span><span class="token punctuation">)</span>
+                <span class="token punctuation">.</span><span class="token function">group</span><span class="token punctuation">(</span>PluginConfigureFieldGroup<span class="token punctuation">.</span>advanced<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token keyword">null</span><span class="token punctuation">)</span>
+        configure<span class="token punctuation">.</span>category <span class="token operator">=</span> PluginConfigureCategory<span class="token punctuation">.</span>NOSQL
+        <span class="token keyword">return</span> configure
     <span class="token punctuation">}</span>
 <span class="token punctuation">}</span></code></pre>
                 </div>
@@ -1493,45 +1470,9 @@
         </div>
         <div class="space-y-4"></div>
     
-        <span class="leading-7">The loader needs to inherit the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">AbstractPluginModule</code>
-    
-        <span class="leading-7"> class and implement the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">PluginModule</code>
-    
-        <span class="leading-7"> interface, so that the system will automatically load the plug-in into the system when it starts.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="rounded-lg my-2 overflow-hidden border border-purple-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-purple-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Note</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-purple-700">
-                    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">It should be noted that you need to override the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">configure()</code>
-    
-        <span class="leading-7"> method in the parent class and bind the plugin to the system.</span>
-    
-                </div>
-            </div>
-        </div>
-    
-        <div class="space-y-4"></div>
-    
-        <h3 id="PluginExecutor">
+        <h3 id="Serviceclass">
             
-        <span class="leading-7">Plugin Executor</span>
+        <span class="leading-7">Service class</span>
     
         </h3>
     <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
@@ -1550,220 +1491,84 @@
             <div class="!overflow-x-auto !flex">
                 
                 <div class="!flex-1">
-                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-kotlin"><span class="token keyword">class</span> StarRocksPlugin <span class="token operator">:</span> Plugin <span class="token punctuation">{</span>
-    <span class="token keyword">private</span> <span class="token keyword">val</span> log <span class="token operator">=</span> <span class="token function">getLogger</span><span class="token punctuation">(</span>StarRocksPlugin<span class="token operator">::</span><span class="token keyword">class</span><span class="token punctuation">.</span>java<span class="token punctuation">)</span>
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-kotlin"><span class="token keyword">class</span> MongoCommunityService <span class="token operator">:</span> PluginService
+<span class="token punctuation">{</span>
+    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">connectType</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> String <span class="token operator">=</span> <span class="token string-literal singleline"><span class="token string">"mongodb"</span></span>
 
-    <span class="token keyword">private</span> <span class="token keyword">var</span> jdbcConfigure<span class="token operator">:</span> JdbcConfigure<span class="token operator">?</span> <span class="token operator">=</span> <span class="token keyword">null</span>
-    <span class="token keyword">private</span> <span class="token keyword">var</span> jdbcConnection<span class="token operator">:</span> JdbcConnection<span class="token operator">?</span> <span class="token operator">=</span> <span class="token keyword">null</span>
-    <span class="token keyword">private</span> <span class="token keyword">var</span> jdbcResponse<span class="token operator">:</span> Response<span class="token operator">?</span> <span class="token operator">=</span> <span class="token keyword">null</span>
+    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">driver</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> String <span class="token operator">=</span> <span class="token string-literal singleline"><span class="token string">"org.devlive.metaforge.MongoDriver"</span></span>
 
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> String <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token string-literal singleline"><span class="token string">"StarRocks"</span></span>
-    <span class="token punctuation">}</span>
+    <span class="token comment">// Databases, collections and fields come from the driver's JDBC metadata</span>
+    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">getDatabases</span><span class="token punctuation">(</span>configure<span class="token operator">:</span> RuntimeConfigure<span class="token punctuation">)</span><span class="token operator">:</span> Response <span class="token operator">=</span> <span class="token function">metadataDatabases</span><span class="token punctuation">(</span>configure<span class="token punctuation">)</span>
 
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">description</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> String <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token string-literal singleline"><span class="token string">"Integrate StarRocks data sources"</span></span>
-    <span class="token punctuation">}</span>
+    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">getTables</span><span class="token punctuation">(</span>configure<span class="token operator">:</span> RuntimeConfigure<span class="token punctuation">,</span> database<span class="token operator">:</span> String<span class="token punctuation">)</span><span class="token operator">:</span> Response <span class="token operator">=</span> <span class="token function">metadataTables</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> database<span class="token punctuation">)</span>
 
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">type</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">:</span> PluginType <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> PluginType<span class="token punctuation">.</span>JDBC
-    <span class="token punctuation">}</span>
-
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">connect</span><span class="token punctuation">(</span>configure<span class="token operator">:</span> Configure<span class="token operator">?</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-        <span class="token keyword">try</span> <span class="token punctuation">{</span>
-            log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string-literal singleline"><span class="token string">"Connecting to StarRocks"</span></span><span class="token punctuation">)</span>
-            jdbcResponse <span class="token operator">=</span> <span class="token function">Response</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-            jdbcConfigure <span class="token operator">=</span> <span class="token function">JdbcConfigure</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-            BeanUtils<span class="token punctuation">.</span><span class="token function">copyProperties</span><span class="token punctuation">(</span>jdbcConfigure<span class="token punctuation">,</span> configure<span class="token punctuation">)</span>
-            jdbcConfigure<span class="token operator">!!</span><span class="token punctuation">.</span>jdbcDriver <span class="token operator">=</span> <span class="token string-literal singleline"><span class="token string">"com.mysql.cj.jdbc.Driver"</span></span>
-            jdbcConfigure<span class="token operator">!!</span><span class="token punctuation">.</span>jdbcType <span class="token operator">=</span> <span class="token string-literal singleline"><span class="token string">"mysql"</span></span>
-            jdbcConnection <span class="token operator">=</span> <span class="token keyword">object</span> <span class="token operator">:</span> <span class="token function">JdbcConnection</span><span class="token punctuation">(</span>jdbcConfigure<span class="token punctuation">,</span> jdbcResponse<span class="token punctuation">)</span> <span class="token punctuation">{</span><span class="token punctuation">}</span>
-        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span>ex<span class="token operator">:</span> Exception<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-            jdbcResponse<span class="token operator">!!</span><span class="token punctuation">.</span>isConnected <span class="token operator">=</span> <span class="token boolean">false</span>
-            jdbcResponse<span class="token operator">!!</span><span class="token punctuation">.</span>message <span class="token operator">=</span> ex<span class="token punctuation">.</span>message
-        <span class="token punctuation">}</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">execute</span><span class="token punctuation">(</span>content<span class="token operator">:</span> String<span class="token operator">?</span><span class="token punctuation">)</span><span class="token operator">:</span> Response <span class="token punctuation">{</span>
-        <span class="token keyword">if</span> <span class="token punctuation">(</span>ObjectUtils<span class="token punctuation">.</span><span class="token function">isNotEmpty</span><span class="token punctuation">(</span>jdbcConnection<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-            log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string-literal singleline"><span class="token string">"Execute starrocks plugin logic started"</span></span><span class="token punctuation">)</span>
-            jdbcResponse <span class="token operator">=</span> jdbcConnection<span class="token operator">?</span><span class="token punctuation">.</span>response
-            <span class="token keyword">val</span> processor <span class="token operator">=</span> <span class="token function">JdbcAdapter</span><span class="token punctuation">(</span>jdbcConnection<span class="token punctuation">)</span>
-            jdbcResponse <span class="token operator">=</span> processor<span class="token punctuation">.</span><span class="token function">handlerExecute</span><span class="token punctuation">(</span>content<span class="token punctuation">)</span>
-            log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string-literal singleline"><span class="token string">"Execute starrocks plugin logic end"</span></span><span class="token punctuation">)</span>
-        <span class="token punctuation">}</span>
-        <span class="token function">destroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-        <span class="token keyword">return</span> jdbcResponse<span class="token operator">!!</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">destroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-        <span class="token keyword">if</span> <span class="token punctuation">(</span>ObjectUtils<span class="token punctuation">.</span><span class="token function">isNotEmpty</span><span class="token punctuation">(</span>jdbcConnection<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-            jdbcConnection<span class="token operator">?</span><span class="token punctuation">.</span><span class="token function">destroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-            jdbcConnection <span class="token operator">=</span> <span class="token keyword">null</span>
-        <span class="token punctuation">}</span>
-    <span class="token punctuation">}</span>
+    <span class="token keyword">override</span> <span class="token keyword">fun</span> <span class="token function">getColumns</span><span class="token punctuation">(</span>configure<span class="token operator">:</span> RuntimeConfigure<span class="token punctuation">,</span> database<span class="token operator">:</span> String<span class="token punctuation">,</span> table<span class="token operator">:</span> String<span class="token punctuation">)</span><span class="token operator">:</span> Response <span class="token operator">=</span> <span class="token function">metadataColumns</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> database<span class="token punctuation">,</span> table<span class="token punctuation">)</span>
 <span class="token punctuation">}</span></code></pre>
                 </div>
             </div>
         </div>
         <div class="space-y-4"></div>
     
-        <span class="leading-7">The executor needs to implement the </span>
+        <span class="leading-7">When metadata comes from SQL, the result column names are those in the table of the </span>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Plugin</code>
+        <a class="text-blue-600 hover:text-blue-800 hover:underline transition-colors duration-200 cursor-pointer"
+           href="../java/home.md"
+           target="_self"
+           title="">
+            Java Implementation
+        </a>
     
-        <span class="leading-7"> interface, which provides the following methods</span>
+        <span class="leading-7">.</span>
     
         <div class="space-y-4"></div>
+    
+        <h3 id="SPIregistrationcapabilitiesandtests">
+            
+        <span class="leading-7">SPI registration, capabilities and tests</span>
+    
+        </h3>
     
         <ul class="my-4 pl-8 list-disc">
             <li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">name()</code>
-    
-        <span class="leading-7">: Plugins have unique names, and plugins with the same name will only take effect the first time they are loaded</span>
-    </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">description()</code>
-    
-        <span class="leading-7">: A description of the plugin</span>
-    </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">type()</code>
-    
-        <span class="leading-7">: Plugin type</span>
-    </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">connect(Configure configure)</code>
-    
-        <span class="leading-7">: Plug-ins need connection information in advance, such as the current plug-in plug-in, which is the connection phase of the plug-in (the system presets the HTTP connection method to be used directly).</span>
-    </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">execute(String content)</code>
-    
-        <span class="leading-7">: Execute the operation logic</span>
-    </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">destroy()</code>
-    
-        <span class="leading-7">:  The final destruction of the plug-in, note that the destruction needs to contain the information in the connection</span>
-    </li>
-        </ul>
-    
-        <div class="space-y-4"></div>
-    
-        <h3 id="PluginConverter">
-            
-        <span class="leading-7">Plugin Converter</span>
-    
-        </h3>
-    
-        <span class="leading-7">The plug-in converter is used to convert the result after the current plug-in is executed, and convert it into logic that can be used in MetaForge. It is mainly used to encapsulate </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Response</code>
-    
-        <span class="leading-7"> to return the result.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">This article is a JDBC-based plug-in, so some functions can be realized by directly inheriting the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">JdbcAdapter</code>
-    
-        <span class="leading-7"> parent class.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <h3 id="SPIloader">
-            
-        <span class="leading-7">SPI loader</span>
-    
-        </h3>
-    
-        <span class="leading-7">Add </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">META-INF</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">src/main/resources/META-INF/services/org.devlive.metaforge.plugin.Plugin</code>
     
         <span class="leading-7"> and </span>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">services</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.plugin.Service</code>
     
-        <span class="leading-7"> directory under </span>
+        <span class="leading-7"> hold the full names of the plugin and service classes.</span>
+    </li><li class="mb-2 text-gray-700">
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">src/main/resources/org/devlive/metaforge/plugin/capabilities.json</code>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">resources</code>
+        <span class="leading-7"> declares the capabilities, at least </span>
     
-        <span class="leading-7"> source directory</span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">query:execute</code>
     
-        <div class="space-y-4"></div>
+        <span class="leading-7">, </span>
     
-        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-yellow-700">
-                    
-        <div class="space-y-4"></div>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">database:list</code>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">services</code>
+        <span class="leading-7">, </span>
     
-        <span class="leading-7"> needs to be in the </span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">table:list</code>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">resources</code>
+        <span class="leading-7"> and </span>
     
-        <span class="leading-7"> directory</span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">column:read</code>
     
-                </div>
-            </div>
-        </div>
+        <span class="leading-7">.</span>
+    </li><li class="mb-2 text-gray-700">
+        <span class="leading-7">The e2e test can be written in Java (</span>
     
-        <div class="space-y-4"></div>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">src/test/java</code>
     
-        <span class="leading-7">Create the </span>
+        <span class="leading-7">); see </span>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.spi.PluginModule</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">MongoE2ETest</code>
     
-        <span class="leading-7"> file, as follows</span>
-    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
-            
-            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">java</div>
-            
-        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
-            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-        </button>
-    
-            <div class="!overflow-x-auto !flex">
-                
-                <div class="!flex-1">
-                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-java"><span class="token class-name"><span class="token namespace">org<span class="token punctuation">.</span>devlive<span class="token punctuation">.</span>metaforge<span class="token punctuation">.</span>plugin<span class="token punctuation">.</span></span>StarRocksPluginModule</span></code></pre>
-                </div>
-            </div>
-        </div>
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">The content of this file is the plugin loading module we defined.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-yellow-700">
-                    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">The unit test of the plug-in can refer to the published plug-in for testing</span>
-    
-                </div>
-            </div>
-        </div>
+        <span class="leading-7">.</span>
+    </li>
+        </ul>
     
         </div>
 
@@ -1783,7 +1588,7 @@
                 <line x1="3" y1="12" y2="12" x2="9"/>
                 <line x1="15" y1="12" y2="12" x2="21"/>
             </svg>
-            <span>提交于 2026年11月1日 01:51</span>
+            <span>提交于 2026年11月7日 08:38</span>
         </div>
 
         <!-- 最后修改时间 -->
@@ -1795,7 +1600,7 @@
                 <path d="M3 3v5h5"/>
                 <path d="M12 7v5l4 2"/>
             </svg>
-            <span>修改于 2026年11月1日 01:51</span>
+            <span>修改于 2026年11月7日 08:38</span>
         </div>
 
         <!-- Hash 链接 -->
@@ -1808,11 +1613,11 @@
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <a href="https://github.com/devlive-community/metaforge/commit/602c12d15787013c5c0ee0f8232430ef20d594b1"
+                <a href="https://github.com/devlive-community/metaforge/commit/1a90f12531c75d5e8e519b4381b2a2ac949d5b2c"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="hover:text-blue-600 dark:hover:text-blue-400">
-                    首次提交 (602c12d1)
+                    首次提交 (1a90f125)
                 </a>
             </div>
 
@@ -1824,11 +1629,11 @@
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <a href="https://github.com/devlive-community/metaforge/commit/602c12d15787013c5c0ee0f8232430ef20d594b1"
+                <a href="https://github.com/devlive-community/metaforge/commit/1a90f12531c75d5e8e519b4381b2a2ac949d5b2c"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="hover:text-blue-600 dark:hover:text-blue-400">
-                    末次提交 (602c12d1)
+                    末次提交 (1a90f125)
                 </a>
             </div>
         
@@ -1930,57 +1735,46 @@
                 
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#pomxmlDepend"
+                            <a href="#pomxmldependencies"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="pomxmlDepend">
+                               data-slug="pomxmldependencies">
                                 
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">pom.xml</code>
     
-        <span class="leading-7"> Depend</span>
+        <span class="leading-7"> dependencies</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#PluginLoader"
+                            <a href="#Pluginclass"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="PluginLoader">
+                               data-slug="Pluginclass">
                                 
-        <span class="leading-7">Plugin Loader</span>
+        <span class="leading-7">Plugin class</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#PluginExecutor"
+                            <a href="#Serviceclass"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="PluginExecutor">
+                               data-slug="Serviceclass">
                                 
-        <span class="leading-7">Plugin Executor</span>
+        <span class="leading-7">Service class</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#PluginConverter"
+                            <a href="#SPIregistrationcapabilitiesandtests"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="PluginConverter">
+                               data-slug="SPIregistrationcapabilitiesandtests">
                                 
-        <span class="leading-7">Plugin Converter</span>
-    
-                            </a>
-                        </div>
-                        
-                    
-                        <div class="pl-8 inline-block min-w-full">
-                            <a href="#SPIloader"
-                               class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="SPIloader">
-                                
-        <span class="leading-7">SPI loader</span>
+        <span class="leading-7">SPI registration, capabilities and tests</span>
     
                             </a>
                         </div>
@@ -2022,57 +1816,46 @@
             
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#pomxmlDepend"
+                        <a href="#pomxmldependencies"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="pomxmlDepend">
+                           data-slug="pomxmldependencies">
                             
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">pom.xml</code>
     
-        <span class="leading-7"> Depend</span>
+        <span class="leading-7"> dependencies</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#PluginLoader"
+                        <a href="#Pluginclass"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="PluginLoader">
+                           data-slug="Pluginclass">
                             
-        <span class="leading-7">Plugin Loader</span>
+        <span class="leading-7">Plugin class</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#PluginExecutor"
+                        <a href="#Serviceclass"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="PluginExecutor">
+                           data-slug="Serviceclass">
                             
-        <span class="leading-7">Plugin Executor</span>
+        <span class="leading-7">Service class</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#PluginConverter"
+                        <a href="#SPIregistrationcapabilitiesandtests"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="PluginConverter">
+                           data-slug="SPIregistrationcapabilitiesandtests">
                             
-        <span class="leading-7">Plugin Converter</span>
-    
-                        </a>
-                    </div>
-                    
-                
-                    <div class="pl-8 inline-block min-w-full">
-                        <a href="#SPIloader"
-                           class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="SPIloader">
-                            
-        <span class="leading-7">SPI loader</span>
+        <span class="leading-7">SPI registration, capabilities and tests</span>
     
                         </a>
                     </div>

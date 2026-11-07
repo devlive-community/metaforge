@@ -46,6 +46,11 @@
         <priority>0.5</priority>
     </url>
     <url>
+        <loc>https://metaforge.devlive.org/en/reference/get-started/dataset/executor/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
         <loc>https://metaforge.devlive.org/en/reference/get-started/dataset/history/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
@@ -186,12 +191,107 @@
         <priority>0.5</priority>
     </url>
     <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/postgresql/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/kyuubi/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/db2/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/oceanbase/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/sqlserver/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/dremio/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/presto/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/hive2x/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/ignite/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/dm/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/tdengine/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/iotdb/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/trino/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/elasticsearch8x/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/oracle/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/monetdb/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
         <loc>https://metaforge.devlive.org/en/reference/connectors/redis/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/mongocommunity/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/neo4j/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
         <loc>https://metaforge.devlive.org/en/reference/connectors/h2/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/en/reference/connectors/h2tcp/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
@@ -741,6 +841,11 @@
         <priority>0.5</priority>
     </url>
     <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/dataset/executor/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
         <loc>https://metaforge.devlive.org/zh-CN/reference/get-started/dataset/history/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
@@ -881,12 +986,107 @@
         <priority>0.5</priority>
     </url>
     <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/postgresql/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/kyuubi/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/db2/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/oceanbase/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/sqlserver/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/dremio/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/presto/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/hive2x/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/ignite/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/dm/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/tdengine/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/iotdb/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/trino/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/elasticsearch8x/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/oracle/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/monetdb/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
         <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/redis/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>
     <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/mongocommunity/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/neo4j/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
         <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/h2/home.html</loc>
+        <changefreq>weekly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://metaforge.devlive.org/zh-CN/reference/connectors/h2tcp/home.html</loc>
         <changefreq>weekly</changefreq>
         <priority>0.5</priority>
     </url>

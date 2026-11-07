@@ -1316,9 +1316,13 @@
             <span class="mx-1">•</span>
             <span>
                 
+                    56 字
                 
                 
-                    6497 词
+                    +
+                
+                
+                    7388 词
                 
             </span>
         
@@ -1338,21 +1342,95 @@
             
         <div class="space-y-4"></div>
     
-        <span class="leading-7">MetaForge supports custom plug-ins, and users can write their own plug-ins and integrate them into the system. This document mainly explains how to quickly integrate a plug-in into the MetaForge system.</span>
+        <span class="leading-7">MetaForge supports custom plugins. This page uses the QuestDB plugin in the repository (</span>
     
-        <div class="rounded-lg my-2 overflow-hidden border border-purple-200">
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">plugin/metaforge-plugin-questdb</code>
+    
+        <span class="leading-7">) to show how a source plugin is built.</span>
+    
+        <div class="space-y-4"></div>
+    
+        <h3 id="Ruleseverypluginfollows">
+            
+        <span class="leading-7">Rules every plugin follows</span>
+    
+        </h3>
+    
+        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
         
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-purple-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Note</h3>
+        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
+               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
            </div>
                    
             <div class="w-full px-5 py-3">
-                <div class="text-sm text-purple-700">
+                <div class="text-sm text-yellow-700">
                     
         <div class="space-y-4"></div>
     
-        <span class="leading-7">This article demonstrates by integrating the QuestDB data storage system based on the HTTP protocol.</span>
+        <ul class="my-4 pl-8 list-disc">
+            <li class="mb-2 text-gray-700"><strong>
+        <span class="leading-7">Sources are reached only through JDBC</span>
+    </strong>
+        <span class="leading-7">: use the source's official or a third-party JDBC driver. A source without one gets its own driver under </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">driver/</code>
+    
+        <span class="leading-7">, built on </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-driver-sql</code>
+    
+        <span class="leading-7"> (the </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-parser</code>
+    
+        <span class="leading-7"> SQL parser) and named </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.<Name>Driver</code>
+    
+        <span class="leading-7">. Plugin names carry no protocol words such as </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Jdbc</code>
+    
+        <span class="leading-7"> or </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Http</code>
+    
+        <span class="leading-7">.</span>
+    </li><li class="mb-2 text-gray-700"><strong>
+        <span class="leading-7">Every plugin uses the same metadata management</span>
+    </strong>
+        <span class="leading-7">: the MySQL structure — a database picker at the top, the table tree, the columns of a table, and tabs and buttons shown by capability. No source gets its own workspace, sidebar or tree. Non-relational sources map onto databases, tables and columns too, e.g. Redis (databases </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">0..n</code>
+    
+        <span class="leading-7"> / keys / </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">key</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">type</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">value</code>
+    
+        <span class="leading-7">), MongoDB (databases / collections / document fields), Neo4j (database / labels / properties).</span>
+    </li><li class="mb-2 text-gray-700"><strong>
+        <span class="leading-7">Capabilities are a contract</span>
+    </strong>
+        <span class="leading-7">: declare in </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">capabilities.json</code>
+    
+        <span class="leading-7"> only what the plugin implements; the UI and the server open features by the declaration.</span>
+    </li><li class="mb-2 text-gray-700"><strong>
+        <span class="leading-7">An e2e test is required</span>
+    </strong>
+        <span class="leading-7">: verify at least two versions in containers and list the verified versions in the connector page.</span>
+    </li>
+        </ul>
     
                 </div>
             </div>
@@ -1360,11 +1438,50 @@
     
         <div class="space-y-4"></div>
     
-        <h3 id="pomxmlDepend">
+        <h3 id="Layout">
+            
+        <span class="leading-7">Layout</span>
+    
+        </h3>
+    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
+            
+            
+            
+        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
+            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </button>
+    
+            <div class="!overflow-x-auto !flex">
+                
+                <div class="!flex-1">
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="">plugin/metaforge-plugin-questdb
+├── pom.xml
+└── src
+    ├── main
+    │   ├── java/org/devlive/metaforge/plugin
+    │   │   ├── QuestDBPlugin.java        # 配置字段与介绍
+    │   │   └── QuestDBService.java       # 驱动、连接与元数据
+    │   └── resources
+    │       ├── META-INF/services
+    │       │   ├── org.devlive.metaforge.plugin.Plugin
+    │       │   └── org.devlive.metaforge.plugin.Service
+    │       └── org/devlive/metaforge/plugin/capabilities.json
+    └── test/java/org/devlive/metaforge/plugin/QuestDBE2ETest.java</code></pre>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-4"></div>
+    
+        <h3 id="pomxmldependencies">
             
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">pom.xml</code>
     
-        <span class="leading-7"> Depend</span>
+        <span class="leading-7"> dependencies</span>
     
         </h3>
     <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
@@ -1388,26 +1505,16 @@
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>metaforge-spi<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>scope</span><span class="token punctuation">></span></span>provided<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>scope</span><span class="token punctuation">></span></span>
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
+<span class="token comment">&lt;!-- 数据源的 JDBC 驱动，或 driver/ 下的自建驱动 --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.postgresql<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>postgresql<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>${metaforge.pgsql.version}<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.devlive.metaforge<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>metaforge-common<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>commons-beanutils<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>commons-beanutils<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.slf4j<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>slf4j-api<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.slf4j<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>slf4j-simple<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>scope</span><span class="token punctuation">></span></span>test<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>scope</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span>
-<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>dependency</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>groupId</span><span class="token punctuation">></span></span>org.testcontainers<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>groupId</span><span class="token punctuation">></span></span>
-    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>testcontainers<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>artifactId</span><span class="token punctuation">></span></span>metaforge-test-e2e<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>artifactId</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>version</span><span class="token punctuation">></span></span>${project.version}<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>version</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>scope</span><span class="token punctuation">></span></span>test<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>scope</span><span class="token punctuation">></span></span>
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>dependency</span><span class="token punctuation">></span></span></code></pre>
                 </div>
@@ -1415,263 +1522,475 @@
         </div>
         <div class="space-y-4"></div>
     
-        <span class="leading-7">The above configuration adds </span>
+        <span class="leading-7">At build time </span>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-spi</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">maven-dependency-plugin</code>
+    
+        <span class="leading-7"> copies the runtime dependencies to </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">target/dependencies</code>
+    
+        <span class="leading-7">, where the plugin loads its driver from (see the </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">pom.xml</code>
+    
+        <span class="leading-7"> of an existing plugin).</span>
+    
+        <div class="space-y-4"></div>
+    
+        <h3 id="Pluginclassconfigurationfields">
+            
+        <span class="leading-7">Plugin class: configuration fields</span>
+    
+        </h3>
+    
+        <span class="leading-7">The plugin class extends </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.plugin.Plugin</code>
+    
+        <span class="leading-7"> and declares the source's configuration fields and descriptions in </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">describe()</code>
+    
+        <span class="leading-7">:</span>
+    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
+            
+            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">java</div>
+            
+        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
+            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </button>
+    
+            <div class="!overflow-x-auto !flex">
+                
+                <div class="!flex-1">
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">QuestDBPlugin</span>
+        <span class="token keyword">extends</span> <span class="token class-name">Plugin</span>
+<span class="token punctuation">{</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">PluginConfigure</span> <span class="token function">describe</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token class-name">PluginConfigure</span> configure <span class="token operator">=</span> <span class="token class-name">PluginConfigure</span><span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"QuestDB"</span><span class="token punctuation">,</span> <span class="token class-name">Arrays</span><span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span>
+                <span class="token class-name">PluginConfigureField</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldName</span><span class="token punctuation">.</span>name<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldType<span class="token punctuation">.</span>String</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">required</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token class-name">PluginConfigureField</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldName</span><span class="token punctuation">.</span>host<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldType<span class="token punctuation">.</span>String</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">required</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">value</span><span class="token punctuation">(</span><span class="token string">"127.0.0.1"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token class-name">PluginConfigureField</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldName</span><span class="token punctuation">.</span>port<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldType<span class="token punctuation">.</span>Number</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">required</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">value</span><span class="token punctuation">(</span><span class="token number">8812</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token class-name">PluginConfigureField</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldName</span><span class="token punctuation">.</span>username<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldType<span class="token punctuation">.</span>String</span><span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">group</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldGroup</span><span class="token punctuation">.</span>authorization<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token class-name">PluginConfigureField</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldName</span><span class="token punctuation">.</span>password<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldType<span class="token punctuation">.</span>String</span><span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">group</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldGroup</span><span class="token punctuation">.</span>authorization<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token class-name">PluginConfigureField</span><span class="token punctuation">.</span><span class="token function">builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">field</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldName</span><span class="token punctuation">.</span>database<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">type</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldType<span class="token punctuation">.</span>String</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">value</span><span class="token punctuation">(</span><span class="token string">"qdb"</span><span class="token punctuation">)</span>
+                        <span class="token punctuation">.</span><span class="token function">group</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureFieldGroup</span><span class="token punctuation">.</span>advanced<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">build</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token keyword">null</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        configure<span class="token punctuation">.</span><span class="token function">setDescriptions</span><span class="token punctuation">(</span><span class="token class-name">Map</span><span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"zh"</span><span class="token punctuation">,</span> <span class="token string">"QuestDB 是高性能时序数据库。"</span><span class="token punctuation">,</span> <span class="token string">"en"</span><span class="token punctuation">,</span> <span class="token string">"QuestDB is a high-performance time-series database."</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        configure<span class="token punctuation">.</span><span class="token function">setCategory</span><span class="token punctuation">(</span><span class="token class-name">PluginConfigureCategory</span><span class="token punctuation">.</span><span class="token constant">NOSQL</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> configure<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-4"></div>
+    
+        <h3 id="Serviceclassconnectionandmetadata">
+            
+        <span class="leading-7">Service class: connection and metadata</span>
+    
+        </h3>
+    
+        <span class="leading-7">The service class implements </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.spi.PluginService</code>
+    
+        <span class="leading-7">. Queries run through the JDBC driver named by </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">driver()</code>
+    
+        <span class="leading-7">; the connection URL defaults to </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">jdbc:<connectType>://host:port/database</code>
+    
+        <span class="leading-7">.</span>
+    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
+            
+            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">java</div>
+            
+        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
+            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </button>
+    
+            <div class="!overflow-x-auto !flex">
+                
+                <div class="!flex-1">
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">QuestDBService</span>
+        <span class="token keyword">implements</span> <span class="token class-name">PluginService</span>
+<span class="token punctuation">{</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">driver</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token string">"org.postgresql.Driver"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">connectType</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token string">"postgresql"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token comment">/** 连接测试执行的语句，第一列返回服务端版本。 */</span>
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">validator</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token string">"SELECT build() AS version"</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Response</span> <span class="token function">getDatabases</span><span class="token punctuation">(</span><span class="token class-name">RuntimeConfigure</span> configure<span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> <span class="token string">"SELECT current_database() AS object_name, 'DATABASE' AS object_type, '' AS object_comment"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Response</span> <span class="token function">getTables</span><span class="token punctuation">(</span><span class="token class-name">RuntimeConfigure</span> configure<span class="token punctuation">,</span> <span class="token class-name">String</span> database<span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> <span class="token string">"SELECT 'table' AS type_name, table_name AS object_name, '' AS object_comment FROM tables()"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@Override</span>
+    <span class="token keyword">public</span> <span class="token class-name">Response</span> <span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token class-name">RuntimeConfigure</span> configure<span class="token punctuation">,</span> <span class="token class-name">String</span> database<span class="token punctuation">,</span> <span class="token class-name">String</span> table<span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> <span class="token string">"SELECT 'column' AS type_name, \"column\" AS object_name, type AS object_data_type FROM table_columns('"</span> <span class="token operator">+</span> table <span class="token operator">+</span> <span class="token string">"')"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-4"></div>
+    
+        <span class="leading-7">Databases, tables and columns come one of two ways:</span>
+    
+        <div class="space-y-4"></div>
+    
+        <ol class="my-4 pl-8 list-decimal">
+            <li class="mb-2 text-gray-700"><strong>
+        <span class="leading-7">JDBC metadata (preferred)</span>
+    </strong>
+        <span class="leading-7">: when the driver implements </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">DatabaseMetaData</code>
+    
+        <span class="leading-7"> (</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getSchemas</code>
+    
+        <span class="leading-7">/</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getCatalogs</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getTables</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getColumns</code>
+    
+        <span class="leading-7">), return </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metadataDatabases(configure)</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metadataTables(configure, database)</code>
     
         <span class="leading-7"> and </span>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-common</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metadataColumns(configure, database, table)</code>
     
-        <span class="leading-7"> modules, and others are some auxiliary dependencies.</span>
+        <span class="leading-7">. Databases are read as JDBC schemas; a driver that reports only catalogs falls back to them for the database list.</span>
+    </li><li class="mb-2 text-gray-700"><strong>
+        <span class="leading-7">SQL</span>
+    </strong>
+        <span class="leading-7">: query the source's own system tables or functions, with these result column names:</span>
+    </li>
+        </ol>
     
         <div class="space-y-4"></div>
     
-        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-yellow-700">
-                    
-        <div class="space-y-4"></div>
+        <div class="space-y-4">
+            <div class="relative overflow-x-auto shadow-sm ring-1 ring-gray-200 dark:ring-gray-700 sm:rounded-lg">
+                <table class="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                    <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                        <tr>
+                            
+                                <th scope="col" class="px-3.5 py-1 text-left">
+                                    
+        <span class="leading-7">Method</span>
     
-        <span class="leading-7">It should be noted that if you open the project separately, you need to specify the version number of each dependency.</span>
+                                </th>
+                            
+                                <th scope="col" class="px-3.5 py-1 text-left">
+                                    
+        <span class="leading-7">Result columns</span>
     
-                </div>
+                                </th>
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getDatabases</code>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_name</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_type</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_comment</code>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getTables</code>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">type_name</code>
+    
+        <span class="leading-7"> (</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">table</code>
+    
+        <span class="leading-7">/</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">view</code>
+    
+        <span class="leading-7">), </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_name</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_comment</code>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getColumns</code>
+    
+                                    </td>
+                                
+                                    <td class="px-3 py-1.5 text-left">
+                                        
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">type_name</code>
+    
+        <span class="leading-7"> (</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">column</code>
+    
+        <span class="leading-7">), </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_name</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_data_type</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_nullable</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_default_value</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_comment</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_position</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_definition</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_length</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_autoincrement</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object_scale</code>
+    
+                                    </td>
+                                
+                            </tr>
+                        
+                    </tbody>
+                </table>
             </div>
         </div>
     
-        <div class="space-y-4"></div>
-    
-        <h3 id="PluginLoader">
+        <h3 id="WritingaJDBCdriver">
             
-        <span class="leading-7">Plugin Loader</span>
+        <span class="leading-7">Writing a JDBC driver</span>
     
         </h3>
-    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
-            
-            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">java</div>
-            
-        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
-            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-        </button>
     
-            <div class="!overflow-x-auto !flex">
-                
-                <div class="!flex-1">
-                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">QuestDBPluginModule</span>
-        <span class="token keyword">extends</span> <span class="token class-name">AbstractPluginModule</span>
-        <span class="token keyword">implements</span> <span class="token class-name">PluginModule</span>
-<span class="token punctuation">{</span>
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token string">"QuestDB"</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token class-name">PluginType</span> <span class="token function">getType</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token class-name">PluginType</span><span class="token punctuation">.</span><span class="token constant">HTTP</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token class-name">AbstractPluginModule</span> <span class="token function">get</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token keyword">protected</span> <span class="token keyword">void</span> <span class="token function">configure</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token class-name">Multibinder</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Plugin</span><span class="token punctuation">></span></span> plugin <span class="token operator">=</span> <span class="token class-name">Multibinder</span><span class="token punctuation">.</span><span class="token function">newSetBinder</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">binder</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token class-name">Plugin</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        plugin<span class="token punctuation">.</span><span class="token function">addBinding</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token keyword">to</span><span class="token punctuation">(</span><span class="token class-name">QuestDBPlugin</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-                </div>
-            </div>
-        </div>
-        <div class="space-y-4"></div>
+        <span class="leading-7">A source without a JDBC driver gets one under </span>
     
-        <span class="leading-7">The loader needs to inherit the </span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">driver/metaforge-driver-<name></code>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">AbstractPluginModule</code>
-    
-        <span class="leading-7"> class and implement the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">PluginModule</code>
-    
-        <span class="leading-7"> interface, so that the system will automatically load the plug-in into the system when it starts.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="rounded-lg my-2 overflow-hidden border border-purple-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-purple-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Note</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-purple-700">
-                    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">It should be noted that you need to override the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">configure()</code>
-    
-        <span class="leading-7"> method in the parent class and bind the plugin to the system.</span>
-    
-                </div>
-            </div>
-        </div>
-    
-        <div class="space-y-4"></div>
-    
-        <h3 id="PluginExecutor">
-            
-        <span class="leading-7">Plugin Executor</span>
-    
-        </h3>
-    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
-            
-            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">java</div>
-            
-        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
-            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-            </svg>
-        </button>
-    
-            <div class="!overflow-x-auto !flex">
-                
-                <div class="!flex-1">
-                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-java"><span class="token annotation punctuation">@Slf4j</span>
-<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">QuestDBPlugin</span>
-        <span class="token keyword">implements</span> <span class="token class-name">Plugin</span>
-<span class="token punctuation">{</span>
-    <span class="token keyword">private</span> <span class="token class-name">HttpConfigure</span> configure<span class="token punctuation">;</span>
-    <span class="token keyword">private</span> <span class="token class-name">HttpConnection</span> connection<span class="token punctuation">;</span>
-    <span class="token keyword">private</span> <span class="token class-name">Response</span> response<span class="token punctuation">;</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">name</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token string">"QuestDB"</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token class-name">String</span> <span class="token function">description</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token string">"Integrate QuestDB data sources"</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token class-name">PluginType</span> <span class="token function">type</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">return</span> <span class="token class-name">PluginType</span><span class="token punctuation">.</span><span class="token constant">HTTP</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">connect</span><span class="token punctuation">(</span><span class="token class-name">Configure</span> configure<span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">try</span> <span class="token punctuation">{</span>
-            <span class="token keyword">this</span><span class="token punctuation">.</span>response <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Response</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token keyword">this</span><span class="token punctuation">.</span>configure <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HttpConfigure</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token class-name">BeanUtils</span><span class="token punctuation">.</span><span class="token function">copyProperties</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>configure<span class="token punctuation">,</span> configure<span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token keyword">this</span><span class="token punctuation">.</span>connection <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HttpConnection</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>configure<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>response<span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">}</span>
-        <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> ex<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-            <span class="token keyword">this</span><span class="token punctuation">.</span>response<span class="token punctuation">.</span><span class="token function">setIsConnected</span><span class="token punctuation">(</span><span class="token class-name">Boolean</span><span class="token punctuation">.</span><span class="token constant">FALSE</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token keyword">this</span><span class="token punctuation">.</span>response<span class="token punctuation">.</span><span class="token function">setMessage</span><span class="token punctuation">(</span>ex<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">}</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token class-name">Response</span> <span class="token function">execute</span><span class="token punctuation">(</span><span class="token class-name">String</span> content<span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">ObjectUtils</span><span class="token punctuation">.</span><span class="token function">isNotEmpty</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>connection<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-            log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"Execute questdb plugin logic started"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token keyword">this</span><span class="token punctuation">.</span>response <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>connection<span class="token punctuation">.</span><span class="token function">getResponse</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token class-name">QuestDBAdapter</span> processor <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">QuestDBAdapter</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>connection<span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token keyword">this</span><span class="token punctuation">.</span>response <span class="token operator">=</span> processor<span class="token punctuation">.</span><span class="token function">handlerExecute</span><span class="token punctuation">(</span>content<span class="token punctuation">)</span><span class="token punctuation">;</span>
-            log<span class="token punctuation">.</span><span class="token function">info</span><span class="token punctuation">(</span><span class="token string">"Execute questdb plugin logic end"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">}</span>
-        <span class="token keyword">this</span><span class="token punctuation">.</span><span class="token function">destroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token keyword">return</span> <span class="token keyword">this</span><span class="token punctuation">.</span>response<span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">destroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">ObjectUtils</span><span class="token punctuation">.</span><span class="token function">isNotEmpty</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>connection<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-            <span class="token keyword">this</span><span class="token punctuation">.</span>connection<span class="token punctuation">.</span><span class="token function">destroy</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token punctuation">}</span>
-    <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
-                </div>
-            </div>
-        </div>
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">The executor needs to implement the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Plugin</code>
-    
-        <span class="leading-7"> interface, which provides the following methods</span>
+        <span class="leading-7"> (see the ZooKeeper, Kafka, HDFS, Redis and MongoDB drivers):</span>
     
         <div class="space-y-4"></div>
     
         <ul class="my-4 pl-8 list-disc">
             <li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">name()</code>
+        <span class="leading-7">Depend on </span>
     
-        <span class="leading-7">: Plugins have unique names, and plugins with the same name will only take effect the first time they are loaded</span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-driver-sql</code>
+    
+        <span class="leading-7"> and implement </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">SqlSource</code>
+    
+        <span class="leading-7"> (</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">databases()</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">tables(database)</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">columns(database, table)</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">rows(...)</code>
+    
+        <span class="leading-7">); </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Connection.getMetaData()</code>
+    
+        <span class="leading-7"> returns </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">new SqlSourceDatabaseMetaData(new SqlSourceConnection(source, url, database, user))</code>
+    
+        <span class="leading-7">, so the plugin can use the JDBC metadata route.</span>
     </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">description()</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Statement.execute(sql)</code>
     
-        <span class="leading-7">: A description of the plugin</span>
+        <span class="leading-7"> must leave a query's rows in </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getResultSet()</code>
+    
+        <span class="leading-7">, return </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">true</code>
+    
+        <span class="leading-7">, and </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getUpdateCount()</code>
+    
+        <span class="leading-7"> must return </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">-1</code>
+    
+        <span class="leading-7">: MetaForge runs every statement through </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">execute()</code>
+    
+        <span class="leading-7">, and </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">false</code>
+    
+        <span class="leading-7"> turns every query into an update count of 0.</span>
     </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">type()</code>
+        <span class="leading-7">An empty result still needs </span>
     
-        <span class="leading-7">: Plugin type</span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">ResultSetMetaData</code>
+    
+        <span class="leading-7"> (with no columns).</span>
     </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">connect(Configure configure)</code>
+        <span class="leading-7">The configured database must take effect: read it from the </span>
     
-        <span class="leading-7">: Plug-ins need connection information in advance, such as the current plug-in plug-in, which is the connection phase of the plug-in (the system presets the HTTP connection method to be used directly).</span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">database</code>
+    
+        <span class="leading-7"> property or the URL path (</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">jdbc:<type>://host:port/<database></code>
+    
+        <span class="leading-7">).</span>
     </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">execute(String content)</code>
+        <span class="leading-7">Register the driver class in </span>
     
-        <span class="leading-7">: Execute the operation logic</span>
-    </li><li class="mb-2 text-gray-700">
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">destroy()</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">META-INF/services/java.sql.Driver</code>
     
-        <span class="leading-7">:  The final destruction of the plug-in, note that the destruction needs to contain the information in the connection</span>
+        <span class="leading-7">.</span>
     </li>
         </ul>
     
         <div class="space-y-4"></div>
     
-        <h3 id="PluginConverter">
+        <h3 id="SPIregistration">
             
-        <span class="leading-7">Plugin Converter</span>
+        <span class="leading-7">SPI registration</span>
     
         </h3>
+    
+        <span class="leading-7">Create two files under </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">src/main/resources/META-INF/services</code>
+    
+        <span class="leading-7">:</span>
+    
+        <div class="space-y-4"></div>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.plugin.Plugin</code>
     <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
             
-            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">java</div>
+            
             
         <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
             <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1685,150 +2004,16 @@
             <div class="!overflow-x-auto !flex">
                 
                 <div class="!flex-1">
-                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-java"><span class="token annotation punctuation">@Slf4j</span>
-<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">QuestDBAdapter</span>
-        <span class="token keyword">extends</span> <span class="token class-name">HttpAdapter</span>
-<span class="token punctuation">{</span>
-    <span class="token keyword">public</span> <span class="token class-name">QuestDBAdapter</span><span class="token punctuation">(</span><span class="token class-name">HttpConnection</span> connection<span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token keyword">super</span><span class="token punctuation">(</span>connection<span class="token punctuation">)</span><span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-
-    <span class="token annotation punctuation">@Override</span>
-    <span class="token keyword">public</span> <span class="token class-name">Response</span> <span class="token function">handlerExecute</span><span class="token punctuation">(</span><span class="token class-name">String</span> content<span class="token punctuation">)</span>
-    <span class="token punctuation">{</span>
-        <span class="token class-name">Time</span> processorTime <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Time</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        processorTime<span class="token punctuation">.</span><span class="token function">setStart</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token class-name">Response</span> response <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>httpConnection<span class="token punctuation">.</span><span class="token function">getResponse</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token class-name">HttpConfigure</span> configure <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HttpConfigure</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token keyword">if</span> <span class="token punctuation">(</span>response<span class="token punctuation">.</span><span class="token function">getIsConnected</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-            <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">></span></span> headers <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">></span></span> types <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">Object</span><span class="token punctuation">></span></span> columns <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token keyword">try</span> <span class="token punctuation">{</span>
-                <span class="token class-name">BeanUtils</span><span class="token punctuation">.</span><span class="token function">copyProperties</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> <span class="token keyword">this</span><span class="token punctuation">.</span>httpConnection<span class="token punctuation">.</span><span class="token function">getConfigure</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                configure<span class="token punctuation">.</span><span class="token function">setAutoConnected</span><span class="token punctuation">(</span><span class="token class-name">Boolean</span><span class="token punctuation">.</span><span class="token constant">FALSE</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                configure<span class="token punctuation">.</span><span class="token function">setRetry</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                configure<span class="token punctuation">.</span><span class="token function">setMethod</span><span class="token punctuation">(</span><span class="token class-name">HttpMethod</span><span class="token punctuation">.</span><span class="token constant">GET</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                configure<span class="token punctuation">.</span><span class="token function">setPath</span><span class="token punctuation">(</span><span class="token string">"exec"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                <span class="token class-name">Map</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">,</span> <span class="token class-name">String</span><span class="token punctuation">></span></span> parameters <span class="token operator">=</span> <span class="token class-name">Maps</span><span class="token punctuation">.</span><span class="token function">newHashMap</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                parameters<span class="token punctuation">.</span><span class="token function">put</span><span class="token punctuation">(</span><span class="token string">"query"</span><span class="token punctuation">,</span> content<span class="token punctuation">)</span><span class="token punctuation">;</span>
-                configure<span class="token punctuation">.</span><span class="token function">setParams</span><span class="token punctuation">(</span>parameters<span class="token punctuation">)</span><span class="token punctuation">;</span>
-                configure<span class="token punctuation">.</span><span class="token function">setDecoded</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                <span class="token class-name">HttpConnection</span> httpConnection <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">HttpConnection</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> <span class="token keyword">new</span> <span class="token class-name">Response</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                <span class="token class-name">HttpClient</span> httpClient <span class="token operator">=</span> <span class="token class-name">HttpClient</span><span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> httpConnection<span class="token punctuation">)</span><span class="token punctuation">;</span>
-                <span class="token class-name">String</span> body <span class="token operator">=</span> httpClient<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                <span class="token class-name">QuestDBResponse</span> requestResponse <span class="token operator">=</span> <span class="token constant">JSON</span><span class="token punctuation">.</span>objectmapper<span class="token punctuation">.</span><span class="token function">readValue</span><span class="token punctuation">(</span>body<span class="token punctuation">,</span> <span class="token class-name">QuestDBResponse</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">ObjectUtils</span><span class="token punctuation">.</span><span class="token function">isNotEmpty</span><span class="token punctuation">(</span>requestResponse<span class="token punctuation">.</span><span class="token function">getQuery</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-                    response<span class="token punctuation">.</span><span class="token function">setIsSuccessful</span><span class="token punctuation">(</span><span class="token boolean">true</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token class-name">ObjectUtils</span><span class="token punctuation">.</span><span class="token function">isNotEmpty</span><span class="token punctuation">(</span>requestResponse<span class="token punctuation">.</span><span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
-                        requestResponse<span class="token punctuation">.</span><span class="token function">getColumns</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-                                <span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span>schema <span class="token operator">-></span> <span class="token punctuation">{</span>
-                                    headers<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>schema<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                                    types<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>schema<span class="token punctuation">.</span><span class="token function">getType</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                                <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                    <span class="token punctuation">}</span>
-                    requestResponse<span class="token punctuation">.</span><span class="token function">getDataset</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
-                            <span class="token punctuation">.</span><span class="token function">forEach</span><span class="token punctuation">(</span>record <span class="token operator">-></span> columns<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span><span class="token function">handlerFormatter</span><span class="token punctuation">(</span>configure<span class="token punctuation">.</span><span class="token function">getFormat</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> headers<span class="token punctuation">,</span> record<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                <span class="token punctuation">}</span>
-                <span class="token keyword">else</span> <span class="token punctuation">{</span>
-                    response<span class="token punctuation">.</span><span class="token function">setIsSuccessful</span><span class="token punctuation">(</span><span class="token class-name">Boolean</span><span class="token punctuation">.</span><span class="token constant">FALSE</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                    response<span class="token punctuation">.</span><span class="token function">setMessage</span><span class="token punctuation">(</span>requestResponse<span class="token punctuation">.</span><span class="token function">getError</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                <span class="token punctuation">}</span>
-            <span class="token punctuation">}</span>
-            <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">Exception</span> ex<span class="token punctuation">)</span> <span class="token punctuation">{</span>
-                log<span class="token punctuation">.</span><span class="token function">error</span><span class="token punctuation">(</span><span class="token string">"Execute content failed content {} exception "</span><span class="token punctuation">,</span> content<span class="token punctuation">,</span> ex<span class="token punctuation">)</span><span class="token punctuation">;</span>
-                response<span class="token punctuation">.</span><span class="token function">setIsSuccessful</span><span class="token punctuation">(</span><span class="token class-name">Boolean</span><span class="token punctuation">.</span><span class="token constant">FALSE</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-                response<span class="token punctuation">.</span><span class="token function">setMessage</span><span class="token punctuation">(</span>ex<span class="token punctuation">.</span><span class="token function">getMessage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token punctuation">}</span>
-            <span class="token keyword">finally</span> <span class="token punctuation">{</span>
-                response<span class="token punctuation">.</span><span class="token function">setHeaders</span><span class="token punctuation">(</span>headers<span class="token punctuation">)</span><span class="token punctuation">;</span>
-                response<span class="token punctuation">.</span><span class="token function">setTypes</span><span class="token punctuation">(</span>types<span class="token punctuation">)</span><span class="token punctuation">;</span>
-                response<span class="token punctuation">.</span><span class="token function">setColumns</span><span class="token punctuation">(</span>columns<span class="token punctuation">)</span><span class="token punctuation">;</span>
-            <span class="token punctuation">}</span>
-        <span class="token punctuation">}</span>
-        processorTime<span class="token punctuation">.</span><span class="token function">setEnd</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">Date</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">getTime</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-        response<span class="token punctuation">.</span><span class="token function">setProcessor</span><span class="token punctuation">(</span>processorTime<span class="token punctuation">)</span><span class="token punctuation">;</span>
-        <span class="token keyword">return</span> response<span class="token punctuation">;</span>
-    <span class="token punctuation">}</span>
-<span class="token punctuation">}</span></code></pre>
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="">org.devlive.metaforge.plugin.QuestDBPlugin</code></pre>
                 </div>
             </div>
         </div>
         <div class="space-y-4"></div>
     
-        <span class="leading-7">The plug-in converter is used to convert the result after the current plug-in is executed, and convert it into logic that can be used in MetaForge. It is mainly used to encapsulate </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">Response</code>
-    
-        <span class="leading-7"> to return the result.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">This article is a JDBC-based plug-in, so some functions can be realized by directly inheriting the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">HttpAdapter</code>
-    
-        <span class="leading-7"> parent class.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <h3 id="SPIloader">
-            
-        <span class="leading-7">SPI loader</span>
-    
-        </h3>
-    
-        <span class="leading-7">Add </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">META-INF</code>
-    
-        <span class="leading-7"> and </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">services</code>
-    
-        <span class="leading-7"> directory under </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">resources</code>
-    
-        <span class="leading-7"> source directory</span>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-yellow-700">
-                    
-        <div class="space-y-4"></div>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">services</code>
-    
-        <span class="leading-7"> needs to be in the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">resources</code>
-    
-        <span class="leading-7"> directory</span>
-    
-                </div>
-            </div>
-        </div>
-    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">Create the </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.spi.PluginModule</code>
-    
-        <span class="leading-7"> file, as follows</span>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">org.devlive.metaforge.plugin.Service</code>
     <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
             
-            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">java</div>
+            
             
         <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
             <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1842,34 +2027,10 @@
             <div class="!overflow-x-auto !flex">
                 
                 <div class="!flex-1">
-                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-java"><span class="token class-name"><span class="token namespace">org<span class="token punctuation">.</span>devlive<span class="token punctuation">.</span>metaforge<span class="token punctuation">.</span>plugin<span class="token punctuation">.</span></span>QuestDBPluginModule</span></code></pre>
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="">org.devlive.metaforge.plugin.QuestDBService</code></pre>
                 </div>
             </div>
         </div>
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">The content of this file is the plugin loading module we defined.</span>
-    
-        <div class="space-y-4"></div>
-    
-        <div class="rounded-lg my-2 overflow-hidden border border-yellow-200">
-        
-        <div class="flex items-start space-x-2 p-2 rounded-t-lg bg-yellow-50">
-               <div class="flex-shrink-0"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5 text-yellow-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
-               <h3 class="text-sm font-medium text-gray-900 mb-2">Warning</h3>
-           </div>
-                   
-            <div class="w-full px-5 py-3">
-                <div class="text-sm text-yellow-700">
-                    
-        <div class="space-y-4"></div>
-    
-        <span class="leading-7">The unit test of the plug-in can refer to the published plug-in for testing</span>
-    
-                </div>
-            </div>
-        </div>
-    
         <div class="space-y-4"></div>
     
         <h3 id="Managementcapabilities">
@@ -1878,15 +2039,11 @@
     
         </h3>
     
-        <span class="leading-7">Every page, tab, dialog, drawer, side panel and button of source management (console, data import, data export, data compare, ER diagram) is controlled by one management capability. A plugin declares the capabilities it implements in </span>
+        <span class="leading-7">Every page, tab, dialog, drawer, side panel and button of source management (workbench, data import, data export, data compare, ER diagram) is governed by one management capability. A plugin declares the capabilities it implements in </span>
     
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere"><ServiceClass>.capabilities.json</code>
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">src/main/resources/org/devlive/metaforge/plugin/capabilities.json</code>
     
-        <span class="leading-7"> next to its service class, for example </span>
-    
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">src/main/resources/org/devlive/metaforge/plugin/MySQLService.capabilities.json</code>
-    
-        <span class="leading-7">:</span>
+        <span class="leading-7"> (every plugin keeps it at that path; only the copy in the plugin's own jar is read):</span>
     <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
             
             <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">json</div>
@@ -1916,7 +2073,7 @@
             <li class="mb-2 text-gray-700">
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">kind</code>
     
-        <span class="leading-7"> chooses the workspace layout: </span>
+        <span class="leading-7"> describes the source: </span>
     
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">relational</code>
     
@@ -1936,29 +2093,77 @@
     
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">graph</code>
     
-        <span class="leading-7"> or </span>
+        <span class="leading-7">, </span>
     
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">unknown</code>
     
-        <span class="leading-7">.</span>
+        <span class="leading-7">. Every kind uses the same UI; only the capabilities decide what it shows.</span>
     </li><li class="mb-2 text-gray-700">
-        <span class="leading-7">A plugin without a declaration offers no management: the source list hides its Manage entry and the related pages do not open.</span>
-    </li><li class="mb-2 text-gray-700">
-        <span class="leading-7">Declare only what the plugin implements; the server refuses every operation the plugin did not declare.</span>
-    </li><li class="mb-2 text-gray-700">
-        <span class="leading-7">Every plugin reaches its source through SQL, so a plugin that declares capabilities always declares </span>
+        <span class="leading-7">Every plugin declares at least </span>
     
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">query:execute</code>
     
-        <span class="leading-7">.</span>
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">database:list</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">table:list</code>
+    
+        <span class="leading-7"> and </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">column:read</code>
+    
+        <span class="leading-7">, so the database picker, the table tree and the columns work.</span>
     </li><li class="mb-2 text-gray-700">
-        <span class="leading-7">An unknown capability or kind fails when the plugin loads; a subclass without its own file uses its parent's declaration.</span>
+        <span class="leading-7">A plugin without the file offers no management: the source list hides "Data management" and its pages can not be opened.</span>
     </li><li class="mb-2 text-gray-700">
-        <span class="leading-7">A new management feature first registers its capability in </span>
+        <span class="leading-7">Every declared capability must be implemented; the server also refuses operations that were not declared.</span>
+    </li><li class="mb-2 text-gray-700">
+        <span class="leading-7">An unknown capability or </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">kind</code>
+    
+        <span class="leading-7"> fails the plugin when it loads; a subclass whose jar has no file inherits its parent jar's declaration.</span>
+    </li><li class="mb-2 text-gray-700">
+        <span class="leading-7">A new management feature registers its capability in </span>
     
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">ManagementCapability</code>
     
-        <span class="leading-7">, then plugins declare it, and every surface of the feature checks it.</span>
+        <span class="leading-7"> first, then plugins declare it, and every UI entry of the feature checks it.</span>
+    </li><li class="mb-2 text-gray-700">
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">namespace:list</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">key:list</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">key:read</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object:list</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object:read</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object:download</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">tab:keys</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">tab:objects</code>
+    
+        <span class="leading-7"> belong to the retired separate browsers and must not be declared.</span>
     </li>
         </ul>
     
@@ -1978,7 +2183,7 @@
                             
                                 <th scope="col" class="px-3.5 py-1 text-left">
                                     
-        <span class="leading-7">Controls</span>
+        <span class="leading-7">UI it governs</span>
     
                                 </th>
                             
@@ -1997,102 +2202,6 @@
                                     <td class="px-3 py-1.5 text-left">
                                         
         <span class="leading-7">Run SQL in the query console and the SQL tab</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">namespace:list</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <span class="leading-7">Namespace list of the native browser (Redis databases, buckets)</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">key:list</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <span class="leading-7">Key list of the native browser</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">key:read</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <span class="leading-7">Key detail panel</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object:list</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <span class="leading-7">Object list of the storage browser</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object:read</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <span class="leading-7">Object detail panel</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">object:download</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <span class="leading-7">Object download button</span>
     
                                     </td>
                                 
@@ -2770,42 +2879,162 @@
                                 
                             </tr>
                         
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">tab:keys</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <span class="leading-7">Key browser tab</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
-                            <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">tab:objects</code>
-    
-                                    </td>
-                                
-                                    <td class="px-3 py-1.5 text-left">
-                                        
-        <span class="leading-7">Object browser tab</span>
-    
-                                    </td>
-                                
-                            </tr>
-                        
                     </tbody>
                 </table>
             </div>
         </div>
+    
+        <h3 id="e2etest">
+            
+        <span class="leading-7">e2e test</span>
+    
+        </h3>
+    
+        <span class="leading-7">Every plugin has an e2e test that verifies each supported version in a container with Testcontainers (see </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">QuestDBE2ETest</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">MySQLE2ETest</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">RedisE2ETest</code>
+    
+        <span class="leading-7">):</span>
+    <div class="!block !w-full !bg-gray-100 !dark:bg-gray-800 !dark:text-gray-300 !text-gray-900 !my-3 !rounded !font-mono !leading-normal !overflow-hidden !relative">
+            
+            <div class="!absolute !right-12 !top-2 !text-sm !text-gray-500 !dark:text-gray-400 !bg-gray-100 !dark:bg-gray-800 !z-10">java</div>
+            
+        <button onclick="window.PageForge.CodeCopy.copy(this)" class="!absolute !right-2 !top-1 !p-1 !rounded !text-gray-400 hover:!text-blue-600 !dark:text-gray-500 hover:!dark:text-blue-300 !transition-colors !duration-200 !z-10">
+            <svg class="copy-icon !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+            </svg>
+            <svg class="check-icon !hidden !w-5 !h-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+            </svg>
+        </button>
+    
+            <div class="!overflow-x-auto !flex">
+                
+                <div class="!flex-1">
+                    <pre class="!px-3 !py-2.5 !m-0"><code class="language-java"><span class="token annotation punctuation">@RunWith</span><span class="token punctuation">(</span><span class="token class-name">Parameterized</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span>
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">QuestDBE2ETest</span>
+<span class="token punctuation">{</span>
+    <span class="token annotation punctuation">@Parameterized.Parameters</span><span class="token punctuation">(</span>name <span class="token operator">=</span> <span class="token string">"QuestDB {0}"</span><span class="token punctuation">)</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token class-name">List</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token class-name">String</span><span class="token punctuation">></span></span> <span class="token function">versions</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token class-name">List</span><span class="token punctuation">.</span><span class="token function">of</span><span class="token punctuation">(</span><span class="token string">"8.3"</span><span class="token punctuation">,</span> <span class="token string">"9.1"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token annotation punctuation">@Test</span>
+    <span class="token keyword">public</span> <span class="token keyword">void</span> <span class="token function">tablesAndColumnsAreManaged</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        <span class="token function">assumeDocker</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">try</span> <span class="token punctuation">(</span><span class="token class-name">GenericContainer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token operator">?</span><span class="token punctuation">></span></span> container <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">GenericContainer</span><span class="token generics"><span class="token punctuation">&lt;</span><span class="token punctuation">></span></span><span class="token punctuation">(</span><span class="token string">"questdb/questdb:"</span> <span class="token operator">+</span> version<span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">withExposedPorts</span><span class="token punctuation">(</span><span class="token number">8812</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            container<span class="token punctuation">.</span><span class="token function">start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">PluginService</span> service <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">QuestDBService</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">RuntimeConfigure</span> configure <span class="token operator">=</span> <span class="token function">configure</span><span class="token punctuation">(</span>container<span class="token punctuation">.</span><span class="token function">getHost</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> container<span class="token punctuation">.</span><span class="token function">getMappedPort</span><span class="token punctuation">(</span><span class="token number">8812</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"admin"</span><span class="token punctuation">,</span> <span class="token string">"quest"</span><span class="token punctuation">,</span> <span class="token string">"qdb"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+            <span class="token class-name">Assert</span><span class="token punctuation">.</span><span class="token function">assertTrue</span><span class="token punctuation">(</span><span class="token function">first</span><span class="token punctuation">(</span><span class="token function">ok</span><span class="token punctuation">(</span><span class="token string">"validator"</span><span class="token punctuation">,</span> service<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> service<span class="token punctuation">.</span><span class="token function">validator</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">startsWith</span><span class="token punctuation">(</span>version <span class="token operator">+</span> <span class="token string">"."</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token function">ok</span><span class="token punctuation">(</span><span class="token string">"create"</span><span class="token punctuation">,</span> service<span class="token punctuation">.</span><span class="token function">execute</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> <span class="token string">"CREATE TABLE trades (ts TIMESTAMP, price DOUBLE) TIMESTAMP(ts)"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Assert</span><span class="token punctuation">.</span><span class="token function">assertTrue</span><span class="token punctuation">(</span><span class="token function">column</span><span class="token punctuation">(</span><span class="token function">ok</span><span class="token punctuation">(</span><span class="token string">"databases"</span><span class="token punctuation">,</span> service<span class="token punctuation">.</span><span class="token function">getDatabases</span><span class="token punctuation">(</span>configure<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"object_name"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span><span class="token string">"qdb"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Assert</span><span class="token punctuation">.</span><span class="token function">assertTrue</span><span class="token punctuation">(</span><span class="token function">column</span><span class="token punctuation">(</span><span class="token function">ok</span><span class="token punctuation">(</span><span class="token string">"tables"</span><span class="token punctuation">,</span> service<span class="token punctuation">.</span><span class="token function">getTables</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> <span class="token string">"qdb"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"object_name"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span><span class="token string">"trades"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token class-name">Assert</span><span class="token punctuation">.</span><span class="token function">assertTrue</span><span class="token punctuation">(</span><span class="token function">column</span><span class="token punctuation">(</span><span class="token function">ok</span><span class="token punctuation">(</span><span class="token string">"columns"</span><span class="token punctuation">,</span> service<span class="token punctuation">.</span><span class="token function">getColumns</span><span class="token punctuation">(</span>configure<span class="token punctuation">,</span> <span class="token string">"qdb"</span><span class="token punctuation">,</span> <span class="token string">"trades"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">"object_name"</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span><span class="token string">"price"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre>
+                </div>
+            </div>
+        </div>
+        <div class="space-y-4"></div>
+    
+        <span class="leading-7">The test covers at least the server version, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getDatabases</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getTables</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">getColumns</code>
+    
+        <span class="leading-7">, and reading back data another client wrote. </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">PluginE2E</code>
+    
+        <span class="leading-7"> (</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">test/metaforge-test-e2e</code>
+    
+        <span class="leading-7">) provides </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">assumeDocker</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">configure</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">ok</code>
+    
+        <span class="leading-7">, </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">column</code>
+    
+        <span class="leading-7"> and </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">first</code>
+    
+        <span class="leading-7">.</span>
+    
+        <div class="space-y-4"></div>
+    
+        <h3 id="Localdevelopmentanddocs">
+            
+        <span class="leading-7">Local development and docs</span>
+    
+        </h3>
+    
+        <ul class="my-4 pl-8 list-disc">
+            <li class="mb-2 text-gray-700">
+        <span class="leading-7">Register the plugin module in </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">configure/etc/conf/plugins.properties</code>
+    
+        <span class="leading-7"> (</span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">metaforge-plugin-questdb=plugin/metaforge-plugin-questdb/pom.xml</code>
+    
+        <span class="leading-7">), run </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">./mvnw install -pl plugin/metaforge-plugin-questdb</code>
+    
+        <span class="leading-7"> and restart the server; in development it loads the plugin from the module's </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">target/classes</code>
+    
+        <span class="leading-7"> and </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">target/dependencies</code>
+    
+        <span class="leading-7">.</span>
+    </li><li class="mb-2 text-gray-700">
+        <span class="leading-7">Write the connector page at </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">docs/content/reference/connectors/<name>/home.md</code>
+    
+        <span class="leading-7">, list the e2e-verified versions under "Version (Validation)", and register it in </span>
+    
+        <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">docs/pageforge.yaml</code>
+    
+        <span class="leading-7">.</span>
+    </li>
+        </ul>
     
         </div>
 
@@ -2825,7 +3054,7 @@
                 <line x1="3" y1="12" y2="12" x2="9"/>
                 <line x1="15" y1="12" y2="12" x2="21"/>
             </svg>
-            <span>提交于 2026年11月1日 01:51</span>
+            <span>提交于 2026年11月7日 08:38</span>
         </div>
 
         <!-- 最后修改时间 -->
@@ -2837,7 +3066,7 @@
                 <path d="M3 3v5h5"/>
                 <path d="M12 7v5l4 2"/>
             </svg>
-            <span>修改于 2026年11月1日 01:51</span>
+            <span>修改于 2026年11月7日 08:38</span>
         </div>
 
         <!-- Hash 链接 -->
@@ -2850,11 +3079,11 @@
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <a href="https://github.com/devlive-community/metaforge/commit/602c12d15787013c5c0ee0f8232430ef20d594b1"
+                <a href="https://github.com/devlive-community/metaforge/commit/1a90f12531c75d5e8e519b4381b2a2ac949d5b2c"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="hover:text-blue-600 dark:hover:text-blue-400">
-                    首次提交 (602c12d1)
+                    首次提交 (1a90f125)
                 </a>
             </div>
 
@@ -2866,11 +3095,11 @@
                     <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
                     <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
                 </svg>
-                <a href="https://github.com/devlive-community/metaforge/commit/602c12d15787013c5c0ee0f8232430ef20d594b1"
+                <a href="https://github.com/devlive-community/metaforge/commit/1a90f12531c75d5e8e519b4381b2a2ac949d5b2c"
                    target="_blank"
                    rel="noopener noreferrer"
                    class="hover:text-blue-600 dark:hover:text-blue-400">
-                    末次提交 (602c12d1)
+                    末次提交 (1a90f125)
                 </a>
             </div>
         
@@ -2972,57 +3201,79 @@
                 
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#pomxmlDepend"
+                            <a href="#Ruleseverypluginfollows"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="pomxmlDepend">
+                               data-slug="Ruleseverypluginfollows">
+                                
+        <span class="leading-7">Rules every plugin follows</span>
+    
+                            </a>
+                        </div>
+                        
+                    
+                        <div class="pl-8 inline-block min-w-full">
+                            <a href="#Layout"
+                               class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                               data-slug="Layout">
+                                
+        <span class="leading-7">Layout</span>
+    
+                            </a>
+                        </div>
+                        
+                    
+                        <div class="pl-8 inline-block min-w-full">
+                            <a href="#pomxmldependencies"
+                               class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                               data-slug="pomxmldependencies">
                                 
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">pom.xml</code>
     
-        <span class="leading-7"> Depend</span>
+        <span class="leading-7"> dependencies</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#PluginLoader"
+                            <a href="#Pluginclassconfigurationfields"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="PluginLoader">
+                               data-slug="Pluginclassconfigurationfields">
                                 
-        <span class="leading-7">Plugin Loader</span>
+        <span class="leading-7">Plugin class: configuration fields</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#PluginExecutor"
+                            <a href="#Serviceclassconnectionandmetadata"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="PluginExecutor">
+                               data-slug="Serviceclassconnectionandmetadata">
                                 
-        <span class="leading-7">Plugin Executor</span>
+        <span class="leading-7">Service class: connection and metadata</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#PluginConverter"
+                            <a href="#WritingaJDBCdriver"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="PluginConverter">
+                               data-slug="WritingaJDBCdriver">
                                 
-        <span class="leading-7">Plugin Converter</span>
+        <span class="leading-7">Writing a JDBC driver</span>
     
                             </a>
                         </div>
                         
                     
                         <div class="pl-8 inline-block min-w-full">
-                            <a href="#SPIloader"
+                            <a href="#SPIregistration"
                                class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                               data-slug="SPIloader">
+                               data-slug="SPIregistration">
                                 
-        <span class="leading-7">SPI loader</span>
+        <span class="leading-7">SPI registration</span>
     
                             </a>
                         </div>
@@ -3034,6 +3285,28 @@
                                data-slug="Managementcapabilities">
                                 
         <span class="leading-7">Management capabilities</span>
+    
+                            </a>
+                        </div>
+                        
+                    
+                        <div class="pl-8 inline-block min-w-full">
+                            <a href="#e2etest"
+                               class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                               data-slug="e2etest">
+                                
+        <span class="leading-7">e2e test</span>
+    
+                            </a>
+                        </div>
+                        
+                    
+                        <div class="pl-8 inline-block min-w-full">
+                            <a href="#Localdevelopmentanddocs"
+                               class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                               data-slug="Localdevelopmentanddocs">
+                                
+        <span class="leading-7">Local development and docs</span>
     
                             </a>
                         </div>
@@ -3075,57 +3348,79 @@
             
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#pomxmlDepend"
+                        <a href="#Ruleseverypluginfollows"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="pomxmlDepend">
+                           data-slug="Ruleseverypluginfollows">
+                            
+        <span class="leading-7">Rules every plugin follows</span>
+    
+                        </a>
+                    </div>
+                    
+                
+                    <div class="pl-8 inline-block min-w-full">
+                        <a href="#Layout"
+                           class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                           data-slug="Layout">
+                            
+        <span class="leading-7">Layout</span>
+    
+                        </a>
+                    </div>
+                    
+                
+                    <div class="pl-8 inline-block min-w-full">
+                        <a href="#pomxmldependencies"
+                           class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                           data-slug="pomxmldependencies">
                             
         <code class="bg-gray-100 text-gray-900 px-1.5 py-0.5 rounded text-sm font-mono mx-1 inline-block max-w-full break-all whitespace-pre-wrap overflow-wrap-anywhere">pom.xml</code>
     
-        <span class="leading-7"> Depend</span>
+        <span class="leading-7"> dependencies</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#PluginLoader"
+                        <a href="#Pluginclassconfigurationfields"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="PluginLoader">
+                           data-slug="Pluginclassconfigurationfields">
                             
-        <span class="leading-7">Plugin Loader</span>
+        <span class="leading-7">Plugin class: configuration fields</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#PluginExecutor"
+                        <a href="#Serviceclassconnectionandmetadata"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="PluginExecutor">
+                           data-slug="Serviceclassconnectionandmetadata">
                             
-        <span class="leading-7">Plugin Executor</span>
+        <span class="leading-7">Service class: connection and metadata</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#PluginConverter"
+                        <a href="#WritingaJDBCdriver"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="PluginConverter">
+                           data-slug="WritingaJDBCdriver">
                             
-        <span class="leading-7">Plugin Converter</span>
+        <span class="leading-7">Writing a JDBC driver</span>
     
                         </a>
                     </div>
                     
                 
                     <div class="pl-8 inline-block min-w-full">
-                        <a href="#SPIloader"
+                        <a href="#SPIregistration"
                            class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
-                           data-slug="SPIloader">
+                           data-slug="SPIregistration">
                             
-        <span class="leading-7">SPI loader</span>
+        <span class="leading-7">SPI registration</span>
     
                         </a>
                     </div>
@@ -3137,6 +3432,28 @@
                            data-slug="Managementcapabilities">
                             
         <span class="leading-7">Management capabilities</span>
+    
+                        </a>
+                    </div>
+                    
+                
+                    <div class="pl-8 inline-block min-w-full">
+                        <a href="#e2etest"
+                           class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                           data-slug="e2etest">
+                            
+        <span class="leading-7">e2e test</span>
+    
+                        </a>
+                    </div>
+                    
+                
+                    <div class="pl-8 inline-block min-w-full">
+                        <a href="#Localdevelopmentanddocs"
+                           class="block px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors duration-150 toc-link whitespace-nowrap"
+                           data-slug="Localdevelopmentanddocs">
+                            
+        <span class="leading-7">Local development and docs</span>
     
                         </a>
                     </div>
