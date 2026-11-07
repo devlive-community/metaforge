@@ -194,6 +194,8 @@
                             @update:model-value="value => runtimeCurrent && (runtimeCurrent.values[field.name] = value ? 'true' : 'false')"/>
                   <MfInputNumber v-else-if="field.type === 'NUMBER'" class="w-full" :model-value="numberOf(runtimeCurrent.values[field.name])" :aria-label="field.name"
                                  @update:model-value="value => runtimeCurrent && (runtimeCurrent.values[field.name] = value === null || value === undefined ? '' : String(value))"/>
+                  <MfSelect v-else-if="field.type === 'SELECT'" v-model="runtimeCurrent.values[field.name]" class="w-full" :aria-label="field.name"
+                            :options="(field.options || []).map(value => ({ label: value, value }))"/>
                   <MfInput v-else v-model="runtimeCurrent.values[field.name]" :show-password="field.type === 'PASSWORD'" :aria-label="field.name"/>
                 </div>
               </div>
@@ -247,7 +249,7 @@ const siteRef = ref()
 const fs = ref(defaultFsSettings())
 
 // Runtime settings: the executors and the dataset target, each its own row of metaforge_configure.
-interface RuntimeField { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'PASSWORD'; defaultValue: string; description: string }
+interface RuntimeField { name: string; type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'PASSWORD' | 'SELECT'; defaultValue: string; description: string; options?: string[] }
 interface RuntimeItem { category: 'EXECUTOR' | 'DATASET'; name: string }
 interface RuntimeEntry { item: RuntimeItem; schema: RuntimeField[]; values: Record<string, string>; saved: Record<string, string> }
 const RUNTIME_CATEGORIES = ['EXECUTOR', 'DATASET'] as const

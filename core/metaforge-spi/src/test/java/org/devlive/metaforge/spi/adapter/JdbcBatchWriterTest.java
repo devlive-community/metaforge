@@ -7,6 +7,7 @@ import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
+import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +24,7 @@ public class JdbcBatchWriterTest
         final AtomicInteger batches = new AtomicInteger();
         boolean transactions;
         boolean commitUnsupported;
+        boolean batchFails;
         boolean autoCommit = true;
 
         Connection connection()
@@ -30,6 +32,9 @@ public class JdbcBatchWriterTest
             PreparedStatement statement = (PreparedStatement) Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[] {PreparedStatement.class}, (proxy, method, args) -> {
                 if (method.getName().equals("executeBatch")) {
                     batches.incrementAndGet();
+                    if (batchFails) {
+                        throw new SQLException("constraint violated");
+                    }
                     return new int[0];
                 }
                 return null;
@@ -93,6 +98,47 @@ public class JdbcBatchWriterTest
         Assert.assertEquals(2, driver.calls.stream().filter("commit"::equals).count());
         Assert.assertTrue(driver.calls.contains("setAutoCommit[false]"));
         Assert.assertTrue(driver.autoCommit);
+    }
+
+    @Test
+    public void aFailedBatchIsRolledBackNotCountedAndNotSentAgainOnClose()
+    {
+        Driver driver = new Driver();
+        driver.transactions = true;
+        AtomicBoolean released = new AtomicBoolean();
+        BatchWriter writer = JdbcStreamAdapter.batchWriter(driver.connection(), () -> released.set(true), "db", "events", List.of("id"), 2);
+        writer.addRow(List.of(1));
+        writer.addRow(List.of(2));
+        Assert.assertEquals(2, writer.writtenCount());
+        driver.batchFails = true;
+        writer.addRow(List.of(3));
+        Assert.assertThrows(IllegalStateException.class, () -> writer.addRow(List.of(4)));
+        Assert.assertEquals(2, writer.writtenCount());
+        Assert.assertTrue(driver.calls.contains("rollback"));
+        Assert.assertEquals(2, driver.batches.get());
+        writer.close();
+        Assert.assertEquals("close does not retry the failed batch", 2, driver.batches.get());
+        Assert.assertEquals(2, writer.writtenCount());
+        Assert.assertTrue(released.get());
+    }
+
+    @Test
+    public void flushCommitsAPartialBatchAndDoesNothingWhenNoneIsPending()
+    {
+        Driver driver = new Driver();
+        driver.transactions = true;
+        BatchWriter writer = JdbcStreamAdapter.batchWriter(driver.connection(), () -> { }, "db", "events", List.of("id"), 10);
+        writer.addRow(List.of(1));
+        writer.addRow(List.of(2));
+        Assert.assertEquals(0, writer.writtenCount());
+        writer.flush();
+        Assert.assertEquals(2, writer.writtenCount());
+        Assert.assertEquals(1, driver.batches.get());
+        writer.flush();
+        Assert.assertEquals(1, driver.batches.get());
+        writer.close();
+        Assert.assertEquals(1, driver.batches.get());
+        Assert.assertEquals(2, writer.writtenCount());
     }
 
     @Test

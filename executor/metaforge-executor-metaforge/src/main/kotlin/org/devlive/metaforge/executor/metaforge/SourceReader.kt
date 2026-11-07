@@ -44,34 +44,43 @@ internal class StreamingSourceReader(
     override fun read(sink: RowSink)
     {
         var keyIndexes = IntArray(0)
-        plugin.executeStream(configure, query, fetchSize, object : RowCallback
+        var running: java.sql.Statement? = null
+        try
         {
-            override fun onSchema(headers: List<String>, types: List<String>)
+            plugin.executeStream(configure, query, fetchSize, object : RowCallback
             {
-                val indexByHeader = HashMap<String, Int>(headers.size * 2)
-                headers.forEachIndexed { i, h -> indexByHeader[h.lowercase()] = i }
-                keyIndexes = IntArray(sourceKeys.size) { k ->
-                    indexByHeader[sourceKeys[k].lowercase()]
-                        ?: throw IllegalStateException("Source column '${sourceKeys[k]}' not found in query result")
-                }
-                taskLog.info("Streaming read: source returned headers={}", headers)
-            }
-
-            override fun onStatement(statement: java.sql.Statement)
-            {
-                handle.sourceStatement = statement
-            }
-
-            override fun onRow(row: List<Any?>)
-            {
-                val projected = ArrayList<Any?>(keyIndexes.size)
-                for (idx in keyIndexes)
+                override fun onSchema(headers: List<String>, types: List<String>)
                 {
-                    projected.add(row[idx])
+                    val indexByHeader = HashMap<String, Int>(headers.size * 2)
+                    headers.forEachIndexed { i, h -> indexByHeader[h.lowercase()] = i }
+                    keyIndexes = IntArray(sourceKeys.size) { k ->
+                        indexByHeader[sourceKeys[k].lowercase()]
+                            ?: throw IllegalStateException("Source column '${sourceKeys[k]}' not found in query result")
+                    }
+                    taskLog.info("Streaming read: source returned headers={}", headers)
                 }
-                sink.accept(projected)
-            }
-        })
+
+                override fun onStatement(statement: java.sql.Statement)
+                {
+                    running = statement
+                    handle.addStatement(statement)
+                }
+
+                override fun onRow(row: List<Any?>)
+                {
+                    val projected = ArrayList<Any?>(keyIndexes.size)
+                    for (idx in keyIndexes)
+                    {
+                        projected.add(row[idx])
+                    }
+                    sink.accept(projected)
+                }
+            })
+        }
+        finally
+        {
+            running?.let { handle.removeStatement(it) }
+        }
     }
 }
 
@@ -117,5 +126,70 @@ internal class MaterializedSourceReader(
             }
             sink.accept(projected)
         }
+    }
+}
+
+/**
+ * 从读出的行里采样预览，供工作流展示：最多 [limit] 行、总量约 64KB、单值最多 512 字符，二进制不展示。
+ * 多个分片可能并行读取，因此加锁；采满后读取路径只多一次 volatile 判断。
+ *
+ * Samples rows for the workflow preview, bounded by rows, total size and value length. Splits may be
+ * read in parallel, hence the lock; once full it costs readers one volatile check.
+ */
+@SuppressFBWarnings(value = ["EI_EXPOSE_REP2"])
+internal class PreviewSampler(private val limit: Int, private val columns: List<String>)
+{
+    private val samples = ArrayList<Map<String, Any?>>()
+    private var bytes = 0
+
+    @Volatile
+    private var full = limit <= 0
+
+    fun wrap(reader: SourceReader): SourceReader = object : SourceReader
+    {
+        override fun read(sink: RowSink)
+        {
+            reader.read { row ->
+                sink.accept(row)
+                if (!full)
+                {
+                    sample(row)
+                }
+            }
+        }
+    }
+
+    @Synchronized
+    fun rows(): List<Map<String, Any?>> = ArrayList(samples)
+
+    @Synchronized
+    private fun sample(row: List<Any?>)
+    {
+        if (samples.size >= limit || bytes >= MAX_BYTES)
+        {
+            full = true
+            return
+        }
+        val sample = linkedMapOf<String, Any?>()
+        columns.forEachIndexed { index, column ->
+            if (bytes < MAX_BYTES)
+            {
+                val safe = when (val value = row.getOrNull(index))
+                {
+                    null, is Number, is Boolean -> value
+                    is ByteArray -> "[binary]"
+                    else -> value.toString().take(MAX_VALUE_LENGTH)
+                }
+                bytes += column.length + (safe?.toString()?.length ?: 4)
+                sample[column] = safe
+            }
+        }
+        samples.add(sample)
+    }
+
+    private companion object
+    {
+        const val MAX_BYTES = 65536
+        const val MAX_VALUE_LENGTH = 512
     }
 }

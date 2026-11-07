@@ -34,7 +34,7 @@ import java.util.concurrent.atomic.AtomicReference
  * 需要本机可用的 Docker。容器由 @BeforeClass/@AfterClass 管理，整个测试类只起停一次；
  * Docker 不可用时优雅跳过。
  */
-@SuppressFBWarnings(value = ["OBL_UNSATISFIED_OBLIGATION", "OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE"])
+@SuppressFBWarnings(value = ["OBL_UNSATISFIED_OBLIGATION", "OBL_UNSATISFIED_OBLIGATION_EXCEPTION_EDGE", "BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
 class MetaForgeExecutorPostgresE2ETest
 {
     companion object
@@ -185,6 +185,195 @@ class MetaForgeExecutorPostgresE2ETest
         assertEquals(RunState.STOPPED, response.state)
         // 被中途取消：落库行数应远小于 3,000,000
         assertTrue("expected partial rows, got ${count("target_t")}", count("target_t") < 3_000_000L)
+    }
+
+    // ---------------------------------------------------------------------
+    // 分片并行与限流
+    // ---------------------------------------------------------------------
+
+    private fun parallelRequest(query: String, options: Map<String, String>, taskName: String = ""): ExecutorRequest =
+        buildRequest(
+            query = query,
+            targetTable = "target_t",
+            columns = linkedSetOf(
+                OriginColumn("uid", "id"),
+                OriginColumn("full_name", "name"),
+                OriginColumn("amt", "amount")
+            ),
+            taskName = taskName
+        ).apply { this.options = options }
+
+    /** 目标表与源表逐行相同：没有丢行，也没有重复 / the target equals the source row for row: nothing lost, nothing duplicated */
+    private fun assertCopiedExactlyOnce(expected: Long)
+    {
+        assertEquals(expected, count("target_t"))
+        assertEquals(listOf(listOf("0")), query(
+            "SELECT count(*) FROM (" +
+                    "(SELECT id, name, amount FROM source_t EXCEPT ALL SELECT uid, full_name, amt FROM target_t) " +
+                    "UNION ALL " +
+                    "(SELECT uid, full_name, amt FROM target_t EXCEPT ALL SELECT id, name, amount FROM source_t)) diff"
+        ))
+    }
+
+    @Test
+    fun parallelChannelsCopyEveryRowExactlyOnceIncludingNullKeys()
+    {
+        // 键严重倾斜（大部分行集中在最小的区间），还有 NULL 键的行，这些行不属于任何范围
+        exec("INSERT INTO source_t SELECT g, 'n' || g, g FROM generate_series(1, 20000) g")
+        exec("INSERT INTO source_t SELECT 1000000 + g, 'far' || g, g FROM generate_series(1, 5) g")
+        exec("INSERT INTO source_t SELECT NULL, 'null' || g, g FROM generate_series(1, 37) g")
+
+        val response = MetaForgeExecutorService().start(parallelRequest(
+            "SELECT id, name, amount FROM source_t",
+            mapOf("concurrency" to "4", "splitStrategy" to "AUTO", "splitColumn" to "id", "batchSize" to "500")
+        ))
+
+        assertTrue(response.message, response.successful)
+        assertEquals(20042, response.count)
+        assertCopiedExactlyOnce(20042)
+        val metrics = response.metrics!!
+        assertEquals("RANGE", metrics.splitStrategy)
+        assertEquals("id", metrics.splitColumn)
+        assertEquals(4, metrics.channels)
+        // 4 通道 × 每通道 4 个区间 + NULL 分片
+        assertEquals(17, metrics.splits.size)
+        assertTrue(metrics.splits.all { it.state == "DONE" })
+        assertEquals(20042L, metrics.splits.sumOf { it.rowsWritten })
+        assertEquals(20042L, metrics.splits.sumOf { it.rowsRead })
+        assertEquals(37L, metrics.splits.single { it.range == "IS NULL" }.rowsWritten)
+        assertEquals(20042L, metrics.rowsRead)
+        assertEquals(20042L, metrics.rowsWritten)
+        assertEquals(0, metrics.queueDepth)
+        assertEquals(16, metrics.queueCapacity)
+        assertTrue("several channels did work", metrics.splits.map { it.channel }.distinct().size > 1)
+    }
+
+    @Test
+    fun dateAndTimestampColumnsSplitByTime()
+    {
+        exec("ALTER TABLE source_t ADD COLUMN day date, ADD COLUMN at timestamp")
+        exec("INSERT INTO source_t SELECT g, 'n' || g, g, DATE '2026-01-01' + (g % 40), TIMESTAMP '2026-01-01 08:00:00' + g * INTERVAL '37 minute' FROM generate_series(1, 3000) g")
+        exec("INSERT INTO source_t (id, name, amount) VALUES (3001, 'no-date', 1)")
+
+        for (column in listOf("day", "at"))
+        {
+            exec("TRUNCATE target_t")
+            val response = MetaForgeExecutorService().start(parallelRequest(
+                "SELECT id, name, amount, day, at FROM source_t",
+                mapOf("concurrency" to "3", "splitStrategy" to "RANGE", "splitColumn" to column, "batchSize" to "100")
+            ))
+            assertTrue(response.message, response.successful)
+            assertEquals(column, response.metrics!!.splitColumn)
+            assertEquals(13, response.metrics!!.splits.size)
+            assertEquals(3001, response.count)
+            assertEquals(1L, response.metrics!!.splits.single { it.range == "IS NULL" }.rowsWritten)
+            assertCopiedExactlyOnce(3001)
+        }
+    }
+
+    @Test
+    fun queriesThatCannotBeSplitSafelyRunAsOneQuery()
+    {
+        exec("INSERT INTO source_t SELECT g, 'n' || g, g FROM generate_series(1, 500) g")
+        val cases = listOf(
+            // LIMIT：每片结果不确定 / LIMIT: each split's result is not deterministic
+            mapOf("splitColumn" to "id") to "SELECT id, name, amount FROM source_t LIMIT 500",
+            // 文本列不能按范围切分 / a text column cannot be split by range
+            mapOf("splitColumn" to "name") to "SELECT id, name, amount FROM source_t",
+            // 列不存在：探测失败 / the column does not exist
+            mapOf("splitColumn" to "missing") to "SELECT id, name, amount FROM source_t",
+            // 非标识符，防注入 / not an identifier, guards against injection
+            mapOf("splitColumn" to "id) --") to "SELECT id, name, amount FROM source_t",
+            // 没有分片列 / no split column at all
+            mapOf("splitColumn" to "") to "SELECT id, name, amount FROM source_t"
+        )
+        for ((options, query) in cases)
+        {
+            exec("TRUNCATE target_t")
+            val response = MetaForgeExecutorService().start(parallelRequest(
+                query, options + mapOf("concurrency" to "4", "splitStrategy" to "RANGE", "batchSize" to "100")
+            ))
+            assertTrue(response.message, response.successful)
+            assertEquals("fell back for $options", "NONE", response.metrics!!.splitStrategy)
+            assertEquals(1, response.metrics!!.channels)
+            assertEquals(1, response.metrics!!.splits.size)
+            assertCopiedExactlyOnce(500)
+        }
+    }
+
+    @Test
+    fun theRateLimitHoldsAcrossChannels()
+    {
+        exec("INSERT INTO source_t SELECT g, 'n' || g, g FROM generate_series(1, 6000) g")
+        val started = System.nanoTime()
+        val response = MetaForgeExecutorService().start(parallelRequest(
+            "SELECT id, name, amount FROM source_t",
+            mapOf(
+                "concurrency" to "3", "splitStrategy" to "RANGE", "splitColumn" to "id",
+                "batchSize" to "200", "maxRowsPerSecond" to "3000"
+            )
+        ))
+        val seconds = (System.nanoTime() - started) / 1e9
+
+        assertTrue(response.message, response.successful)
+        assertCopiedExactlyOnce(6000)
+        // 6000 行 / 3000 行每秒 = 2 秒；首批不等待，留一点余量；上限防止限流失效以外的异常变慢
+        assertTrue("rate limit not applied: took ${seconds}s", seconds >= 1.5)
+        assertTrue("took too long: ${seconds}s", seconds < 10)
+        assertTrue(response.metrics!!.throttleWaitMs > 0)
+    }
+
+    @Test
+    fun stopCancelsEveryChannel()
+    {
+        val taskName = "pg-stop-parallel"
+        val request = parallelRequest(
+            "SELECT g AS id, 'x' AS name, g AS amount FROM generate_series(1, 3000000) g",
+            mapOf("concurrency" to "3", "splitStrategy" to "RANGE", "splitColumn" to "id", "batchSize" to "500"),
+            taskName
+        )
+        val executor = MetaForgeExecutorService()
+        val responseRef = AtomicReference<ExecutorResponse>()
+        val worker = Thread { responseRef.set(executor.start(request)) }
+        worker.start()
+
+        var waited = 0
+        while (count("target_t") == 0L && waited < 60_000)
+        {
+            Thread.sleep(50)
+            waited += 50
+        }
+        assertTrue("sync did not start writing in time", count("target_t") > 0L)
+        assertEquals(RunState.STOPPED, executor.stop(stopRequest(taskName)).state)
+
+        worker.join(60_000)
+        val response = responseRef.get()
+        assertNotNull("worker did not finish after stop", response)
+        assertEquals(RunState.STOPPED, response.state)
+        // 已读的行都提交了，上报的行数等于目标表实际行数 / the reported count matches what the target holds
+        assertEquals(count("target_t"), response.count.toLong())
+        assertTrue(response.count < 3_000_000)
+    }
+
+    @Test
+    fun aWriteFailureInOneChannelEndsTheWholeTask()
+    {
+        // 目标表拒绝某一行：其余通道被叫停，任务以失败结束而不是挂起
+        exec("INSERT INTO source_t SELECT g, 'n' || g, g FROM generate_series(1, 200000) g")
+        exec("ALTER TABLE target_t ADD CONSTRAINT no_bad_row CHECK (uid <> 150000)")
+
+        val response = MetaForgeExecutorService().start(parallelRequest(
+            "SELECT id, name, amount FROM source_t",
+            mapOf("concurrency" to "4", "splitStrategy" to "RANGE", "splitColumn" to "id", "batchSize" to "500")
+        ))
+
+        assertFalse(response.successful)
+        assertEquals(RunState.FAILURE, response.state)
+        assertTrue(response.message!!.contains("no_bad_row"))
+        val metrics = response.metrics!!
+        assertEquals(1, metrics.splits.count { it.state == "FAILED" })
+        assertFalse(metrics.splits.any { it.state == "RUNNING" })
+        assertEquals(count("target_t"), metrics.rowsWritten)
     }
 
     // ---------------------------------------------------------------------

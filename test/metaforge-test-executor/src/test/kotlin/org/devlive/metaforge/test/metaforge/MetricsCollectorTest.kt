@@ -2,6 +2,7 @@ package org.devlive.metaforge.test.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.configure.Bottleneck
+import org.devlive.metaforge.executor.configure.SplitMetrics
 import org.devlive.metaforge.executor.configure.TotalSource
 import org.devlive.metaforge.executor.metaforge.MetricsCollector
 import org.devlive.metaforge.executor.metaforge.ValueSize
@@ -117,6 +118,48 @@ class MetricsCollectorTest
         now += 5 * second
         metrics.recordWriterWait(4 * second)
         assertEquals(Bottleneck.SOURCE, metrics.sample().bottleneck)
+    }
+
+    @Test
+    fun theRateLimitOutranksTheWaitsItCauses()
+    {
+        val metrics = collector()
+        metrics.sample()
+        now += 2 * second
+        metrics.recordWriterWait(2 * second)
+        metrics.recordThrottleWait(3 * second / 2)
+        val snapshot = metrics.sample()
+        assertEquals(Bottleneck.THROTTLE, snapshot.bottleneck)
+        assertEquals(1500L, snapshot.throttleWaitMs)
+    }
+
+    @Test
+    fun withoutATotalFinishedSplitsEstimateProgressAndEta()
+    {
+        val metrics = collector()
+        metrics.splitSource = {
+            listOf(
+                SplitMetrics(1, "< 10", "DONE"),
+                SplitMetrics(2, "[10, 20)", "DONE"),
+                SplitMetrics(3, ">= 20", "RUNNING"),
+                SplitMetrics(4, "IS NULL", "PENDING")
+            )
+        }
+        now += 10 * second
+
+        val snapshot = metrics.sample()
+
+        assertEquals(50.0, snapshot.progress, 1e-9)
+        assertEquals(10L, snapshot.etaSeconds)
+        assertEquals(TotalSource.SPLITS, snapshot.totalSource)
+        assertEquals(-1L, snapshot.totalRows)
+        assertEquals(4, snapshot.splits.size)
+
+        metrics.setTotal(100, TotalSource.PRECOUNT)
+        metrics.recordWrite(10, 0)
+        val counted = metrics.sample()
+        assertEquals("a known total wins over split counting", 10.0, counted.progress, 1e-9)
+        assertEquals(TotalSource.PRECOUNT, counted.totalSource)
     }
 
     @Test

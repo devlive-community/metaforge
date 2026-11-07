@@ -1,5 +1,6 @@
 package org.devlive.metaforge.test.workflow
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.configure.ExecutorConfigure
 import org.devlive.metaforge.executor.metaforge.MetaForgeExecutorService
 import org.devlive.metaforge.executor.seatunnel.SeatunnelExecutorService
@@ -14,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** Each executor ships its workflow declaration; MetaForge compiles plans into its own requests. */
+@SuppressFBWarnings(value = ["BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
 class WorkflowCompileTest
 {
     private fun node(type: String, key: String, category: WorkflowCategory, values: Map<String, Any?>, sources: Map<String, ExecutorConfigure> = emptyMap()) =

@@ -11,7 +11,7 @@ export interface WorkflowMetricsSnapshot {
   readRowsPerSecond?: number; writeRowsPerSecond?: number; readBytesPerSecond?: number; writeBytesPerSecond?: number
   avgReadRowsPerSecond?: number; avgWriteRowsPerSecond?: number; peakWriteRowsPerSecond?: number
   batchesCommitted?: number; avgBatchMs?: number; channels?: number; queueDepth?: number; queueCapacity?: number
-  readerWaitMs?: number; writerWaitMs?: number; bottleneck?: string
+  readerWaitMs?: number; writerWaitMs?: number; throttleWaitMs?: number; bottleneck?: string
   stages?: { name: string; state: string; startedAt?: number; elapsedMs: number }[]
   series?: { at: number; readRowsPerSecond: number; writeRowsPerSecond: number }[]
 }
@@ -43,6 +43,7 @@ export const WORKFLOW_METRICS: Record<string, { group: WorkflowMetricGroup; form
   queue: { group: 'pipeline', format: 'queue' },
   readerWaitMs: { group: 'pipeline', format: 'ms' },
   writerWaitMs: { group: 'pipeline', format: 'ms' },
+  throttleWaitMs: { group: 'pipeline', format: 'ms' },
   bottleneck: { group: 'pipeline', format: 'bottleneck' },
 }
 /** Declared metrics drawn as charts rather than cards. */

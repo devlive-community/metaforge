@@ -177,8 +177,12 @@ class CapturingBatchWriter(
         }
     }
 
-    private fun flush()
+    override fun flush()
     {
+        if (buffer.isEmpty())
+        {
+            return
+        }
         if (flushDelayMs > 0)
         {
             Thread.sleep(flushDelayMs)

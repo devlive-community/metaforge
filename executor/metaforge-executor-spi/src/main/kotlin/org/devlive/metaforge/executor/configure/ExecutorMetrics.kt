@@ -55,8 +55,16 @@ data class ExecutorMetrics(
     var readerWaitMs: Long = 0,
     /** 写入方因队列空而等待的累计毫秒（源端慢）/ ms writers waited on an empty queue (slow source) */
     var writerWaitMs: Long = 0,
+    /** 读取方被限流等待的累计毫秒 / ms readers were held back by the rate limit */
+    var throttleWaitMs: Long = 0,
     /** 最近窗口的瓶颈 / the bottleneck over the last window */
     var bottleneck: Bottleneck = Bottleneck.NONE,
+    /** 实际采用的分片方式 NONE / RANGE / the split strategy actually used */
+    var splitStrategy: String = "NONE",
+    /** 分片列，未分片为 null / the split column, null without splitting */
+    var splitColumn: String? = null,
+    /** 各分片进度 / per-split progress */
+    var splits: MutableList<SplitMetrics> = mutableListOf(),
     /** 各阶段进度 / per-stage progress */
     var stages: MutableList<StageMetrics> = mutableListOf(),
     /** 最近的速率采样，按时间先后 / recent rate samples, oldest first */
@@ -77,6 +85,22 @@ enum class Bottleneck
     THROTTLE
 }
 
+/**
+ * 单个分片的进度。state 取 PENDING / RUNNING / DONE / FAILED / CANCELLED。
+ * Progress of one split; state is PENDING / RUNNING / DONE / FAILED / CANCELLED.
+ */
+data class SplitMetrics(
+    var id: Int = 0,
+    /** 分片范围的可读描述 / readable description of the split's range */
+    var range: String = "",
+    var state: String = "PENDING",
+    /** 处理它的通道，尚未开始为 0 / the channel handling it, 0 before it starts */
+    var channel: Int = 0,
+    var rowsRead: Long = 0,
+    var rowsWritten: Long = 0,
+    var elapsedMs: Long = 0
+)
+
 /** 一个速率采样点 / one rate sample */
 data class MetricsSample(
     /** 距任务开始的毫秒数 / ms since the task started */
@@ -92,6 +116,9 @@ enum class TotalSource
 
     /** 全量读取后已知的精确值 / exact, the source was fully materialized */
     MATERIALIZED,
+
+    /** 总行数未知，进度按已完成分片数估算 / total unknown, progress is estimated from finished splits */
+    SPLITS,
 
     /** 任务成功结束、源端已读完时的精确值 / exact, the run finished after reading the whole source */
     COMPLETED,

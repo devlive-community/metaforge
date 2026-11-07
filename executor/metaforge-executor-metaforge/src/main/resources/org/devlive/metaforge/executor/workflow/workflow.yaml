@@ -35,6 +35,7 @@ metrics:
   - queue
   - readerWaitMs
   - writerWaitMs
+  - throttleWaitMs
   - bottleneck
   - stages
   - series
@@ -60,6 +61,43 @@ settings:
     type: switch
     value: true
     description: Count the source rows before transferring, so the total and progress are known from the start. Turn it off for very large sources where counting is slow.
+  - field: concurrency
+    label: Parallel channels
+    type: number
+    min: 1
+    max: 16
+    description: Read/write channels running at once, each with its own connections. More than one needs a split column. Leave empty to use the executor configuration.
+  - field: splitStrategy
+    label: Split strategy
+    type: select
+    description: NONE keeps one query, AUTO splits when channels are above one, RANGE always splits. Queries that cannot be split safely stay as one query.
+    options:
+      - label: NONE
+        value: NONE
+      - label: AUTO
+        value: AUTO
+      - label: RANGE
+        value: RANGE
+  - field: splitColumn
+    label: Split column
+    type: input
+    description: Integer or date source column to split the query on, ideally indexed and evenly spread.
+  - field: splitCount
+    label: Split count
+    type: number
+    min: 0
+    max: 256
+    description: Number of ranges. Leave empty or 0 to use four per channel.
+  - field: maxRowsPerSecond
+    label: Max rows per second
+    type: number
+    min: 0
+    description: Upper limit on rows read per second across all channels. 0 means no limit.
+  - field: maxBytesPerSecond
+    label: Max bytes per second
+    type: number
+    min: 0
+    description: Upper limit on estimated bytes read per second across all channels. 0 means no limit.
 nodes:
   - nodes/metaforge-source.yaml
   - nodes/metaforge-sink.yaml

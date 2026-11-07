@@ -202,10 +202,24 @@ class JdbcPluginService(
             }
         }
 
-        private fun flush()
+        override fun flush()
         {
-            ps.executeBatch()
-            conn.commit()
+            if (pending == 0)
+            {
+                return
+            }
+            try
+            {
+                ps.executeBatch()
+                conn.commit()
+            }
+            catch (ex: java.sql.SQLException)
+            {
+                pending = 0
+                ps.clearBatch()
+                conn.rollback()
+                throw ex
+            }
             committed += pending
             pending = 0
             ps.clearBatch()

@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.configure.Bottleneck
 import org.devlive.metaforge.executor.configure.ExecutorMetrics
 import org.devlive.metaforge.executor.configure.MetricsSample
+import org.devlive.metaforge.executor.configure.SplitMetrics
 import org.devlive.metaforge.executor.configure.StageMetrics
 import org.devlive.metaforge.executor.configure.TotalSource
 import java.util.ArrayDeque
@@ -32,6 +33,7 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
     private val batchNanos = LongAdder()
     private val readerWaitNanos = LongAdder()
     private val writerWaitNanos = LongAdder()
+    private val throttleWaitNanos = LongAdder()
 
     @Volatile
     private var totalRows: Long = -1
@@ -45,6 +47,16 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
     @Volatile
     var queueCapacity: Int = 0
 
+    @Volatile
+    var splitStrategy: String = "NONE"
+
+    @Volatile
+    var splitColumn: String? = null
+
+    /** 各分片的当前进度，由传输设置 / current progress of each split, set by the transfer */
+    @Volatile
+    var splitSource: (() -> List<SplitMetrics>)? = null
+
     /** 当前排队批次数，由通道维护 / batches queued right now, kept by the channels */
     val queueDepth = AtomicLong()
 
@@ -55,7 +67,7 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
     private var peakWrite = 0.0
 
     private class Point(val nanos: Long, val read: Long, val written: Long, val bytesRead: Long, val bytesWritten: Long,
-                        val readerWait: Long, val writerWait: Long)
+                        val readerWait: Long, val writerWait: Long, val throttleWait: Long)
 
     fun setTotal(total: Long, source: TotalSource)
     {
@@ -97,6 +109,8 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
 
     fun recordWriterWait(nanos: Long) = writerWaitNanos.add(nanos)
 
+    fun recordThrottleWait(nanos: Long) = throttleWaitNanos.add(nanos)
+
     @Synchronized
     fun beginStage(name: String)
     {
@@ -129,7 +143,7 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
     {
         val now = clock()
         val point = Point(now, rowsRead.sum(), rowsWritten.sum(), bytesRead.sum(), bytesWritten.sum(),
-            readerWaitNanos.sum(), writerWaitNanos.sum())
+            readerWaitNanos.sum(), writerWaitNanos.sum(), throttleWaitNanos.sum())
         window.addLast(point)
         while (window.size > 1 && now - window.first.nanos > WINDOW_NANOS)
         {
@@ -161,11 +175,16 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
         val completed = finished && totalRows < 0
         val total = if (completed) point.read else totalRows
         val written = point.written
+        val splits = splitSource?.invoke() ?: emptyList()
+        // 总行数未知但有多个分片时，按已完成分片数估算进度 / without a total, finished splits estimate the progress
+        val bySplits = total < 0 && splits.size > 1
+        val splitsDone = splits.count { it.state == "DONE" }
         val progress = when
         {
             finished -> 100.0
             total > 0 -> minOf(100.0, written * 100.0 / total)
             total == 0L -> 0.0
+            bySplits -> splitsDone * 100.0 / splits.size
             else -> -1.0
         }
         val etaRate = if (writeRate > 0) writeRate else if (elapsed > 0) written / elapsed else 0.0
@@ -173,6 +192,7 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
         {
             finished -> 0L
             total >= 0 && etaRate > 0 -> ((total - written).coerceAtLeast(0) / etaRate).toLong()
+            bySplits && splitsDone > 0 -> (elapsed * (splits.size - splitsDone) / splitsDone).toLong()
             else -> -1L
         }
         val batchCount = batches.sum()
@@ -182,7 +202,12 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
             bytesRead = point.bytesRead,
             bytesWritten = point.bytesWritten,
             totalRows = total,
-            totalSource = if (completed) TotalSource.COMPLETED else totalSource,
+            totalSource = when
+            {
+                completed -> TotalSource.COMPLETED
+                bySplits -> TotalSource.SPLITS
+                else -> totalSource
+            },
             progress = progress,
             elapsedMs = elapsedMs,
             etaSeconds = eta,
@@ -200,6 +225,10 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
             queueCapacity = queueCapacity,
             readerWaitMs = point.readerWait / 1_000_000,
             writerWaitMs = point.writerWait / 1_000_000,
+            throttleWaitMs = point.throttleWait / 1_000_000,
+            splitStrategy = splitStrategy,
+            splitColumn = splitColumn,
+            splits = splits.toMutableList(),
             bottleneck = if (finished) Bottleneck.NONE else bottleneck(oldest, point),
             stages = stages.values.map { it.copy() }.toMutableList(),
             series = series.map { it.copy() }.toMutableList()
@@ -217,6 +246,7 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
     /**
      * 窗口内读取方等待占比过半 -> 目标端慢；写入方等待占比过半 -> 源端慢。
      * Readers waiting most of the window means the target is slow; writers waiting means the source is.
+     * 限流等待优先：此时写入方等数据只是限流的结果。 / The rate limit comes first: writers then wait because of it.
      */
     private fun bottleneck(oldest: Point, latest: Point): Bottleneck
     {
@@ -228,8 +258,10 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
         val lanes = channels.coerceAtLeast(1)
         val readerShare = (latest.readerWait - oldest.readerWait).toDouble() / (span * lanes)
         val writerShare = (latest.writerWait - oldest.writerWait).toDouble() / (span * lanes)
+        val throttleShare = (latest.throttleWait - oldest.throttleWait).toDouble() / (span * lanes)
         return when
         {
+            throttleShare >= BUSY_SHARE -> Bottleneck.THROTTLE
             readerShare >= BUSY_SHARE && readerShare >= writerShare -> Bottleneck.TARGET
             writerShare >= BUSY_SHARE -> Bottleneck.SOURCE
             else -> Bottleneck.NONE

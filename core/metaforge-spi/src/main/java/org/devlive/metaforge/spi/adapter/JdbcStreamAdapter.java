@@ -239,11 +239,25 @@ public final class JdbcStreamAdapter
                 statement.addBatch();
                 pending++;
                 if (pending >= batchSize) {
-                    flush();
+                    commitPending();
                 }
             }
             catch (SQLException ex) {
                 throw new IllegalStateException("Add batch row failed: " + ex.getMessage(), ex);
+            }
+        }
+
+        @Override
+        public void flush()
+        {
+            if (pending == 0) {
+                return;
+            }
+            try {
+                commitPending();
+            }
+            catch (SQLException ex) {
+                throw new IllegalStateException("Flush batch failed: " + ex.getMessage(), ex);
             }
         }
 
@@ -258,7 +272,7 @@ public final class JdbcStreamAdapter
         {
             try {
                 if (pending > 0) {
-                    flush();
+                    commitPending();
                 }
             }
             catch (SQLException ex) {
@@ -269,30 +283,59 @@ public final class JdbcStreamAdapter
             }
         }
 
-        private void flush()
+        private void commitPending()
                 throws SQLException
         {
-            statement.executeBatch();
-            if (transactional) {
-                try {
-                    connection.commit();
-                }
-                catch (SQLFeatureNotSupportedException ex) {
-                    // The driver advertised transactions but cannot commit: the batch is already written.
-                    log.warn("Driver does not support commit(); continuing with auto-commit: {}", ex.getMessage());
-                    transactional = false;
+            try {
+                statement.executeBatch();
+                if (transactional) {
                     try {
-                        connection.setAutoCommit(true);
-                        restoreAutoCommit = !originalAutoCommit;
+                        connection.commit();
                     }
-                    catch (SQLException ignored) {
-                        // Nothing more to do: the driver writes on executeBatch.
+                    catch (SQLFeatureNotSupportedException ex) {
+                        // The driver advertised transactions but cannot commit: the batch is already written.
+                        log.warn("Driver does not support commit(); continuing with auto-commit: {}", ex.getMessage());
+                        transactional = false;
+                        try {
+                            connection.setAutoCommit(true);
+                            restoreAutoCommit = !originalAutoCommit;
+                        }
+                        catch (SQLException ignored) {
+                            // Nothing more to do: the driver writes on executeBatch.
+                        }
                     }
                 }
+            }
+            catch (SQLException ex) {
+                discardFailedBatch();
+                throw ex;
             }
             written += pending;
             pending = 0;
             statement.clearBatch();
+        }
+
+        /**
+         * A failed batch is rolled back and dropped, so close() neither sends it again nor counts it:
+         * committing an aborted transaction rolls it back without an error on some drivers.
+         */
+        private void discardFailedBatch()
+        {
+            pending = 0;
+            try {
+                statement.clearBatch();
+            }
+            catch (SQLException ex) {
+                log.debug("Clear failed batch: {}", ex.getMessage());
+            }
+            if (transactional) {
+                try {
+                    connection.rollback();
+                }
+                catch (SQLException ex) {
+                    log.warn("Rollback failed batch: {}", ex.getMessage());
+                }
+            }
         }
 
         private void safeClose()

@@ -219,6 +219,24 @@ public class DataSetServiceImpl
                 .orElseGet(() -> CommonResponse.failure(String.format("DataSet [ %s ] not found", code)));
     }
 
+    /** 默认分片列：主键优先，其次排序键，取其源列名；都没有返回空串 / primary key first, then order-by key; empty when neither exists */
+    private static String defaultSplitColumn(Iterable<DataSetColumnEntity> columns)
+    {
+        String orderBy = "";
+        for (DataSetColumnEntity column : columns) {
+            if (column.isVirtualColumn() || StringUtils.isBlank(column.getOriginal())) {
+                continue;
+            }
+            if (column.isPrimaryKey()) {
+                return column.getOriginal();
+            }
+            if (column.isOrderByKey() && orderBy.isEmpty()) {
+                orderBy = column.getOriginal();
+            }
+        }
+        return orderBy;
+    }
+
     private static int parseIntOrDefault(String raw, int fallback)
     {
         if (raw == null || raw.isEmpty()) {
@@ -916,7 +934,9 @@ public class DataSetServiceImpl
                                                 f.getType(),
                                                 effective.getOrDefault(f.getName(), f.getDefaultValue()),
                                                 f.getDescription(),
-                                                true
+                                                true,
+                                                f.getOptions(),
+                                                f.getGroup()
                                         ))
                                         .collect(java.util.stream.Collectors.toList());
                                 return CommonResponse.success(tunable);
@@ -1332,6 +1352,10 @@ public class DataSetServiceImpl
                                                                             executorCfg.put(k, v);
                                                                         }
                                                                     });
+                                                                }
+                                                                // 未指定分片列时用数据集主键（其次排序键）对应的源列；仅声明了该配置的 executor 需要
+                                                                if (executorCfg.containsKey("splitColumn") && StringUtils.isBlank(executorCfg.get("splitColumn"))) {
+                                                                    executorCfg.put("splitColumn", defaultSplitColumn(columnRepository.findAllByDatasetId(entity.getId())));
                                                                 }
                                                                 // taskName / workHome 供 UI 定位日志文件；本次真正生效的配置 JSON 便于事后审计 / UI 展示
                                                                 String effectiveConfigure = null;

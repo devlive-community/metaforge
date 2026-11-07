@@ -207,6 +207,8 @@ class MetaForgeExecutorCharacterizationTest
                     throw IllegalStateException("Add batch row failed: disk full")
                 }
 
+                override fun flush() {}
+
                 override fun writtenCount(): Long = 0
 
                 override fun close() {}

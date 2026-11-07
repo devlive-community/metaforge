@@ -259,6 +259,10 @@ public abstract class Plugin
                     && !"true".equalsIgnoreCase(value.trim()) && !"false".equalsIgnoreCase(value.trim())) {
                 problems.add(field.getName() + " is not true or false: " + value);
             }
+            else if (field.getType() == org.devlive.metaforge.plugin.configure.RuntimeConfigureFieldType.SELECT
+                    && field.getOptions() != null && !field.getOptions().contains(value.trim())) {
+                problems.add(field.getName() + " must be one of " + field.getOptions() + ": " + value);
+            }
         }
         return problems;
     }

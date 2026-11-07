@@ -1,5 +1,6 @@
 package org.devlive.metaforge.executor.seatunnel
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.devlive.metaforge.executor.workflow.WorkflowCategory
 import org.devlive.metaforge.executor.workflow.WorkflowNode
@@ -12,6 +13,7 @@ import org.junit.Test
 import java.nio.file.Files
 
 /** SeaTunnel compiles a pipeline into one job whose blocks are joined by result tables. */
+@SuppressFBWarnings(value = ["BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
 class SeatunnelWorkflowCompileTest
 {
     private fun node(type: String, key: String, category: WorkflowCategory, values: Map<String, Any?>) =

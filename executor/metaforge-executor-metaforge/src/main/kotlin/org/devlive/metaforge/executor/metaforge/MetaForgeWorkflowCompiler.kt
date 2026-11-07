@@ -20,7 +20,10 @@ internal object MetaForgeWorkflowCompiler
     const val PREVIEW_ROWS = "50"
 
     /** 可按工作流覆盖的执行器配置 / executor options a workflow may override */
-    private val SETTINGS = setOf("fetchSize", "batchSize", "queueCapacity", "preCount")
+    private val SETTINGS = setOf(
+        "fetchSize", "batchSize", "queueCapacity", "preCount",
+        "concurrency", "splitStrategy", "splitColumn", "splitCount", "maxRowsPerSecond", "maxBytesPerSecond"
+    )
 
     fun compile(plan: WorkflowPlan): ExecutorRequest
     {

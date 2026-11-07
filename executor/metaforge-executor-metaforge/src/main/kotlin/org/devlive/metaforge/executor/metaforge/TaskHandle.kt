@@ -2,6 +2,7 @@ package org.devlive.metaforge.executor.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.slf4j.Logger
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 /** 取消原因：区分“用户主动停止”与“任务超时”，供 start() 映射成 STOPPED / TIMEOUT。 */
@@ -49,8 +50,8 @@ internal class CancellationToken
 
 /**
  * 已注册的活跃任务句柄。
- * - cancellation: 取消信号，stop() 设置、策略读取
- * - sourceStatement: stop() 会调 cancel() 立即终止源端 JDBC 查询，不必等下一行
+ * - cancellation: 取消信号，stop() 设置、通道读取
+ * - 源端 Statement：各通道正在执行的查询，取消时全部 cancel()，不必等下一行
  * - taskLog: 让 stop() 把"用户停止"事件写到任务专属日志里
  *
  * An in-flight task handle shared between start() and stop().
@@ -60,11 +61,57 @@ internal class TaskHandle
 {
     val cancellation: CancellationToken = CancellationToken()
 
+    private val statements: MutableSet<java.sql.Statement> = ConcurrentHashMap.newKeySet()
+
     @Volatile
-    var sourceStatement: java.sql.Statement? = null
+    private var cancelRequested: Boolean = false
 
     @Volatile
     var taskLog: Logger? = null
+
+    /** 登记正在执行的查询；取消已发生时立即取消它 / register a running query; cancel it at once if cancellation already happened */
+    fun addStatement(statement: java.sql.Statement)
+    {
+        statements.add(statement)
+        if (cancelRequested)
+        {
+            cancel(statement)
+        }
+    }
+
+    fun removeStatement(statement: java.sql.Statement)
+    {
+        statements.remove(statement)
+    }
+
+    /**
+     * 异步取消所有正在执行的查询。Statement.cancel() 通常会新开连接发 KILL QUERY，源库网络异常时会阻塞，
+     * 所以放到独立线程。
+     * Cancels every running query off this thread, since Statement.cancel() may block on a new connection.
+     */
+    fun cancelStatements()
+    {
+        cancelRequested = true
+        statements.forEach { cancel(it) }
+    }
+
+    private fun cancel(statement: java.sql.Statement)
+    {
+        TaskRegistry.submitCancel {
+            try
+            {
+                if (!statement.isClosed)
+                {
+                    statement.cancel()
+                    taskLog?.warn("Source JDBC statement cancelled")
+                }
+            }
+            catch (ex: Exception)
+            {
+                taskLog?.warn("Cancel source statement failed: {}", ex.message)
+            }
+        }
+    }
 }
 
 /** 取消传播专用异常，携带已提交行数便于上游记录 */

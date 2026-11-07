@@ -19,10 +19,11 @@ import java.util.concurrent.ScheduledFuture
  * MetaForge 执行器：在 MetaForge 进程内把“源查询结果”搬运到“目标表”，按 taskName 支持运行时停止与超时。
  *
  * 一次任务分阶段执行：PREPARE（解析参数）→ PRECOUNT（可选，统计总行数）→ PLAN（规划分片）→
- * TRANSFER（经 [Channel] 读写流水线搬运）。源端读取由 [SourceReader] 完成（流式或全量回退），
+ * TRANSFER（[Transfer] 的多条 [Channel] 读写流水线并行搬运，[RateLimiter] 限流）。
+ * [SplitPlanner] 负责切分查询，源端读取由 [SourceReader] 完成（流式或全量回退），
  * 指标由 [MetricsCollector] 采集、[MetricsPublisher] 定时上报；活跃任务与后台线程委托给 [TaskRegistry]。
  *
- * Runs a sync in stages (PREPARE, optional PRECOUNT, PLAN, TRANSFER) through a [Channel] pipeline,
+ * Runs a sync in stages (PREPARE, optional PRECOUNT, PLAN, TRANSFER) through parallel [Channel] pipelines,
  * with metrics collected by [MetricsCollector] and reported on a timer by [MetricsPublisher].
  */
 @SuppressFBWarnings(value = ["RV_RETURN_VALUE_IGNORED_BAD_PRACTICE", "BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
@@ -90,12 +91,17 @@ class MetaForgeExecutorService : ExecutorService
             val batchSize = (options["batchSize"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_BATCH_SIZE
             val queueCapacity = (options["queueCapacity"]?.toIntOrNull()?.takeIf { it > 0 }) ?: DEFAULT_QUEUE_CAPACITY
             val preCountEnabled = options["preCount"]?.toBoolean() ?: false
+            val concurrency = (options["concurrency"]?.toIntOrNull()?.takeIf { it > 0 } ?: 1).coerceAtMost(MAX_CONCURRENCY)
+            val limiter = RateLimiter(
+                options["maxRowsPerSecond"]?.toLongOrNull() ?: 0L,
+                options["maxBytesPerSecond"]?.toLongOrNull() ?: 0L
+            )
 
             taskLog.info(
-                    "Resolved input plugin={} output plugin={} streaming={}/{} fetchSize={} batchSize={} queueCapacity={} preCount={}",
+                    "Resolved input plugin={} output plugin={} streaming={}/{} concurrency={} fetchSize={} batchSize={} queueCapacity={} preCount={}",
                     inputPlugin.name(), outputPlugin.name(),
                     inputPlugin.supportsStreaming(), outputPlugin.supportsStreaming(),
-                    fetchSize, batchSize, queueCapacity, preCountEnabled
+                    concurrency, fetchSize, batchSize, queueCapacity, preCountEnabled
             )
             taskLog.info("Source query: {}", query)
 
@@ -132,62 +138,48 @@ class MetaForgeExecutorService : ExecutorService
                 metrics.skipStage(STAGE_PRECOUNT)
             }
 
-            // 目前整段查询作为单个分片 / the whole query is one split for now
+            // 全量回退读取无法分片 / the materialized fallback cannot be split
             stages.begin(STAGE_PLAN)
+            val plan = if (inputPlugin.supportsStreaming())
+            {
+                SplitPlanner(inputPlugin, inputConfigure, taskLog).plan(
+                    query,
+                    options["splitStrategy"] ?: SplitPlan.NONE,
+                    options["splitColumn"],
+                    concurrency,
+                    options["splitCount"]?.toIntOrNull() ?: 0
+                )
+            }
+            else
+            {
+                SplitPlan(SplitPlan.NONE, null, listOf(Split(1, query, "ALL")))
+            }
+            val previewLimit = (options["previewRows"]?.toIntOrNull() ?: 0).coerceIn(0, 50)
+            val preview = PreviewSampler(previewLimit, originColumns.map { it.name })
             val sourceKeys = originColumns.map { it.original }
-            val reader: SourceReader =
-                if (inputPlugin.supportsStreaming())
-                {
-                    StreamingSourceReader(inputPlugin, inputConfigure, query, fetchSize, sourceKeys, handle, taskLog)
-                }
-                else
-                {
-                    MaterializedSourceReader(inputPlugin, inputConfigure, query, sourceKeys, metrics, totalKnown, taskLog)
-                }
-            metrics.channels = 1
-            metrics.queueCapacity = queueCapacity
+            val readerFor = { split: Split ->
+                val reader: SourceReader =
+                    if (inputPlugin.supportsStreaming())
+                    {
+                        StreamingSourceReader(inputPlugin, inputConfigure, split.query, fetchSize, sourceKeys, handle, taskLog)
+                    }
+                    else
+                    {
+                        MaterializedSourceReader(inputPlugin, inputConfigure, split.query, sourceKeys, metrics, totalKnown, taskLog)
+                    }
+                if (previewLimit > 0) preview.wrap(reader) else reader
+            }
             stages.end(STAGE_PLAN)
 
             stages.begin(STAGE_TRANSFER)
-            taskLog.info("Transfer start: target=`{}`.`{}` columns={} batchSize={} queueCapacity={}",
-                database, table, originColumns.size, batchSize, queueCapacity)
-            val writer = outputPlugin.openBatchWriter(outputConfigure, database, table, originColumns.map { it.name }, batchSize)
-            val channel = Channel(1, request.taskName, batchSize, queueCapacity, metrics, handle.cancellation, taskLog)
-            val previewLimit = (options["previewRows"]?.toIntOrNull() ?: 0).coerceIn(0, 50)
-            val preview = mutableListOf<Map<String, Any?>>()
-            var previewBytes = 0
-            val sampledReader = object : SourceReader
-            {
-                override fun read(sink: RowSink)
-                {
-                    reader.read { row ->
-                        sink.accept(row)
-                        if (preview.size < previewLimit && previewBytes < 65536)
-                        {
-                            val sample = linkedMapOf<String, Any?>()
-                            originColumns.forEachIndexed { index, column ->
-                                if (previewBytes < 65536)
-                                {
-                                    val value = row.getOrNull(index)
-                                    val safe = when (value)
-                                    {
-                                        null, is Number, is Boolean -> value
-                                        is ByteArray -> "[binary]"
-                                        else -> value.toString().take(512)
-                                    }
-                                    previewBytes += column.name.length + (safe?.toString()?.length ?: 4)
-                                    sample[column.name] = safe
-                                }
-                            }
-                            preview.add(sample)
-                        }
-                    }
-                }
-            }
-            val written = channel.run(sampledReader, writer)
+            taskLog.info("Transfer start: target=`{}`.`{}` columns={} splits={} strategy={} batchSize={} queueCapacity={}",
+                database, table, originColumns.size, plan.splits.size, plan.strategy, batchSize, queueCapacity)
+            val targetColumns = originColumns.map { it.name }
+            val written = Transfer(request.taskName, batchSize, queueCapacity, concurrency, handle, metrics, limiter, taskLog)
+                .run(plan, readerFor) { outputPlugin.openBatchWriter(outputConfigure, database, table, targetColumns, batchSize) }
             if (previewLimit > 0)
             {
-                response.preview = preview
+                response.preview = preview.rows()
             }
             stages.end(STAGE_TRANSFER)
 
@@ -279,11 +271,8 @@ class MetaForgeExecutorService : ExecutorService
     }
 
     /**
-     * 触发取消：设标志位（纯内存、立即完成）+ 异步 cancel 源端 Statement。
+     * 触发取消：设标志位（纯内存、立即完成）+ 异步 cancel 所有正在执行的源端查询。
      * 用户停止与超时看门狗共用此逻辑，仅取消原因不同。
-     *
-     * Statement.cancel() 实现里通常会新开一个 JDBC 连接发 KILL QUERY，
-     * 如果源 DB 网络异常会阻塞调用线程，所以放到独立线程执行。
      */
     private fun requestCancel(handle: TaskHandle, taskName: String, reason: CancelReason)
     {
@@ -291,25 +280,7 @@ class MetaForgeExecutorService : ExecutorService
         val what = if (reason == CancelReason.TIMEOUT) "Timeout cancel" else "Cancel"
         log.info("{} requested for task [ {} ]", what, taskName)
         handle.taskLog?.warn("{} requested for task [ {} ]", what, taskName)
-        val stmt = handle.sourceStatement
-        if (stmt != null)
-        {
-            TaskRegistry.submitCancel {
-                try
-                {
-                    if (!stmt.isClosed)
-                    {
-                        stmt.cancel()
-                        handle.taskLog?.warn("Source JDBC statement cancelled for task [ {} ]", taskName)
-                    }
-                }
-                catch (ex: Exception)
-                {
-                    log.warn("Cancel source statement failed: {}", ex.message)
-                    handle.taskLog?.warn("Cancel source statement failed: {}", ex.message)
-                }
-            }
-        }
+        handle.cancelStatements()
     }
 
     /**
@@ -384,6 +355,7 @@ class MetaForgeExecutorService : ExecutorService
         private const val DEFAULT_FETCH_SIZE = 1000
         private const val DEFAULT_BATCH_SIZE = 1000
         private const val DEFAULT_QUEUE_CAPACITY = 4
+        private const val MAX_CONCURRENCY = 16
         private const val DEFAULT_METRICS_INTERVAL_MS = 1000L
         private const val MIN_METRICS_INTERVAL_MS = 200L
 

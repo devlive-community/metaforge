@@ -16,6 +16,7 @@
                   v-model="booleanProxies[field.name]"
                   @update:model-value="(v: boolean) => onBoolChange(field.name, v)"/>
         <MfInput v-else-if="field.type === 'PASSWORD'" v-model="overrides[field.name]" type="password" show-password/>
+        <MfSelect v-else-if="field.type === 'SELECT'" v-model="overrides[field.name]" :options="(field.options || []).map(value => ({ label: value, value }))"/>
       </div>
     </div>
 
@@ -40,7 +41,8 @@ import { DatasetModel } from '@/model/dataset'
 interface PluginConfigureField
 {
   name: string
-  type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'PASSWORD'
+  type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'PASSWORD' | 'SELECT'
+  options?: string[]
   defaultValue: string
   description: string
   tunable: boolean
