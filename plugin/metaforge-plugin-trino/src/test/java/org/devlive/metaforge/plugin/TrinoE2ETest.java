@@ -55,22 +55,22 @@ public class TrinoE2ETest
             container.start();
             PluginService service = new TrinoService();
             RuntimeConfigure configure = configure(container.getHost(), container.getMappedPort(8080), "metaforge", null, "memory");
-            Assert.assertEquals(version, first(ok("validator", service.execute(configure, service.validator()))));
+            Assert.assertEquals(version, first(ok("validator", () -> service.execute(configure, service.validator()))));
 
-            ok("create schema", service.execute(configure, "CREATE SCHEMA memory.e2e"));
-            List<String> databases = column(ok("databases", service.getDatabases(configure)), "object_name");
+            ok("create schema", () -> service.execute(configure, "CREATE SCHEMA memory.e2e"));
+            List<String> databases = column(ok("databases", () -> service.getDatabases(configure)), "object_name");
             Assert.assertTrue(databases.toString(), databases.contains("e2e"));
-            ok("create table", service.execute(configure, "CREATE TABLE memory.e2e.items (id INTEGER, name VARCHAR)"));
-            ok("insert", service.execute(configure, "INSERT INTO memory.e2e.items VALUES (1, 'a'), (2, 'b')"));
-            List<String> tables = column(ok("tables", service.getTables(configure, "e2e")), "object_name");
+            ok("create table", () -> service.execute(configure, "CREATE TABLE memory.e2e.items (id INTEGER, name VARCHAR)"));
+            ok("insert", () -> service.execute(configure, "INSERT INTO memory.e2e.items VALUES (1, 'a'), (2, 'b')"));
+            List<String> tables = column(ok("tables", () -> service.getTables(configure, "e2e")), "object_name");
             Assert.assertTrue(tables.toString(), tables.contains("items"));
-            List<String> columns = column(ok("columns", service.getColumns(configure, "e2e", "items")), "object_name");
+            List<String> columns = column(ok("columns", () -> service.getColumns(configure, "e2e", "items")), "object_name");
             Assert.assertTrue(columns.toString(), columns.containsAll(List.of("id", "name")));
-            Assert.assertEquals("b", first(ok("select", service.execute(configure, "SELECT name FROM memory.e2e.items WHERE id = 2"))));
+            Assert.assertEquals("b", first(ok("select", () -> service.execute(configure, "SELECT name FROM memory.e2e.items WHERE id = 2"))));
 
-            ok("drop table", service.execute(configure, "DROP TABLE memory.e2e.items"));
-            ok("drop schema", service.execute(configure, "DROP SCHEMA memory.e2e"));
-            Assert.assertFalse(column(ok("databases", service.getDatabases(configure)), "object_name").contains("e2e"));
+            ok("drop table", () -> service.execute(configure, "DROP TABLE memory.e2e.items"));
+            ok("drop schema", () -> service.execute(configure, "DROP SCHEMA memory.e2e"));
+            Assert.assertFalse(column(ok("databases", () -> service.getDatabases(configure)), "object_name").contains("e2e"));
         }
     }
 }

@@ -22,9 +22,11 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -115,6 +117,31 @@ public final class PluginE2E
         Assert.assertNotNull(what, response);
         Assert.assertTrue(what + " failed: " + response.getMessage(), Boolean.TRUE.equals(response.getIsSuccessful()));
         return response;
+    }
+
+    /**
+     * Runs the statement and asserts it succeeded, retrying while the coordinator reports
+     * "No nodes available to run query": single-node Presto/Trino containers drop and
+     * re-register their only node under CI load, and a scheduling failure means the
+     * statement was never started, so retrying it cannot repeat any work.
+     */
+    public static Response ok(String what, Supplier<Response> call)
+    {
+        long deadline = System.currentTimeMillis() + Duration.ofMinutes(2).toMillis();
+        Response response = call.get();
+        while (!Boolean.TRUE.equals(response.getIsSuccessful())
+                && String.valueOf(response.getMessage()).contains("No nodes available")
+                && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(2000);
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            response = call.get();
+        }
+        return ok(what, response);
     }
 
     /** Values of one column of a successful response, as text. */
