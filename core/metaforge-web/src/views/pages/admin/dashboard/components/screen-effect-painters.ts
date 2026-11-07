@@ -11,6 +11,67 @@ export function createAdditionalScreenPainters(env: ScreenEnvironment, position:
     ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill()
   }
   const painters = {
+    matrixGrid(ctx, p, time) {
+      const horizon=env.height*.35,vanish=env.width*(.5+env.wind/600),depth=wrap(p.y+time*.1),y=horizon+depth*depth*(env.height-horizon)
+      ctx.globalAlpha=.15+p.depth*.35;ctx.lineWidth=Math.max(.5,env.size*p.depth)
+      ctx.beginPath();ctx.moveTo(vanish,horizon);ctx.lineTo(p.x*env.width*1.6-env.width*.3,env.height);ctx.moveTo(0,y);ctx.lineTo(env.width,y);ctx.stroke()
+    },
+    searchBeams(ctx,p,time) {
+      const x=p.x*env.width,angle=Math.sin(time*.4+p.phase)*.8,reach=env.height*1.4,spread=env.size/350
+      const gradient=ctx.createLinearGradient(x,env.height,x+Math.sin(angle)*reach,env.height-Math.cos(angle)*reach)
+      gradient.addColorStop(0,env.color);gradient.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gradient;ctx.globalAlpha=.12+p.depth*.08
+      ctx.beginPath();ctx.moveTo(x,env.height);ctx.lineTo(x+Math.sin(angle-spread)*reach,env.height-Math.cos(angle-spread)*reach);ctx.lineTo(x+Math.sin(angle+spread)*reach,env.height-Math.cos(angle+spread)*reach);ctx.closePath();ctx.fill()
+    },
+    floatingHexagons(ctx,p,time) {
+      const at=position(p,time,-.025,.02),radius=env.size*p.depth,rotation=p.phase+time*p.spin*.2
+      ctx.globalAlpha=.15+p.depth*.4;ctx.lineWidth=Math.max(.6,env.size/16);ctx.beginPath()
+      for(let i=0;i<6;i++){const angle=rotation+i*Math.PI/3,x=at.x+Math.cos(angle)*radius,y=at.y+Math.sin(angle)*radius;if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y)}ctx.closePath();ctx.stroke()
+    },
+    digitalScan(ctx,p,time,index) {
+      const scan=wrap(.25+time*.08)*env.height,band=env.size*10
+      if(index===0){const gradient=ctx.createLinearGradient(0,scan-band,0,scan+band);gradient.addColorStop(0,'rgba(0,0,0,0)');gradient.addColorStop(.5,env.color);gradient.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=gradient;ctx.globalAlpha=.12;ctx.fillRect(0,scan-band,env.width,band*2)}
+      const distance=Math.abs(p.y*env.height-scan);if(distance>band)return
+      ctx.globalAlpha=(1-distance/band)*p.depth;ctx.fillStyle=env.color;ctx.font=`${Math.max(8,env.size)}px monospace`;ctx.fillText((index*31%256).toString(16).padStart(2,'0').toUpperCase(),p.x*env.width,p.y*env.height)
+    },
+    waterCaustics(ctx, p, time) {
+      const { x, y } = position(p, time, .015, .015)
+      const radius = env.size * (1 + p.depth * 1.6)
+      ctx.globalAlpha = .13 + .2 * p.depth
+      ctx.lineWidth = Math.max(.7, env.size / 65)
+      ctx.shadowColor = env.color
+      ctx.shadowBlur = Math.min(8, env.size / 12)
+      ctx.beginPath()
+      for (let index = 0; index <= 32; index++) {
+        const angle = index * Math.PI / 16
+        const swell = 1 + .16 * Math.sin(3 * angle + time * .65 + p.phase) + .13 * Math.cos(5 * angle - time * .9)
+        const px = x + Math.cos(angle) * radius * swell
+        const py = y + Math.sin(angle) * radius * swell * .58
+        if (index === 0) ctx.moveTo(px, py)
+        else ctx.lineTo(px, py)
+      }
+      ctx.closePath()
+      ctx.stroke()
+    },
+    lightTrails(ctx, p, time) {
+      const reach = env.size * (2 + p.depth * 3)
+      const x = wrap(p.x + time * (.09 + env.wind / 1800) * (1 + p.depth)) * (env.width + reach) - reach / 2
+      const y = p.y * env.height
+      const curve = (offset: number) => y + Math.sin(offset / Math.max(1, env.width) * 5 + p.phase) * Math.min(env.height * .09, env.size)
+      const gradient = ctx.createLinearGradient(x - reach, 0, x, 0)
+      gradient.addColorStop(0, env.color + '00')
+      gradient.addColorStop(.8, env.color + '77')
+      gradient.addColorStop(1, env.color)
+      ctx.globalAlpha = .45 + .5 * p.depth
+      ctx.strokeStyle = gradient
+      ctx.lineWidth = Math.max(.6, env.size / 19 * p.depth)
+      ctx.beginPath()
+      ctx.moveTo(x - reach, curve(x - reach))
+      for (let step = 1; step <= 10; step++) {
+        const px = x - reach + reach * step / 10
+        ctx.lineTo(px, curve(px))
+      }
+      ctx.stroke()
+    },
     fog(ctx, p, time) { mist(ctx, wrap(p.x + time * env.wind / 5000) * env.width, p.y * env.height, env.size * (1 + p.depth), .5) },
     smoke(ctx, p, time) {
       const at = position(p, time, -.04, .035)

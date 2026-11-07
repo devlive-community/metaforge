@@ -141,15 +141,17 @@
 
 <script setup lang="ts">
 import { formatDateTime } from '@/utils/date'
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, provide, ref, shallowRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Box, ChartNoAxesCombined, Check, Group, Layers, Maximize, Move, MoveDiagonal2, RefreshCw, Sparkles, Trash2, Ungroup } from '@lucide/vue'
 import { useDismissableLayer } from 'metaforge-ui'
 import type { ReportModel } from '@/model/report'
 import { chartFieldKind, type QueryChartRow } from '@/model/query-chart'
-import { constrainDashboardGroup, constrainDashboardRect, dashboardCanvasColor, dashboardCardStyle, dashboardChartType, dashboardColumns, dashboardContainerTool, dashboardGridTarget, dashboardGroupBounds,
+import { constrainDashboardGroup, constrainDashboardRect, dashboardCanvasColor, dashboardCardStyle, dashboardChartType, dashboardColumns, dashboardContainerTool, dashboardFilterTool, dashboardGridTarget, dashboardGroupBounds,
   dashboardLayerMembers, dashboardMotionStyle, dashboardScreenEffectTool, dashboardSnapshot, resizeDashboardGroup, type DashboardDesign, type DashboardRect, type DashboardWidget } from '@/model/dashboard-layout'
 import { useDashboardReports } from '@/composables/useDashboardReports'
+import { dashboardFiltersContext } from '@/composables/dashboardFiltersContext'
+import { dashboardFilteredReports, dashboardFilterHasValue, dashboardFilterMatchesWidget, type DashboardFilter } from '@/model/dashboard-filters'
 import DashboardWidgetView from './DashboardWidgetView.vue'
 import DashboardContainerView from './DashboardContainerView.vue'
 import DashboardCanvasBackground from './DashboardCanvasBackground.vue'
@@ -183,6 +185,41 @@ const live = computed(() => !props.editable && !props.thumbnail)
 const assets = computed(() => new Map(props.reports.map(report => [report.code, report])))
 const snapshots = computed(() => new Map(props.reports.map(report => [report.code, dashboardSnapshot(report)])))
 const data = useDashboardReports(board, reports, live)
+const widgetFilters = shallowRef(new Map<string, DashboardFilter>())
+const boundFilters = computed(() => {
+  if (!live.value || !widgetFilters.value.size) return []
+  return board.value.widgets.flatMap(widget => {
+    const filter = widgetFilters.value.get(widget.id)
+    return filter && dashboardFilterMatchesWidget(filter, widget) ? [filter] : []
+  })
+})
+const filteredReports = computed(() => dashboardFilteredReports(boundFilters.value, code => data.data.value[code] ?? snapshots.value.get(code)?.columns ?? []))
+const combinedSelection = computed(() => {
+  const linked = selection.value
+  if (!linked) return
+  const filtered = filteredReports.value.get(linked.reportCode)
+  return filtered ? new Set([...linked.rows].filter(row => filtered.has(row))) : linked.rows
+})
+provide(dashboardFiltersContext, {
+  read(widget) {
+    const filter = widgetFilters.value.get(widget.id)
+    return filter && dashboardFilterMatchesWidget(filter, widget) ? filter : undefined
+  },
+  write(widget, filter) {
+    if (!live.value || !widget.reportCode || !widget.field || widget.kind !== filter.kind) return
+    const active = dashboardFilterHasValue(filter)
+    if (!active && !widgetFilters.value.has(widget.id)) return
+    const next = new Map(widgetFilters.value)
+    if (active) next.set(widget.id, { ...filter, reportCode: widget.reportCode, field: widget.field })
+    else next.delete(widget.id)
+    widgetFilters.value = next
+  },
+  active: code => filteredReports.value.has(code) || selection.value?.reportCode === code,
+  clear(code) {
+    widgetFilters.value = new Map([...widgetFilters.value].filter(([, filter]) => filter.reportCode !== code))
+    if (selection.value?.reportCode === code) selection.value = undefined
+  },
+})
 const refreshTime = computed(() => data.refreshedAt.value ? formatDateTime(data.refreshedAt.value) : '')
 const expandedWidget = computed(() => board.value.widgets.find(widget => widget.id === expanded.value))
 const hasDate = computed(() => board.value.widgets.some(widget => {
@@ -212,7 +249,7 @@ const frameStyle = computed(() => {
     aspectRatio: ratio,
   }
 })
-watch(() => props.design.mode, () => { selection.value = undefined; days.value = 0; expanded.value = ''; closeContext() })
+watch(() => props.design.mode, () => { selection.value = undefined; widgetFilters.value = new Map(); days.value = 0; expanded.value = ''; closeContext() })
 watch(data.data, () => { selection.value = undefined })
 function refreshed(widget: DashboardWidget) { return widget.reportCode ? data.data.value[widget.reportCode] : undefined }
 function selectPeriod(value: string | number | undefined) {
@@ -225,7 +262,9 @@ function applyFilter(widget: DashboardWidget, rows: QueryChartRow[]) {
   expanded.value = ''
 }
 function selectionFor(widget: DashboardWidget) {
-  if (selection.value?.reportCode === widget.reportCode && selection.value?.widgetId !== widget.id) return selection.value?.rows
+  if (!widget.reportCode || dashboardFilterTool(widget.kind)) return
+  if (selection.value?.reportCode === widget.reportCode && selection.value.widgetId !== widget.id) return combinedSelection.value
+  return filteredReports.value.get(widget.reportCode)
 }
 function refreshBoard() {
   selection.value = undefined

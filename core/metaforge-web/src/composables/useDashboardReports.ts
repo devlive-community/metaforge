@@ -1,7 +1,7 @@
 import { computed, inject, onScopeDispose, shallowRef, watch, type InjectionKey, type Ref } from 'vue'
 import ReportService from '@/services/report'
 import DashboardService from '@/services/dashboard'
-import { dashboardSnapshot, type DashboardBoard, type DashboardRefresh } from '@/model/dashboard-layout'
+import { dashboardFilterTool, dashboardSnapshot, type DashboardBoard, type DashboardRefresh } from '@/model/dashboard-layout'
 import type { QueryChartRow } from '@/model/query-chart'
 import type { ReportModel } from '@/model/report'
 import type { ResponseModel } from '@/model/response'
@@ -30,6 +30,7 @@ export function useDashboardReports(board: Ref<DashboardBoard>, reports: Ref<Rep
     if (!live.value) return result
     const assets = new Map(reports.value.map(report => [report.code, report]))
     for (const widget of board.value.widgets) {
+      if (dashboardFilterTool(widget.kind)) continue
       const code = widget.reportCode
       const report = assets.get(code)
       if (!code || !report?.realtime) continue

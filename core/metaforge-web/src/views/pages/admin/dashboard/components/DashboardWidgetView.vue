@@ -1,5 +1,10 @@
 <template>
   <ChartLoading v-if="loading"/>
+  <template v-else-if="dashboardFilterTool(widget.kind)">
+    <DashboardFilterControl v-if="snapshot" :widget="widget" :options="snapshot.queryChart.options" :rows="source" :editable="editable"/>
+    <MfEmpty v-else class="h-full" size="sm" :title="$t(emptyMessage)"/>
+  </template>
+  <DashboardUtilityContent v-else-if="widget.kind === 'statusLegend' || widget.kind === 'copyText'" :widget="widget" :editable="editable"/>
   <div v-else-if="widget.kind === 'metric'" class="flex h-full min-h-0 flex-col justify-center px-1">
     <strong class="truncate text-3xl font-extrabold tabular-nums" :title="metricValue">{{ metricValue }}</strong>
     <span class="mt-1 truncate text-xs text-content-tertiary">{{ report?.name || $t('dashboard.studio.chooseAsset') }}</span>
@@ -48,10 +53,13 @@
   <div v-else-if="widget.kind === 'panel'" class="size-full rounded-mf-md border border-primary/25 bg-primary/8"
        :style="{ backgroundColor: widget.color || undefined }"/>
   <div v-else-if="widget.kind === 'spacer'" class="size-full"/>
+  <DashboardExtendedContent v-else-if="dashboardExtendedContentTools.some(kind => kind === widget.kind)" :widget="widget"/>
   <DashboardAdvancedContent v-else-if="dashboardAdvancedContentTools.some(kind => kind === widget.kind)" :widget="widget" :editable="editable"/>
   <DashboardContentView v-else-if="['imageText', 'bulletList', 'linkList', 'countdown', 'icon'].includes(widget.kind)" :widget="widget"/>
   <DashboardAdvancedDecoration v-else-if="dashboardAdvancedDecorationTools.some(kind => kind === widget.kind)" :widget="widget" :editable="editable"/>
   <DashboardDecoration v-else-if="['borderFrame', 'gridPanel', 'gradientPanel', 'horizontalArrow', 'verticalArrow', 'glowLine', 'glowRing', 'dotMatrix', 'cornerAccent', 'ripple', 'ribbon'].includes(widget.kind)" :widget="widget"/>
+  <DashboardMonitoring v-else-if="options && dashboardMonitoringTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
+  <DashboardExtendedData v-else-if="options && dashboardExtendedDataTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
   <DashboardAdvancedData v-else-if="options && dashboardAdvancedDataTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows"/>
   <DashboardDataDisplay v-else-if="options && dashboardDataTool(widget.kind)" :kind="widget.kind" :options="options" :rows="rows" :field="widget.field"
                         :display-fields="widget.displayFields" :record-index="widget.recordIndex" :time-field="widget.timeField"
@@ -80,13 +88,18 @@ import DashboardDecoration from './DashboardDecoration.vue'
 import DashboardProgress from './DashboardProgress.vue'
 import DashboardAdvancedContent from './DashboardAdvancedContent.vue'
 import DashboardAdvancedData from './DashboardAdvancedData.vue'
+import DashboardExtendedData from './DashboardExtendedData.vue'
+import DashboardExtendedContent from './DashboardExtendedContent.vue'
+import DashboardFilterControl from './DashboardFilterControl.vue'
+import DashboardMonitoring from './DashboardMonitoring.vue'
+import DashboardUtilityContent from './DashboardUtilityContent.vue'
 import DashboardAdvancedDecoration from './DashboardAdvancedDecoration.vue'
 import ChartLoading from '@/views/components/visual/ChartLoading.vue'
 import ChartError from '@/views/components/visual/ChartError.vue'
 import EChart from '@/views/components/visual/EChart.vue'
 import type { EChartsOption } from 'echarts'
 import { aggregateQueryChart, chartFieldKind, defaultQueryChart, type QueryChartConfiguration, type QueryChartRow } from '@/model/query-chart'
-import { dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardMetric, dashboardMetricTool, dashboardResourceUrl, dashboardRowsInPeriod, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
+import { dashboardExtendedDataTools, dashboardExtendedContentTools, dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardFilterTool, dashboardMetric, dashboardMetricTool, dashboardMonitoringTools, dashboardResourceUrl, dashboardRowsInPeriod, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
 import type { ReportModel } from '@/model/report'
 import type { Configuration } from '@/views/components/visual/Configuration'
 

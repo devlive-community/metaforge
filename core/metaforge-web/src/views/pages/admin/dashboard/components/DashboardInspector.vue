@@ -57,11 +57,16 @@
               <MfSelect :options="childKinds" searchable :placeholder="$t('dashboard.studio.chooseComponent')" @update:model-value="value => emit('add-child', String(value))"/>
             </MfFormItem>
             <div class="grid grid-cols-2 gap-2">
-              <MfFormItem v-for="field in containerFields" :key="field.key" :name="'layoutOptions.' + field.key" :label="$t('dashboard.studio.layoutField.' + field.key)">
+              <MfFormItem v-for="field in containerFields" :key="field.key" :name="'layoutOptions.' + field.key" :label="$t(widget.kind === 'footerContainer' && field.key === 'header' ? 'dashboard.studio.footerHeight' : 'dashboard.studio.layoutField.' + field.key)">
                 <MfInputNumber :model-value="layout[field.key]" :min="field.min" :max="field.max" :precision="0" decimal-only commit-on-change
                                @update:model-value="value => value !== undefined && updateLayout({ [field.key]: value })"/>
               </MfFormItem>
             </div>
+            <template v-if="widget.kind === 'carouselContainer'">
+              <label class="toggle-row">{{ $t('dashboard.studio.autoplay') }}<MfSwitch :model-value="contentSettings.autoplay" @update:model-value="value => updateContent({ autoplay: value })"/></label>
+              <MfFormItem name="contentOptions.interval" :label="$t('dashboard.studio.playInterval')"><MfInputNumber :model-value="contentSettings.interval" :min="2" :max="60" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateContent({ interval: value })"/></MfFormItem>
+              <label class="toggle-row">{{ $t('dashboard.studio.pauseOnHover') }}<MfSwitch :model-value="contentSettings.pauseOnHover" @update:model-value="value => updateContent({ pauseOnHover: value })"/></label>
+            </template>
             <div v-if="containerChildren.length" class="grid gap-1">
               <MfButton v-for="child in containerChildren" :key="child.id" variant="ghost" size="sm" class="justify-start!" @click="emit('select-child', child.id)"><span class="truncate">{{ child.name }}</span></MfButton>
             </div>
@@ -92,12 +97,19 @@
             <MfButton size="sm" @click="emit('preview')"><Play :size="14"/>{{ $t('dashboard.studio.previewEffect') }}</MfButton>
           </DashboardInspectorGroup>
 
-          <DashboardInspectorGroup v-if="widget && usesAsset" :key="widget.id + ':' + widget.kind" icon="data" :default-open="!!specialSetup || dashboardDataTool(widget.kind)"
+          <DashboardInspectorGroup v-if="widget && usesAsset" :key="widget.id + ':' + widget.kind" icon="data" :default-open="!!specialSetup || dashboardDataTool(widget.kind) || filterWidget"
                                    :title="$t(specialSetup ? 'queryChart.mapping.title.' + specialSetup : 'dashboard.studio.source')">
             <MfFormItem :label="$t('dashboard.studio.chartAsset')">
               <MfSelect :model-value="widget.reportCode" :options="reportOptions" searchable :placeholder="$t('dashboard.studio.chooseAsset')"
                         @update:model-value="changeAsset"/>
             </MfFormItem>
+            <MfFormItem v-if="filterWidget && snapshot && widget.kind !== 'clearFilters'" :label="$t('queryChart.selectField')" required-mark>
+              <MfSelect :model-value="widget.field" :options="widget.kind === 'dateRangeFilter' ? chartDateFields : widget.kind === 'numberRangeFilter' ? chartNumericFields : chartFields" searchable
+                        :placeholder="$t(widget.kind === 'dateRangeFilter' ? 'dashboard.studio.chooseDateField' : 'queryChart.selectField')"
+                        @update:model-value="emit('widget', { field: String($event ?? '') })"/>
+            </MfFormItem>
+            <p v-if="filterWidget && snapshot" class="text-xs leading-5 text-content-tertiary">{{ $t(widget.kind === 'clearFilters'
+              ? 'dashboard.studio.filterClearHint' : 'dashboard.studio.filterScopeHint') }}</p>
             <QueryChartDataFields v-if="specializedMappings" :options="specializedMappings"
                                   :fields="chartFields" :numeric-fields="chartNumericFields" @change="changeMappings"/>
             <template v-if="dataAggregation && snapshot">
@@ -125,9 +137,9 @@
                         :placeholder="$t('queryChart.selectField')"
                         @update:model-value="emit('widget', { field: String($event ?? '') })"/>
             </MfFormItem>
-            <template v-if="snapshot && (widget.kind === 'metricGrid' || widget.kind === 'recordDetail' || widget.kind === 'recordCards')">
+            <template v-if="snapshot && (widget.kind === 'metricGrid' || widget.kind === 'recordDetail' || widget.kind === 'recordCards' || widget.kind === 'rollingTable' || widget.kind === 'statisticList')">
               <MfFormItem name="displayFields" :label="$t('dashboard.studio.displayFields')">
-                <MfSelect :model-value="widget.displayFields ?? []" :options="widget.kind === 'metricGrid' ? chartNumericFields : chartFields" multiple searchable
+                <MfSelect :model-value="widget.displayFields ?? []" :options="['metricGrid','statisticList'].includes(widget.kind) ? chartNumericFields : chartFields" multiple searchable
                           :placeholder="$t('dashboard.studio.autoFields')" @update:model-value="setDisplayFields"/>
               </MfFormItem>
               <MfFormItem v-if="widget.kind === 'metricGrid'" name="operation" :label="$t('dashboard.studio.dataAggregation')">
@@ -165,13 +177,41 @@
             <MfFormItem v-if="metricWidget && widget.operation !== 'count'" :label="$t('queryChart.selectField')">
               <MfSelect :model-value="widget.field" :options="fieldOptions" searchable @update:model-value="emit('widget', { field: String($event ?? '') })"/>
             </MfFormItem>
-            <MfFormItem v-if="widget.kind === 'progress' || widget.kind === 'gauge' || widget.kind === 'progressList'" :label="$t('dashboard.studio.targetValue')">
+            <MfFormItem v-if="widget.kind === 'progress' || widget.kind === 'gauge' || ['progressList','radialProgress','thresholdCards'].includes(widget.kind)" :label="$t('dashboard.studio.targetValue')">
               <MfInputNumber :model-value="widget.target" :min="1" :max="1000000000" :precision="0" decimal-only commit-on-change @update:model-value="setTarget"/>
             </MfFormItem>
           </DashboardInspectorGroup>
 
           <DashboardInspectorGroup v-if="widget && advancedData" icon="data" :title="$t('dashboard.studio.dataDisplaySettings')">
-            <MfFormItem v-if="widget.kind === 'metricComparison'" name="dataOptions.baselineField" :label="$t('dashboard.studio.baselineField')" required-mark>
+            <MfFormItem v-if="['comparisonTable','radialProgress','thresholdCards','sparklineGrid'].includes(widget.kind)" :label="$t('dashboard.studio.dataCategory')">
+              <MfSelect :model-value="widget.chartOptions?.category ?? snapshot?.queryChart.options.category" :options="chartFields" searchable @update:model-value="value => changeMappings({ category: String(value ?? '') })"/>
+            </MfFormItem>
+            <template v-if="widget.kind === 'calendarHeatmap'">
+              <MfFormItem name="timeField" :label="$t('dashboard.studio.timelineDateField')" required-mark><MfSelect :model-value="widget.timeField || chartDateFields[0]?.value" :options="chartDateFields" @update:model-value="value => emit('widget', { timeField: String(value ?? '') })"/></MfFormItem>
+              <MfFormItem name="dataOptions.year" :label="$t('dashboard.studio.calendarYear')"><MfInputNumber :model-value="dataSettings.year || undefined" :min="1" :max="9999" :precision="0" :placeholder="$t('dashboard.studio.autoLatestYear')" decimal-only commit-on-change @update:model-value="value => updateData({ year: value ?? 0 })"/></MfFormItem>
+            </template>
+            <MfFormItem v-if="widget.kind === 'dataQuality'" :label="$t('dashboard.studio.monitoring.qualityFields')">
+              <MfSelect :model-value="widget.displayFields ?? []" :options="chartFields" multiple searchable clearable :placeholder="$t('dashboard.studio.autoFields')"
+                        @update:model-value="value => emit('widget', { displayFields: Array.isArray(value) ? value.map(String).slice(0, 12) : undefined })"/>
+            </MfFormItem>
+            <MfFormItem v-if="['periodComparison','dataFreshness','sparklineGrid'].includes(widget.kind)" :label="$t('dashboard.studio.timelineDateField')" required-mark>
+              <MfSelect :model-value="widget.timeField || chartDateFields[0]?.value" :options="chartDateFields" searchable
+                        @update:model-value="value => emit('widget', { timeField: String(value ?? '') })"/>
+            </MfFormItem>
+            <MfFormItem v-if="widget.kind === 'periodComparison' || widget.kind === 'sparklineGrid'" :label="$t('dashboard.studio.monitoring.periodDays')">
+              <MfInputNumber :model-value="dataSettings.periodDays" :min="1" :max="90" :precision="0" decimal-only commit-on-change
+                             @update:model-value="value => value !== undefined && updateData({ periodDays: value })"/>
+            </MfFormItem>
+            <MfFormItem v-if="widget.kind === 'dataFreshness'" :label="$t('dashboard.studio.monitoring.staleHours')">
+              <MfInputNumber :model-value="dataSettings.staleHours" :min="1" :max="8760" :precision="0" decimal-only commit-on-change
+                             @update:model-value="value => value !== undefined && updateData({ staleHours: value })"/>
+            </MfFormItem>
+            <template v-if="widget.kind === 'rollingTable'">
+              <label class="toggle-row">{{ $t('dashboard.studio.autoplay') }}<MfSwitch :model-value="contentSettings.autoplay" @update:model-value="value => updateContent({ autoplay: value })"/></label>
+              <MfFormItem name="contentOptions.interval" :label="$t('dashboard.studio.playInterval')"><MfInputNumber :model-value="contentSettings.interval" :min="2" :max="60" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateContent({ interval: value })"/></MfFormItem>
+              <label class="toggle-row">{{ $t('dashboard.studio.pauseOnHover') }}<MfSwitch :model-value="contentSettings.pauseOnHover" @update:model-value="value => updateContent({ pauseOnHover: value })"/></label>
+            </template>
+            <MfFormItem v-if="['metricComparison','comparisonTable'].includes(widget.kind)" name="dataOptions.baselineField" :label="$t('dashboard.studio.baselineField')" required-mark>
               <MfSelect :model-value="dataSettings.baselineField" :options="chartNumericFields" searchable @update:model-value="value => updateData({ baselineField: String(value ?? '') })"/>
             </MfFormItem>
             <template v-if="widget.kind === 'statusGrid'">
@@ -179,12 +219,12 @@
               <MfFormItem name="field" :label="$t('dashboard.studio.timelineLabelField')"><MfSelect :model-value="widget.field" :options="chartFields" searchable @update:model-value="value => emit('widget', { field: String(value ?? '') })"/></MfFormItem>
               <MfFormItem name="dataOptions.positiveValues" :label="$t('dashboard.studio.positiveValues')"><MfInput :model-value="dataSettings.positiveValues" @update:model-value="value => updateData({ positiveValues: value })"/></MfFormItem>
             </template>
-            <MfFormItem v-if="['rankList', 'distributionList', 'statusGrid', 'recordCards'].includes(widget.kind)" name="dataOptions.limit" :label="$t('dashboard.studio.displayLimit')">
-              <MfInputNumber :model-value="dataSettings.limit" :min="1" :max="100" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateData({ limit: value })"/>
+            <MfFormItem v-if="['rankList', 'distributionList', 'statusGrid', 'recordCards', 'rollingTable', 'comparisonTable', 'radialProgress', 'thresholdCards', 'sparklineGrid'].includes(widget.kind)" name="dataOptions.limit" :label="$t('dashboard.studio.displayLimit')">
+              <MfInputNumber :model-value="dataSettings.limit" :min="1" :max="widget.kind === 'radialProgress' ? 5 : widget.kind === 'sparklineGrid' ? 8 : 100" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateData({ limit: value })"/>
             </MfFormItem>
-            <template v-if="!['statusGrid','recordCards'].includes(widget.kind)">
+            <template v-if="!['statusGrid','recordCards','dataFreshness'].includes(widget.kind)">
               <MfFormItem name="dataOptions.decimals" :label="$t('dashboard.studio.decimalPlaces')"><MfInputNumber :model-value="dataSettings.decimals" :min="0" :max="8" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateData({ decimals: value })"/></MfFormItem>
-              <div class="grid grid-cols-2 gap-2"><MfFormItem name="dataOptions.prefix" :label="$t('dashboard.studio.numberPrefix')"><MfInput :model-value="dataSettings.prefix" :maxlength="30" @update:model-value="value => updateData({ prefix: value })"/></MfFormItem><MfFormItem name="dataOptions.suffix" :label="$t('dashboard.studio.numberSuffix')"><MfInput :model-value="dataSettings.suffix" :maxlength="30" @update:model-value="value => updateData({ suffix: value })"/></MfFormItem></div>
+              <div v-if="widget.kind !== 'dataQuality'" class="grid grid-cols-2 gap-2"><MfFormItem name="dataOptions.prefix" :label="$t('dashboard.studio.numberPrefix')"><MfInput :model-value="dataSettings.prefix" :maxlength="30" @update:model-value="value => updateData({ prefix: value })"/></MfFormItem><MfFormItem name="dataOptions.suffix" :label="$t('dashboard.studio.numberSuffix')"><MfInput :model-value="dataSettings.suffix" :maxlength="30" @update:model-value="value => updateData({ suffix: value })"/></MfFormItem></div>
             </template>
           </DashboardInspectorGroup>
 
@@ -245,7 +285,7 @@
             </template>
           </DashboardInspectorGroup>
 
-          <DashboardInspectorGroup v-if="!widget || usesAsset" icon="refresh" :title="$t('dashboard.studio.dataRefresh')">
+          <DashboardInspectorGroup v-if="!widget || usesAsset && !filterWidget" icon="refresh" :title="$t('dashboard.studio.dataRefresh')">
             <MfFormItem :label="$t('dashboard.studio.refreshPolicy')">
               <MfSelect :model-value="refreshConfig.refresh" :options="refreshOptions" :disabled="!canConfigureRefresh"
                         @update:model-value="updateRefresh($event, !!widget)"/>
@@ -260,8 +300,8 @@
           </DashboardInspectorGroup>
 
           <DashboardInspectorGroup v-if="widget && configurableContent" :title="$t('dashboard.studio.widgetContent')">
-            <MfFormItem v-if="textContent" :label="$t('dashboard.studio.tool.text')">
-              <MfTextarea :model-value="widget.text" :rows="4" :maxlength="2000" @update:model-value="emit('widget', { text: $event })"/>
+            <MfFormItem v-if="textContent" :label="$t(widget.kind === 'copyText' ? 'dashboard.studio.copyTextPrompt' : 'dashboard.studio.tool.text')">
+              <MfTextarea :model-value="widget.text" :rows="widget.kind === 'codeBlock' || widget.kind === 'markdown' ? 7 : 4" :maxlength="widget.kind === 'codeBlock' || widget.kind === 'markdown' ? 20000 : 2000" @update:model-value="emit('widget', { text: $event })"/>
             </MfFormItem>
             <MfFormItem v-else-if="widget.kind === 'image'" :label="$t('dashboard.studio.imageUrl')">
               <MfInput :model-value="widget.image" placeholder="https://" @update:model-value="emit('widget', { image: $event })"/>
@@ -280,9 +320,10 @@
             <MfFormItem v-else-if="widget.kind === 'shape'" :label="$t('dashboard.studio.shape')">
               <MfSelect :model-value="widget.shape" :options="choices('shapeType', ['rectangle', 'circle'])" @update:model-value="changeShape"/>
             </MfFormItem>
-            <DashboardLinkEditor v-else-if="widget.kind === 'linkList'" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
-            <DashboardLinkEditor v-else-if="['imageCarousel','imageGallery','announcement','tabsContent','accordion'].includes(widget.kind)" :model-value="widget.links ?? []"
-                                 :mode="widget.kind === 'imageCarousel' || widget.kind === 'imageGallery' ? 'gallery' : 'entries'" @update:model-value="emit('widget', { links: $event })"/>
+            <DashboardLinkEditor v-else-if="['linkList','iconLinks'].includes(widget.kind)" :mode="widget.kind === 'iconLinks' ? 'icons' : 'links'" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
+            <DashboardLinkEditor v-else-if="widget.kind === 'statusLegend'" mode="legend" :model-value="widget.links ?? []" @update:model-value="emit('widget', { links: $event })"/>
+            <DashboardLinkEditor v-else-if="['imageCarousel','imageGallery','announcement','tabsContent','accordion','stepGuide','imageCompare'].includes(widget.kind)" :model-value="widget.links ?? []"
+                                 :max-items="widget.kind === 'imageCompare' ? 2 : 20" :mode="['imageCarousel','imageGallery','imageCompare'].includes(widget.kind) ? 'gallery' : 'entries'" @update:model-value="emit('widget', { links: $event })"/>
             <template v-else-if="widget.kind === 'countdown'">
               <MfFormItem name="deadline.date" :label="$t('dashboard.studio.deadlineDate')">
                 <MfDatePicker :model-value="widget.deadline?.date ?? ''" :locale="locale" :label="$t('dashboard.studio.deadlineDate')"
@@ -309,6 +350,19 @@
               <MfFormItem name="url" :label="$t('dashboard.studio.linkUrl')"><MfInput :model-value="widget.url" placeholder="https://" @update:model-value="emit('widget', { url: $event })"/></MfFormItem>
             </template>
             <p v-if="widget.kind === 'bulletList'" class="text-xs text-content-tertiary">{{ $t('dashboard.studio.listLineHint') }}</p>
+            <MfFormItem v-if="widget.kind === 'codeBlock'" name="contentOptions.language" :label="$t('dashboard.studio.codeLanguage')"><MfSelect :model-value="contentSettings.language" :options="['text','sql','json'].map(value => ({ value, label: value.toUpperCase() }))" @update:model-value="value => updateContent({ language: value as 'text' | 'sql' | 'json' })"/></MfFormItem>
+            <p v-if="widget.kind === 'markdown'" class="text-xs text-content-tertiary">{{ $t('dashboard.studio.markdownHint') }}</p>
+            <template v-if="widget.kind === 'worldClock'">
+              <MfFormItem name="contentOptions.timezone" :label="$t('dashboard.studio.timezone')"><MfSelect :model-value="contentSettings.timezone" :options="timezoneOptions" searchable @update:model-value="value => updateContent({ timezone: String(value) })"/></MfFormItem>
+              <label class="toggle-row">{{ $t('dashboard.studio.showClockDate') }}<MfSwitch :model-value="widget.clockDate" @update:model-value="value => emit('widget', { clockDate: value })"/></label>
+            </template>
+            <MfFormItem v-if="widget.kind === 'imageCompare'" name="contentOptions.comparePosition" :label="$t('dashboard.studio.comparePosition')"><MfInputNumber :model-value="contentSettings.comparePosition" :min="0" :max="100" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateContent({ comparePosition: value })"/></MfFormItem>
+            <p v-if="widget.kind === 'imageCompare'" class="text-xs text-content-tertiary">{{ $t('dashboard.studio.compareImagesNeeded') }}</p>
+            <template v-if="widget.kind === 'stepGuide'">
+              <MfFormItem name="contentOptions.activeIndex" :label="$t('dashboard.studio.activeStep')"><MfInputNumber :model-value="contentSettings.activeIndex + 1" :min="1" :max="Math.max(1, widget.links?.length || 1)" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateContent({ activeIndex: value - 1 })"/></MfFormItem>
+              <MfFormItem name="contentOptions.direction" :label="$t('dashboard.studio.contentDirection')"><MfSelect :model-value="contentSettings.direction" :options="[{ value:'horizontal',label:$t('dashboard.studio.horizontal') },{ value:'vertical',label:$t('dashboard.studio.vertical') }]" @update:model-value="value => updateContent({ direction: value as 'horizontal' | 'vertical' })"/></MfFormItem>
+            </template>
+            <MfFormItem v-if="widget.kind === 'iconLinks'" name="layoutOptions.columns" :label="$t('dashboard.studio.layoutField.columns')"><MfInputNumber :model-value="layout.columns" :min="1" :max="6" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateLayout({ columns: value })"/></MfFormItem>
             <MfFormItem v-if="widget.kind === 'actionButton'" name="url" :label="$t('dashboard.studio.linkUrl')"><MfInput :model-value="widget.url" placeholder="https://" @update:model-value="emit('widget', { url: $event })"/></MfFormItem>
             <MfFormItem v-if="widget.kind === 'quote'" name="contentOptions.attribution" :label="$t('dashboard.studio.quoteAttribution')"><MfInput :model-value="contentSettings.attribution" @update:model-value="value => updateContent({ attribution: value })"/></MfFormItem>
             <p v-if="widget.kind === 'embed'" class="text-xs text-content-tertiary">{{ $t('dashboard.studio.embedHint') }}</p>
@@ -365,8 +419,8 @@
               <MfInputNumber :model-value="widget.strokeWidth ?? 2" :min="1" :max="12" :precision="0" decimal-only commit-on-change
                              @update:model-value="value => value !== undefined && emit('widget', { strokeWidth: value })"/>
             </MfFormItem>
-            <template v-if="widget.kind === 'cornerAccent'">
-              <MfFormItem name="cornerPosition" :label="$t('dashboard.studio.cornerPosition')">
+            <template v-if="['cornerAccent','cornerFrame'].includes(widget.kind)">
+              <MfFormItem v-if="widget.kind === 'cornerAccent'" name="cornerPosition" :label="$t('dashboard.studio.cornerPosition')">
                 <MfSelect :model-value="widget.cornerPosition ?? 'topLeft'" :options="cornerPositions" @update:model-value="setCornerPosition"/>
               </MfFormItem>
               <MfFormItem name="cornerSize" :label="$t('dashboard.studio.cornerSize')">
@@ -379,14 +433,14 @@
                              @update:model-value="value => value !== undefined && emit('widget', { gridSize: value })"/>
             </MfFormItem>
           </DashboardInspectorGroup>
-          <DashboardInspectorGroup v-if="advancedContent && ['quote','textTicker','announcement','tabsContent','accordion','tagCloud'].includes(widget.kind)" icon="appearance" :title="$t('dashboard.studio.typography')">
+          <DashboardInspectorGroup v-if="advancedContent && ['quote','textTicker','announcement','tabsContent','accordion','tagCloud','markdown','codeBlock','worldClock','imageCompare','iconLinks','stepGuide'].includes(widget.kind)" icon="appearance" :title="$t('dashboard.studio.typography')">
             <MfFormItem name="contentOptions.fontSize" :label="$t('dashboard.studio.contentFontSize')"><MfInputNumber :model-value="contentSettings.fontSize" :min="10" :max="128" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateContent({ fontSize: value })"/></MfFormItem>
             <MfFormItem name="contentOptions.lineHeight" :label="$t('dashboard.studio.lineHeight')"><MfInputNumber :model-value="contentSettings.lineHeight" :min="1" :max="3" :step=".1" :precision="1" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateContent({ lineHeight: value })"/></MfFormItem>
             <MfFormItem name="contentOptions.fontWeight" :label="$t('dashboard.studio.fontWeightLabel')"><MfSelect :model-value="contentSettings.fontWeight" :options="choices('fontWeight', ['normal','medium','bold'])" @update:model-value="setFontWeight"/></MfFormItem>
           </DashboardInspectorGroup>
           <DashboardInspectorGroup v-if="advancedDecoration" icon="appearance" :title="$t('dashboard.studio.decorationSettings')">
             <MfFormItem v-for="field in decorationNumbers" :key="field.key" :name="'decorationOptions.' + field.key" :label="$t('dashboard.studio.decorationField.' + field.key)"><MfInputNumber :model-value="decorationSettings[field.key]" :min="field.min" :max="field.max" :precision="0" decimal-only commit-on-change @update:model-value="value => value !== undefined && updateDecoration({ [field.key]: value })"/></MfFormItem>
-            <label v-if="['titlePlate','badgeSeal','hexagon'].includes(widget.kind)" class="toggle-row">{{ $t('dashboard.studio.fillDecoration') }}<MfSwitch :model-value="decorationSettings.filled" @update:model-value="value => updateDecoration({ filled: value })"/></label>
+            <label v-if="['titlePlate','badgeSeal','hexagon','sectionBanner'].includes(widget.kind)" class="toggle-row">{{ $t('dashboard.studio.fillDecoration') }}<MfSwitch :model-value="decorationSettings.filled" @update:model-value="value => updateDecoration({ filled: value })"/></label>
           </DashboardInspectorGroup>
 
           <template v-if="widget.showCard">
@@ -412,7 +466,7 @@
       <MfTabPane v-if="widget" item-key="animation" :tab="$t('dashboard.studio.animationTab')">
         <template #tab><span class="flex items-center justify-center gap-1.5"><Sparkles :size="15"/>{{ $t('dashboard.studio.animationTab') }}</span></template>
         <div class="inspector-section">
-          <DashboardInspectorGroup v-if="widget && ['radarSweep','scanFrame'].includes(widget.kind)" icon="appearance" :title="$t('dashboard.studio.internalMotion')"><label class="toggle-row">{{ $t('dashboard.studio.autoplay') }}<MfSwitch :model-value="decorationSettings.animate" @update:model-value="value => updateDecoration({ animate: value })"/></label></DashboardInspectorGroup>
+          <DashboardInspectorGroup v-if="widget && ['radarSweep','scanFrame','bezierConnector'].includes(widget.kind)" icon="appearance" :title="$t('dashboard.studio.internalMotion')"><label class="toggle-row">{{ $t('dashboard.studio.autoplay') }}<MfSwitch :model-value="decorationSettings.animate" @update:model-value="value => updateDecoration({ animate: value })"/></label></DashboardInspectorGroup>
           <DashboardInspectorGroup icon="appearance" :title="$t('dashboard.studio.widgetAnimation')">
             <MfFormItem name="animation.effect" :label="$t('dashboard.studio.animationType')">
               <MfSelect :model-value="animation.effect" :options="animationOptions" @update:model-value="setAnimationEffect"/>
@@ -442,7 +496,7 @@
       <MfTabPane v-if="widget && !effectSettings" item-key="interaction" :tab="$t('dashboard.studio.interaction')">
         <template #tab><span class="flex items-center justify-center gap-1.5"><MousePointer2 :size="15"/>{{ $t('dashboard.studio.interaction') }}</span></template>
         <div v-if="widget" class="inspector-section">
-          <DashboardInspectorGroup v-if="usesAsset && !metricWidget && widget.kind !== 'table' && !dashboardDataTool(widget.kind)" icon="interaction" :title="$t('dashboard.studio.chartInteraction')">
+          <DashboardInspectorGroup v-if="usesAsset && !metricWidget && !filterWidget && widget.kind !== 'table' && !dashboardDataTool(widget.kind)" icon="interaction" :title="$t('dashboard.studio.chartInteraction')">
             <MfFormItem :label="$t('queryChart.pointAction')">
               <MfSelect :model-value="widget.action" :disabled="!snapshot" :options="choices('pointAction', ['saved', 'details', 'filter', 'none'])"
                         @update:model-value="changeAction"/>
@@ -477,7 +531,7 @@ import { apiBaseUrl } from '@/utils/http'
 import { TokenUtils } from '@/utils/token'
 import { dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardContentSettings, dashboardDataSettings,
   dashboardDecorationSettings, dashboardScreenEffectSizeLimit, type DashboardContentOptions, type DashboardDataOptions, type DashboardDecorationOptions } from '@/model/dashboard-layout'
-import { dashboardResourceUrl, type DashboardMode } from '@/model/dashboard-layout'
+import { dashboardFilterTool, dashboardResourceUrl, type DashboardMode } from '@/model/dashboard-layout'
 import { dashboardAnimationDefaults, dashboardAnimationEffects, dashboardCanContain, dashboardCanvasColor, dashboardCanvasNumber, dashboardCanvasNumbers, dashboardChartMappings, dashboardContainerTool, dashboardDataAggregationTool, dashboardDataTool, dashboardDecorationTools, dashboardLayoutSettings, dashboardMetricTool, dashboardPaddingEdges, dashboardRadiusCorners, dashboardScreenEffectPresets, dashboardScreenEffectQuantityLimit, dashboardScreenEffectSettings, dashboardScreenEffectTool, dashboardSnapshot, dashboardTools, dashboardWallPresets, dashboardWallResolution, dashboardWidgetLabelKey, dashboardWidgetUsesAsset, type DashboardAction, type DashboardAnimation, type DashboardBoard, type DashboardChartOverrides, type DashboardDeadline, type DashboardDesign, type DashboardInsets, type DashboardLayoutOptions, type DashboardRect, type DashboardRefresh, type DashboardScreenEffectOptions, type DashboardWidget } from '@/model/dashboard-layout'
 
 const props = defineProps<{ design: DashboardDesign; board: DashboardBoard; widget?: DashboardWidget; groupRect?: DashboardRect;
@@ -532,22 +586,27 @@ function setBackgroundPosition(value: unknown) { if (value === 'center' || value
 const advancedData = computed(() => dashboardAdvancedDataTools.some(kind => kind === props.widget?.kind))
 const advancedContent = computed(() => dashboardAdvancedContentTools.some(kind => kind === props.widget?.kind))
 const advancedDecoration = computed(() => dashboardAdvancedDecorationTools.some(kind => kind === props.widget?.kind))
-const dataSettings = computed(() => dashboardDataSettings(props.widget?.dataOptions))
+const dataSettings = computed(() => { const value = dashboardDataSettings(props.widget?.dataOptions); return props.widget?.kind === 'radialProgress' ? { ...value, limit: Math.min(5, value.limit) } : value })
 const contentSettings = computed(() => dashboardContentSettings(props.widget?.contentOptions))
 const decorationSettings = computed(() => dashboardDecorationSettings(props.widget?.decorationOptions))
+const timezoneOptions = computed(() => {
+  const supported = (Intl as typeof Intl & { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf?.('timeZone') || ['Asia/Shanghai','Asia/Tokyo','America/New_York','Europe/London']
+  return [...new Set(['UTC', contentSettings.value.timezone, ...supported])].map(value => ({ value, label: value }))
+})
 function updateData(change: Partial<DashboardDataOptions>) { emit('widget', { dataOptions: dashboardDataSettings({ ...dataSettings.value, ...change }) }) }
 function updateContent(change: Partial<DashboardContentOptions>) { emit('widget', { contentOptions: dashboardContentSettings({ ...contentSettings.value, ...change }) }) }
 function updateDecoration(change: Partial<DashboardDecorationOptions>) { emit('widget', { decorationOptions: dashboardDecorationSettings({ ...decorationSettings.value, ...change }) }) }
 function setImageFit(value: unknown) { if (value === 'cover' || value === 'contain') updateContent({ fit: value }) }
 function setFontWeight(value: unknown) { if (value === 'normal' || value === 'medium' || value === 'bold') updateContent({ fontWeight: value }) }
 const decorationNumbers = computed(() => [
-  ...(['chevrons','zigzag','waveLine','honeycomb'].includes(props.widget?.kind ?? '') ? [{ key: 'count' as const, min: 2, max: 24 }] : []),
+  ...(['chevrons','zigzag','waveLine','honeycomb','techRuler','bezierConnector'].includes(props.widget?.kind ?? '') ? [{ key: 'count' as const, min: 2, max: 24 }] : []),
   { key: 'rotation' as const, min: -180, max: 180 }, { key: 'opacity' as const, min: 0, max: 100 },
 ])
-const textContent = computed(() => !!props.widget && ['text', 'heading', 'note', 'badge', 'sectionDivider', 'imageText', 'bulletList', 'ribbon', 'textTicker', 'quote', 'actionButton', 'tagCloud', 'titlePlate', 'badgeSeal'].includes(props.widget.kind))
-const configurableContent = computed(() => !!props.widget && (advancedContent.value || textContent.value || ['image', 'video', 'audio', 'clock', 'link', 'shape', 'linkList', 'countdown', 'icon'].includes(props.widget.kind)))
-const coloredContent = computed(() => !!props.widget && ['shape', 'panel', 'progress', 'gauge', 'progressList', 'icon', 'borderFrame', 'gridPanel', 'gradientPanel', 'horizontalArrow', 'verticalArrow', 'quote', 'textTicker', 'announcement', 'tabsContent', 'accordion', 'tagCloud', ...dashboardDecorationTools].some(kind => kind === props.widget?.kind))
+const textContent = computed(() => !!props.widget && ['markdown', 'codeBlock', 'worldClock', 'sectionBanner', 'text', 'heading', 'note', 'badge', 'sectionDivider', 'imageText', 'bulletList', 'ribbon', 'textTicker', 'quote', 'actionButton', 'tagCloud', 'titlePlate', 'badgeSeal', 'copyText'].includes(props.widget.kind))
+const configurableContent = computed(() => !!props.widget && (advancedContent.value || textContent.value || ['image', 'video', 'audio', 'clock', 'link', 'shape', 'linkList', 'countdown', 'icon', 'statusLegend'].includes(props.widget.kind)))
+const coloredContent = computed(() => !!props.widget && ['calendarHeatmap', 'radialProgress', 'markdown', 'worldClock', 'imageCompare', 'iconLinks', 'stepGuide', 'shape', 'panel', 'progress', 'gauge', 'progressList', 'icon', 'borderFrame', 'gridPanel', 'gradientPanel', 'horizontalArrow', 'verticalArrow', 'quote', 'textTicker', 'announcement', 'tabsContent', 'accordion', 'tagCloud', ...dashboardDecorationTools].some(kind => kind === props.widget?.kind))
 const usesAsset = computed(() => !!props.widget && dashboardWidgetUsesAsset(props.widget.kind))
+const filterWidget = computed(() => !!props.widget && dashboardFilterTool(props.widget.kind))
 const layout = computed(() => dashboardLayoutSettings(props.widget?.layoutOptions))
 const containerChildren = computed(() => props.board.widgets.filter(child => child.parentId === props.widget?.id))
 const containerCandidates = computed(() => !props.widget ? [] : props.board.widgets.filter(child => (!child.parentId || child.parentId === props.widget?.id)
@@ -556,9 +615,11 @@ const childKinds = computed(() => dashboardTools.filter(kind => !dashboardScreen
 const containerFields = computed(() => {
   const fields: { key: keyof DashboardLayoutOptions; min: number; max: number }[] = [{ key: 'gap', min: 0, max: 48 }, { key: 'padding', min: 0, max: 64 }]
   if (props.widget?.kind === 'gridContainer') fields.push({ key: 'columns', min: 1, max: 6 })
-  if (props.widget?.kind === 'splitContainer') fields.push({ key: 'ratio', min: 10, max: 90 })
-  if (props.widget?.kind === 'headerContainer') fields.push({ key: 'header', min: 10, max: 70 })
+  if (props.widget?.kind === 'spotlightContainer') fields.push({ key: 'columns', min: 3, max: 4 }, { key: 'itemHeight', min: 48, max: 800 })
+  if (['splitContainer','sidebarContainer'].includes(props.widget?.kind || '')) fields.push({ key: 'ratio', min: 10, max: 90 })
+  if (['headerContainer','footerContainer'].includes(props.widget?.kind || '')) fields.push({ key: 'header', min: 10, max: 70 })
   if (props.widget?.kind === 'responsiveContainer') fields.push({ key: 'minWidth', min: 80, max: 600 })
+  if (props.widget?.kind === 'scrollContainer') fields.push({ key: 'itemHeight', min: 48, max: 800 })
   return fields
 })
 function updateLayout(change: Partial<DashboardLayoutOptions>) { emit('widget', { layoutOptions: dashboardLayoutSettings({ ...layout.value, ...change }) }) }
@@ -608,7 +669,7 @@ function setAnimationEasing(value: unknown) {
   if (value === 'linear' || value === 'ease-in' || value === 'ease-out' || value === 'ease-in-out') updateAnimation({ easing: value })
 }
 const specializedMappings = computed(() => {
-  if (!props.widget || metricWidget.value || dashboardDataTool(props.widget.kind)) return
+  if (!props.widget || metricWidget.value || filterWidget.value || dashboardDataTool(props.widget.kind)) return
   const mappings = dashboardChartMappings(props.widget, snapshot.value)
   return chartDataSpec(mappings.type) && mappings
 })

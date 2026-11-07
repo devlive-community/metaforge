@@ -83,9 +83,9 @@ import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DashboardPanelHeader from './DashboardPanelHeader.vue'
 import DashboardLayers from './DashboardLayers.vue'
-import { ArrowDown, ArrowRight, AudioLines, Blend, ChartNoAxesCombined, Clock, CloudRain, Columns2, Flower2, Frame, Grid2x2, Heading, Image, Layers,
-  LayoutGrid, Link, List, ListOrdered, MessageSquare, Minus, Network, PanelTop, PartyPopper, Plus, Search, Shapes, Snowflake, Sparkles, Square, SquareDashed, Star,
-  Table2, Tag, Timer, Type, Video, Waves } from '@lucide/vue'
+import { ArrowDown, ArrowRight, AudioLines, Blend, CalendarRange, ChartNoAxesCombined, Clock, CloudRain, Columns2, Copy, Flower2, Frame, Gauge, Grid2x2, Heading, Image, Layers,
+  LayoutGrid, Link, List, ListOrdered, ListRestart, ListFilter, MessageSquare, Minus, MousePointer2, Network, PanelTop, PartyPopper, Plus, Search, Shapes, SlidersHorizontal, Snowflake, Sparkles, Square, SquareDashed, Star,
+  Table2, Tag, Terminal, Timer, Type, Video, Waves } from '@lucide/vue'
 import { queryChartTypes, type QueryChartType } from '@/model/query-chart'
 import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIcon.vue'
 import type { ReportModel } from '@/model/report'
@@ -113,24 +113,39 @@ const toolGroups = [
     ...queryChartTypes.filter(kind => kind !== 'gauge' && kind !== 'table').map(kind => ({ kind, icon: undefined })),
     { kind: 'rank', icon: ListOrdered },
   ] },
-  { title: 'metricTools', icon: ListOrdered, items: [
-    { kind: 'table', icon: undefined }, { kind: 'metric', icon: Square }, { kind: 'progress', icon: Minus }, { kind: 'gauge', icon: undefined },
+  { title: 'metricTools', icon: Table2, items: [
+    { kind: 'table', icon: undefined },
     { kind: 'pivot', icon: Table2 }, { kind: 'dataList', icon: List }, { kind: 'dataSummary', icon: ChartNoAxesCombined },
-    { kind: 'metricGrid', icon: LayoutGrid }, { kind: 'recordDetail', icon: List }, { kind: 'progressList', icon: ListOrdered },
-    { kind: 'dataTags', icon: Tag }, { kind: 'dataTimeline', icon: Clock },
-    { kind: 'metricTicker', icon: Square }, { kind: 'metricComparison', icon: ChartNoAxesCombined }, { kind: 'metricTrend', icon: ChartNoAxesCombined },
-    { kind: 'bulletMetric', icon: Minus }, { kind: 'rankList', icon: ListOrdered }, { kind: 'distributionList', icon: ChartNoAxesCombined },
-    { kind: 'statusGrid', icon: LayoutGrid }, { kind: 'recordCards', icon: Table2 },
+    { kind: 'recordDetail', icon: List }, { kind: 'dataTags', icon: Tag }, { kind: 'dataTimeline', icon: Clock },
+    { kind: 'rankList', icon: ListOrdered }, { kind: 'distributionList', icon: ChartNoAxesCombined }, { kind: 'recordCards', icon: Table2 },
+    { kind: 'rollingTable', icon: Table2 }, { kind: 'comparisonTable', icon: Columns2 }, { kind: 'statisticList', icon: ListOrdered },
+    { kind: 'calendarHeatmap', icon: CalendarRange },
+    { kind: 'dataQuality', icon: Table2 },
   ] },
-  { title: 'contentTools', icon: Image, items: [
-    { kind: 'text', icon: Type }, { kind: 'image', icon: Image }, { kind: 'video', icon: Video },
-    { kind: 'clock', icon: Clock }, { kind: 'link', icon: Link }, { kind: 'heading', icon: Heading },
-    { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'audio', icon: AudioLines },
-    { kind: 'imageText', icon: Image }, { kind: 'bulletList', icon: List }, { kind: 'linkList', icon: Link },
+  { title: 'indicatorTools', icon: Gauge, items: [
+    { kind: 'metric', icon: Square }, { kind: 'progress', icon: Minus }, { kind: 'gauge', icon: undefined },
+    { kind: 'metricGrid', icon: LayoutGrid }, { kind: 'progressList', icon: ListOrdered }, { kind: 'statusGrid', icon: LayoutGrid },
+    { kind: 'metricTicker', icon: Square }, { kind: 'metricComparison', icon: ChartNoAxesCombined }, { kind: 'metricTrend', icon: ChartNoAxesCombined },
+    { kind: 'bulletMetric', icon: Minus }, { kind: 'radialProgress', icon: Shapes }, { kind: 'thresholdCards', icon: MessageSquare },
+    { kind: 'periodComparison', icon: CalendarRange }, { kind: 'dataFreshness', icon: Clock }, { kind: 'sparklineGrid', icon: ChartNoAxesCombined },
+  ] },
+  { title: 'contentTools', icon: Type, items: [
+    { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
+    { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },
     { kind: 'countdown', icon: Timer }, { kind: 'icon', icon: Sparkles },
-    { kind: 'imageCarousel', icon: Image }, { kind: 'imageGallery', icon: Grid2x2 }, { kind: 'announcement', icon: MessageSquare },
+    { kind: 'announcement', icon: MessageSquare },
     { kind: 'textTicker', icon: Type }, { kind: 'tabsContent', icon: PanelTop }, { kind: 'accordion', icon: List },
-    { kind: 'quote', icon: Type }, { kind: 'embed', icon: Square }, { kind: 'actionButton', icon: Link }, { kind: 'tagCloud', icon: Tag },
+    { kind: 'quote', icon: Type }, { kind: 'tagCloud', icon: Tag }, { kind: 'markdown', icon: Type }, { kind: 'codeBlock', icon: Terminal },
+    { kind: 'stepGuide', icon: ListOrdered }, { kind: 'worldClock', icon: Clock }, { kind: 'statusLegend', icon: Tag },
+  ] },
+  { title: 'mediaTools', icon: Image, items: [
+    { kind: 'image', icon: Image }, { kind: 'video', icon: Video }, { kind: 'audio', icon: AudioLines }, { kind: 'imageText', icon: Image },
+    { kind: 'imageCarousel', icon: Image }, { kind: 'imageGallery', icon: Grid2x2 }, { kind: 'imageCompare', icon: Columns2 }, { kind: 'embed', icon: Square },
+  ] },
+  { title: 'interactionTools', icon: MousePointer2, items: [
+    { kind: 'selectFilter', icon: ListFilter }, { kind: 'searchFilter', icon: Search }, { kind: 'dateRangeFilter', icon: CalendarRange }, { kind: 'clearFilters', icon: ListRestart },
+    { kind: 'multiValueFilter', icon: ListFilter }, { kind: 'numberRangeFilter', icon: SlidersHorizontal }, { kind: 'valueStateFilter', icon: SquareDashed }, { kind: 'copyText', icon: Copy },
+    { kind: 'actionButton', icon: MousePointer2 }, { kind: 'link', icon: Link }, { kind: 'linkList', icon: List }, { kind: 'iconLinks', icon: LayoutGrid },
   ] },
   { title: 'layoutTools', icon: LayoutGrid, items: [
     { kind: 'shape', icon: Shapes }, { kind: 'container', icon: PanelTop }, { kind: 'divider', icon: Minus },
@@ -141,6 +156,9 @@ const toolGroups = [
     { kind: 'rowContainer', icon: Columns2 }, { kind: 'columnContainer', icon: List }, { kind: 'gridContainer', icon: Grid2x2 },
     { kind: 'tabsContainer', icon: PanelTop }, { kind: 'stackContainer', icon: Layers }, { kind: 'splitContainer', icon: Columns2 },
     { kind: 'headerContainer', icon: PanelTop }, { kind: 'responsiveContainer', icon: LayoutGrid },
+    { kind: 'footerContainer', icon: PanelTop }, { kind: 'sidebarContainer', icon: Columns2 },
+    { kind: 'scrollContainer', icon: List }, { kind: 'carouselContainer', icon: Layers },
+    { kind: 'spotlightContainer', icon: LayoutGrid },
   ] },
   { title: 'decorationTools', icon: Sparkles, items: [
     { kind: 'glowLine', icon: Minus }, { kind: 'glowRing', icon: Shapes }, { kind: 'dotMatrix', icon: Grid2x2 },
@@ -149,6 +167,7 @@ const toolGroups = [
     { kind: 'waveLine', icon: Waves }, { kind: 'bracketPair', icon: Columns2 }, { kind: 'titlePlate', icon: PanelTop }, { kind: 'badgeSeal', icon: Tag },
     { kind: 'hexagon', icon: Shapes }, { kind: 'honeycomb', icon: Grid2x2 }, { kind: 'radarSweep', icon: Shapes }, { kind: 'scanFrame', icon: Frame },
     { kind: 'circuitPattern', icon: Network }, { kind: 'orbitalRings', icon: Shapes },
+    { kind: 'cornerFrame', icon: Frame }, { kind: 'sectionBanner', icon: Heading }, { kind: 'techRuler', icon: Minus }, { kind: 'bezierConnector', icon: Network },
   ] },
   { title: 'screenEffectTools', icon: Sparkles, items: [
     { kind: 'snow', icon: Snowflake }, { kind: 'rain', icon: CloudRain }, { kind: 'stars', icon: Star }, { kind: 'meteors', icon: Sparkles },
@@ -158,6 +177,8 @@ const toolGroups = [
     { kind: 'embers', icon: Sparkles }, { kind: 'leaves', icon: Flower2 }, { kind: 'hearts', icon: Shapes }, { kind: 'sparkles', icon: Star },
     { kind: 'lightning', icon: Sparkles }, { kind: 'fireworks', icon: PartyPopper }, { kind: 'risingDigits', icon: Type },
     { kind: 'warpStars', icon: Star }, { kind: 'oceanWaves', icon: Waves }, { kind: 'sunRays', icon: Sparkles },
+    { kind: 'matrixGrid', icon: Grid2x2 }, { kind: 'searchBeams', icon: Sparkles }, { kind: 'floatingHexagons', icon: Shapes }, { kind: 'digitalScan', icon: Type },
+    { kind: 'waterCaustics', icon: Waves }, { kind: 'lightTrails', icon: Sparkles },
   ] },
 ] as const
 
