@@ -1,0 +1,12 @@
+{
+  "label": "Seatunnel Executor",
+  "description": "A Seatunnel execution plugin for MetaForge.",
+  "i18nFormat": true,
+  "type": "Executor",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/executor/seatunnel.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 57
+}

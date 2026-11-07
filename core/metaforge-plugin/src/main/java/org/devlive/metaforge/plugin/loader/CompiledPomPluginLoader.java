@@ -6,6 +6,7 @@ import org.devlive.metaforge.plugin.SpiType;
 import org.devlive.metaforge.plugin.utils.VersionUtils;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.nio.file.Files;
@@ -48,7 +49,6 @@ public class CompiledPomPluginLoader
             // 获取编译后的类路径
             // Get compiled classpath
             Path targetClasses = path.resolve("target/classes");
-            Path targetDependencies = path.resolve("target/dependency");
 
             // 如果已编译的类不存在，直接返回空列表
             // If compiled classes don't exist, return empty list
@@ -59,7 +59,7 @@ public class CompiledPomPluginLoader
 
             // 创建类加载器
             // Create class loader
-            PluginClassLoader classLoader = createProjectClassLoader(targetClasses, targetDependencies, path, parentClassLoaderPackages);
+            PluginClassLoader classLoader = createProjectClassLoader(targetClasses, path, parentClassLoaderPackages);
 
             // 查找并加载插件类
             // Find and load plugin classes
@@ -73,35 +73,15 @@ public class CompiledPomPluginLoader
 
     // 创建项目类加载器
     // Create project class loader
-    private PluginClassLoader createProjectClassLoader(Path targetClasses, Path targetDependencies, Path module, Set<String> parentClassLoaderPackages)
+    private PluginClassLoader createProjectClassLoader(Path targetClasses, Path module, Set<String> parentClassLoaderPackages)
             throws Exception
     {
         List<URL> urls = new ArrayList<>();
-
-        // 添加编译后的类路径
-        // Add compiled classes path
         log.debug("Adding classes directory to classpath: {}", targetClasses);
         urls.add(targetClasses.toUri().toURL());
-
-        // 添加所有依赖jar（如果存在）
-        // Add all dependency jars (if exist)
-        if (Files.exists(targetDependencies)) {
-            log.debug("Adding dependencies from: {}", targetDependencies);
-            try (Stream<Path> paths = Files.walk(targetDependencies)) {
-                paths.filter(path -> path.toString().endsWith(".jar"))
-                        .forEach(path -> {
-                            try {
-                                log.debug("Adding dependency to classpath: {}", path);
-                                urls.add(path.toUri().toURL());
-                            }
-                            catch (Exception e) {
-                                log.error("Failed to add dependency jar to classpath: {}", path, e);
-                            }
-                        });
-            }
-        }
-        else {
-            log.debug("Dependencies directory not found: {}", targetDependencies);
+        for (Path jar : dependencyJars(module)) {
+            log.debug("Adding dependency to classpath: {}", jar);
+            urls.add(jar.toUri().toURL());
         }
 
         // Path.getFileName() may return null for empty paths, fall back to
@@ -165,5 +145,26 @@ public class CompiledPomPluginLoader
         String relativePath = baseDir.relativize(classFile).toString();
         return relativePath.replace(File.separatorChar, '.')
                 .replace(".class", "");
+    }
+
+    /**
+     * The module's dependency jars: the plugin builds copy them to target/dependencies, while
+     * `mvn dependency:copy-dependencies` run by hand writes target/dependency. Without them a plugin
+     * finds only the drivers that happen to be on the server's own class path.
+     */
+    static List<Path> dependencyJars(Path module)
+            throws IOException
+    {
+        List<Path> jars = new ArrayList<>();
+        for (String directory : new String[] {"target/dependencies", "target/dependency"}) {
+            Path dependencies = module.resolve(directory);
+            if (!Files.isDirectory(dependencies)) {
+                continue;
+            }
+            try (Stream<Path> paths = Files.walk(dependencies)) {
+                paths.filter(path -> path.toString().endsWith(".jar")).sorted().forEach(jars::add);
+            }
+        }
+        return jars;
     }
 }

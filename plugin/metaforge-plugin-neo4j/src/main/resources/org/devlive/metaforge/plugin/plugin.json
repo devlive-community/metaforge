@@ -1,0 +1,12 @@
+{
+  "label": "Neo4j",
+  "description": "Neo4j is a graph database for knowledge management and analysis.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/neo4j.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 29
+}

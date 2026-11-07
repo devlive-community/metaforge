@@ -6,6 +6,7 @@ import { MfMessage, useDismissableLayer } from 'metaforge-ui'
 import MetadataService from '@/services/metadata.ts'
 import { hasSidebarActions, sidebarActions, sourceManageLocation } from '@/model/source-manage'
 import { StructureEnum, StructureModel } from '@/model/structure.ts'
+import { useMetadataTreeVersion } from './useMetadataTreeChange'
 
 export function useMetadataSidebar() {
   interface MenuItem
@@ -42,6 +43,7 @@ export function useMetadataSidebar() {
 
   const route = useRoute()
   const can = inject<(capability: string) => boolean>('metadataCan', () => false)
+  const databases = inject('metadataDatabases', computed(() => ({ needsDatabase: false, loading: false, empty: false, error: '' })))
 
   const router = useRouter()
 
@@ -232,9 +234,6 @@ export function useMetadataSidebar() {
   const visibleCreateTable = (opened: boolean) => {
     tableCreateVisible.value = opened
     closeContextMenu()
-    if (!opened) {
-      onChangeDatabase()
-    }
   }
 
   const visibleCreateColumn = (opened: boolean) => {
@@ -255,9 +254,6 @@ export function useMetadataSidebar() {
   const visibleDropTable = (opened: boolean) => {
     tableDropVisible.value = opened
     closeContextMenu()
-    if (!opened) {
-      onChangeDatabase()
-    }
   }
 
   const visibleChangeColumn = (opened: boolean) => {
@@ -268,14 +264,16 @@ export function useMetadataSidebar() {
   const visibleDropColumn = (opened: boolean) => {
     columnDropVisible.value = opened
     closeContextMenu()
-    if (!opened) {
-      onChangeDatabase()
-    }
   }
 
-  watch(() => [route.params.source, route.params.database, can('table:list')], onChangeDatabase, { immediate: true })
+  // A string key: route.params is rebuilt on every navigation, so an array here would reload the
+  // tree whenever another table is opened. Only a different source or database reloads it.
+  watch(() => [route.params.source, route.params.database, can('table:list')].join('\u0000'), onChangeDatabase, { immediate: true })
+  // Structural changes (tables or columns created, changed or dropped) report here.
+  const treeVersion = useMetadataTreeVersion()
+  if (treeVersion) watch(treeVersion, onChangeDatabase)
   watch(() => route.params.table, table => { selectedKeys.value = table ? [String(table) + '_table'] : [] }, { immediate: true })
   onScopeDispose(() => { tableRevision++ })
 
-  return { can, contextActions, contextMenuRoot, loading, selectDatabase, selectedKeys, originalSource, dataInfo, tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible, columnCreateVisible, columnChangeVisible, columnDropVisible, contextmenu, tableEngine, searchKeyword, tableCount, filteredTreeArray, onChangeDatabase, onSelect, onLoadData, visibleContextMenu, visibleCreateTable, visibleCreateColumn, visibleExportData, visibleTruncateTable, visibleDropTable, visibleChangeColumn, visibleDropColumn }
+  return { can, databases, contextActions, contextMenuRoot, loading, selectDatabase, selectedKeys, originalSource, dataInfo, tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible, columnCreateVisible, columnChangeVisible, columnDropVisible, contextmenu, tableEngine, searchKeyword, tableCount, filteredTreeArray, onChangeDatabase, onSelect, onLoadData, visibleContextMenu, visibleCreateTable, visibleCreateColumn, visibleExportData, visibleTruncateTable, visibleDropTable, visibleChangeColumn, visibleDropColumn }
 }

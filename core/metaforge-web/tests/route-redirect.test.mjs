@@ -42,6 +42,21 @@ test('interrupted pages hand their address on, interim pages pass along the one 
     assert.deepEqual(redirectQuery('/auth/signin'), {})
 })
 
+test('the network page records sign-in, sign-up and setup themselves; other interim pages still do not', () => {
+    const signin = { path: '/auth/signin', fullPath: `/auth/signin?redirect=${ encodeURIComponent(workbench) }`, query: { redirect: workbench } }
+    assert.deepEqual(interimLocation('/common/not_network', signin), { path: '/common/not_network', query: { redirect: signin.fullPath } })
+    for (const path of ['/auth/signup', '/setup']) {
+        assert.deepEqual(interimLocation('/common/not_network', { path, fullPath: path, query: {} }), { path: '/common/not_network', query: { redirect: path } })
+    }
+    // 404 and 403 still pass on the page before them, and the network page never records itself.
+    assert.deepEqual(interimLocation('/common/not_network', { path: '/common/404', fullPath: '/common/404', query: { redirect: workbench } }), { path: '/common/not_network', query: { redirect: workbench } })
+    assert.deepEqual(interimLocation('/common/not_network', { path: '/common/not_network', fullPath: '/common/not_network?redirect=/setup', query: { redirect: '/setup' } }), { path: '/common/not_network', query: { redirect: '/setup' } })
+    assert.equal(resolveRedirect('/common/not_network', '', true), '')
+    // Signing in or other interim pages never go back to an entry page.
+    assert.deepEqual(interimLocation('/auth/signin', { path: '/auth/signup', fullPath: '/auth/signup', query: {} }), { path: '/auth/signin', query: {} })
+    assert.equal(resolveRedirect('/auth/signup'), '/home')
+})
+
 test('the pending deep link is reported while the first navigation is still in its guards', async () => {
     const component = { render: () => null }
     const router = createRouter({ history: createMemoryHistory(), routes: ['/home', '/manage', '/common/404', '/common/not_network'].map(path => ({ path, component })) })

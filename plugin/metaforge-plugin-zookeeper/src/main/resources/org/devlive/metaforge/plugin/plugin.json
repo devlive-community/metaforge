@@ -1,0 +1,12 @@
+{
+  "label": "Apache Zookeeper",
+  "description": "Zookeeper is a distributed, distributed configuration service. It is a distributed database with a focus on performance, scalability, and ease of use.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/zookeeper.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 5
+}

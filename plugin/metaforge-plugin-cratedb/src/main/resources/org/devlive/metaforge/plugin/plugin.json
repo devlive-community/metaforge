@@ -1,0 +1,12 @@
+{
+  "label": "CrateDB",
+  "description": "CrateDB is a hyper-fast database for real-time analytics and hybrid search. It handles multiple types of data and combines the simplicity of SQL with the scalability of a distributed architecture.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/cratedb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 4
+}

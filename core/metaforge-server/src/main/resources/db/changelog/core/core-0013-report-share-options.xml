@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Shared reports can expire, and their public page can hide the title or the description. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0013-report-share-options" author="metaforge">
+        <addColumn tableName="metaforge_report">
+            <column name="share_expires_at" type="${instant}"/>
+            <column name="share_show_title" type="${flag}" defaultValueBoolean="true"/>
+            <column name="share_show_description" type="${flag}" defaultValueBoolean="true"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

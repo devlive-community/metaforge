@@ -66,3 +66,16 @@ MetaForge 整合 DolphinDB 模块，用于实现对 DolphinDB 数据源的数据
         |---|---|
         | `database` | `default` |
 :::
+
+#### 版本（验证）
+
+---
+
+!!! note
+
+    插件的 e2e 测试 `DolphinDBE2ETest` 在容器中逐一验证以下版本：版本检查后，用 SQL 创建的分布式数据库和数据表连同字段被列出，并读回其中的数据。
+
+    - [x] 2.00
+    - [x] 3.00
+
+!!!

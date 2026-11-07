@@ -109,46 +109,133 @@ jobs:
   maven:
     name: Publish to Maven Central
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150
     needs: build
+    env:
+      # Publishing to Maven Central is permanent, so it runs last and only when
+      # its secrets exist; a half-configured repository still releases the rest.
+      CENTRAL_CONFIGURED: ${{ secrets.CENTRAL_USERNAME != '' && secrets.GPG_PRIVATE_KEY != '' }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
-      # Imports the GPG key and injects the metaforge-ossrh server
-      # credentials into the Maven settings. The gpg-passphrase input is the
-      # NAME of the env variable holding the passphrase, provided below.
-      - name: Set up JDK 21 with signing and repository credentials
+      # The distribution and the store archives (dist/plugins) are built once
+      # here; the publishing steps below reuse them, so a deploy that fails
+      # half-way leaves nothing behind and re-running finishes the release.
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: maven
-          gpg-private-key: ${{ secrets.GPG_SECRET }}
-          gpg-passphrase: GPG_PASSPHRASE
-          server-id: metaforge-ossrh
-          server-username: OSSRH_USERNAME
-          server-password: OSSRH_TOKEN
-
-      # Fails fast with a clear message when the key or passphrase is wrong,
-      # instead of stalling or failing halfway through the deploy.
-      - name: Verify the GPG signing key
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSWORD }}
-        run: |
-          gpg --list-secret-keys --keyid-format long
-          echo 'metaforge signing check' | gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --local-user "$(gpg --list-secret-keys --keyid-format long --with-colons | awk -F: '/^sec/{print $5; exit}')" -o /tmp/signing-check.sig --sign
-          rm -f /tmp/signing-check.sig
-
-      - name: Deploy to Maven Central
-        env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSWORD }}
+      - name: Build the distribution and the store archives
         run: >
-          ./mvnw -B clean deploy -Pdeploy
-          -DskipTests -Dcheckstyle.skip -Dspotbugs.skip
+          ./mvnw -B clean install
+          -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
           -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
-          -Dgpg.passphrase="$GPG_PASSPHRASE"
-          -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+
+      - uses: actions/setup-java@v4
+        if: env.CENTRAL_CONFIGURED == 'true'
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          # Publishing goes to Maven Central through the Central Portal with the
+          # server id "central"; the gpg-passphrase input is the NAME of the env
+          # variable holding the passphrase, provided below.
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Publish the Maven artifacts to Maven Central
+        if: env.CENTRAL_CONFIGURED == 'true'
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          version="$(./mvnw -B -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive \
+            -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN exec:exec | tail -1)"
+          if curl --silent --fail --head --output /dev/null \
+              "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge/${version}/metaforge-${version}.pom"; then
+            echo "::notice::${version} is on Maven Central already"
+            exit 0
+          fi
+          ./mvnw --batch-mode --no-transfer-progress -Prelease,central -Dcentral.skip=false \
+            -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip \
+            -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm deploy \
+            -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+      - name: Skip Maven Central
+        if: env.CENTRAL_CONFIGURED != 'true'
+        run: echo "::notice::Maven Central skipped; set CENTRAL_USERNAME, CENTRAL_PASSWORD, GPG_PRIVATE_KEY and GPG_PASSPHRASE to publish there"
+
+      # The store catalogue and the statistics catalog are built from the very
+      # archives just deployed to Maven Central (dist/plugins holds copies), so
+      # one SHA-256 and size are valid for the Maven and CDN sources alike.
+      - name: Build the store catalogue and the statistics catalog
+        run: >
+          node configure/publish/build-metadata.mjs --dist dist/plugins --strict
+          --out dist/metadata.json --catalog dist/release-catalog.json
+          --commit "$GITHUB_SHA" --generation "$GITHUB_RUN_NUMBER" --released now
+
+      - name: Upload the catalogues
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-catalogue
+          if-no-files-found: error
+          path: |
+            dist/metadata.json
+            dist/release-catalog.json
+
+      # Order: packages to the CDN -> catalog into ForgeStats -> public metadata.json.
+      # A failed step keeps the previous public catalogue, and re-running is safe.
+      - name: Publish the packages to the CDN
+        env:
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          if [ -z "$OSS_ACCESS_KEY_ID" ]; then
+            echo '::warning::OSS secrets are not set; skipping the CDN upload (the store falls back to Maven Central)'
+            exit 0
+          fi
+          # Official ossutil 1.x installer (same tool as configure/publish/publish-oss-artifact.sh).
+          curl -fsSL https://gosspublic.alicdn.com/ossutil/install.sh | sudo bash
+          oss() { ossutil -e "$OSS_ENDPOINT" -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" "$@"; }
+          jq -r '.plugins[] | .sources.cdn' dist/release-catalog.json | while read -r path; do
+            file="dist/plugins/$(basename "$path")"
+            oss cp "$file" "oss://$OSS_BUCKET/applications/metaforge/plugins/$path" -f
+          done
+
+      - name: Import the statistics catalog into ForgeStats
+        env:
+          STATS_SSH_KEY: ${{ secrets.STATS_SSH_KEY }}
+          STATS_SSH_TARGET: ${{ secrets.STATS_SSH_TARGET }}
+        run: |
+          if [ -z "$STATS_SSH_KEY" ] || [ -z "$STATS_SSH_TARGET" ]; then
+            echo '::warning::ForgeStats secrets are not set; downloads of this release are not counted'
+            exit 0
+          fi
+          umask 077
+          printf '%s\n' "$STATS_SSH_KEY" > "$RUNNER_TEMP/stats-key"
+          digest=$(sha256sum dist/release-catalog.json | cut -d ' ' -f 1)
+          ssh -T -i "$RUNNER_TEMP/stats-key" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            "$STATS_SSH_TARGET" "sudo -n /usr/local/sbin/forgestats-admin catalog metaforge $digest" < dist/release-catalog.json
+          rm -f "$RUNNER_TEMP/stats-key"
+
+      - name: Publish the store catalogue
+        env:
+          OSS_ACCESS_KEY_ID: ${{ secrets.OSS_ACCESS_KEY_ID }}
+          OSS_ACCESS_KEY_SECRET: ${{ secrets.OSS_ACCESS_KEY_SECRET }}
+          OSS_ENDPOINT: ${{ secrets.OSS_ENDPOINT }}
+          OSS_BUCKET: ${{ secrets.OSS_BUCKET }}
+        run: |
+          if [ -z "$OSS_ACCESS_KEY_ID" ]; then
+            echo '::warning::OSS secrets are not set; publish dist/metadata.json from the store-catalogue artifact manually'
+            exit 0
+          fi
+          ossutil -e "$OSS_ENDPOINT" -i "$OSS_ACCESS_KEY_ID" -k "$OSS_ACCESS_KEY_SECRET" \
+            cp dist/metadata.json "oss://$OSS_BUCKET/applications/metaforge/metadata/metadata.json" -f

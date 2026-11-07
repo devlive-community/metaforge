@@ -1,0 +1,12 @@
+{
+  "label": "Oracle",
+  "description": "Oracle is an advanced, enterprise-class relational database management system.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/oracle.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 31
+}

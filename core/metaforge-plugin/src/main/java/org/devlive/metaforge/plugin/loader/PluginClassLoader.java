@@ -67,7 +67,14 @@ public class PluginClassLoader
                         // Add Plugin related packages to parent-first list
                         || (parentFirst && name.startsWith("org.devlive.metaforge.plugin"))
                 ) {
-                    return super.loadClass(name, resolve);
+                    try {
+                        return super.loadClass(name, resolve);
+                    }
+                    catch (ClassNotFoundException e) {
+                        // 父加载器没有时再尝试插件自身的 jar（如驱动类）
+                        // Fall back to the plugin's own jars (e.g. driver classes)
+                        return findClass(name);
+                    }
                 }
 
                 // 其他所有类先尝试从当前类加载器加载

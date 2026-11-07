@@ -3,8 +3,19 @@ import LayoutContainer from '@/views/layouts/common/LayoutContainer.vue'
 import ProfileContainer from '@/views/layouts/profile/LayoutContainer.vue'
 import { sourceManageLocation } from '@/model/source-manage'
 import { accountPages, businessPages, canonicalPagePath } from './navigation'
+import { useUserStore } from '@/stores/user'
+import { legacyScreenPath, SCREEN_LIST_PATH } from '@/model/screen-route'
 
 const createDefaultRouter = (router: Router) => {
+    // A user who chose a data screen as their home page sees it at /home, filling the viewport under the
+    // navigation; ?default=1 opens the default home. Runs on every visit, including query-only changes.
+    router.beforeEach(async to => {
+        if (to.name !== 'home') return true
+        const code = to.query.default ? '' : await useUserStore().resolveHomePage()
+        to.meta.workspace = !code
+        to.meta.workflowWorkspace = !!code
+        return true
+    })
     router.addRoute({
         name: 'app',
         path: '/',
@@ -12,35 +23,22 @@ const createDefaultRouter = (router: Router) => {
         component: LayoutContainer,
         meta: { requiresAuth: true },
         children: [
-            { name: 'home', path: 'home', component: () => import('@/views/pages/default/dashboard/DashboardHome.vue') },
+            {
+                // The layout follows the user's home page choice; see the guard below.
+                name: 'home', path: 'home', meta: { title: 'common.home', workspace: true }, component: () => import('@/views/pages/default/dashboard/HomePage.vue')
+            },
+            { path: 'home/screen/:code', redirect: '/home' },
             { name: 'store', path: 'store', meta: { title: 'common.store' }, component: () => import('@/views/pages/store/StoreHome.vue') },
+            { name: 'notifications', path: 'notifications', meta: { title: 'notify.text.center' }, component: () => import('@/views/pages/notification/NotificationCenter.vue') },
             { name: 'workspace', path: 'workspace', redirect: '/query' },
-            { name: 'analysis', path: 'analysis', redirect: '/dashboard' },
-            {
-                name: 'dashboard',
-                path: 'dashboard',
-                meta: {
-                    title: 'common.dashboard',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/admin/dashboard/DashboardHome.vue')
-            },
-            {
-                path: 'dashboard/preview/:code',
-                meta: {
-                    title: 'common.dashboard',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/admin/dashboard/DashboardPreview.vue')
-            },
-            {
-                path: 'dashboard/info/:code?',
-                meta: {
-                    title: 'common.dashboard',
-                    isRoot: false
-                },
-                component: () => import('@/views/pages/admin/dashboard/DashboardInfo.vue')
-            },
+            { name: 'analysis', path: 'analysis', redirect: SCREEN_LIST_PATH },
+            // Data screens: list, designer (new and existing) and the published view, which has no toolbar.
+            { name: 'screen', path: 'screen', meta: { title: 'common.dashboard', isRoot: false, workspace: true }, component: () => import('@/views/pages/admin/dashboard/DashboardHome.vue') },
+            { name: 'screen-design-new', path: 'screen/design', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardInfo.vue') },
+            { name: 'screen-design', path: 'screen/:code/design', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardInfo.vue') },
+            { name: 'screen-view', path: 'screen/:code', meta: { dashboardStudio: true, title: 'common.dashboard', isRoot: false }, component: () => import('@/views/pages/admin/dashboard/DashboardPreview.vue') },
+            // Former /dashboard addresses (list, info, preview) keep working, with their query and hash.
+            { path: 'dashboard/:rest(.*)*', redirect: to => legacyScreenPath(to.fullPath) || SCREEN_LIST_PATH },
             {
                 name: 'query',
                 path: 'query',
@@ -76,6 +74,12 @@ const createDefaultRouter = (router: Router) => {
                 component: () => import('@/views/pages/admin/dataset/DatasetDetail.vue')
             },
             {
+                // Sync records share the run page layout: the side menu stays, the content scrolls.
+                path: 'dataset/runs/:code',
+                meta: { workflowWorkspace: true, title: 'common.dataset', isRoot: false },
+                component: () => import('@/views/pages/admin/dataset/DatasetRuns.vue')
+            },
+            {
                 path: 'dataset/info/:code?',
                 meta: {
                     title: 'common.dataset',
@@ -94,6 +98,7 @@ const createDefaultRouter = (router: Router) => {
             {
                 path: 'dataset/adhoc/:code',
                 meta: {
+                    datasetStudio: true,
                     title: 'common.dataset',
                     isRoot: false
                 },
@@ -102,6 +107,7 @@ const createDefaultRouter = (router: Router) => {
             {
                 path: 'dataset/adhoc/:code/:id',
                 meta: {
+                    datasetStudio: true,
                     title: 'common.dataset',
                     isRoot: false
                 },
@@ -195,6 +201,7 @@ const createDefaultRouter = (router: Router) => {
             },
             {
                 path: 'workflow',
+                name: 'workflow',
                 meta: {
                     title: 'common.workflow',
                     isRoot: false
@@ -203,11 +210,21 @@ const createDefaultRouter = (router: Router) => {
             },
             {
                 path: 'workflow/info/:code?',
+                name: 'workflow-info',
                 meta: {
+                    workflowWorkspace: true,
+                    workflowStudio: true,
                     title: 'common.workflow',
                     isRoot: false
                 },
                 component: () => import('@/views/pages/admin/wofkflow/WorkflowInfo.vue')
+            },
+            {
+                path: 'workflow/monitor/:code',
+                name: 'workflow-monitor',
+                // The side menu stays in place while the run details scroll beside it.
+                meta: { workflowWorkspace: true, title: 'common.workflow', isRoot: false },
+                component: () => import('@/views/pages/admin/wofkflow/WorkflowMonitor.vue')
             }
         ]
     })
@@ -261,13 +278,19 @@ const createDefaultRouter = (router: Router) => {
                 component: () => import('@/views/pages/system/menu/MenuHome.vue')
             },
             {
+                // Runtime settings moved into System settings.
                 name: 'configure',
                 path: 'configure',
+                redirect: { path: '/admin/settings', query: { tab: 'runtime' } }
+            },
+            {
+                name: 'settings',
+                path: 'settings',
                 meta: {
-                    title: 'configure.runtime.title',
+                    title: 'navigation.systemSettings',
                     isRoot: false
                 },
-                component: () => import('@/views/pages/system/configure/ConfigureHome.vue')
+                component: () => import('@/views/pages/system/settings/SettingsHome.vue')
             }
         ]
     })

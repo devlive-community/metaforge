@@ -1,5 +1,6 @@
 import { ref } from 'vue'
-import { logosByKey, storedMetadataUrl } from '@/model/store-metadata'
+import PluginService from '@/services/plugin'
+import { logosByKey } from '@/model/store-metadata'
 
 let cache: Promise<Record<string, string>> | null = null
 
@@ -9,8 +10,8 @@ let cache: Promise<Record<string, string>> | null = null
  */
 export function usePluginLogos() {
   const logos = ref<Record<string, string>>({})
-  cache ||= fetch(storedMetadataUrl())
-      .then(response => response.ok ? response.json() : null)
+  cache ||= PluginService.getCatalogue()
+      .then(response => response.status && response.data ? response.data : null)
       .then(logosByKey)
       .catch(() => { cache = null; return {} })
   cache.then(value => { logos.value = value })

@@ -1,0 +1,12 @@
+{
+  "label": "H2",
+  "description": "H2 is a small, fast, and easy-to-use in-memory database.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/h2.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 7
+}

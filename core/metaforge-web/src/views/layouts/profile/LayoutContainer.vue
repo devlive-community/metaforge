@@ -5,11 +5,11 @@
         <LayoutHeader/>
       </div>
       <main class="isolate min-h-screen px-2 py-6">
-        <div class="flex w-full gap-4">
-          <div class="shrink-0">
+        <div class="grid min-w-0 w-full grid-cols-1 gap-4 lg:grid-cols-[264px_minmax(0,1fr)]">
+          <div class="min-w-0">
             <LayoutSidebar/>
           </div>
-          <div class="ml-6 min-w-0 flex-1">
+          <div class="min-w-0">
             <RouterView/>
           </div>
         </div>

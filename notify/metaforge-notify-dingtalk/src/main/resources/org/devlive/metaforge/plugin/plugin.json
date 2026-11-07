@@ -1,0 +1,7 @@
+{
+  "label": "DingTalk",
+  "description": "Sends MetaForge notifications to DingTalk group robots.",
+  "type": "Notify",
+  "author": "metaforge-community",
+  "order": 65
+}

@@ -6,7 +6,9 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import org.devlive.metaforge.common.utils.DateUtils
 import org.devlive.metaforge.convert.ConvertService
 import org.devlive.metaforge.convert.FileConvert.formatFile
+import org.devlive.metaforge.convert.model.ConvertOption
 import org.devlive.metaforge.convert.model.ConvertRequest
+import org.devlive.metaforge.convert.model.choice
 import org.devlive.metaforge.convert.model.ConvertResponse
 import org.slf4j.LoggerFactory.getLogger
 import java.io.ByteArrayOutputStream
@@ -66,6 +68,16 @@ class XmlConvertService : ConvertService
         TODO("Not yet implemented")
     }
 
+    override fun options(): List<ConvertOption>
+    {
+        return listOf(
+            ConvertOption("rootElement", mapOf("zh" to "根元素名", "en" to "Root element"), root),
+            ConvertOption("rowElement", mapOf("zh" to "行元素名", "en" to "Row element"), node),
+            ConvertOption("nulls", mapOf("zh" to "NULL 值处理", "en" to "NULL values"), "keep",
+                listOf(choice("keep", "写为 null", "Write null"), choice("omit", "省略属性", "Leave the attribute out")))
+        )
+    }
+
     override fun writer(request: ConvertRequest): ConvertResponse
     {
         val response = ConvertResponse()
@@ -80,7 +92,9 @@ class XmlConvertService : ConvertService
                 .use { generator ->
                     generator.codec = XmlMapper()
                     val staxWriter = generator.staxWriter
-                    staxWriter.writeStartElement(root)
+                    val rowElement = request.option("rowElement", node)
+                    val omitNull = request.excludeNull || request.option("nulls", "keep") == "omit"
+                    staxWriter.writeStartElement(request.option("rootElement", root))
                     if (request.includeStructure)
                     {
                         staxWriter.writeStartElement("Columns")
@@ -94,7 +108,7 @@ class XmlConvertService : ConvertService
                     }
                     request.columns
                         .forEach { column ->
-                            staxWriter.writeStartElement(node)
+                            staxWriter.writeStartElement(rowElement)
                             for (headerIndex in request.headers.indices)
                             {
                                 when (column)
@@ -102,7 +116,7 @@ class XmlConvertService : ConvertService
                                     is List<*> ->
                                     {
                                         val value = column[headerIndex]
-                                        if (value != null || !request.excludeNull)
+                                        if (value != null || ! omitNull)
                                         {
                                             staxWriter.writeAttribute(request.headers[headerIndex].toString(), value.toString())
                                         }

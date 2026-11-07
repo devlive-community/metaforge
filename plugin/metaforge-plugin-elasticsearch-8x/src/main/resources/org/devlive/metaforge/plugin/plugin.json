@@ -1,0 +1,12 @@
+{
+  "label": "Elasticsearch 8.x",
+  "description": "Use Elasticsearch 8.x",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/elasticsearch8x.svg",
+  "supportVersion": [
+    "8.x"
+  ],
+  "order": 47
+}

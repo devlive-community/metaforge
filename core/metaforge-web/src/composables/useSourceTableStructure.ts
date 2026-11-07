@@ -70,11 +70,14 @@ export function useSourceTableStructure() {
     { label: t('source.index.normal'), value: 'normal' }, { label: t('source.index.unique'), value: 'unique' },
   ])
   const compositeColumnOptions = computed(() => columns.value.filter(column => column.name !== panelForm.value.name).map(column => ({ label: column.name, value: column.name })))
+  // A tab shows only what the source declares: keys and indexes come from index:read, references from foreign-key:read.
+  const DETAIL_TAB_CAPABILITY: Record<string, string> = { constraints: 'index:read', indexes: 'index:read', foreignkeys: 'foreign-key:read', usage: 'foreign-key:read' }
   const detailTabs = computed(() => [
     { key: 'basic', label: t('source.common.info') }, { key: 'constraints', label: t('source.detail.constraints') },
     { key: 'indexes', label: t('source.detail.indexes') }, { key: 'foreignkeys', label: t('source.detail.foreignKeys') },
     { key: 'usage', label: t('source.detail.usage') },
-  ])
+  ].filter(tab => !DETAIL_TAB_CAPABILITY[tab.key] || can(DETAIL_TAB_CAPABILITY[tab.key])))
+  watch(detailTabs, tabs => { if (!tabs.some(tab => tab.key === detailTab.value)) detailTab.value = 'basic' })
   const groupedIndexes = computed(() => {
     const groups = new Map<string, { name: string; columns: string[]; unique: boolean }>()
     for (const row of stats.indexes.value) {
@@ -120,7 +123,8 @@ export function useSourceTableStructure() {
   })
   const detailConstraints = computed(() => {
     const column = detailColumn.value
-    if (!column) return []
+    // Primary and unique keys come from the indexes; a source without them has no constraints to show.
+    if (!column || !can('index:read')) return []
     return [
       { label: t('source.prototype.isPrimary'), value: t(primaryNames.value.has(column.name) ? 'common.yes' : 'common.no'), tone: primaryNames.value.has(column.name) ? 'text-success' : '' },
       { label: t('source.prototype.isUnique'), value: t(detailUnique.value ? 'common.yes' : 'common.no'), tone: detailUnique.value ? 'text-success' : '' },

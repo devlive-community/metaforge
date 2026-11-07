@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Runtime settings moved into System settings, so their own menu is removed. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0009-runtime-settings-menu" author="metaforge">
+        <delete tableName="metaforge_role_menu">
+            <where>menu_id IN (SELECT id FROM metaforge_menu WHERE code = 'RUNTIME_CONFIGURE')</where>
+        </delete>
+        <delete tableName="metaforge_menu">
+            <where>code = 'RUNTIME_CONFIGURE'</where>
+        </delete>
+    </changeSet>
+</databaseChangeLog>

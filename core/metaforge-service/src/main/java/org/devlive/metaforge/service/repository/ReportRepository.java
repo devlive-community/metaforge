@@ -6,6 +6,8 @@ import org.devlive.metaforge.service.persistence.Visibility;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Optional;
+
 public interface ReportRepository
         extends BaseRepository<ReportEntity, Long>
 {
@@ -16,4 +18,6 @@ public interface ReportRepository
     }
 
     Page<ReportEntity> findAllByUserId(Long userId, Pageable pageable);
+
+    Optional<ReportEntity> findByShareToken(String shareToken);
 }

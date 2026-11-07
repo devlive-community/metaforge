@@ -1,0 +1,12 @@
+{
+  "label": "Amazon S3 FileSystem",
+  "description": "A Amazon S3 file system plugin for MetaForge.",
+  "i18nFormat": true,
+  "type": "FileSystem",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/amazon-s3.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 63
+}

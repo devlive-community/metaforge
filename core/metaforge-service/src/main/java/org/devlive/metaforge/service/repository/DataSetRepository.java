@@ -18,6 +18,8 @@ public interface DataSetRepository
         return Visibility.where("userId", user.getId());
     }
 
+    long countByUserId(Long userId);
+
     Page<DataSetEntity> findAllByUserId(Long userId, Pageable pageable);
 
     List<DataSetEntity> findAllBySyncMode(SyncMode mode);

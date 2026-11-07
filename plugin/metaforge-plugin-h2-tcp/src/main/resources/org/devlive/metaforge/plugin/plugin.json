@@ -1,0 +1,12 @@
+{
+  "label": "H2 TCP",
+  "description": "Use TCP to access the remote H2 database",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/h2tcp.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 44
+}

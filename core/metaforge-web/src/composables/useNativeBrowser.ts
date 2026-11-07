@@ -1,3 +1,4 @@
+import { formatDateTime } from '@/utils/date'
 import { computed, inject, onScopeDispose, ref, watch, type Ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
@@ -10,7 +11,7 @@ import type { useSourceCapabilities } from './useSourceCapabilities'
 export function useNativeBrowser() {
   const route = useSourceManageRoute()
   const router = useRouter()
-  const { t, locale } = useI18n()
+  const { t } = useI18n()
   const { profile, can } = inject<ReturnType<typeof useSourceCapabilities>>('metadataCapabilityState')!
   const refresh = inject<Ref<number>>('metadataRefreshKey', ref(0))
   const panelOpen = inject<Ref<boolean>>('metadataFieldPanelOpen', ref(false))
@@ -107,7 +108,7 @@ export function useNativeBrowser() {
     if (size < 1048576) return (size / 1024).toFixed(1) + ' KiB'
     return (size / 1048576).toFixed(1) + ' MiB'
   }
-  const formatTime = (value: unknown) => value == null ? '-' : new Intl.DateTimeFormat(locale.value, { dateStyle: 'short', timeStyle: 'medium' }).format(Number(value))
+  const formatTime = (value: unknown) => value == null ? '-' : formatDateTime(Number(value))
   const formatTtl = (value: unknown) => value === -1 ? t('source.native.persistent') : value === -2 ? t('source.native.expired') : value == null ? '-' : Math.max(0, Math.ceil(Number(value) / 1000)) + ' s'
   const headers = computed(() => storage.value ? [
     { title: t('common.name'), dataIndex: 'name', width: 300, ellipsis: true },

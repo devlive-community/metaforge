@@ -58,4 +58,14 @@ public class DashboardEntity
     @Transient
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Set<ReportEntity> reports;
+
+    /** The signed-in user's permission on this screen (OWNER, VIEW, EDIT or PUBLISH); filled on reads. */
+    @Transient
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String permission;
+
+    /** Who owns a screen shared with the signed-in user; filled for shared screens. */
+    @Transient
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String ownerName;
 }

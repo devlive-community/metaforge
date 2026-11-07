@@ -1,0 +1,124 @@
+# Workflow declaration of the MetaForge executor. The server reads it from this plugin's own jar.
+description: Runs the pipeline inside the MetaForge server, reading and writing through saved data sources.
+topology: pipeline
+capabilities:
+  # cooperative: the executor stops the task itself; interrupt: the server interrupts the worker thread.
+  stop: cooperative
+  rowCount: true
+  metrics: true
+  preview: true
+limits:
+  sources: 1
+  transforms: 0
+  sinks: 1
+# Metrics reported by MetricsCollector (ExecutorMetrics field names). Keep this list, the web metric
+# registry (model/workflow-metrics.ts), the labels and the run pages in step.
+metrics:
+  - rowsRead
+  - rowsWritten
+  - rowsSkipped
+  - rowsFailed
+  - totalRows
+  - totalSource
+  - elapsedMs
+  - progress
+  - etaSeconds
+  - bytesRead
+  - bytesWritten
+  - readRowsPerSecond
+  - writeRowsPerSecond
+  - avgReadRowsPerSecond
+  - avgWriteRowsPerSecond
+  - peakWriteRowsPerSecond
+  - readBytesPerSecond
+  - writeBytesPerSecond
+  - batchesCommitted
+  - batchRetries
+  - avgBatchMs
+  - channels
+  - queue
+  - readerWaitMs
+  - writerWaitMs
+  - throttleWaitMs
+  - bottleneck
+  - stages
+  - series
+  - splits
+  - dirtySamples
+# Job settings filled per workflow; empty values fall back to the executor's runtime configuration.
+settings:
+  - field: fetchSize
+    label: Fetch size
+    type: number
+    min: 1
+    description: Rows fetched from the source per round trip. Leave empty to use the executor configuration.
+  - field: batchSize
+    label: Batch size
+    type: number
+    min: 1
+    description: Rows flushed to the target per batch. Leave empty to use the executor configuration.
+  - field: queueCapacity
+    label: Queue capacity
+    type: number
+    min: 1
+    description: Batches buffered between reading and writing.
+  - field: preCount
+    label: Count rows first
+    type: switch
+    value: true
+    description: Count the source rows before transferring, so the total and progress are known from the start. Turn it off for very large sources where counting is slow.
+  - field: concurrency
+    label: Parallel channels
+    type: number
+    min: 1
+    max: 16
+    description: Read/write channels running at once, each with its own connections. More than one needs a split column. Leave empty to use the executor configuration.
+  - field: splitStrategy
+    label: Split strategy
+    type: select
+    description: NONE keeps one query, AUTO splits when channels are above one, RANGE always splits. Queries that cannot be split safely stay as one query.
+    options:
+      - label: NONE
+        value: NONE
+      - label: AUTO
+        value: AUTO
+      - label: RANGE
+        value: RANGE
+  - field: splitColumn
+    label: Split column
+    type: input
+    description: Integer or date source column to split the query on, ideally indexed and evenly spread.
+  - field: splitCount
+    label: Split count
+    type: number
+    min: 0
+    max: 256
+    description: Number of ranges. Leave empty or 0 to use four per channel.
+  - field: maxRowsPerSecond
+    label: Max rows per second
+    type: number
+    min: 0
+    description: Upper limit on rows read per second across all channels. 0 means no limit.
+  - field: maxBytesPerSecond
+    label: Max bytes per second
+    type: number
+    min: 0
+    description: Upper limit on estimated bytes read per second across all channels. 0 means no limit.
+  - field: maxErrorRows
+    label: Max rejected rows
+    type: number
+    min: 0
+    description: Rows the target may reject before the run fails. Rejected rows are skipped and listed in the run metrics. 0 fails on the first one.
+  - field: writeRetries
+    label: Batch retries
+    type: number
+    min: 0
+    description: Times a batch is written again after a transient error such as a lost connection.
+  - field: writeRetryBackoffMs
+    label: Batch retry wait
+    type: number
+    min: 0
+    description: Wait before the first batch retry in milliseconds; it doubles with each retry.
+nodes:
+  - nodes/metaforge-source.yaml
+  - nodes/metaforge-sink.yaml

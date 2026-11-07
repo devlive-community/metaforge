@@ -40,7 +40,7 @@ public class DremioPlugin
                                 .required(true)
                                 .min(1L)
                                 .max(65535L)
-                                .value(31010)
+                                .value(32010)
                                 .message("port is a required field, please be sure to enter")
                                 .build(),
                         PluginConfigureField.builder()

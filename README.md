@@ -4,16 +4,14 @@
 
 # MetaForge
 
+**Integrated software for data transformation, integration, and visualization**
+
 ---
 
-![Visitors](https://api.visitorbadge.io/api/visitors?path=https%3A%2F%2Fgithub.com%2FEdurtIO%2Fmetaforge.git&countColor=%23263759&style=flat&labelStyle=none)
-[![](https://tokei.rs/b1/github/EdurtIO/metaforge)](https://github.com/EdurtIO/metaforge)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 ![version](https://img.shields.io/github/v/release/EdurtIO/metaforge.svg)
 
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-![GitHub Release Date](https://img.shields.io/github/release-date/EdurtIO/metaforge?style=flat-square)
-
-![Docker Automated build](https://img.shields.io/docker/automated/devliveorg/metaforge)
+[![Docker Automated build](https://img.shields.io/docker/automated/devliveorg/metaforge)](https://hub.docker.com/r/devliveorg/metaforge)
 ![Docker Image Size (latest by date)](https://img.shields.io/docker/image-size/devliveorg/metaforge?style=flat-square)
 ![Docker Pulls](https://img.shields.io/docker/pulls/devliveorg/metaforge?style=flat-square)
 
@@ -23,26 +21,116 @@
 
 </div>
 
-### What is metaforge?
+## What is MetaForge?
 
 ---
 
-MetaForge is integrated software for data transformation, integration, and visualization. Support a variety of data sources, file types, big data related database, relational database, NoSQL database, etc. Through the software can realize the management of multiple data sources, the data under the source of various operations conversion, making data charts, monitoring data sources and other functions.
+MetaForge is integrated software for data transformation, integration, and visualization. It supports a wide variety of data sources — relational databases, NoSQL databases, big data engines, message queues and file systems — and lets you manage multiple data sources, query and transform data, build datasets, and create charts and monitoring views.
 
-| Username  | Password    |
-|:---------:|:------------|
-| `metaforge` | `123456789` |
-|  `admin`  | `12345678`  |
-
-### Require
+## Features
 
 ---
 
-> Must-read for users: Be sure to execute the following command after cloning the code locally
+- **Data source management** — connect, test and manage 50+ data sources from a single console
+- **SQL query console** — IDE-style editor with syntax highlighting, formatting, execution history and export
+- **Datasets** — build reusable datasets from tables or ad-hoc queries, preview data and define column metadata
+- **Visualization** — drag-and-drop dashboards with tables, pies and more chart types
+- **Reports** — schedule and share reports
+- **Workflows** — chain data jobs into repeatable workflows
+- **File storage** — read and write files through Aliyun OSS, Amazon S3, HDFS, local storage and more
+- **Notifications** — DingTalk, email and other channels for job and system events
+- **AI assistant** — chat with your data through configured AI providers
+- **Plugin architecture** — every connector, converter and storage backend is a hot-loadable plugin
+- **Administration** — users, roles, menus and runtime configuration with fine-grained permissions
+
+## Requirements
+
+---
+
+| Dependency | Version                                      |
+|:-----------|:---------------------------------------------|
+| JDK        | 21                                           |
+| Maven      | 3.9+ (wrapper `./mvnw` included)             |
+| Node.js    | 20                                           |
+| pnpm       | 9.13.2                                       |
+
+## Getting Started
+
+---
+
+> Must-read for users: be sure to execute the following command after cloning the code locally
 
 ```bash
 cp configure/git-hook/* .git/hooks
 chmod 700 .git/hooks/*
+```
+
+### Run the backend (development)
+
+Run the main class `org.devlive.metaforge.server.MetaForge` (module `core/metaforge-server`) from your IDE.
+The server starts on [http://localhost:9096](http://localhost:9096). On first launch the setup wizard guides you through
+selecting the metadata database (embedded H2 by default, or MySQL / PostgreSQL / SQL Server / Oracle) and creating the
+administrator account.
+
+### Run the frontend (development)
+
+```bash
+pnpm install
+pnpm --filter metaforge-web dev
+```
+
+The web console starts on [http://localhost:3001](http://localhost:3001) and proxies API calls to the backend.
+
+### Build for production
+
+```bash
+# Frontend
+pnpm --filter metaforge-web build
+
+# Backend + distribution package (the server serves the built frontend
+# from core/metaforge-web/dist; the tarball lands in dist/)
+./mvnw -T1C clean package -DskipTests
+```
+
+## Docker
+
+---
+
+```bash
+docker pull devliveorg/metaforge:latest
+docker run -d --name metaforge -p 9096:9096 devliveorg/metaforge:latest
+```
+
+Or unpack the distribution built locally (`dist/metaforge-server-2026.0.0-bin.tar.gz`) and run `bin/startup.sh`.
+
+## Project Structure
+
+---
+
+```
+metaforge
+├── client                        # Command line client
+├── configure                     # Default configuration and plugin manifests
+├── core
+│   ├── metaforge-captcha         # Captcha generation
+│   ├── metaforge-common          # Shared utilities and enums
+│   ├── metaforge-condor          # Scheduling integration
+│   ├── metaforge-server          # Spring Boot server (REST API entry point)
+│   ├── metaforge-service         # Domain services and persistence
+│   ├── metaforge-security        # Security configuration
+│   ├── metaforge-sql             # SQL statement builders
+│   ├── metaforge-spi             # Plugin SPI contracts
+│   ├── metaforge-web             # Vue 3 + Tailwind web console
+├── convert                       # Data converters (JSON, CSV, XML, ...)
+├── driver                        # Database drivers (Redis, MongoDB, ...)
+├── executor                      # Execution engines
+├── fs                            # File storage plugins (OSS, S3, local, ...)
+├── lib                           # Shared libraries (HTTP client, logging, shell)
+├── notify                        # Notification channels (DingTalk, ...)
+├── parser                        # SQL parsers (MySQL, Trino, ...)
+├── plugin                        # Data source plugins (50+ connectors)
+├── scheduler                     # Job scheduling
+└── shaded                        # Shaded third-party integrations
 ```
 
 ## Supported Connectors
@@ -105,17 +193,11 @@ Here are some of the major database solutions that are supported:
  <a href="https://dolphindb.com/"><img src="docs/assets/plugin/dolphindb.svg" alt="DolphinDB" height="60"/></a>
 </div>
 
-## System architecture
+## Documentation
 
 ---
 
-<img src="docs/assets/architecture.jpg" width="100%" />
-
-## Stargazers over time
-
----
-
-[![Star History Chart](https://star-history.dera.page/svg?repos=devlive-community/metaforge&type=Timeline)](https://star-history.dera.page/#devlive-community/metaforge&Timeline)
+[Extended documentation for MetaForge](https://metaforge.devlive.org)
 
 ## Join Us
 
@@ -131,11 +213,11 @@ Please visit [Issues 950](https://github.com/devlive-community/metaforge/issues/
 [![App Store](https://img.shields.io/badge/App%20Store-Rainbond-brightgreen?style=flat-square)](https://www.rainbond.com/)
 [![Vue 3](https://img.shields.io/badge/UI-Vue%203%20%2B%20Tailwind-brightgreen?style=flat-square)](https://vuejs.org/)
 
-## Installation and Configuration
+## Stargazers over time
 
 ---
 
-[Extended documentation for MetaForge](https://metaforge.devlive.org)
+[![Star History Chart](https://star-history.dera.page/svg?repos=devlive-community/metaforge&type=Timeline)](https://star-history.dera.page/#devlive-community/metaforge&Timeline)
 
 ## Contributors
 

@@ -2,8 +2,10 @@ package org.devlive.metaforge.service.service;
 
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.entity.WorkflowEntity;
+import org.devlive.metaforge.service.workflow.WorkflowRun;
 
 import java.util.List;
+import java.util.Map;
 
 public interface WorkflowService
         extends BaseService<WorkflowEntity>
@@ -13,4 +15,24 @@ public interface WorkflowService
     CommonResponse<List<String>> log(String code);
 
     CommonResponse<String> restart(String code);
+
+    CommonResponse<Map<String, Object>> catalog();
+
+    CommonResponse<List<String>> validate(WorkflowEntity workflow);
+
+    CommonResponse<List<WorkflowRun>> runs(String code);
+
+    CommonResponse<WorkflowRun> run(String code, String runId);
+
+    CommonResponse<List<String>> log(String code, String runId);
+
+    CommonResponse<Map<String, Long>> statistics();
+
+    CommonResponse<WorkflowEntity> publish(String code);
+
+    /** Column names and types a query on a saved data source returns, without reading rows. */
+    CommonResponse<List<Map<String, String>>> queryColumns(String source, String query);
+
+    /** Columns and the first rows of a query on a saved data source, for previewing it in the editor. */
+    CommonResponse<Map<String, Object>> queryPreview(String source, String query);
 }

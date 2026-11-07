@@ -29,6 +29,12 @@
             <artifactId>taos-jdbcdriver</artifactId>
             <version>${tdengine.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-test-e2e</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

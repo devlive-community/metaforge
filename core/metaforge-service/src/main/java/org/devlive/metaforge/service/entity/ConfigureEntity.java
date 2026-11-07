@@ -17,7 +17,7 @@ import org.springframework.data.relational.core.mapping.Table;
  *
  * Generic configuration row keyed by (category, name).
  * - category: e.g. "EXECUTOR", "DATASET"
- * - name:     e.g. "Local", "Seatunnel", or a dataset target identifier
+ * - name:     e.g. "MetaForge", "Seatunnel", or a dataset target identifier
  * - configure: JSON-serialized map of effective field values
  */
 @Data

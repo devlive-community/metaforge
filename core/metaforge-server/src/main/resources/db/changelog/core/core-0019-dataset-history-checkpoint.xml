@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Sync history keeps the checkpoint a paused, stopped or failed run resumes from. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0019-dataset-history-checkpoint" author="metaforge">
+        <addColumn tableName="metaforge_dataset_history">
+            <!-- checkpoint itself is a T-SQL reserved word and breaks SQL Server reads. -->
+            <column name="checkpoint_payload" type="${text}"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

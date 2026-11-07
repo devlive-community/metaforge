@@ -23,7 +23,7 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 !!! note
 
-    Queries are executed through the JDBC driver (`metaforge-driver-redis`), supporting the `SELECT` and `SHOW` keywords.
+    Queries are executed through the JDBC driver (`metaforge-driver-redis`): `SELECT` and `SHOW` read keys, and any other statement is sent to Redis as a plain command (`GET user:1`, `HGETALL h`, `KEYS *`), as earlier releases did.
 
 !!!
 
@@ -49,11 +49,34 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `RedisE2ETest` verifies each version below in a container: keys written with plain Redis commands, read back with SQL, and listed as databases, tables and columns.
 
-    - [x] 6.x
-    - [x] 7.x
+    - [x] 6.2
+    - [x] 7.4
 
 !!!
+
+#### SQL and concepts
+
+---
+
+Redis is browsed like MySQL: choose a database at the top, and its keys are the tables.
+
+| MetaForge | Redis | SQL |
+|:--|:--|:--|
+| Database | Database `0` .. `n-1` (`CONFIG GET databases`, 16 when CONFIG is refused) | `SHOW DATABASES` |
+| Table | Key (the first 10 000 per database) | `SHOW TABLES` |
+| Column | `key`, `type`, `value` | `SHOW COLUMNS FROM` `` `user:1` `` |
+
+| Statement | Result |
+|:--|:--|
+| ``SELECT * FROM `user:1` `` | The key, one row of `key`, `type`, `value` |
+| ``SELECT * FROM `2`.`user:1` LIMIT 10`` | The key in database 2 |
+| ``SELECT `key`, type FROM `user:*` `` | Every key matching the pattern (`*`, `?`) |
+| `SELECT * FROM user` | `user` itself, or else every key starting with `user` |
+| `GET user:1`, `HGETALL h`, ... | A plain command; its reply in one `RESULTS` column |
+
+- Quote keys with `:` or other symbols in backticks, and write the `key` column as `` `key` ``: `KEY` is a reserved word.
+- Choose the database in the source settings or with `` `n`.`key` ``, not with `SELECT n`: connections are pooled, so the command is refused.

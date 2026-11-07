@@ -85,10 +85,6 @@ public class TableExportServiceTest
             rows.add(List.of(3215L));
             return Response.builder().isSuccessful(true).headers(List.of("COUNT(*)")).columns(rows).build();
         }
-        if (content.contains("information_schema.COLUMNS")) {
-            rows.add(List.of("id", "bigint"));
-            return Response.builder().isSuccessful(true).headers(List.of("COLUMN_NAME", "COLUMN_TYPE")).columns(rows).build();
-        }
         rows.add(new ArrayList<>(Arrays.asList(1, null)));
         return Response.builder().isSuccessful(true).headers(List.of("id", "name")).columns(rows).build();
     }
@@ -111,6 +107,13 @@ public class TableExportServiceTest
             public Response execute(RuntimeConfigure configure, String content)
             {
                 return answer(content);
+            }
+
+            @Override
+            public Response getColumns(RuntimeConfigure configure, String database, String table)
+            {
+                return Response.builder().isSuccessful(true).headers(List.of("type_name", "object_name", "object_data_type", "object_nullable", "object_default_value", "object_comment", "object_autoincrement"))
+                        .columns(new ArrayList<>(List.of(List.of("column", "id", "bigint", "NO", "", "", "NO")))).build();
             }
         };
         SourceEntity entity = new SourceEntity();

@@ -1,9 +1,8 @@
 <template>
   <div class="dc-table">
-    <div v-if="title || description" class="dc-table__head">
+    <div v-if="title" class="dc-table__head">
       <div class="dc-table__head-main">
         <h1 v-if="title" class="m-0 text-xl leading-7 font-semibold text-content">{{ title }}</h1>
-        <p v-if="description" class="mt-1 mb-0 text-sm leading-5 text-content-secondary">{{ description }}</p>
       </div>
     </div>
 

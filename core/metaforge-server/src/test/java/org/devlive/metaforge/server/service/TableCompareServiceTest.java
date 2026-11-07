@@ -39,19 +39,7 @@ public class TableCompareServiceTest
         sql.add(content);
         ObjectMapper mapper = new ObjectMapper();
         List<Object> rows = new ArrayList<>();
-        if (content.contains("information_schema.COLUMNS")) {
-            if (content.contains("TABLE_SCHEMA = 'app'")) {
-                rows.add(Arrays.asList("id", "bigint", "NO", null, "主键"));
-                rows.add(Arrays.asList("name", "varchar(100)", "NO", null, ""));
-                rows.add(Arrays.asList("status", "tinyint", "NO", "1", ""));
-            }
-            else {
-                rows.add(Arrays.asList("id", "bigint", "NO", null, "主键"));
-                rows.add(Arrays.asList("name", "varchar(100)", "YES", null, ""));
-                rows.add(Arrays.asList("is_deleted", "tinyint", "NO", "0", ""));
-            }
-        }
-        else if (content.contains("KEY_COLUMN_USAGE")) {
+        if (content.contains("KEY_COLUMN_USAGE")) {
             rows.add(mapper.createObjectNode().put("object_name", "id"));
         }
         else if (content.startsWith("SHOW CREATE TABLE")) {
@@ -67,6 +55,26 @@ public class TableCompareServiceTest
             rows.add(new ArrayList<>(Arrays.asList(3, "c")));
         }
         return Response.builder().isSuccessful(true).columns(rows).build();
+    }
+
+    /** The plugin's column listing, with the standard headers every plugin returns. */
+    private static Response columns(String database)
+    {
+        List<Object> rows = new ArrayList<>();
+        if ("app".equals(database)) {
+            rows.add(Arrays.asList("column", "id", "bigint", "NO", null, "主键"));
+            rows.add(Arrays.asList("column", "name", "varchar(100)", "NO", null, ""));
+            rows.add(Arrays.asList("column", "status", "tinyint", "NO", "1", ""));
+            rows.add(Arrays.asList("index", "PRIMARY", "", "", null, ""));
+        }
+        else {
+            rows.add(Arrays.asList("column", "id", "bigint", "NO", null, "主键"));
+            rows.add(Arrays.asList("column", "name", "varchar(100)", "YES", null, ""));
+            rows.add(Arrays.asList("column", "is_deleted", "tinyint", "NO", "0", ""));
+        }
+        return Response.builder().isSuccessful(true)
+                .headers(Arrays.asList("type_name", "object_name", "object_data_type", "object_nullable", "object_default_value", "object_comment"))
+                .columns(rows).build();
     }
 
     private TableCompareService service()
@@ -86,6 +94,12 @@ public class TableCompareServiceTest
             public Response execute(RuntimeConfigure configure, String content)
             {
                 return answer(content);
+            }
+
+            @Override
+            public Response getColumns(RuntimeConfigure configure, String database, String table)
+            {
+                return columns(database);
             }
         };
         SourceEntity entity = new SourceEntity();

@@ -1,10 +1,4 @@
 <template>
-  <MfAlert variant="info" closable class="dc-header-banner rounded-none!">
-    <router-link to="/chat" target="_blank" class="hover:text-primary">
-      Support ChatGPT
-    </router-link>
-  </MfAlert>
-
   <!-- 白底铺满整行：底色在宽屏下从两侧透出来 -->
   <div class="dc-header__bar">
     <div class="container dc-header__layout flex min-h-16 w-full items-center justify-between gap-6 py-3">
@@ -54,49 +48,7 @@
           </MfTooltip>
 
           <div v-if="userInfo" class="flex items-center">
-            <MfPopover trigger="click" placement="bottomRight">
-              <template #content>
-                <div class="dc-notify" style="width: 340px; max-height: 300px; overflow-y: auto;" @scroll="onNotifyScroll">
-                  <div v-if="messages.length === 0" class="p-4 text-center text-sm text-content-tertiary">
-                    {{ $t('common.noData') }}
-                  </div>
-
-                  <div v-for="(item, index) in messages"
-                       :key="index"
-                       class="dc-notify__item"
-                       @click="handleNotificationClick(item)">
-                    <div class="mt-1 text-sm text-content-secondary">
-                      <div v-if="item.entityExists" class="flex space-x-1">
-                        <span>{{ $t(`common.${ item.entityType?.toLowerCase() || '' }`) }}</span>
-
-                        <template v-if="item.entityType === 'DATASET'">
-                          <router-link :to="`/dataset/info/${item.entityCode}`" target="_blank" class="hover:text-primary flex items-center">
-                            [ {{ item.entityName }} ]
-                          </router-link>
-                        </template>
-
-                        <template v-else>
-                          <router-link class="hover:text-primary" :to="'/' + item.entityType + '/' + item.entityCode">[ {{ item.entityName }} ]</router-link>
-                        </template>
-
-                        <span>{{ $t(`common.${ item.type?.toLowerCase() || '' }`) }}</span>
-                      </div>
-                      <div v-else>
-                        {{ $t(`common.${ item.entityType?.toLowerCase() || '' }`) }} [ {{ item.entityName }} ] {{ $t(`common.${ item.type?.toLowerCase() || '' }`) }}
-                      </div>
-                    </div>
-
-                    <div class="text-xs text-content-tertiary mt-1">{{ item.createTime }}</div>
-                  </div>
-                </div>
-              </template>
-
-              <MfBadge :count="userInfo?.unreadCount || 0">
-                <button type="button" class="dc-header__icon-action" :aria-label="$t('notify.text.center')">
-                  <Bell :size="20" />
-                </button>
-              </MfBadge>
-            </MfPopover>
+            <NotificationBell/>
           </div>
 
           <!-- User Info -->
@@ -131,7 +83,7 @@
 
                   <MfMenuItem>
                     <router-link to="/account/profile" class="flex items-center space-x-2">
-                      <SettingOutlined :style="{ fontSize: '16px' }"/>
+                      <Settings :size="16"/>
                       <span>{{ $t('user.common.setting') }}</span>
                     </router-link>
                   </MfMenuItem>
@@ -152,16 +104,14 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import NotificationBell from '@/views/components/notify/NotificationBell.vue'
+import { computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import { MfMessage } from 'metaforge-ui'
 import { useUserStore } from '@/stores/user'
 import { storeToRefs } from 'pinia'
 import { TokenUtils } from '@/utils/token'
 import router from '@/router'
-import NotificationService from '@/services/notification'
-import { FilterModel } from '@/model/filter.ts'
-import { Bell, CircleHelp, LogOut } from '@lucide/vue'
+import { CircleHelp, LogOut, Settings } from '@lucide/vue'
 import { MENU_ICONS } from '@/config/menu-icons'
 
 defineOptions({ name: 'LayoutHeader' })
@@ -192,52 +142,12 @@ const menuIcons = MENU_ICONS
 
 const route = useRoute()
 const userStore = useUserStore()
-const filter: FilterModel = new FilterModel()
-const messages = ref<any[]>([])
-const pageIndex = ref<number>(1)
-const hasMoreData = ref(true)
-const loading = ref(false)
 
 const { userInfo, isLoggedIn, menu: activeMenus } = storeToRefs(userStore)
-
-const fetchMessages = async (value: number = 1, append = false) => {
-  filter.page = value
-  filter.orders = [{ column: 'createTime', order: 'desc' }]
-  loading.value = true
-  try {
-    const response = await NotificationService.getAll(filter)
-    if (response.status && response.data) {
-      const items = response.data.content.map((item: any) => {
-        item.read = item.isRead
-        return item
-      })
-      messages.value = append ? [...messages.value, ...items] : items
-      pageIndex.value = response.data.page
-      hasMoreData.value = response.data.page < response.data.totalPage
-    }
-    else {
-      MfMessage.error(response.message)
-    }
-  }
-  finally {
-    loading.value = false
-  }
-}
-
-const onNotifyScroll = (event: any) => {
-  const target = event.target
-  if (loading.value || !hasMoreData.value) {
-    return
-  }
-  if (target.scrollTop + target.offsetHeight >= target.scrollHeight - 10) {
-    fetchMessages(pageIndex.value + 1, true)
-  }
-}
 
 onMounted(async () => {
   if (TokenUtils.getAuthUser()) {
     await Promise.all([userStore.fetchUserInfo(), userStore.fetchMenus()])
-    await fetchMessages()
   }
 })
 
@@ -246,33 +156,9 @@ const logout = () => {
   router.push('/auth/signin')
 }
 
-const handleNotificationClick = (msg: any) => {
-  const { id, code } = msg
-  const payload = { id, code, isRead: true }
-  NotificationService.saveOrUpdate(payload)
-                     .then(response => {
-                       if (response.status && response.data) {
-                         fetchMessages()
-                         userStore.fetchUserInfo()
-                       }
-                       else {
-                         MfMessage.error(response.message)
-                       }
-                     })
-}
 </script>
 
 <style scoped>
-.dc-notify__item {
-    padding: 8px 12px;
-    border-radius: 6px;
-    cursor: pointer;
-}
-
-.dc-notify__item:hover {
-    background-color: var(--mf-color-surface-hover);
-}
-
 .dc-header__bar {
     min-height: 64px;
     display: flex;

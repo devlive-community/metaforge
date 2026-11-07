@@ -1,0 +1,12 @@
+{
+  "label": "Qiniu FileSystem",
+  "description": "A Qiniu file system plugin for MetaForge.",
+  "i18nFormat": true,
+  "type": "FileSystem",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/qiniu.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 60
+}

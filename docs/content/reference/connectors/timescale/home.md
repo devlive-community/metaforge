@@ -47,14 +47,15 @@ Timescale 是一个用于时间序列、事件和分析的 PostgreSQL 数据平�
 |  流水线  | :x: |
 | 元数据管理 | :x: |
 
-#### 版本
+#### 版本（验证）
 
 ---
 
-!!! warning
+!!! note
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/devlive-community/metaforge/issues/new/choose)
+    插件的 e2e 测试 `TimescaleE2ETest` 在容器中逐一验证以下版本：版本检查后，用 SQL 创建的 hypertable 作为数据表连同字段被列出，并读回其中的数据。
 
-    - [x] `all`
+    - [x] TimescaleDB 2.17 (PostgreSQL 16)
+    - [x] TimescaleDB 2.22 (PostgreSQL 17)
 
 !!!

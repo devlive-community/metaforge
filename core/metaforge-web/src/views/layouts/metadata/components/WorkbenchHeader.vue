@@ -10,12 +10,13 @@
             <MfAvatar :size="28" :src="pluginLogo" :alt="sourceName">
               <Database :size="18"/>
             </MfAvatar>
-            <span class="dc-source-name max-w-[144px] truncate text-xl font-bold text-content">{{ sourceName }}</span>
+            <MfLoadingIcon v-if="sourceLoading" :size="16" class="text-content-tertiary" :aria-label="$t('common.loading')"/>
+            <span v-else class="dc-source-name max-w-[144px] truncate text-xl font-bold text-content">{{ sourceName }}</span>
           </span>
         </MfTooltip>
 
         <MfSelect v-if="can('database:list')" v-model="currentDatabase" class="shrink-0" style="width: 142px" size="sm"
-                  :options="databaseOptions" :placeholder="$t('source.common.database')"/>
+                  :options="databaseOptions" :loading="databasesLoading" :placeholder="$t('source.common.database')"/>
 
         <nav class="dc-workbench-nav flex min-w-0 items-center gap-1">
           <router-link v-for="item in navItems" :key="item.path" :to="item.to || item.path"
@@ -30,49 +31,7 @@
 
         <MfSpace :size="16" :wrap="false" class="dc-header__actions shrink-0">
           <div v-if="userInfo" class="flex items-center">
-            <MfPopover trigger="click" placement="bottomRight">
-              <template #content>
-                <div class="dc-notify" style="width: 340px; max-height: 300px; overflow-y: auto;" @scroll="onNotifyScroll">
-                  <div v-if="messages.length === 0" class="p-4 text-center text-sm text-content-tertiary">
-                    {{ $t('common.noData') }}
-                  </div>
-
-                  <div v-for="(item, index) in messages"
-                       :key="index"
-                       class="dc-notify__item"
-                       @click="handleNotificationClick(item)">
-                    <div class="mt-1 text-sm text-content-secondary">
-                      <div v-if="item.entityExists" class="flex space-x-1">
-                        <span>{{ $t(`common.${ item.entityType?.toLowerCase() || '' }`) }}</span>
-
-                        <template v-if="item.entityType === 'DATASET'">
-                          <router-link :to="`/dataset/info/${item.entityCode}`" target="_blank" class="hover:text-primary flex items-center">
-                            [ {{ item.entityName }} ]
-                          </router-link>
-                        </template>
-
-                        <template v-else>
-                          <router-link class="hover:text-primary" :to="'/' + item.entityType + '/' + item.entityCode">[ {{ item.entityName }} ]</router-link>
-                        </template>
-
-                        <span>{{ $t(`common.${ item.type?.toLowerCase() || '' }`) }}</span>
-                      </div>
-                      <div v-else>
-                        {{ $t(`common.${ item.entityType?.toLowerCase() || '' }`) }} [ {{ item.entityName }} ] {{ $t(`common.${ item.type?.toLowerCase() || '' }`) }}
-                      </div>
-                    </div>
-
-                    <div class="text-xs text-content-tertiary mt-1">{{ item.createTime }}</div>
-                  </div>
-                </div>
-              </template>
-
-              <MfBadge :count="userInfo?.unreadCount || 0">
-                <button type="button" class="dc-header__icon-action" :aria-label="$t('notify.text.center')">
-                  <Bell :size="20" />
-                </button>
-              </MfBadge>
-            </MfPopover>
+            <NotificationBell/>
           </div>
 
           <!-- 帮助 -->
@@ -136,11 +95,12 @@
 </template>
 
 <script setup lang="ts">
-import { Bell, CircleHelp, Database, LogOut, Settings } from '@lucide/vue'
+import NotificationBell from '@/views/components/notify/NotificationBell.vue'
+import { CircleHelp, Database, LogOut, Settings } from '@lucide/vue'
 import { useWorkbenchHeader } from '@/composables/useWorkbenchHeader'
 defineOptions({ name: 'WorkbenchHeader' })
-const { can, sourceName, pluginLogo, currentDatabase, databaseOptions, navItems, isNavActive, userInfo,
-  messages, onNotifyScroll, handleNotificationClick, isLoggedIn, logout } = useWorkbenchHeader()
+const { can, sourceName, sourceLoading, pluginLogo, currentDatabase, databaseOptions, databasesLoading, navItems, isNavActive, userInfo,
+  isLoggedIn, logout } = useWorkbenchHeader()
 </script>
 
 <style scoped>

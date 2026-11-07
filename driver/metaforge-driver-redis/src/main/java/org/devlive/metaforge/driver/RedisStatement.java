@@ -11,12 +11,17 @@ import org.redisson.api.RedissonClient;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Slf4j
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2", "NP_NULL_PARAM_DEREF"})
@@ -25,6 +30,7 @@ public class RedisStatement
 {
     private final RedisConnection connection;
     private boolean isClosed = false;
+    private ResultSet resultSet;
 
     public RedisStatement(RedisConnection connection)
     {
@@ -38,6 +44,9 @@ public class RedisStatement
         checkClosed();
 
         try {
+            if (RedisCommands.isCommand(sql)) {
+                return new RedisResultSet(RedisCommands.run(connection.getClient(), sql));
+            }
             RedisParser parser = RedisParser.createParser(sql);
             if (parser instanceof RedisShowParser) {
                 return executeShowStatement((RedisShowParser) parser);
@@ -55,53 +64,124 @@ public class RedisStatement
         }
     }
 
+    /** SELECT version(): the server's redis_version from INFO server. */
     private ResultSet handleServerInfo()
     {
+        Map<String, Object> row = new LinkedHashMap<>();
+        row.put("version", serverVersion(connection.getClient()));
         List<Map<String, Object>> rows = new ArrayList<>();
-        Map<String, Object> row = new HashMap<>();
-        row.put("info", "Redis Server");
         rows.add(row);
         return new RedisResultSet(rows);
     }
 
-    private ResultSet executeSelectStatement(RedisParser parser)
+    static String serverVersion(RedissonClient client)
     {
-        RedissonClient client = connection.getClient();
-        String collection = parser.getCollection();
-        List<Map<String, Object>> rows = new ArrayList<>();
-
-        if (collection == null || collection.equals("*")) {
-            RKeys keys = client.getKeys();
-            for (String key : keys.getKeys()) {
-                Map<String, Object> row = new HashMap<>();
-                row.put("key", key);
-                row.put("type", getKeyType(client, key));
-                row.put("value", getKeyValue(client, key));
-                rows.add(row);
+        for (Map<String, Object> line : RedisCommands.run(client, "INFO server")) {
+            for (String part : String.valueOf(line.get(RedisCommands.COLUMN)).split("\\r?\\n")) {
+                if (part.startsWith("redis_version:")) {
+                    return part.substring("redis_version:".length()).trim();
+                }
             }
         }
-        else {
-            RKeys keys = client.getKeys();
-            String pattern = collection.contains("*") || collection.contains("?") ? collection : collection + "*";
-            for (String key : keys.getKeysByPattern(pattern)) {
-                Map<String, Object> row = new HashMap<>();
-                row.put("key", key);
-                row.put("type", getKeyType(client, key));
-                row.put("value", getKeyValue(client, key));
-                rows.add(row);
-            }
-        }
-
-        return new RedisResultSet(rows);
+        return "";
     }
 
-    private String getKeyType(RedissonClient client, String key)
+    /**
+     * SELECT ... FROM key: an exact key, a pattern with * or ? (`test:*`), or else the keys starting
+     * with the name; FROM * reads every key.
+     * Each key is a row of key, type and value, and the selected columns are kept in order.
+     */
+    private ResultSet executeSelectStatement(RedisParser parser)
+            throws SQLException
+    {
+        // The workbench qualifies the key with its database: `2`.`user:1`.
+        String collection = parser.getCollection();
+        RedissonClient client = connection.getClient();
+        Matcher qualified = collection == null ? null : QUALIFIED.matcher(collection.trim());
+        if (qualified != null && qualified.matches()) {
+            client = connection.getClient(Integer.parseInt(qualified.group(1)));
+            collection = qualified.group(2).replace("``", "`");
+        }
+        else {
+            collection = unquote(collection);
+        }
+        Iterable<String> keys;
+        if (collection == null || collection.isEmpty() || collection.equals("*")) {
+            keys = client.getKeys().getKeys();
+        }
+        else if (collection.contains("*") || collection.contains("?")) {
+            keys = client.getKeys().getKeysByPattern(collection);
+        }
+        else if (client.getKeys().countExists(collection) > 0) {
+            keys = List.of(collection);
+        }
+        else {
+            // Not a key: the keys starting with it, as FROM test always read test:*.
+            keys = client.getKeys().getKeysByPattern(collection + "*");
+        }
+
+        List<String> columns = columns(parser.getFields());
+        List<Map<String, Object>> rows = new ArrayList<>();
+        long limit = parser.getLimit() == null ? Long.MAX_VALUE : parser.getLimit();
+        for (String key : keys) {
+            if (rows.size() >= limit) {
+                break;
+            }
+            Map<String, Object> all = new LinkedHashMap<>();
+            all.put("key", key);
+            all.put("type", keyType(client, key));
+            all.put("value", keyValue(client, key));
+            Map<String, Object> row = new LinkedHashMap<>();
+            columns.forEach(column -> row.put(column, all.get(column)));
+            rows.add(row);
+        }
+        return new RedisResultSet(columns, rows);
+    }
+
+    private static final List<String> COLUMNS = RedisSqlSource.COLUMNS;
+    private static final Pattern QUALIFIED = Pattern.compile("^`(\\d+)`\\.`((?:[^`]|``)+)`$");
+
+    private static List<String> columns(List<String> fields)
+            throws SQLException
+    {
+        if (fields == null || fields.isEmpty() || fields.stream().anyMatch(field -> "*".equals(unquote(field)))) {
+            return COLUMNS;
+        }
+        List<String> columns = new ArrayList<>();
+        for (String field : fields) {
+            String name = unquote(field).toLowerCase(Locale.ROOT);
+            if (!COLUMNS.contains(name)) {
+                throw new SQLException("Unknown column " + field + "; a key has the columns key, type and value");
+            }
+            columns.add(name);
+        }
+        return columns;
+    }
+
+    /** Keys and columns may be quoted: `test:list`, "test:list" or 'test:list'. */
+    private static String unquote(String name)
+    {
+        if (name == null) {
+            return null;
+        }
+        String trimmed = name.trim();
+        if (trimmed.length() >= 2) {
+            char first = trimmed.charAt(0);
+            char last = trimmed.charAt(trimmed.length() - 1);
+            if ((first == '`' || first == '"' || first == '\'') && first == last) {
+                return trimmed.substring(1, trimmed.length() - 1);
+            }
+        }
+        return trimmed;
+    }
+
+    static String keyType(RedissonClient client, String key)
     {
         RType type = client.getKeys().getType(key);
         return type != null ? type.name() : "NONE";
     }
 
-    private Object getKeyValue(RedissonClient client, String key)
+    static Object keyValue(RedissonClient client, String key)
     {
         RType type = client.getKeys().getType(key);
         if (type == null) {
@@ -206,7 +286,17 @@ public class RedisStatement
     public int executeUpdate(String sql)
             throws SQLException
     {
-        throw new UnsupportedOperationException("Update operation not supported");
+        checkClosed();
+        if (!RedisCommands.isCommand(sql)) {
+            throw new SQLFeatureNotSupportedException("Only Redis commands can update: " + sql);
+        }
+        try {
+            // The released driver answered with the number of reply values.
+            return RedisCommands.run(connection.getClient(), sql).size();
+        }
+        catch (Exception e) {
+            throw new SQLException("Failed to execute command", e);
+        }
     }
 
     private void checkClosed()
@@ -291,21 +381,23 @@ public class RedisStatement
     public boolean execute(String sql)
             throws SQLException
     {
-        return false;
+        resultSet = executeQuery(sql);
+        return true;
     }
 
     @Override
     public ResultSet getResultSet()
             throws SQLException
     {
-        return null;
+        return resultSet;
     }
 
     @Override
     public int getUpdateCount()
             throws SQLException
     {
-        return 0;
+        // execute() always leaves a result set, so there is no update count.
+        return -1;
     }
 
     @Override

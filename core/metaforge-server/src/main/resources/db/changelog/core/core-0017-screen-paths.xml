@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Data screens moved from /dashboard to /screen; the menu keeps its id and role assignments. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0017-screen-paths" author="metaforge">
+        <update tableName="metaforge_menu">
+            <column name="url" value="/screen"/>
+            <where>url = '/dashboard'</where>
+        </update>
+    </changeSet>
+</databaseChangeLog>

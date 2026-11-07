@@ -37,6 +37,7 @@ public class LinkRepository
     public void deleteUser(Long userId)
     {
         jdbc.update("DELETE FROM metaforge_user_role WHERE user_id = :id", Map.of("id", userId));
+        jdbc.update("DELETE FROM metaforge_user_oauth WHERE user_id = :id", Map.of("id", userId));
     }
 
     public long countUsersOfRole(Long roleId)

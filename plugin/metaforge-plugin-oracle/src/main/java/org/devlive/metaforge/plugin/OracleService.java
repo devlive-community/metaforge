@@ -14,7 +14,7 @@ public class OracleService
     public String validator()
     {
         return "SELECT version FROM PRODUCT_COMPONENT_VERSION\n" +
-                "WHERE product LIKE 'Oracle Database%'";
+                "WHERE product LIKE 'Oracle%Database%'";
     }
 
     @Override

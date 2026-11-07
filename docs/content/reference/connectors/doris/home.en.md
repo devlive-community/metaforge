@@ -31,7 +31,7 @@ Support Time: `2023-04-19`
     |:------:|:---------------------------------:|:-------------:|
     | `Name` | :check{20,#3CA34F}:  |       -       |
     | `Host` | :check{20,#3CA34F}: |  `127.0.0.1`  |
-    | `Port` | :check{20,#3CA34F}: |     `9093`    |
+    | `Port` | :check{20,#3CA34F}: |     `9030`    |
 
 === "Authorization"
 
@@ -50,6 +50,11 @@ Support Time: `2023-04-19`
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `DorisE2ETest` verifies each version below in a container: the version check, then a database, table and columns created with SQL are listed, and their rows read back.
+
+    - [x] 2.1
+    - [x] 4.1
+
+!!!

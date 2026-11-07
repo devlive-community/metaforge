@@ -2,26 +2,20 @@
   <MfDrawer :open="open" inline :container="container || undefined" :width="width + 'px'" :title="$t('source.data.columnSettings')" @update:open="value => !value && emit('close')">
     <div class="flex flex-col gap-4">
       <MfInput v-model="keyword" size="sm" clearable :placeholder="$t('source.data.searchField')"><template #prefix><Search :size="14"/></template></MfInput>
-      <div class="overflow-hidden rounded-mf-md border border-line text-sm">
-        <div class="grid grid-cols-[16px_32px_minmax(0,1fr)_64px_76px_32px] items-center gap-2 border-b border-line bg-surface-hover px-2 py-2 text-xs font-medium text-content-secondary">
-          <span/><span>{{ $t('source.data.colShow') }}</span><span>{{ $t('source.data.colName') }}</span><span>{{ $t('source.data.colWidth') }}</span><span>{{ $t('source.data.colAlign') }}</span><span>{{ $t('source.data.colFixed') }}</span>
-        </div>
-        <div @dragleave="sort.leave">
-          <div v-for="column in filtered" :key="column.name" :draggable="true"
-               class="grid grid-cols-[16px_32px_minmax(0,1fr)_64px_76px_32px] items-center gap-2 border-b border-line px-2 py-1.5 last:border-b-0"
-               :class="[dropClass(column.name), column.name === sort.dragging.value && 'opacity-50']"
-               @dragstart="sort.start(column.name, $event)" @dragend="sort.end" @dragover.prevent="sort.enter(column.name)" @drop.prevent="onDrop(column.name)">
-            <GripVertical :size="14" class="cursor-grab text-content-tertiary"/>
-            <MfCheckbox v-model="column.visible" :disabled="column.visible && visibleCount === 1" :aria-label="$t('source.data.colShow')"/>
-            <span class="truncate" :title="label(column)">{{ label(column) }}</span>
-            <MfInput :model-value="String(column.width)" size="sm" inputmode="numeric" :disabled="draft.autoWidth" :aria-label="$t('source.data.colWidth')"
-                     @update:model-value="value => setWidth(column, String(value))"/>
-            <MfSelect v-model="column.align" size="sm" :options="alignOptions" :aria-label="$t('source.data.colAlign')"/>
-            <MfCheckbox v-model="column.fixed" :aria-label="$t('source.data.colFixed')"/>
-          </div>
-          <MfEmpty v-if="!filtered.length" size="sm" :title="$t('common.noData')"/>
-        </div>
-      </div>
+      <MfTable :columns="headers" :data-source="filtered" row-key="name" density="compact" :row-class="rowClass" :empty-text="$t('common.noData')"
+               @dragover="onRowDragOver" @drop="onRowDrop" @dragleave="sort.leave">
+        <template #cell-__drag__="{ record }">
+          <button type="button" draggable="true" class="flex size-4 cursor-grab items-center justify-center text-content-tertiary active:cursor-grabbing" :aria-label="$t('source.data.dragColumn', { name: label(record) })"
+                  @dragstart="sort.start(record.name, $event)" @dragend="sort.end"><GripVertical :size="14"/></button>
+        </template>
+        <template #cell-visible="{ record }"><MfCheckbox v-model="record.visible" :disabled="record.visible && visibleCount === 1" :aria-label="$t('source.data.colShow')"/></template>
+        <template #cell-name="{ record }"><span class="block truncate" :title="label(record)">{{ label(record) }}</span></template>
+        <template #cell-width="{ record }">
+          <MfInput :model-value="String(record.width)" size="sm" inputmode="numeric" :disabled="draft.autoWidth" :aria-label="$t('source.data.colWidth')" @update:model-value="value => setWidth(record, String(value))"/>
+        </template>
+        <template #cell-align="{ record }"><MfSelect v-model="record.align" size="sm" :options="alignOptions" :aria-label="$t('source.data.colAlign')"/></template>
+        <template #cell-fixed="{ record }"><MfCheckbox v-model="record.fixed" :aria-label="$t('source.data.colFixed')"/></template>
+      </MfTable>
       <div class="flex flex-col gap-2">
         <span class="text-sm font-medium text-content">{{ $t('source.data.columnMode') }}</span>
         <MfRadioGroup :model-value="isDefault ? 'default' : 'custom'" @update:model-value="value => value === 'default' && reset()">
@@ -81,9 +75,31 @@ function setWidth(column: ColumnSetting, value: string) {
   if (Number.isFinite(width) && width > 0) column.width = Math.min(800, Math.max(40, width))
 }
 const sort = useDragSort(() => draft.value.columns.map(column => column.name))
-function dropClass(name: string) {
-  const side = sort.dropSide(name)
-  return side ? DROP_SIDE_CLASS[side] : ''
+const headers = computed(() => [
+  { title: '', dataIndex: 'name', key: '__drag__', width: 28 },
+  { title: t('source.data.colShow'), dataIndex: 'visible', key: 'visible', width: 48 },
+  { title: t('source.data.colName'), dataIndex: 'name', key: 'name', ellipsis: true },
+  { title: t('source.data.colWidth'), dataIndex: 'width', key: 'width', width: 80 },
+  { title: t('source.data.colAlign'), dataIndex: 'align', key: 'align', width: 92 },
+  { title: t('source.data.colFixed'), dataIndex: 'fixed', key: 'fixed', width: 48 },
+])
+// Rows are found by MfTable's data-row-key, as on the table structure page.
+const rowName = (event: DragEvent) => (event.target as HTMLElement | null)?.closest<HTMLElement>('tr[data-row-key]')?.dataset.rowKey
+function rowClass(column: ColumnSetting) {
+  const side = sort.dropSide(column.name)
+  return [side ? DROP_SIDE_CLASS[side] : '', column.name === sort.dragging.value ? 'opacity-50' : ''].join(' ')
+}
+function onRowDragOver(event: DragEvent) {
+  const name = rowName(event)
+  if (!name || !sort.dragging.value) return
+  event.preventDefault()
+  sort.enter(name)
+}
+function onRowDrop(event: DragEvent) {
+  event.preventDefault()
+  const target = rowName(event)
+  if (target) onDrop(target)
+  else sort.end()
 }
 function onDrop(target: string) {
   const name = sort.drop(target)

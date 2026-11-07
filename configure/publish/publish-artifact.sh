@@ -36,8 +36,11 @@ for file in "$HOME/dist"/*bin.tar.gz; do
   fi
 done
 
-# Handle metadata file
-METADATA_FILE="${HOME}/configure/metadata.json"
+# Handle metadata file: built from the packages uploaded below (size, SHA-256,
+# sources, features). Release CI publishes the same file automatically; the
+# statistics catalog is imported only by CI, from the Maven Central archives.
+METADATA_FILE="${HOME}/dist/metadata.json"
+node "${HOME}/configure/publish/build-metadata.mjs" --dist "$PLUGIN_DIR" --out "$METADATA_FILE" --released now || exit 1
 if [ -f "$METADATA_FILE" ]; then
   # Upload new metadata file
   echo "Uploading metadata file"

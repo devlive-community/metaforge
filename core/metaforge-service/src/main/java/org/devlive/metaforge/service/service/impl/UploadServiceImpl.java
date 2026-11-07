@@ -14,6 +14,7 @@ import org.devlive.metaforge.service.entity.convert.AvatarEntity;
 import org.devlive.metaforge.service.enums.UploadMode;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.security.UserDetailsService;
+import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.service.service.UploadService;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -28,12 +29,14 @@ import java.io.IOException;
 public class UploadServiceImpl
         implements UploadService
 {
+    private final SystemSettingService systemSettings;
     private final PluginManager pluginManager;
     private final HttpServletRequest request;
     private final InitializerConfigure initializer;
 
-    public UploadServiceImpl(PluginManager pluginManager, HttpServletRequest request, InitializerConfigure initializer)
+    public UploadServiceImpl(PluginManager pluginManager, HttpServletRequest request, InitializerConfigure initializer, SystemSettingService systemSettings)
     {
+        this.systemSettings = systemSettings;
         this.pluginManager = pluginManager;
         this.request = request;
         this.initializer = initializer;
@@ -45,17 +48,17 @@ public class UploadServiceImpl
         if (configure.getMode().equals(UploadMode.DASHBOARD)) {
             configure.setCode(CodeUtils.generateCode(false));
             AvatarEntity entity = AvatarEntity.builder()
-                    .type(initializer.getFsConfigure().getType())
+                    .type(systemSettings.fs().getType())
                     .build();
             try {
                 FsRequest fsRequest = getFsRequest(configure.getFile(), configure);
-                pluginManager.getPlugin(initializer.getFsConfigure().getType())
+                pluginManager.getPlugin(systemSettings.fs().getType())
                         .ifPresent(plugin -> {
                             FsService fsService = plugin.getService(FsService.class);
                             FsResponse response = fsService.writer(fsRequest);
                             entity.setPath(response.getRemote());
                             entity.setLocal(response.getRemote());
-                            if (initializer.getFsConfigure().getType().startsWith("Local")) {
+                            if (systemSettings.fs().getType().startsWith("Local")) {
                                 entity.setPath(getAccess(entity));
                             }
                         });
@@ -89,10 +92,10 @@ public class UploadServiceImpl
             throws IOException
     {
         return FsRequest.builder()
-                .access(initializer.getFsConfigure().getAccess())
-                .secret(initializer.getFsConfigure().getSecret())
+                .access(systemSettings.fs().getAccess())
+                .secret(systemSettings.fs().getSecret())
                 .endpoint(getHome(configure))
-                .bucket(initializer.getFsConfigure().getBucket())
+                .bucket(systemSettings.fs().getBucket())
                 .stream(file.getInputStream())
                 .fileName("avatar.png")
                 .build();
@@ -106,8 +109,8 @@ public class UploadServiceImpl
      */
     private String getHome(UploadBody configure)
     {
-        if (!initializer.getFsConfigure().getType().startsWith("Local")) {
-            return initializer.getFsConfigure().getEndpoint();
+        if (!systemSettings.fs().getType().startsWith("Local")) {
+            return systemSettings.fs().getEndpoint();
         }
         return String.join("/", initializer.getDataHome(),
                 UserDetailsService.getUser().getUsername(),

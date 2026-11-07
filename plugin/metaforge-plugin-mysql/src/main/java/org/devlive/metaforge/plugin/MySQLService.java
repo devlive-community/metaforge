@@ -16,10 +16,4 @@ public class MySQLService
     {
         return "com.mysql.cj.jdbc.Driver";
     }
-
-    @Override
-    public Boolean isSupportMeta()
-    {
-        return true;
-    }
 }

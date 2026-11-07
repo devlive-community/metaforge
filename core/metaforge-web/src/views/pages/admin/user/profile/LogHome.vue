@@ -1,6 +1,5 @@
 <template>
   <DataTable filterable :filter-fields="tableFilters" :columns="headers"
-             :title="$t('user.common.log')"
              :description="$t('user.tip.log')"
                :data-source="data"
                :loading="loading"

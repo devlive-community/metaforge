@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.devlive.metaforge.executor.common.RunState;
+import org.devlive.metaforge.executor.common.RunStateMachine;
 import org.devlive.metaforge.service.entity.DatasetHistoryEntity;
 import org.devlive.metaforge.service.initializer.InstallationState;
 import org.devlive.metaforge.service.repository.DatasetHistoryRepository;
@@ -11,13 +12,12 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
 /**
  * 启动时把上次服务异常退出留下的"未完结"同步历史标记为 INTERRUPTED。
- * 仅处理 RUNNING / CREATED / STOPPING 这些非终态。
+ * 处理所有非终态（排队、运行、暂停、取消中、重试等，见 RunStateMachine）。
  * 在 SchedulerRunner 之前执行（@Order 较小），避免被即将启动的定时任务"运行中"覆盖。
  *
  * On startup, mark sync-history rows left in transient states by a prior crash as INTERRUPTED.
@@ -29,11 +29,7 @@ import java.util.List;
 public class DatasetHistoryRecoveryRunner
         implements CommandLineRunner
 {
-    private static final List<RunState> TRANSIENT_STATES = Arrays.asList(
-            RunState.RUNNING,
-            RunState.CREATED,
-            RunState.STOPPING
-    );
+    private static final List<RunState> TRANSIENT_STATES = RunStateMachine.activeStates();
 
     private final DatasetHistoryRepository historyRepository;
     private final InstallationState installationState;
@@ -62,6 +58,11 @@ public class DatasetHistoryRecoveryRunner
             Date updateTime = new Date();
             for (DatasetHistoryEntity history : stale) {
                 RunState previous = history.getState();
+                // 只有暂停或等待重试时的断点是精确的：运行中崩溃时断点之后可能还提交过行
+                // Only a paused or waiting run has an exact checkpoint: a crash mid-run may have committed rows past it.
+                if (previous != RunState.PAUSED && previous != RunState.RETRYING) {
+                    history.setCheckpoint(null);
+                }
                 history.setState(RunState.INTERRUPTED);
                 history.setMessage(message);
                 history.setUpdateTime(updateTime);

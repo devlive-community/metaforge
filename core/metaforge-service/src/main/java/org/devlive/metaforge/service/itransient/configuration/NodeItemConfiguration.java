@@ -11,6 +11,7 @@ import lombok.ToString;
 import org.devlive.metaforge.common.view.EntityView;
 
 import java.util.List;
+import java.util.Map;
 
 @Data
 @ToString
@@ -31,4 +32,17 @@ public class NodeItemConfiguration
     private Object value;
     private List<RuleConfiguration> rules;
     private List<OptionConfiguration> options;
+    private Double min;
+    private Double max;
+    private Double step;
+    /** Editor tab of the field: basic, sql or advanced. Derived from the field when absent. */
+    private String group;
+    /**
+     * Fields of the same node this field reads its choices from, such as {@code {source: source}} for
+     * a database list or {@code {source: source, database: database, table: table}} for target columns.
+     * Changing one of them clears this field.
+     */
+    private Map<String, String> from;
+    /** Fields of the upstream node supplying incoming columns, such as {@code {source: source, query: query}}. */
+    private Map<String, String> upstream;
 }

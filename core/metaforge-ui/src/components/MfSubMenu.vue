@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, inject, provide, ref, watch } from 'vue'
+import { computed, inject, onBeforeUnmount, provide, ref, watch } from 'vue'
 import clsx from 'clsx'
 import { useDismissableLayer } from '../composables/useDismissableLayer'
 
@@ -28,14 +28,34 @@ const open = computed(() => menu?.openKeys.value.includes(props.key_) ?? false)
 const horizontal = computed(() => menu?.mode.value === 'horizontal')
 const popup = ref(false)
 const root = ref<HTMLElement>()
+let closeTimer: ReturnType<typeof setTimeout> | undefined
 
-useDismissableLayer(root, computed(() => horizontal.value && popup.value), () => { popup.value = false })
-watch(horizontal, () => { popup.value = false })
+function closePopup(): void {
+    clearTimeout(closeTimer)
+    popup.value = false
+}
+
+function openPopup(): void {
+    if (!horizontal.value || props.disabled) return
+    clearTimeout(closeTimer)
+    popup.value = true
+}
+
+function scheduleClose(): void {
+    if (!horizontal.value || !popup.value) return
+    clearTimeout(closeTimer)
+    closeTimer = setTimeout(closePopup, 200)
+}
+
+useDismissableLayer(root, computed(() => horizontal.value && popup.value), closePopup)
+watch(horizontal, closePopup)
+onBeforeUnmount(closePopup)
 
 function toggle(): void {
     if (props.disabled) return
     if (horizontal.value) {
-        popup.value = !popup.value
+        if (popup.value) closePopup()
+        else openPopup()
     }
     else {
         menu?.toggleOpen(props.key_)
@@ -62,8 +82,8 @@ const chevron = computed(() => clsx(
         role="menuitem"
         aria-haspopup="true"
         :aria-expanded="open || popup"
-        @mouseenter="horizontal && !disabled && (popup = true)"
-        @mouseleave="horizontal && (popup = false)"
+        @mouseenter="openPopup"
+        @mouseleave="scheduleClose"
     >
         <div :class="titleClass" @click="toggle">
             <slot name="icon" />
@@ -84,9 +104,9 @@ const chevron = computed(() => clsx(
         <div
             v-if="horizontal"
             v-show="popup"
-            class="absolute left-0 top-full z-40 mt-1 min-w-40 rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg"
+            class="absolute left-0 top-full z-40 min-w-40 pt-1"
         >
-            <div class="flex flex-col gap-0.5">
+            <div class="flex flex-col gap-0.5 rounded-mf-lg border border-line bg-surface p-1 shadow-mf-lg" @click="closePopup">
                 <slot />
             </div>
         </div>

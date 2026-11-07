@@ -5,7 +5,6 @@ import { useI18n } from 'vue-i18n'
 import { ChartColumn, Database, Download, History, Pencil, RefreshCw, Search } from '@lucide/vue'
 import DatasetService from '@/services/dataset'
 import DatasetWizard from './DatasetWizard.vue'
-import DatasetHistory from './DatasetHistory.vue'
 import type { DatasetColumn } from '@/model/dataset-editor'
 import { useUtil } from '@/utils/common'
 const route=useRoute();const router=useRouter();const {t}=useI18n();const {getDatasetStateText}=useUtil()
@@ -22,7 +21,6 @@ const keyword=ref('')
 const page=ref(1)
 const pageSize=ref(20)
 const editing=ref(false)
-const historyOpen=ref(false)
 const banner=ref(route.query.submitted === '1')
 let active=true
 let request=0
@@ -99,11 +97,11 @@ onBeforeUnmount(()=>{active=false;request++;previewRequest++;clearTimeout(timer)
   <MfAlert v-else-if="error" variant="danger" :title="error"><MfButton @click="load">{{ t('common.refresh') }}</MfButton></MfAlert>
   <template v-else-if="info">
    <div v-if="banner" class="flex flex-wrap items-center justify-between gap-3 rounded-mf-md border border-primary/20 bg-primary/5 px-5 py-4 text-sm text-primary"><span>{{ t(complete?'dataset.prototype.datasetReady':'dataset.editor.submitted') }}</span><MfButton size="sm" variant="ghost" :aria-label="t('common.cancel')" @click="banner=false">×</MfButton></div>
-   <div class="flex flex-wrap items-center justify-between gap-4"><div class="flex min-w-0 items-center gap-3"><span class="flex size-12 shrink-0 items-center justify-center rounded-mf-md bg-primary/10 text-primary"><Database :size="25"/></span><div class="min-w-0"><h1 class="break-all text-xl leading-7 font-semibold">{{ info.name }}</h1><p class="mt-1 text-xs text-content-tertiary">{{ info.source?.name }} · {{ info.updateTime }}</p></div></div><div class="flex flex-wrap gap-2"><MfButton @click="router.push('/dataset')">{{ t('dataset.editor.backToList') }}</MfButton><MfButton @click="editing=true"><Pencil :size="15"/>{{ t('dataset.common.modify') }}</MfButton><MfButton variant="primary" :disabled="!complete" @click="router.push(`/dataset/adhoc/${code}`)"><ChartColumn :size="15"/>{{ t('dataset.common.adhoc') }}</MfButton></div></div>
+   <div class="flex flex-wrap items-center justify-between gap-4"><div class="flex min-w-0 items-center gap-3"><span class="flex size-12 shrink-0 items-center justify-center rounded-mf-md bg-primary/10 text-primary"><Database :size="25"/></span><div class="min-w-0"><h1 class="break-all text-xl leading-7 font-semibold">{{ info.name }}</h1><p class="mt-1 text-xs text-content-tertiary">{{ info.source?.name }} · {{ info.updateTime }}</p></div></div><div class="flex flex-wrap gap-2"><MfButton @click="router.push('/dataset')">{{ t('dataset.editor.backToList') }}</MfButton><MfButton @click="editing=true"><Pencil :size="15"/>{{ t('dataset.common.modify') }}</MfButton><MfButton variant="primary" :disabled="!tableAvailable" @click="router.push(`/dataset/adhoc/${code}`)"><ChartColumn :size="15"/>{{ t('dataset.common.adhoc') }}</MfButton></div></div>
    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"><div class="rounded-mf-lg border border-line bg-surface p-5"><p class="text-xs text-content-tertiary">{{ t('dataset.prototype.fieldCount') }}</p><p class="mt-2 text-2xl font-semibold">{{ fields.length }}</p></div><div class="rounded-mf-lg border border-line bg-surface p-5"><p class="text-xs text-content-tertiary">{{ t('dataset.common.totalRows') }}</p><p class="mt-2 text-2xl font-semibold">{{ info.totalRows ?? '—' }}</p></div><div class="rounded-mf-lg border border-line bg-surface p-5"><p class="text-xs text-content-tertiary">{{ t('dataset.common.syncMode') }}</p><p class="mt-3 text-sm font-semibold">{{ t(info.syncMode==='TIMING'?'dataset.common.syncModeTiming':info.syncMode==='OUT_SYNC'?'dataset.common.syncModeOutSync':'dataset.common.syncModeManual') }}</p></div><div class="rounded-mf-lg border border-line bg-surface p-5"><p class="text-xs text-content-tertiary">{{ t('common.state') }}</p><MfTag class="mt-3" :variant="complete?'primary':failed?'danger':'default'">{{ getDatasetStateText(latestState) }}</MfTag></div></div>
    <MfAlert v-if="failed" variant="danger" :title="info.message || t('dataset.common.failed')"/>
    <section class="overflow-hidden rounded-mf-lg border border-line bg-surface">
-    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3"><div class="flex items-center gap-4"><button v-for="tab in tabs" :key="tab.key" type="button" class="border-b-2 py-2 text-sm font-semibold" :class="activeTab===tab.key?'border-primary text-primary':'border-transparent text-content-tertiary hover:text-content'" @click="activeTab=tab.key">{{ tab.label }}</button></div><div class="flex gap-2"><MfButton size="sm" @click="historyOpen=true"><History :size="14"/>{{ t('dataset.common.history') }}</MfButton><MfButton size="sm" :loading="previewLoading" @click="load();loadPreview()"><RefreshCw :size="14"/>{{ t('common.refresh') }}</MfButton><MfButton size="sm" :disabled="!allRows.length" @click="download"><Download :size="14"/>{{ t('common.export') }}</MfButton></div></div>
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3"><div class="flex items-center gap-4"><button v-for="tab in tabs" :key="tab.key" type="button" class="border-b-2 py-2 text-sm font-semibold" :class="activeTab===tab.key?'border-primary text-primary':'border-transparent text-content-tertiary hover:text-content'" @click="activeTab=tab.key">{{ tab.label }}</button></div><div class="flex gap-2"><MfButton size="sm" @click="router.push(`/dataset/runs/${info.code}`)"><History :size="14"/>{{ t('dataset.common.history') }}</MfButton><MfButton size="sm" :loading="previewLoading" @click="load();loadPreview()"><RefreshCw :size="14"/>{{ t('common.refresh') }}</MfButton><MfButton size="sm" :disabled="!allRows.length" @click="download"><Download :size="14"/>{{ t('common.export') }}</MfButton></div></div>
     <div class="p-5">
      <template v-if="activeTab==='preview'">
       <div class="mb-4 flex flex-wrap items-center justify-between gap-3"><p class="text-xs text-content-tertiary">{{ t('dataset.prototype.storedPreviewHint') }}</p><MfInput v-model="keyword" size="sm" class="w-64" clearable :placeholder="t('query.result.searchResults')" @update:model-value="page=1"><template #prefix><Search :size="14"/></template></MfInput></div>
@@ -118,5 +116,4 @@ onBeforeUnmount(()=>{active=false;request++;previewRequest++;clearTimeout(timer)
   </template>
  </div>
  <DatasetWizard v-if="editing" embedded :dataset-code="code" @close="editing=false" @submitted="edited"/>
- <DatasetHistory v-if="historyOpen" :is-visible="historyOpen" :info="info" @close="historyOpen=false"/>
 </template>

@@ -25,6 +25,9 @@ import org.devlive.metaforge.service.entity.PluginEntity;
 import org.devlive.metaforge.service.entity.ScheduledHistoryEntity;
 import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.BaseRepository;
 import org.devlive.metaforge.service.repository.PluginAuditRepository;
@@ -37,6 +40,7 @@ import org.devlive.metaforge.service.wrapper.ResponseWrapper;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -79,6 +83,14 @@ public class SourceServiceImpl
         this.environment = environment;
     }
 
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
+    }
+
     @Override
     public CommonResponse<PageEntity<SourceEntity>> getAll(BaseRepository<SourceEntity, Long> repository, FilterBody filter)
     {
@@ -92,8 +104,6 @@ public class SourceServiceImpl
                         if (pluginConfigure != null) {
                             item.setPipelines(pluginConfigure.getPipelines());
                         }
-                        PluginService service = plugin.getService(PluginService.class);
-                        item.setIsSupportMeta(service.isSupportMeta());
                     });
         });
         return CommonResponse.success(PageEntity.build(page));
@@ -118,8 +128,22 @@ public class SourceServiceImpl
             this.pluginAuditRepository.deleteAllBySourceId(id);
             this.scheduledHistoryRepository.deleteAllBySourceId(id);
             this.sourceRepository.deleteById(id);
+            notifications.publish(NotificationScene.SOURCE_DELETED, String.format("数据源「%s」已删除", source.getName()),
+                    String.format("数据源「%s」已删除。", source.getName()), EntityType.SOURCE, source.getCode(), source.getName());
         }
         return CommonResponse.success(id);
+    }
+
+    @Override
+    public CommonResponse<String> deleteByCode(BaseRepository<SourceEntity, Long> repository, String code)
+    {
+        // The page deletes by code; go through delete(id) so owned rows and files go too.
+        return this.sourceRepository.findByCode(code)
+                .map(value -> {
+                    delete(value.getId());
+                    return CommonResponse.success(code);
+                })
+                .orElseGet(() -> CommonResponse.failure(String.format("Resource [ %s ] not found", code)));
     }
 
     @Override
@@ -267,6 +291,7 @@ public class SourceServiceImpl
                         source.setAvailable(false);
                     }
 
+                    boolean created = source.getId() == null;
                     this.sourceRepository.save(source);
 
                     // Copy file to local data
@@ -296,6 +321,10 @@ public class SourceServiceImpl
                         }
                     }
 
+                    notifications.publish(created ? NotificationScene.SOURCE_CREATED : NotificationScene.SOURCE_UPDATED,
+                            String.format(created ? "数据源「%s」已创建" : "数据源「%s」已更新", source.getName()),
+                            String.format(created ? "数据源「%s」（%s）已创建。" : "数据源「%s」（%s）的连接配置已更新。", source.getName(), source.getType()),
+                            EntityType.SOURCE, source.getCode(), source.getName());
                     return CommonResponse.success(source);
                 })
                 .orElse(CommonResponse.failure(ServiceState.PLUGIN_NOT_FOUND));

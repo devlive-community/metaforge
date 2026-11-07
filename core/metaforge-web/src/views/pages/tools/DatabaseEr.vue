@@ -34,11 +34,16 @@
           <article v-for="box in boxes" :key="box.table.name" class="absolute overflow-hidden rounded-mf-md border bg-surface shadow-mf-sm"
                    :class="focused === box.table.name ? 'border-primary ring-2 ring-primary/20' : 'border-line'"
                    :style="{ left: box.x + 'px', top: box.y + 'px', width: box.width + 'px', height: box.height + 'px' }">
-            <MfTooltip :content="box.table.comment || box.table.name">
-              <button type="button" class="flex w-full items-center gap-2 border-b border-line bg-primary/10 px-3 text-left text-sm font-semibold text-content hover:bg-primary/15"
+            <!-- The header spans the card; a long name is cut with an ellipsis and shown whole in the tooltip. -->
+            <MfTooltip class="flex w-full">
+              <button type="button" class="flex w-full min-w-0 items-center gap-2 border-b border-line bg-primary/10 px-3 text-left text-sm font-semibold text-content hover:bg-primary/15"
                       :style="{ height: ER_CARD.header + 'px' }" @click="openTable(box.table.name)" @mouseenter="focused = box.table.name">
-                <Table2 :size="16" class="shrink-0 text-primary"/><span class="truncate">{{ box.table.name }}</span>
+                <Table2 :size="16" class="shrink-0 text-primary"/><span class="min-w-0 truncate">{{ box.table.name }}</span>
               </button>
+              <template #content>
+                <span class="block font-semibold">{{ box.table.name }}</span>
+                <span v-if="box.table.comment" class="block">{{ box.table.comment }}</span>
+              </template>
             </MfTooltip>
             <div v-for="column in box.table.columns" :key="column.name" class="flex items-center gap-2 border-b border-line/60 px-3 text-xs last:border-b-0"
                  :style="{ height: ER_CARD.row + 'px' }">

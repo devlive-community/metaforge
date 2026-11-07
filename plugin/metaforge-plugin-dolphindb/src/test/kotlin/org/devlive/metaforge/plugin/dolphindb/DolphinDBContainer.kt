@@ -1,5 +1,7 @@
 package org.devlive.metaforge.plugin.dolphindb
 
+import org.devlive.metaforge.test.e2e.PluginE2E
+import org.junit.Assume
 import org.slf4j.LoggerFactory
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
@@ -57,6 +59,10 @@ class DolphinDBContainer(dockerImageName: String = IMAGE) : GenericContainer<Dol
 
     override fun start()
     {
+        // 镜像仅提供 arm64 版本，amd64 主机上会以模拟方式启动并失败
+        // The image ships arm64 only, so skip on amd64 hosts instead of emulating.
+        val arch = PluginE2E.hostArchitecture()
+        Assume.assumeTrue("DolphinDB image is arm64-only, skipping on $arch", arch == "arm64")
         super.start()
         LOG.info("DolphinDB container started successfully")
         LOG.info("DolphinDB Web UI available at: http://{}:{}", host, getMappedPort(DEFAULT_PORT))

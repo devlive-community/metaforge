@@ -6,7 +6,6 @@
       </div>
       <div class="min-w-0">
         <div class="dc-profile-sidebar__title">{{ $t('navigation.accountSettings') }}</div>
-        <div class="dc-profile-sidebar__subtitle">{{ $t('user.tip.settings') }}</div>
       </div>
     </div>
 
@@ -70,6 +69,7 @@ const items = computed(() => [
     box-shadow: var(--dc-shadow-card);
     padding: 16px 12px;
     min-height: calc(100vh - 220px);
+    max-width: 100%;
 }
 
 .dc-profile-sidebar__head {
@@ -95,12 +95,6 @@ const items = computed(() => [
     font-size: 15px;
     font-weight: 600;
     color: var(--dc-text-title);
-}
-
-.dc-profile-sidebar__subtitle {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 2px;
 }
 
 .dc-profile-sidebar__menu {
@@ -182,5 +176,16 @@ const items = computed(() => [
     border-radius: 50%;
     background: var(--dc-primary-light);
     color: var(--dc-primary);
+}
+</style>
+
+<style scoped>
+@media (max-width: 1023px) {
+    .dc-profile-sidebar { width: 100%; min-height: 0; padding: 8px; }
+    .dc-profile-sidebar__head, .dc-profile-sidebar__promo { display: none; }
+    .dc-profile-sidebar__menu { flex-direction: row; flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+    .dc-profile-sidebar__menu::-webkit-scrollbar { display: none; }
+    .dc-profile-sidebar__menu :deep(li[role='menuitem']) { width: auto; flex-shrink: 0; }
+    .dc-profile-sidebar__link { white-space: nowrap; }
 }
 </style>

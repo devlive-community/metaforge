@@ -50,10 +50,11 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `YDBE2ETest` verifies each version below in a container: the version check, then a table created with YQL is listed in the database with its columns, and its rows read back. Schema statements (CREATE, ALTER, DROP) run as scheme queries; the YDB nodes' advertised host names must be reachable from MetaForge.
 
-    - [x] 2.1.x
+    - [x] 25.4
+    - [x] 26.3
 
 !!!

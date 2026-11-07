@@ -39,13 +39,37 @@
         </dependency>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
-            <artifactId>metaforge-executor-local</artifactId>
+            <artifactId>metaforge-executor-metaforge</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.devlive.metaforge</groupId>
             <artifactId>metaforge-executor-seatunnel</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-test-e2e</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-plugin-postgresql</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-plugin-mysql</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-plugin-clickhouse</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>

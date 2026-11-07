@@ -47,8 +47,11 @@ Support Time: `2023-05-06`
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `PinotE2ETest` verifies each version below in a container: the batch quick start's tables are listed with their columns and queried with SQL. When brokers register with an address MetaForge can not reach, add `brokers=<host>:<port>` under Custom to name a broker directly.
 
-- [x] `0.8.x`
+    - [x] 1.4
+    - [x] 1.5
+
+!!!

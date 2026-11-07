@@ -56,7 +56,8 @@ import { useRouteRedirect } from '@/composables/useRouteRedirect'
 defineOptions({ name: 'NotNetwork' })
 
 const { t } = useI18n()
-const { restore } = useRouteRedirect()
+// 断网前停留在登录、注册或安装页时也回到原页。
+const { restore } = useRouteRedirect('/home', true)
 
 const checking = ref(false)
 

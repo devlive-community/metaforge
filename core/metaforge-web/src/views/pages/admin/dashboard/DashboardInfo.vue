@@ -1,61 +1,51 @@
 <template>
-  <div class="relative min-h-screen">
-    <div v-if="loading" class="flex items-center justify-center py-16">
-      <MfSpinner size="lg"/>
-    </div>
-    <div v-else>
-      <DashboardEditor v-if="version === '1.0'" :info="dataInfo"/>
-
-      <DashboardEditorV2 v-else :info="dataInfo"/>
-    </div>
+  <div v-if="loading" class="flex min-h-0 flex-1 items-center justify-center"><MfSpinner size="lg"/></div>
+  <div v-else-if="failed" class="flex min-h-0 flex-1 items-center justify-center p-4">
+    <MfAlert variant="danger" :title="$t('dashboard.studio.loadFailed')">
+      <MfButton size="sm" @click="load">{{ $t('common.refresh') }}</MfButton>
+    </MfAlert>
   </div>
+  <DashboardEditor v-else :key="code" :info="data"/>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
-import { MfMessage } from 'metaforge-ui'
+import { computed, onScopeDispose, ref, shallowRef, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { permits } from '@/model/dashboard'
+import { screenViewPath } from '@/model/screen-route'
 import DashboardService from '@/services/dashboard'
-import { DashboardModel } from '@/model/dashboard'
-import DashboardEditor from '@/views/pages/admin/dashboard/components/DashboardEditor.vue'
-import DashboardEditorV2 from '@/views/pages/admin/dashboard/components/DashboardEditorV2.vue'
-
-defineOptions({ name: 'DashboardInfo' })
+import type { DashboardModel } from '@/model/dashboard'
+import DashboardEditor from './components/DashboardEditor.vue'
 
 const route = useRoute()
+const router = useRouter()
+const code = computed(() => String(route.params.code || ''))
 const loading = ref(false)
-const dataInfo = ref<DashboardModel | null>(null)
-const version = ref('1.0')
+const failed = ref(false)
+const data = shallowRef<DashboardModel | null>(null)
+let request = 0
 
-const handleInitialize = async () => {
-  const code = route.params.code as string
-
-  if (!code) {
-    dataInfo.value = null
-    return
-  }
-
+async function load() {
+  const id = ++request
+  const dashboardCode = code.value
+  failed.value = false
+  data.value = null
+  loading.value = !!dashboardCode
+  if (!dashboardCode) return
   try {
-    loading.value = true
-    const response = await DashboardService.getByCode(code)
-    if (response.status) {
-      dataInfo.value = response.data
-      version.value = response.data.version
+    const response = await DashboardService.getByCode(dashboardCode)
+    if (id !== request) return
+    if (!response.status || !response.data) throw new Error('Dashboard unavailable')
+    // A screen shared for viewing only opens in the viewer instead of the designer.
+    if (!permits(response.data.permission, 'EDIT')) {
+      await router.replace(screenViewPath(dashboardCode))
+      return
     }
-    else {
-      MfMessage.error(response.message)
-    }
+    data.value = response.data
   }
-  catch (error) {
-    console.error('Failed to fetch dashboard:', error)
-    MfMessage.error('Failed to load dashboard data')
-  }
-  finally {
-    loading.value = false
-  }
+  catch { if (id === request) failed.value = true }
+  finally { if (id === request) loading.value = false }
 }
-
-onMounted(() => {
-  handleInitialize()
-})
+watch(code, load, { immediate: true })
+onScopeDispose(() => { request++ })
 </script>

@@ -1,0 +1,12 @@
+{
+  "label": "Apache Phoenix",
+  "description": "Apache Phoenix is a SQL skin over HBase delivered as a client-embedded JDBC driver targeting low latency queries over HBase data. ",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/phoenix.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 32
+}

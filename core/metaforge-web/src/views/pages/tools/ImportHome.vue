@@ -5,7 +5,7 @@
         <span class="inline-flex size-12 shrink-0 items-center justify-center rounded-mf-lg bg-primary/10 text-primary"><ArrowUpFromLine :size="24"/></span>
         <div class="min-w-0">
           <h1 class="m-0 text-xl font-semibold text-content">{{ $t('navigation.dataImport') }}</h1>
-          <p class="m-0 mt-0.5 text-sm text-content-tertiary">{{ $t('import.subtitle') }}</p>
+
         </div>
       </div>
       <div class="flex shrink-0 items-center gap-3 text-sm">

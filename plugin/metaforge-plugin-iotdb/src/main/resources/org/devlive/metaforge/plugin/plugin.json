@@ -1,0 +1,12 @@
+{
+  "label": "Apache IoTDB",
+  "description": "Apache IoTDB (Database for Internet of Things) is an IoT native database with high performance for data management and analysis, deployable on the edge and the cloud. ",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/iotdb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 26
+}

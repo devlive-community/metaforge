@@ -1,0 +1,12 @@
+{
+  "label": "ScyllaDB",
+  "description": "ScyllaDB is a distributed database written in C++ and designed to fully exploit modern cloud infrastructure. It utilizes a shard-per-core architecture, meaning each CPU core has dedicated resources that independently handle data for maximum efficiency. ",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/scylladb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 18
+}

@@ -1,0 +1,12 @@
+{
+  "label": "Local Scheduler",
+  "description": "A local scheduling plugin for MetaForge.",
+  "i18nFormat": true,
+  "type": "Scheduler",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/scheduler/local.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 58
+}

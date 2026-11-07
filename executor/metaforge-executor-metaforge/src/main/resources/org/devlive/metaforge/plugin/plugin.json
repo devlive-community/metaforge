@@ -1,0 +1,12 @@
+{
+  "label": "MetaForge Executor",
+  "description": "The built-in MetaForge executor for data sync and migration.",
+  "i18nFormat": true,
+  "type": "Executor",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/executor/local.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 56
+}

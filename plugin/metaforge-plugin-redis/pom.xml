@@ -24,6 +24,12 @@
             <groupId>org.devlive.metaforge</groupId>
             <artifactId>metaforge-driver-redis</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-test-e2e</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

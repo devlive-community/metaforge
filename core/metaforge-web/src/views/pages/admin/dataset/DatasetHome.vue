@@ -1,7 +1,6 @@
 <template>
 
   <DataTable filterable :filter-fields="tableFilters"
-             :title="$t('dataset.common.list')"
              :columns="headers"
              :data-source="data"
              :loading="loading"
@@ -48,13 +47,24 @@
             </template>
             <span class="cursor-pointer">{{ getState(record?.state) }}</span>
           </MfPopover>
+          <!-- An unfinished sync: its state, progress and write rate, linking to the run -->
+          <router-link v-if="activeSyncs[record.code]" :to="`/dataset/runs/${record.code}?run=${activeSyncs[record.code].historyId}`" class="mt-1 block min-w-0">
+            <span class="flex items-center justify-between gap-2 text-xs text-content-secondary">
+              <span class="shrink-0">{{ $t('dataTable.state' + activeSyncs[record.code].state) }}</span>
+              <span class="min-w-0 truncate tabular-nums">{{ syncRate(activeSyncs[record.code]) }}</span>
+            </span>
+            <span class="mt-1 block h-1 overflow-hidden rounded-mf-full bg-surface-active">
+              <span class="block h-full rounded-mf-full bg-primary transition-[width]" :class="activeSyncs[record.code].progress < 0 && 'w-full animate-pulse'"
+                    :style="activeSyncs[record.code].progress >= 0 ? { width: activeSyncs[record.code].progress + '%' } : undefined"/>
+            </span>
+          </router-link>
         </template>
         <template v-else-if="column.key === 'action'">
           <MfSpace :wrap="false" :size="2">
             <MfTooltip :content="$t('dataset.common.info')"><router-link :to="`/dataset/detail/${record.code}`"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.info')" shape="circle"><Eye :size="15"/></MfButton></router-link></MfTooltip>
             <MfTooltip :content="$t('dataset.common.modify')"><MfButton variant="ghost" size="sm" :aria-label="$t('dataset.common.modify')" @click="openWizard(record.code)" shape="circle"><Pencil :size="15"/></MfButton></MfTooltip>
             <MfTooltip :content="$t('dataset.common.adhoc')">
-              <router-link v-if="isSuccess(record?.state)" :to="`/dataset/adhoc/${ record?.code }`" target="_blank">
+              <router-link v-if="tableReady(record?.state)" :to="`/dataset/adhoc/${ record?.code }`" target="_blank">
                 <MfButton variant="ghost" size="sm" shape="circle">
                   <ChartColumn :size="15" />
                 </MfButton>
@@ -78,14 +88,14 @@
                     </router-link>
                   </MfMenuItem>
 
-                  <MfMenuItem key_="sync" :disabled="!isSuccess(record?.state)" @click="visibleSyncData(record, true)">
+                  <MfMenuItem key_="sync" :disabled="!tableReady(record?.state)" @click="visibleSyncData(record, true)">
                     <div class="flex items-center space-x-2">
                       <RefreshCw :size="15" />
                       <span>{{ $t('dataset.common.syncData') }}</span>
                     </div>
                   </MfMenuItem>
 
-                  <MfMenuItem key_="history" @click="visibleHistory(record, true)">
+                  <MfMenuItem key_="history" @click="router.push(`/dataset/runs/${record.code}`)">
                     <div class="flex items-center space-x-2">
                       <History :size="15" />
                       <span>{{ $t('dataset.common.history') }}</span>
@@ -99,7 +109,7 @@
                     </div>
                   </MfMenuItem>
 
-                  <MfMenuItem key_="rebuild" :disabled="isSuccess(record?.state)" @click="visibleRebuild(record, true)">
+                  <MfMenuItem key_="rebuild" :disabled="tableReady(record?.state)" @click="visibleRebuild(record, true)">
                     <div class="flex items-center space-x-2">
                       <component :size="15" :is="record?.state === 'SUCCESS' ? CirclePlay : CirclePause" />
                       <span>{{ $t('dataset.common.rebuild') }}</span>
@@ -133,11 +143,6 @@
                   :data="contextData"
                   @close="visibleRebuild(null, false)"/>
 
-  <DatasetHistory v-if="historyVisible"
-                  :is-visible="historyVisible"
-                  :info="contextData"
-                  @close="visibleHistory(null, false)"/>
-
   <DatasetSync v-if="syncDataVisible"
                :is-visible="syncDataVisible"
                :info="contextData"
@@ -160,7 +165,8 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, onBeforeUnmount } from 'vue'
+import { metricText } from '@/model/workflow-metrics'
 import { useDatasetHeaders } from './DatasetUtils'
 import { DatasetModel } from '@/model/dataset'
 import { useUtil } from '@/utils/common'
@@ -172,7 +178,6 @@ import { useRouter } from 'vue-router'
 import DatasetService from '@/services/dataset'
 import DatasetState from '@/views/pages/admin/dataset/components/DatasetState.vue'
 import DatasetSync from '@/views/pages/admin/dataset/DatasetSync.vue'
-import DatasetHistory from '@/views/pages/admin/dataset/DatasetHistory.vue'
 import MarkdownPreview from '@/views/components/markdown/MarkdownView.vue'
 import DatasetRebuild from '@/views/pages/admin/dataset/DatasetRebuild.vue'
 import DatasetClear from '@/views/pages/admin/dataset/DatasetClear.vue'
@@ -193,7 +198,6 @@ const { getDatasetStateText } = useUtil()
 
 const contextData = ref<DatasetModel | null>(null)
 const rebuildVisible = ref(false)
-const historyVisible = ref(false)
 const syncDataVisible = ref(false)
 const clearDataVisible = ref(false)
 const errorVisible = ref(false)
@@ -230,8 +234,47 @@ const {
     onPageChange,
     onSizeChange
   } = usePagedList<any>(filter => DatasetService.getAll(filter), {
-    onData: rows => loadFieldCounts(rows)
+    onData: rows => {
+      loadFieldCounts(rows)
+      loadActiveSyncs()
+    }
   })
+
+// Progress of unfinished syncs, refreshed while there are any; the list reloads once they end.
+const ACTIVE_REFRESH_MS = 3000
+interface ActiveSync { datasetCode: string; historyId: number; state: string; progress: number; rowsWritten: number; writeRowsPerSecond: number }
+const activeSyncs = ref<Record<string, ActiveSync>>({})
+let activeTimer: ReturnType<typeof setTimeout> | undefined
+let activeRequest = 0
+const syncRate = (sync: ActiveSync) => sync.state === 'RUNNING' ? metricText('writeRowsPerSecond', sync) : undefined
+async function loadActiveSyncs()
+{
+  const request = ++activeRequest
+  clearTimeout(activeTimer)
+  const hadActive = Object.keys(activeSyncs.value).length > 0
+  const response = await DatasetService.getActiveSyncs().catch(() => null)
+  if (request !== activeRequest || !response?.status) {
+    return
+  }
+  const next: Record<string, ActiveSync> = {}
+  for (const sync of response.data || []) {
+    next[sync.datasetCode] = sync
+  }
+  activeSyncs.value = next
+  if (Object.keys(next).length > 0) {
+    activeTimer = setTimeout(() => (document.hidden ? (activeTimer = setTimeout(loadActiveSyncs, ACTIVE_REFRESH_MS)) : loadActiveSyncs()), ACTIVE_REFRESH_MS)
+  }
+  else if (hadActive) {
+    initialize()
+  }
+}
+onBeforeUnmount(() => {
+  activeRequest++
+  clearTimeout(activeTimer)
+})
+
+/** Ad hoc queries and syncs need the dataset's table; a failed sync leaves it usable. */
+const tableReady = (state: Array<any> | null) => !!state?.includes('TABLE_SUCCESS')
 
 const isSuccess = (state: Array<any> | null) => {
   if (state && state.length > 0) {
@@ -248,21 +291,18 @@ const getState = (state: Array<any> | null): string | null => {
   return null
 }
 
+// Rebuilding recreates the metadata and table, so it is offered only when the build failed.
 const visibleRebuild = (record: DatasetModel | null, opened: boolean) => {
-  if (record && isSuccess(record.state)) {
+  if (record && tableReady(record.state)) {
     return
   }
   rebuildVisible.value = opened
   contextData.value = record
 }
 
-const visibleHistory = (record: DatasetModel | null, opened: boolean) => {
-  contextData.value = record
-  historyVisible.value = opened
-}
 
 const visibleSyncData = (record: DatasetModel | null, opened: boolean) => {
-  if (record && !isSuccess(record.state)) {
+  if (record && !tableReady(record.state)) {
     return
   }
   contextData.value = record

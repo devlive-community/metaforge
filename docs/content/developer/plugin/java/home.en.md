@@ -2,13 +2,37 @@
 title: Java Implementation
 ---
 
-MetaForge supports custom plug-ins, and users can write their own plug-ins and integrate them into the system. This document mainly explains how to quickly integrate a plug-in into the MetaForge system.
-!!! note
+MetaForge supports custom plugins. This page uses the QuestDB plugin in the repository (`plugin/metaforge-plugin-questdb`) to show how a source plugin is built.
 
-    This article demonstrates by integrating the QuestDB data storage system based on the HTTP protocol.
+### Rules every plugin follows
+
+!!! warning
+
+    - **Sources are reached only through JDBC**: use the source's official or a third-party JDBC driver. A source without one gets its own driver under `driver/`, built on `metaforge-driver-sql` (the `metaforge-parser` SQL parser) and named `org.devlive.metaforge.<Name>Driver`. Plugin names carry no protocol words such as `Jdbc` or `Http`.
+    - **Every plugin uses the same metadata management**: the MySQL structure — a database picker at the top, the table tree, the columns of a table, and tabs and buttons shown by capability. No source gets its own workspace, sidebar or tree. Non-relational sources map onto databases, tables and columns too, e.g. Redis (databases `0..n` / keys / `key`, `type`, `value`), MongoDB (databases / collections / document fields), Neo4j (database / labels / properties).
+    - **Capabilities are a contract**: declare in `capabilities.json` only what the plugin implements; the UI and the server open features by the declaration.
+    - **An e2e test is required**: verify at least two versions in containers and list the verified versions in the connector page.
 !!!
 
-### `pom.xml` Depend
+### Layout
+
+```
+plugin/metaforge-plugin-questdb
+├── pom.xml
+└── src
+    ├── main
+    │   ├── java/org/devlive/metaforge/plugin
+    │   │   ├── QuestDBPlugin.java        # 配置字段与介绍
+    │   │   └── QuestDBService.java       # 驱动、连接与元数据
+    │   └── resources
+    │       ├── META-INF/services
+    │       │   ├── org.devlive.metaforge.plugin.Plugin
+    │       │   └── org.devlive.metaforge.plugin.Service
+    │       └── org/devlive/metaforge/plugin/capabilities.json
+    └── test/java/org/devlive/metaforge/plugin/QuestDBE2ETest.java
+```
+
+### `pom.xml` dependencies
 
 ```xml
 <dependency>
@@ -16,255 +40,138 @@ MetaForge supports custom plug-ins, and users can write their own plug-ins and i
     <artifactId>metaforge-spi</artifactId>
     <scope>provided</scope>
 </dependency>
+<!-- 数据源的 JDBC 驱动，或 driver/ 下的自建驱动 -->
+<dependency>
+    <groupId>org.postgresql</groupId>
+    <artifactId>postgresql</artifactId>
+    <version>${metaforge.pgsql.version}</version>
+</dependency>
 <dependency>
     <groupId>org.devlive.metaforge</groupId>
-    <artifactId>metaforge-common</artifactId>
-</dependency>
-<dependency>
-    <groupId>commons-beanutils</groupId>
-    <artifactId>commons-beanutils</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.slf4j</groupId>
-    <artifactId>slf4j-api</artifactId>
-</dependency>
-<dependency>
-    <groupId>org.slf4j</groupId>
-    <artifactId>slf4j-simple</artifactId>
-    <scope>test</scope>
-</dependency>
-<dependency>
-    <groupId>org.testcontainers</groupId>
-    <artifactId>testcontainers</artifactId>
+    <artifactId>metaforge-test-e2e</artifactId>
+    <version>${project.version}</version>
     <scope>test</scope>
 </dependency>
 ```
 
-The above configuration adds `metaforge-spi` and `metaforge-common` modules, and others are some auxiliary dependencies.
+At build time `maven-dependency-plugin` copies the runtime dependencies to `target/dependencies`, where the plugin loads its driver from (see the `pom.xml` of an existing plugin).
 
-!!! warning
+### Plugin class: configuration fields
 
-    It should be noted that if you open the project separately, you need to specify the version number of each dependency.
-!!!
-
-### Plugin Loader
+The plugin class extends `org.devlive.metaforge.plugin.Plugin` and declares the source's configuration fields and descriptions in `describe()`:
 
 ```java
-public class QuestDBPluginModule
-        extends AbstractPluginModule
-        implements PluginModule
-{
-    @Override
-    public String getName()
-    {
-        return "QuestDB";
-    }
-
-    @Override
-    public PluginType getType()
-    {
-        return PluginType.HTTP;
-    }
-
-    @Override
-    public AbstractPluginModule get()
-    {
-        return this;
-    }
-
-    protected void configure()
-    {
-        Multibinder<Plugin> plugin = Multibinder.newSetBinder(this.binder(), Plugin.class);
-        plugin.addBinding().to(QuestDBPlugin.class);
-    }
-}
-```
-
-The loader needs to inherit the `AbstractPluginModule` class and implement the `PluginModule` interface, so that the system will automatically load the plug-in into the system when it starts.
-
-!!! note
-
-    It should be noted that you need to override the `configure()` method in the parent class and bind the plugin to the system.
-!!!
-
-### Plugin Executor
-
-```java
-@Slf4j
 public class QuestDBPlugin
-        implements Plugin
+        extends Plugin
 {
-    private HttpConfigure configure;
-    private HttpConnection connection;
-    private Response response;
-
     @Override
-    public String name()
+    public PluginConfigure describe()
     {
-        return "QuestDB";
-    }
-
-    @Override
-    public String description()
-    {
-        return "Integrate QuestDB data sources";
-    }
-
-    @Override
-    public PluginType type()
-    {
-        return PluginType.HTTP;
-    }
-
-    @Override
-    public void connect(Configure configure)
-    {
-        try {
-            this.response = new Response();
-            this.configure = new HttpConfigure();
-            BeanUtils.copyProperties(this.configure, configure);
-            this.connection = new HttpConnection(this.configure, this.response);
-        }
-        catch (Exception ex) {
-            this.response.setIsConnected(Boolean.FALSE);
-            this.response.setMessage(ex.getMessage());
-        }
-    }
-
-    @Override
-    public Response execute(String content)
-    {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            log.info("Execute questdb plugin logic started");
-            this.response = this.connection.getResponse();
-            QuestDBAdapter processor = new QuestDBAdapter(this.connection);
-            this.response = processor.handlerExecute(content);
-            log.info("Execute questdb plugin logic end");
-        }
-        this.destroy();
-        return this.response;
-    }
-
-    @Override
-    public void destroy()
-    {
-        if (ObjectUtils.isNotEmpty(this.connection)) {
-            this.connection.destroy();
-        }
+        PluginConfigure configure = PluginConfigure.of("QuestDB", Arrays.asList(
+                PluginConfigureField.builder().field(PluginConfigureFieldName.name).type(PluginConfigureFieldType.String).required(true).build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.host).type(PluginConfigureFieldType.String).required(true).value("127.0.0.1").build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.port).type(PluginConfigureFieldType.Number).required(true).value(8812).build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.username).type(PluginConfigureFieldType.String)
+                        .group(PluginConfigureFieldGroup.authorization).build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.password).type(PluginConfigureFieldType.String)
+                        .group(PluginConfigureFieldGroup.authorization).build(),
+                PluginConfigureField.builder().field(PluginConfigureFieldName.database).type(PluginConfigureFieldType.String).value("qdb")
+                        .group(PluginConfigureFieldGroup.advanced).build()),
+                null);
+        configure.setDescriptions(Map.of("zh", "QuestDB 是高性能时序数据库。", "en", "QuestDB is a high-performance time-series database."));
+        configure.setCategory(PluginConfigureCategory.NOSQL);
+        return configure;
     }
 }
 ```
 
-The executor needs to implement the `Plugin` interface, which provides the following methods
+### Service class: connection and metadata
 
-- `name()`: Plugins have unique names, and plugins with the same name will only take effect the first time they are loaded
-- `description()`: A description of the plugin
-- `type()`: Plugin type
-- `connect(Configure configure)`: Plug-ins need connection information in advance, such as the current plug-in plug-in, which is the connection phase of the plug-in (the system presets the HTTP connection method to be used directly).
-- `execute(String content)`: Execute the operation logic
-- `destroy()`:  The final destruction of the plug-in, note that the destruction needs to contain the information in the connection
-
-### Plugin Converter
+The service class implements `org.devlive.metaforge.spi.PluginService`. Queries run through the JDBC driver named by `driver()`; the connection URL defaults to `jdbc:<connectType>://host:port/database`.
 
 ```java
-@Slf4j
-public class QuestDBAdapter
-        extends HttpAdapter
+public class QuestDBService
+        implements PluginService
 {
-    public QuestDBAdapter(HttpConnection connection)
+    @Override
+    public String driver()
     {
-        super(connection);
+        return "org.postgresql.Driver";
     }
 
     @Override
-    public Response handlerExecute(String content)
+    public String connectType()
     {
-        Time processorTime = new Time();
-        processorTime.setStart(new Date().getTime());
-        Response response = this.httpConnection.getResponse();
-        HttpConfigure configure = new HttpConfigure();
-        if (response.getIsConnected()) {
-            List<String> headers = new ArrayList<>();
-            List<String> types = new ArrayList<>();
-            List<Object> columns = new ArrayList<>();
-            try {
-                BeanUtils.copyProperties(configure, this.httpConnection.getConfigure());
-                configure.setAutoConnected(Boolean.FALSE);
-                configure.setRetry(0);
-                configure.setMethod(HttpMethod.GET);
-                configure.setPath("exec");
-                Map<String, String> parameters = Maps.newHashMap();
-                parameters.put("query", content);
-                configure.setParams(parameters);
-                configure.setDecoded(true);
-                HttpConnection httpConnection = new HttpConnection(configure, new Response());
-                HttpClient httpClient = HttpClient.getInstance(configure, httpConnection);
-                String body = httpClient.execute();
-                QuestDBResponse requestResponse = JSON.objectmapper.readValue(body, QuestDBResponse.class);
-                if (ObjectUtils.isNotEmpty(requestResponse.getQuery())) {
-                    response.setIsSuccessful(true);
-                    if (ObjectUtils.isNotEmpty(requestResponse.getColumns())) {
-                        requestResponse.getColumns()
-                                .forEach(schema -> {
-                                    headers.add(schema.getName());
-                                    types.add(schema.getType());
-                                });
-                    }
-                    requestResponse.getDataset()
-                            .forEach(record -> columns.add(handlerFormatter(configure.getFormat(), headers, record)));
-                }
-                else {
-                    response.setIsSuccessful(Boolean.FALSE);
-                    response.setMessage(requestResponse.getError());
-                }
-            }
-            catch (Exception ex) {
-                log.error("Execute content failed content {} exception ", content, ex);
-                response.setIsSuccessful(Boolean.FALSE);
-                response.setMessage(ex.getMessage());
-            }
-            finally {
-                response.setHeaders(headers);
-                response.setTypes(types);
-                response.setColumns(columns);
-            }
-        }
-        processorTime.setEnd(new Date().getTime());
-        response.setProcessor(processorTime);
-        return response;
+        return "postgresql";
+    }
+
+    /** 连接测试执行的语句，第一列返回服务端版本。 */
+    @Override
+    public String validator()
+    {
+        return "SELECT build() AS version";
+    }
+
+    @Override
+    public Response getDatabases(RuntimeConfigure configure)
+    {
+        return this.execute(configure, "SELECT current_database() AS object_name, 'DATABASE' AS object_type, '' AS object_comment");
+    }
+
+    @Override
+    public Response getTables(RuntimeConfigure configure, String database)
+    {
+        return this.execute(configure, "SELECT 'table' AS type_name, table_name AS object_name, '' AS object_comment FROM tables()");
+    }
+
+    @Override
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
+    {
+        return this.execute(configure, "SELECT 'column' AS type_name, \"column\" AS object_name, type AS object_data_type FROM table_columns('" + table + "')");
     }
 }
 ```
 
-The plug-in converter is used to convert the result after the current plug-in is executed, and convert it into logic that can be used in MetaForge. It is mainly used to encapsulate `Response` to return the result.
+Databases, tables and columns come one of two ways:
 
-This article is a JDBC-based plug-in, so some functions can be realized by directly inheriting the `HttpAdapter` parent class.
+1. **JDBC metadata (preferred)**: when the driver implements `DatabaseMetaData` (`getSchemas`/`getCatalogs`, `getTables`, `getColumns`), return `metadataDatabases(configure)`, `metadataTables(configure, database)` and `metadataColumns(configure, database, table)`. Databases are read as JDBC schemas; a driver that reports only catalogs falls back to them for the database list.
+2. **SQL**: query the source's own system tables or functions, with these result column names:
 
-### SPI loader
+| Method | Result columns |
+|:--|:--|
+| `getDatabases` | `object_name`, `object_type`, `object_comment` |
+| `getTables` | `type_name` (`table`/`view`), `object_name`, `object_comment` |
+| `getColumns` | `type_name` (`column`), `object_name`, `object_data_type`, `object_nullable`, `object_default_value`, `object_comment`, `object_position`, `object_definition`, `object_length`, `object_autoincrement`, `object_scale` |
 
-Add `META-INF` and `services` directory under `resources` source directory
+### Writing a JDBC driver
 
-!!! warning
+A source without a JDBC driver gets one under `driver/metaforge-driver-<name>` (see the ZooKeeper, Kafka, HDFS, Redis and MongoDB drivers):
 
-    `services` needs to be in the `resources` directory
-!!!
+- Depend on `metaforge-driver-sql` and implement `SqlSource` (`databases()`, `tables(database)`, `columns(database, table)`, `rows(...)`); `Connection.getMetaData()` returns `new SqlSourceDatabaseMetaData(new SqlSourceConnection(source, url, database, user))`, so the plugin can use the JDBC metadata route.
+- `Statement.execute(sql)` must leave a query's rows in `getResultSet()`, return `true`, and `getUpdateCount()` must return `-1`: MetaForge runs every statement through `execute()`, and `false` turns every query into an update count of 0.
+- An empty result still needs `ResultSetMetaData` (with no columns).
+- The configured database must take effect: read it from the `database` property or the URL path (`jdbc:<type>://host:port/<database>`).
+- Register the driver class in `META-INF/services/java.sql.Driver`.
 
-Create the `org.devlive.metaforge.spi.PluginModule` file, as follows
+### SPI registration
 
-```java
-org.devlive.metaforge.plugin.QuestDBPluginModule
+Create two files under `src/main/resources/META-INF/services`:
+
+`org.devlive.metaforge.plugin.Plugin`
+
+```
+org.devlive.metaforge.plugin.QuestDBPlugin
 ```
 
-The content of this file is the plugin loading module we defined.
+`org.devlive.metaforge.plugin.Service`
 
-!!! warning
-
-    The unit test of the plug-in can refer to the published plug-in for testing
-!!!
+```
+org.devlive.metaforge.plugin.QuestDBService
+```
 
 ### Management capabilities
 
-Every page, tab, dialog, drawer, side panel and button of source management (console, data import, data export, data compare, ER diagram) is controlled by one management capability. A plugin declares the capabilities it implements in `<ServiceClass>.capabilities.json` next to its service class, for example `src/main/resources/org/devlive/metaforge/plugin/MySQLService.capabilities.json`:
+Every page, tab, dialog, drawer, side panel and button of source management (workbench, data import, data export, data compare, ER diagram) is governed by one management capability. A plugin declares the capabilities it implements in `src/main/resources/org/devlive/metaforge/plugin/capabilities.json` (every plugin keeps it at that path; only the copy in the plugin's own jar is read):
 
 ```json
 {
@@ -273,22 +180,17 @@ Every page, tab, dialog, drawer, side panel and button of source management (con
 }
 ```
 
-- `kind` chooses the workspace layout: `relational`, `key-value`, `document`, `storage`, `graph` or `unknown`.
-- A plugin without a declaration offers no management: the source list hides its Manage entry and the related pages do not open.
-- Declare only what the plugin implements; the server refuses every operation the plugin did not declare.
-- Every plugin reaches its source through SQL, so a plugin that declares capabilities always declares `query:execute`.
-- An unknown capability or kind fails when the plugin loads; a subclass without its own file uses its parent's declaration.
-- A new management feature first registers its capability in `ManagementCapability`, then plugins declare it, and every surface of the feature checks it.
+- `kind` describes the source: `relational`, `key-value`, `document`, `storage`, `graph`, `unknown`. Every kind uses the same UI; only the capabilities decide what it shows.
+- Every plugin declares at least `query:execute`, `database:list`, `table:list` and `column:read`, so the database picker, the table tree and the columns work.
+- A plugin without the file offers no management: the source list hides "Data management" and its pages can not be opened.
+- Every declared capability must be implemented; the server also refuses operations that were not declared.
+- An unknown capability or `kind` fails the plugin when it loads; a subclass whose jar has no file inherits its parent jar's declaration.
+- A new management feature registers its capability in `ManagementCapability` first, then plugins declare it, and every UI entry of the feature checks it.
+- `namespace:list`, `key:list`, `key:read`, `object:list`, `object:read`, `object:download`, `tab:keys`, `tab:objects` belong to the retired separate browsers and must not be declared.
 
-| Capability | Controls |
+| Capability | UI it governs |
 |---|---|
 | `query:execute` | Run SQL in the query console and the SQL tab |
-| `namespace:list` | Namespace list of the native browser (Redis databases, buckets) |
-| `key:list` | Key list of the native browser |
-| `key:read` | Key detail panel |
-| `object:list` | Object list of the storage browser |
-| `object:read` | Object detail panel |
-| `object:download` | Object download button |
 | `database:list` | Database selector of the workbench header and the database list of the side tree |
 | `database:info` | Database overview page |
 | `database:alter` | Edit database properties button and drawer |
@@ -331,5 +233,43 @@ Every page, tab, dialog, drawer, side panel and button of source management (con
 | `tab:info` | Table properties tab |
 | `tab:statement` | DDL tab |
 | `tab:er-diagram` | Table ER tab and the database ER page |
-| `tab:keys` | Key browser tab |
-| `tab:objects` | Object browser tab |
+
+### e2e test
+
+Every plugin has an e2e test that verifies each supported version in a container with Testcontainers (see `QuestDBE2ETest`, `MySQLE2ETest`, `RedisE2ETest`):
+
+```java
+@RunWith(Parameterized.class)
+public class QuestDBE2ETest
+{
+    @Parameterized.Parameters(name = "QuestDB {0}")
+    public static List<String> versions()
+    {
+        return List.of("8.3", "9.1");
+    }
+
+    @Test
+    public void tablesAndColumnsAreManaged()
+    {
+        assumeDocker();
+        try (GenericContainer<?> container = new GenericContainer<>("questdb/questdb:" + version).withExposedPorts(8812)) {
+            container.start();
+            PluginService service = new QuestDBService();
+            RuntimeConfigure configure = configure(container.getHost(), container.getMappedPort(8812), "admin", "quest", "qdb");
+
+            Assert.assertTrue(first(ok("validator", service.execute(configure, service.validator()))).startsWith(version + "."));
+            ok("create", service.execute(configure, "CREATE TABLE trades (ts TIMESTAMP, price DOUBLE) TIMESTAMP(ts)"));
+            Assert.assertTrue(column(ok("databases", service.getDatabases(configure)), "object_name").contains("qdb"));
+            Assert.assertTrue(column(ok("tables", service.getTables(configure, "qdb")), "object_name").contains("trades"));
+            Assert.assertTrue(column(ok("columns", service.getColumns(configure, "qdb", "trades")), "object_name").contains("price"));
+        }
+    }
+}
+```
+
+The test covers at least the server version, `getDatabases`, `getTables`, `getColumns`, and reading back data another client wrote. `PluginE2E` (`test/metaforge-test-e2e`) provides `assumeDocker`, `configure`, `ok`, `column` and `first`.
+
+### Local development and docs
+
+- Register the plugin module in `configure/etc/conf/plugins.properties` (`metaforge-plugin-questdb=plugin/metaforge-plugin-questdb/pom.xml`), run `./mvnw install -pl plugin/metaforge-plugin-questdb` and restart the server; in development it loads the plugin from the module's `target/classes` and `target/dependencies`.
+- Write the connector page at `docs/content/reference/connectors/<name>/home.md`, list the e2e-verified versions under "Version (Validation)", and register it in `docs/pageforge.yaml`.

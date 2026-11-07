@@ -18,6 +18,9 @@ const props = withDefaults(defineProps<{
     readonly?: boolean
     invalid?: boolean
     maxlength?: number
+    /** The browser's autofill hint, e.g. `username`, `current-password`, `new-password`; off by default. */
+    autocomplete?: string
+    name?: string
 }>(), {
     modelValue: '',
     type: 'text',
@@ -27,6 +30,8 @@ const props = withDefaults(defineProps<{
     disabled: false,
     readonly: false,
     invalid: false,
+    autocomplete: 'off',
+    name: undefined,
 })
 
 const emit = defineEmits<{
@@ -43,7 +48,8 @@ const actualType = computed(() => props.showPassword || props.type === 'password
 const wrapperClass = computed(() => clsx(
     // Fills its container unless the caller gives it a width.
     !hasWidthClass(attrs.class) && 'w-full',
-    'mf-invalidable inline-flex items-center rounded-mf-md border bg-surface',
+    // Keep native/autofill paint inside the rounded frame; the outer element owns the border and focus ring.
+    'mf-invalidable inline-flex min-w-0 max-w-full items-center overflow-hidden rounded-mf-md border bg-surface',
     CONTROL_SIZES[props.size],
     'px-0! gap-0!',
     TRANSITION,
@@ -79,9 +85,10 @@ defineExpose({
             :disabled="disabled"
             :readonly="readonly"
             :maxlength="maxlength"
-            class="h-full min-w-0 flex-1 appearance-none border-0 bg-transparent px-3 text-sm text-content placeholder:text-content-placeholder outline-none focus:ring-0"
+            class="h-full w-0 min-w-0 flex-1 appearance-none border-0 bg-transparent px-3 text-sm text-content placeholder:text-content-placeholder outline-none focus:ring-0"
             :class="readonly ? 'cursor-default' : ''"
-            autocomplete="off"
+            :autocomplete="autocomplete"
+            :name="name"
             @input="onInput"
             @blur="emit('blur', $event)"
             @keyup.enter="emit('enter', $event)"

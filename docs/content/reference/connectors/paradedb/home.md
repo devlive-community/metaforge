@@ -47,14 +47,15 @@ ParadeDB 不是 Postgres 的分支，而是安装了自定义扩展的常规 Pos
 |  流水线  | :x: |
 | 元数据管理 | :x: |
 
-#### 版本
+#### 版本（验证）
 
 ---
 
-!!! warning
+!!! note
 
-    在线服务尚未测试，如果您有详细的测试结果，请提交 [issues](https://github.com/devlive-community/metaforge/issues/new/choose)
+    插件的 e2e 测试 `ParadeDBE2ETest` 在容器中逐一验证以下版本：版本检查后，用 SQL 创建并建立 BM25 索引的数据表连同字段被列出，并可被全文检索。
+
+    - [x] ParadeDB 0.15 (PostgreSQL 16)
+    - [x] ParadeDB 0.19 (PostgreSQL 17)
 
 !!!
-
-- [x] `all`

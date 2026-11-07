@@ -20,7 +20,8 @@ public class AuthBody
             ValidationGroup.Crud.Update.class,
             ValidationGroup.Crud.Auth.class
     })
-    @Size(max = 20)
+    // An email when signing in by email; sign-up checks its own username rule.
+    @Size(max = 255)
     private String username;
 
     @NotBlank(groups = {
@@ -32,4 +33,9 @@ public class AuthBody
     private String password;
     private Integer captcha;
     private Long timestamp;
+    private String email;
+    /** The email code on sign-up. */
+    private String code;
+    /** Keep the sign-in for the remembered days when the system settings allow it. */
+    private Boolean remember;
 }

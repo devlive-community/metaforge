@@ -1,0 +1,12 @@
+{
+  "label": "Apache Cassandra",
+  "description": "Cassandra is a distributed key-value store for the cloud.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/cassandra.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 16
+}

@@ -69,3 +69,16 @@ The driver used is `com.dolphindb.jdbc.Driver`.
     | Properties | Default Value |
     |---|---|
     | `database` | `default` |
+
+#### Version (Validation)
+
+---
+
+!!! note
+
+    The plugin's e2e test `DolphinDBE2ETest` verifies each version below in a container: the version check, then a distributed database and table created with SQL are listed with the table's columns, and its rows read back.
+
+    - [x] 2.00
+    - [x] 3.00
+
+!!!

@@ -1,0 +1,12 @@
+{
+  "label": "Apache Impala",
+  "description": "Apache Impala is the open source, native analytic database for open data and table formats.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/impala.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 23
+}

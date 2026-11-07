@@ -1,0 +1,12 @@
+{
+  "label": "PostgreSQL",
+  "description": "PostgreSQL is a powerful, open source object-relational database system.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/postgresql.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 33
+}

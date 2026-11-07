@@ -1,0 +1,30 @@
+# Workflow declaration of the SeaTunnel executor. The server reads it from this plugin's own jar.
+description: Generates a SeaTunnel job from the pipeline and runs it with the configured SeaTunnel installation.
+topology: pipeline
+capabilities:
+  # The SeaTunnel launcher runs as a child process; stopping interrupts the worker that waits for it.
+  stop: interrupt
+  rowCount: false
+  metrics: false
+  preview: false
+# The SeaTunnel launcher reports no metrics yet; runs show their log only.
+metrics: []
+limits:
+  sources: 1
+  # Transforms run in order; each one reads the previous result table.
+  transforms: 3
+  sinks: 1
+settings:
+  - field: parallelism
+    label: Parallelism
+    type: number
+    min: 1
+    description: SeaTunnel env.parallelism. Leave empty to use the engine default.
+nodes:
+  - nodes/jdbc-source.yaml
+  - nodes/clickhouse-source.yaml
+  - nodes/sql-transform.yaml
+  - nodes/replace-transform.yaml
+  - nodes/split-transform.yaml
+  - nodes/jdbc-sink.yaml
+  - nodes/clickhouse-sink.yaml

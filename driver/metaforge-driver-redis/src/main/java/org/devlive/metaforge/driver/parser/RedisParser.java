@@ -19,6 +19,8 @@ public class RedisParser
     protected String collection;
     protected ShowStatement.ShowType showType;
     protected String database;
+    /** SELECT ... LIMIT n; null without a limit. */
+    protected Long limit;
 
     public static RedisParser createParser(String sql)
     {
@@ -34,6 +36,11 @@ public class RedisParser
             return new RedisShowParser((ShowStatement) statement);
         }
         throw new IllegalArgumentException("Unsupported SQL operation: " + sql);
+    }
+
+    public Long getLimit()
+    {
+        return limit;
     }
 
     public Map<String, Object> getFilter()

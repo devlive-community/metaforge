@@ -1,0 +1,12 @@
+{
+  "label": "AliYun OSS FileSystem",
+  "description": "A Ali OSS file system plugin for MetaForge.",
+  "i18nFormat": true,
+  "type": "FileSystem",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/alioss.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 61
+}

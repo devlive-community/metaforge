@@ -50,7 +50,7 @@ Support time: `2024-06-25`
     |---|---|---|---|
     | `name` | ✅ | - |-|
     | `Host address` | ✅ | `127.0.0.1` | The address here needs to be filled in with the relevant address of zookeeper |
-    | `Port` | ✅ | `8983` | - |
+    | `Port` | ✅ | `9983` | ZooKeeper port; Solr's embedded ZooKeeper listens on the Solr port + 1000 |
 
 === "Authorization Configuration"
 
@@ -71,3 +71,16 @@ Support time: `2024-06-25`
 
     No default configuration yet
     
+
+#### Version (Validation)
+
+---
+
+!!! note
+
+    The plugin's e2e test `SolrE2ETest` verifies each version below in a container: documents indexed over HTTP are listed as a collection (table) with its fields, and queried with SQL. The driver comes from Solr 9.11; Solr 10 is not verified.
+
+    - [x] 9.4
+    - [x] 9.11
+
+!!!

@@ -12,7 +12,7 @@ const serviceUrl=url(`export const state={calls:[],browse:async()=>({status:true
 let model=compile(await readFile(new URL('../src/model/source-native.ts',import.meta.url),'utf8'))
 const modelUrl=url(model)
 let source=compile(await readFile(new URL('../src/composables/useNativeBrowser.ts',import.meta.url),'utf8'))
-const imports={'vue-router':routeUrl,'./useSourceManageRoute':routeUrl,'@/services/metadata':serviceUrl,'@/model/source-native':modelUrl,'vue-i18n':url(`import {ref} from ${JSON.stringify(vue)};export const useI18n=()=>({t:key=>key,locale:ref('en')})`),'metaforge-ui':url('export const MfMessage={error(){}}')}
+const imports={'vue-router':routeUrl,'./useSourceManageRoute':routeUrl,'@/services/metadata':serviceUrl,'@/model/source-native':modelUrl,'@/utils/date':url(compile(await readFile(new URL('../src/utils/date.ts',import.meta.url),'utf8'))),'vue-i18n':url(`import {ref} from ${JSON.stringify(vue)};export const useI18n=()=>({t:key=>key,locale:ref('en')})`),'metaforge-ui':url('export const MfMessage={error(){}}')}
 source=source.replace(/from (['"])([^'"]+)\1/g,(_m,_q,name)=>`from ${JSON.stringify(imports[name]||import.meta.resolve(name))}`)
 const {useNativeBrowser}=await import(url(source))
 const {route}=await import(routeUrl)

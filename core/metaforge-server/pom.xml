@@ -201,6 +201,20 @@
 
     <build>
         <plugins>
+            <!--
+                Releases and Docker start with spring.config.location=<home>/configure/, which replaces
+                the classpath defaults, and setup writes its choices there. The bundled copy would never
+                be read, so it is kept for running from the IDE only and left out of the jar.
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>application.properties</exclude>
+                    </excludes>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>

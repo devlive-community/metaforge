@@ -13,7 +13,7 @@ title: 提交工作流
     
     ```json
     {
-      "executor": "LocalExecutor",
+      "executor": "MetaForge",
       "name": "dsf",
       "configure": {
         "nodes": [

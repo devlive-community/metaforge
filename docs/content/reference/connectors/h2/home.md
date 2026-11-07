@@ -46,10 +46,22 @@ Support Time: `2023-04-05`
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    H2 runs inside the MetaForge server, so the version is the H2 library the plugin bundles. The plugin's e2e test `H2E2ETest` runs it in process, without a container: the version check, then a schema, table and columns created with SQL are listed as a database, table and columns, and their rows read back by later queries.
 
-    - [x] `all`
+    - [x] 2.1.214
 
 !!!
+
+#### SQL and concepts
+
+---
+
+- The database is an in-memory database named after the `Database` field; it lives until the MetaForge server stops.
+
+| MetaForge | H2 |
+|:--|:--|
+| Database | Schema |
+| Table | Table or view |
+| Column | Column |

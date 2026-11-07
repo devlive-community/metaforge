@@ -49,12 +49,15 @@ Support Time: `2024-02-05`
 |      Pipeline       | :x: |
 | Metadata management | :x: |
 
-#### Version
+#### Version (Validation)
 
 ---
 
-!!! Version
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/devlive-community/metaforge/issues/new/choose) to us
+    The plugin's e2e test `ParadeDBE2ETest` verifies each version below in a container: the version check, then a table with a BM25 index created with SQL is listed with its columns and searched.
 
-- [x] `all`
+    - [x] ParadeDB 0.15 (PostgreSQL 16)
+    - [x] ParadeDB 0.19 (PostgreSQL 17)
+
+!!!

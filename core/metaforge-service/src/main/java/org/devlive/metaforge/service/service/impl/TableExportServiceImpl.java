@@ -1,6 +1,5 @@
 package org.devlive.metaforge.service.service.impl;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
@@ -11,6 +10,7 @@ import org.devlive.metaforge.convert.model.ConvertRequest;
 import org.devlive.metaforge.convert.model.ConvertResponse;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.service.body.TableExportBody;
+import org.devlive.metaforge.service.common.SourceColumns;
 import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.service.TableExportService;
@@ -188,18 +188,7 @@ public class TableExportServiceImpl
     private static List<Object> types(PluginService service, RuntimeConfigure configure, String database, String table, List<String> headers)
     {
         Map<String, String> byName = new HashMap<>();
-        Response response = service.execute(configure, "SELECT COLUMN_NAME, COLUMN_TYPE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = "
-                + service.sqlLiteral(database) + " AND TABLE_NAME = " + service.sqlLiteral(table));
-        if (response != null && Boolean.TRUE.equals(response.getIsSuccessful()) && response.getColumns() != null) {
-            for (Object row : response.getColumns()) {
-                if (row instanceof List && ((List<?>) row).size() >= 2) {
-                    byName.put(String.valueOf(((List<?>) row).get(0)), String.valueOf(((List<?>) row).get(1)).toUpperCase(Locale.ROOT));
-                }
-                else if (row instanceof JsonNode) {
-                    byName.put(((JsonNode) row).path("COLUMN_NAME").asText(), ((JsonNode) row).path("COLUMN_TYPE").asText().toUpperCase(Locale.ROOT));
-                }
-            }
-        }
+        SourceColumns.of(service, configure, database, table).forEach(column -> byName.put(column.getName(), column.getType().toUpperCase(Locale.ROOT)));
         List<Object> types = new ArrayList<>();
         headers.forEach(header -> types.add(byName.getOrDefault(header, "")));
         return types;

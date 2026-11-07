@@ -1,0 +1,12 @@
+{
+  "label": "Apache Doris",
+  "description": "Apache Doris is a distributed OLAP database.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/doris.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 39
+}

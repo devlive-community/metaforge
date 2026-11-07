@@ -1,0 +1,12 @@
+{
+  "label": "YDB",
+  "description": "YDB is a versatile open source Distributed SQL Database that combines high availability and scalability with strong consistency and ACID transactions. It accommodates transactional (OLTP), analytical (OLAP), and streaming workloads simultaneously.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ydb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 28
+}

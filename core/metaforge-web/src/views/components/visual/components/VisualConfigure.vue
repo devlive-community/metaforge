@@ -10,6 +10,7 @@
                    :key="group.label"
                    :item-key="group.label"
                    :tab="group.label">
+          <MfFormGrid>
           <MfFormItem v-for="item in fieldGroup.find(value => value.label === activeGroup)?.fields"
                       :key="item.field"
                       :name="item.field"
@@ -34,6 +35,7 @@
                       :disabled="item.disabled?.field ? formState[Object(item.disabled?.field)] === item.disabled?.value : false"
                       :options="item.values ? item.values : (configuration.headers || []).map((header: any) => ({ label: header, value: header }))"/>
           </MfFormItem>
+          </MfFormGrid>
         </MfTabPane>
       </MfTabs>
     </MfForm>

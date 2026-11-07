@@ -8,6 +8,7 @@ const createSetupRoute = (router: Router) => {
             {
                 name: 'setup_home',
                 path: '',
+                meta: { title: 'common.install' },
                 component: () => import('@/views/setup/SetupHome.vue')
             }
         ]

@@ -1,0 +1,12 @@
+{
+  "label": "Ali OSS",
+  "description": "Ali OSS is a cloud storage service that provides a simple, secure and efficient way to store and manage data.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/alioss.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 11
+}

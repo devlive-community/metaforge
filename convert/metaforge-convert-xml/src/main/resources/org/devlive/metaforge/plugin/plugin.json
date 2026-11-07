@@ -1,0 +1,12 @@
+{
+  "label": "Xml Convert",
+  "description": "A XML file conversion plugin for MetaForge.",
+  "i18nFormat": true,
+  "type": "Converter",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/xml.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 54
+}

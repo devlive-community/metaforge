@@ -101,26 +101,13 @@
       <div class="mt-4">
         <div class="text-sm font-semibold text-content">{{ $t('function.import.exampleTitle') }}</div>
         <div class="mt-0.5 text-xs text-content-tertiary">{{ $t('function.import.exampleDesc') }}</div>
-        <table class="mt-2 w-full overflow-hidden rounded-mf-md border border-line text-xs">
-          <thead>
-            <tr class="bg-surface-hover text-content-secondary">
-              <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.field.name') }}</th>
-              <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colDescription') }}</th>
-              <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.exampleUsage') }}</th>
-              <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colExample') }}</th>
-              <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.field.notes') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr class="border-t border-line">
-              <td class="px-2 py-1.5 font-mono text-content">CONCAT</td>
-              <td class="px-2 py-1.5 text-content-secondary">{{ $t('function.import.exampleDescCell') }}</td>
-              <td class="px-2 py-1.5 font-mono text-content">{{ $t('function.import.exampleSyntax') }}</td>
-              <td class="px-2 py-1.5 font-mono text-content">{{ $t('function.import.exampleSql') }}</td>
-              <td class="px-2 py-1.5 text-content-secondary">{{ $t('function.import.exampleNotes') }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="mt-2 overflow-hidden rounded-mf-md border border-line">
+          <MfTable :columns="exampleColumns" :data-source="exampleRows" row-key="name" density="compact" :bordered="false">
+            <template #cell-name="{ record }"><span class="font-mono text-content">{{ record.name }}</span></template>
+            <template #cell-syntax="{ record }"><span class="font-mono text-content">{{ record.syntax }}</span></template>
+            <template #cell-example="{ record }"><span class="font-mono text-content">{{ record.example }}</span></template>
+          </MfTable>
+        </div>
         <div class="mt-2 flex gap-2">
           <MfButton size="sm" @click="onDownloadTemplate">
             <Download :size="14"/>
@@ -181,24 +168,16 @@
       <div class="mt-4">
         <div class="text-sm font-semibold text-content">{{ $t('function.import.mapping') }}</div>
         <div class="mt-0.5 text-xs text-content-tertiary">{{ $t('function.import.mappingDesc') }}</div>
-        <table class="mt-2 w-full overflow-hidden rounded-mf-md border border-line text-xs">
-          <thead>
-            <tr class="bg-surface-hover text-content-secondary">
-              <th class="px-3 py-1.5 text-left font-medium">{{ $t('function.import.mappingSystemField') }}</th>
-              <th class="px-3 py-1.5 text-left font-medium">{{ $t('function.import.mappingFileField') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="field in mappingFields" :key="field.key" class="border-t border-line">
-              <td class="px-3 py-1.5 text-content">
-                {{ $t(`function.field.${ field.key }`) }}<span v-if="field.required" class="ml-0.5 text-danger">*</span>
-              </td>
-              <td class="px-3 py-1.5">
-                <MfSelect v-model="mapping[field.key]" size="sm" :options="columnOptions" :placeholder="$t('function.import.selectColumn')" clearable/>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="mt-2 overflow-hidden rounded-mf-md border border-line">
+          <MfTable :columns="mappingColumns" :data-source="mappingFields" row-key="key" density="compact" :bordered="false">
+            <template #cell-field="{ record }">
+              <span class="text-content">{{ $t(`function.field.${ record.key }`) }}<span v-if="record.required" class="ml-0.5 text-danger">*</span></span>
+            </template>
+            <template #cell-column="{ record }">
+              <MfSelect v-model="mapping[record.key]" size="sm" :options="columnOptions" :placeholder="$t('function.import.selectColumn')" clearable/>
+            </template>
+          </MfTable>
+        </div>
       </div>
 
       <div class="mt-4">
@@ -244,44 +223,31 @@
         </div>
       </div>
 
-      <table class="mt-3 w-full overflow-hidden rounded-mf-md border border-line text-xs">
-        <thead>
-          <tr class="bg-surface-hover text-content-secondary">
-            <th class="w-8 px-2 py-1.5 text-left font-medium">{{ $t('function.import.colIndex') }}</th>
-            <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colName') }}</th>
-            <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colDescription') }}</th>
-            <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colUsage') }}</th>
-            <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colExample') }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <template v-for="(entry, index) in previewEntries" :key="index">
-            <tr class="cursor-pointer border-t border-line transition-colors hover:bg-surface-hover" @click="toggleExpand(index)">
-              <td class="px-2 py-1.5 text-content-tertiary">{{ index + 1 }}</td>
-              <td class="px-2 py-1.5 font-mono text-content">
-                <span class="mr-1 inline-flex items-center">
-                  <ChevronRight :size="11" :class="['text-content-tertiary transition-transform duration-200', expanded.has(index) && 'rotate-90']"/>
-                </span>
-                {{ entry.name || $t('function.import.invalidReason') }}
-              </td>
-              <td class="max-w-40 truncate px-2 py-1.5 text-content-secondary" :title="entry.description">{{ entry.description }}</td>
-              <td class="max-w-40 truncate px-2 py-1.5 font-mono text-content-secondary" :title="entry.syntax">{{ entry.syntax }}</td>
-              <td class="max-w-40 truncate px-2 py-1.5 font-mono text-content-secondary" :title="entry.examples">{{ entry.examples }}</td>
-            </tr>
-            <tr v-if="expanded.has(index)" class="border-t border-line bg-surface-hover/40">
-              <td :colspan="5" class="px-3 py-2">
-                <div class="mb-1 text-[11px] font-medium text-content-tertiary">{{ $t('function.import.detailTitle') }}</div>
-                <div class="space-y-1">
-                  <div v-for="(value, key) in entry" :key="key" class="grid grid-cols-[110px_1fr] items-start gap-2">
-                    <span class="text-[11px] leading-5 text-content-tertiary">{{ attributeLabel(String(key)) }}</span>
-                    <pre class="m-0 overflow-x-auto whitespace-pre-wrap font-mono text-xs leading-5 text-content">{{ value }}</pre>
-                  </div>
-                </div>
-              </td>
-            </tr>
+      <div class="mt-3 overflow-hidden rounded-mf-md border border-line">
+        <MfTable :columns="previewColumns" :data-source="previewRows" row-key="__index" density="compact" :bordered="false"
+                 :row-class="record => 'cursor-pointer' + (record.__index === selected ? ' bg-primary/5' : '')" @row-click="(record: any) => toggleSelected(record.__index)">
+          <template #cell-index="{ record }"><span class="text-content-tertiary">{{ record.__index + 1 }}</span></template>
+          <template #cell-name="{ record }">
+            <span class="inline-flex items-center gap-1 font-mono text-content">
+              <ChevronRight :size="11" :class="['text-content-tertiary transition-transform duration-200', record.__index === selected && 'rotate-90']"/>
+              {{ record.name || $t('function.import.invalidReason') }}
+            </span>
           </template>
-        </tbody>
-      </table>
+          <template #cell-description="{ record }"><EllipsisCell :text="record.description || ''"/></template>
+          <template #cell-syntax="{ record }"><span class="font-mono"><EllipsisCell :text="record.syntax || ''"/></span></template>
+          <template #cell-examples="{ record }"><span class="font-mono"><EllipsisCell :text="record.examples || ''"/></span></template>
+        </MfTable>
+        <!-- Clicking a function shows every attribute it was read with. -->
+        <div v-if="selected !== null && previewEntries[selected]" class="border-t border-line bg-surface-hover/40 px-3 py-2">
+          <div class="mb-1 text-[11px] font-medium text-content-tertiary">{{ $t('function.import.detailTitle') }}</div>
+          <div class="space-y-1">
+            <div v-for="(value, key) in previewEntries[selected]" :key="key" class="grid grid-cols-[110px_1fr] items-start gap-2">
+              <span class="text-[11px] leading-5 text-content-tertiary">{{ attributeLabel(String(key)) }}</span>
+              <pre class="m-0 overflow-x-auto whitespace-pre-wrap font-mono text-xs leading-5 text-content">{{ value }}</pre>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- 无效数据 -->
       <div v-if="invalidEntries.length" class="mt-3 overflow-hidden rounded-mf-md border border-danger/30">
@@ -290,24 +256,13 @@
           <span class="flex-1 text-sm font-medium text-danger">{{ $t('function.import.invalidTitle') }}（{{ invalidEntries.length }}）</span>
           <ChevronDown :size="13" :class="['text-content-tertiary transition-transform duration-200', invalidOpen && 'rotate-180']"/>
         </button>
-        <table v-if="invalidOpen" class="w-full border-t border-danger/30 text-xs">
-          <thead>
-            <tr class="bg-surface-hover text-content-secondary">
-              <th class="w-8 px-2 py-1.5 text-left font-medium">{{ $t('function.import.colIndex') }}</th>
-              <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colRow') }}</th>
-              <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colReason') }}</th>
-              <th class="px-2 py-1.5 text-left font-medium">{{ $t('function.import.colContent') }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="(item, index) in invalidEntries" :key="index" class="border-t border-line">
-              <td class="px-2 py-1.5 text-content-tertiary">{{ index + 1 }}</td>
-              <td class="px-2 py-1.5 text-content">{{ item.row }}</td>
-              <td class="px-2 py-1.5 text-danger">{{ $t('function.import.invalidReason') }}</td>
-              <td class="max-w-72 truncate px-2 py-1.5 font-mono text-content-secondary" :title="item.content">{{ item.content }}</td>
-            </tr>
-          </tbody>
-        </table>
+        <div v-if="invalidOpen" class="border-t border-danger/30">
+          <MfTable :columns="invalidColumns" :data-source="invalidRows" row-key="__index" density="compact" :bordered="false">
+            <template #cell-index="{ record }"><span class="text-content-tertiary">{{ record.__index + 1 }}</span></template>
+            <template #cell-reason><span class="text-danger">{{ $t('function.import.invalidReason') }}</span></template>
+            <template #cell-content="{ record }"><span class="font-mono"><EllipsisCell :text="record.content || ''"/></span></template>
+          </MfTable>
+        </div>
       </div>
     </template>
 
@@ -332,6 +287,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDateTime } from '@/utils/date'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
@@ -353,6 +309,7 @@ import {
 import FunctionService from '@/services/function'
 import PluginService from '@/services/plugin'
 import AceEditor from '@/views/components/editor/AceEditor.vue'
+import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 
 defineOptions({ name: 'FunctionImport' })
 
@@ -458,7 +415,8 @@ const sourceDocument = ref<FunctionSourceDocument>({ columns: [], rows: [] })
 
 const plugins = ref<{ label: string; value: string }[]>([])
 const importing = ref(false)
-const expanded = ref<Set<number>>(new Set())
+// The preview row whose attributes are shown under the table.
+const selected = ref<number | null>(null)
 const invalidOpen = ref(true)
 
 const sourceTabs = [
@@ -513,6 +471,35 @@ const invalidEntries = computed(() => entries.value
     content: Object.values(entry).join(' ') || sourceDocument.value.rows[index]?.join(' ') || ''
   })))
 const previewEntries = computed(() => entries.value.slice(0, 10))
+const previewRows = computed(() => previewEntries.value.map((entry, index) => ({ ...entry, __index: index })))
+const invalidRows = computed(() => invalidEntries.value.map((entry, index) => ({ ...entry, __index: index })))
+const exampleColumns = computed(() => [
+  { key: 'name', title: t('function.field.name'), dataIndex: 'name' },
+  { key: 'description', title: t('function.import.colDescription'), dataIndex: 'description' },
+  { key: 'syntax', title: t('function.import.exampleUsage'), dataIndex: 'syntax' },
+  { key: 'example', title: t('function.import.colExample'), dataIndex: 'example' },
+  { key: 'notes', title: t('function.field.notes'), dataIndex: 'notes' },
+])
+const exampleRows = computed(() => [{
+  name: 'CONCAT', description: t('function.import.exampleDescCell'), syntax: t('function.import.exampleSyntax'), example: t('function.import.exampleSql'), notes: t('function.import.exampleNotes'),
+}])
+const mappingColumns = computed(() => [
+  { key: 'field', title: t('function.import.mappingSystemField'), dataIndex: 'key', width: 200 },
+  { key: 'column', title: t('function.import.mappingFileField'), dataIndex: 'key' },
+])
+const previewColumns = computed(() => [
+  { key: 'index', title: t('function.import.colIndex'), dataIndex: '__index', width: 56 },
+  { key: 'name', title: t('function.import.colName'), dataIndex: 'name', width: 200 },
+  { key: 'description', title: t('function.import.colDescription'), dataIndex: 'description', width: 200 },
+  { key: 'syntax', title: t('function.import.colUsage'), dataIndex: 'syntax', width: 200 },
+  { key: 'examples', title: t('function.import.colExample'), dataIndex: 'examples', width: 200 },
+])
+const invalidColumns = computed(() => [
+  { key: 'index', title: t('function.import.colIndex'), dataIndex: '__index', width: 56 },
+  { key: 'row', title: t('function.import.colRow'), dataIndex: 'row', width: 80 },
+  { key: 'reason', title: t('function.import.colReason'), dataIndex: 'row', width: 140 },
+  { key: 'content', title: t('function.import.colContent'), dataIndex: 'content' },
+])
 const estimate = computed(() => Math.max(1, Math.round((validEntries.value.length || 1) / 200)))
 const stats = computed(() => [
   { label: t('function.import.statTotal'), value: String(entries.value.length), icon: FileText, tone: 'text-content-tertiary' },
@@ -531,12 +518,7 @@ const fieldHint = (key: string) => {
   return hints[key] || ''
 }
 
-const toggleExpand = (index: number) => {
-  const next = new Set(expanded.value)
-  if (next.has(index)) next.delete(index)
-  else next.add(index)
-  expanded.value = next
-}
+const toggleSelected = (index: number) => { selected.value = selected.value === index ? null : index }
 
 const applyDocument = (text: string) => {
   try {
@@ -586,7 +568,7 @@ const onFetchUrl = () => {
 const readPickedFile = (file: File) => {
   fileName.value = file.name
   fileSize.value = file.size
-  fileDate.value = new Date().toLocaleString()
+  fileDate.value = formatDateTime(new Date())
   file.text()
       .then(text => {
         fileText.value = text
@@ -661,7 +643,7 @@ const onNext = () => {
       MfMessage.warning(t('function.import.noMapping'))
       return
     }
-    expanded.value = new Set()
+    selected.value = null
     invalidOpen.value = true
     step.value = 3
   }

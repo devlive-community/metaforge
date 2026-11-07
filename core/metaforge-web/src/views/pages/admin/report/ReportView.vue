@@ -4,7 +4,9 @@
            :title="title">
     <div class="relative w-full justify-center items-center" style="height: 60vh; overflow: auto;">
       <div v-if="info">
-        <VisualView class="h-full"
+        <VisualView v-if="visible" class="h-full"
+                    :report-code="info.code"
+                    :realtime="info.realtime"
                     :code="info.dataset?.code"
                     :type="info.type"
                     :configuration="JSON.parse(info.configure as string)"

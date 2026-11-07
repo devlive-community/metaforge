@@ -1,0 +1,12 @@
+{
+  "label": "Apache Hive 2.x",
+  "description": "The Apache Hive ™ is a distributed, fault-tolerant data warehouse system that enables analytics at a massive scale and facilitates reading, writing, and managing petabytes of data residing in distributed storage using SQL.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hive2x.svg",
+  "supportVersion": [
+    "2.x"
+  ],
+  "order": 20
+}

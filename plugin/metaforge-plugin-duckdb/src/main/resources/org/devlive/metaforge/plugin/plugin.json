@@ -1,0 +1,12 @@
+{
+  "label": "DuckDB",
+  "description": "To use DuckDB, you must first create a connection to a database. The exact syntax varies between the client APIs but it typically involves passing an argument to configure persistence.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/duckdb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 14
+}

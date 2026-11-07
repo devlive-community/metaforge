@@ -1,22 +1,12 @@
 <template>
-  <MfModal v-model:open="visible" :title="`[ ${ info?.name } ] ${ $t('dataset.common.syncData') }`">
+  <MfModal v-model:open="visible" width="720px" :title="`[ ${ info?.name } ] ${ $t('dataset.common.syncData') }`">
     <MfAlert variant="danger" :title="$t('dataset.tip.syncData')"/>
 
     <div v-if="loadingFields" class="py-2 text-xs text-gray-500">{{ $t('common.loading') }}</div>
 
     <div v-else-if="fields.length > 0" class="mt-3 space-y-3">
       <div class="text-xs font-medium">{{ $t('dataset.sync.overrideTitle') }}</div>
-      <div v-for="field in fields" :key="field.name" class="space-y-1">
-        <label class="text-xs">{{ field.name }}</label>
-        <div v-if="field.description" class="text-xs text-gray-500">{{ field.description }}</div>
-
-        <MfInput v-if="field.type === 'STRING'" v-model="overrides[field.name]"/>
-        <MfInputNumber v-else-if="field.type === 'NUMBER'" v-model="overrides[field.name]" :style="{ width: '100%' }"/>
-        <MfSwitch v-else-if="field.type === 'BOOLEAN'"
-                  v-model="booleanProxies[field.name]"
-                  @update:model-value="(v: boolean) => onBoolChange(field.name, v)"/>
-        <MfInput v-else-if="field.type === 'PASSWORD'" v-model="overrides[field.name]" type="password" show-password/>
-      </div>
+      <RuntimeFields collapsible :fields="fields" :values="overrides" @change="(name, value) => (overrides[name] = value)"/>
     </div>
 
     <template #footer>
@@ -33,18 +23,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import DatasetService from '@/services/dataset'
 import { DatasetModel } from '@/model/dataset'
-
-interface PluginConfigureField
-{
-  name: string
-  type: 'STRING' | 'NUMBER' | 'BOOLEAN' | 'PASSWORD'
-  defaultValue: string
-  description: string
-  tunable: boolean
-}
+import type { RuntimeField } from '@/model/runtime-fields'
+import RuntimeFields from '@/views/components/runtime/RuntimeFields.vue'
 
 defineOptions({ name: 'DatasetSync' })
 
@@ -55,6 +39,7 @@ const props = withDefaults(defineProps<{ isVisible?: boolean; info?: DatasetMode
 const emit = defineEmits<{ (e: 'close', value: boolean): void }>()
 
 const { t } = useI18n()
+const router = useRouter()
 
 const visible = computed({
   get: () => props.isVisible,
@@ -63,9 +48,8 @@ const visible = computed({
 
 const loading = ref(false)
 const loadingFields = ref(false)
-const fields = ref<PluginConfigureField[]>([])
+const fields = ref<RuntimeField[]>([])
 const overrides = ref<Record<string, string>>({})
-const booleanProxies = ref<Record<string, boolean>>({})
 
 const handleInitialize = () => {
   if (!props.info?.code) {
@@ -77,18 +61,12 @@ const handleInitialize = () => {
                   if (response.status && Array.isArray(response.data)) {
                     fields.value = response.data
                     for (const f of fields.value) {
-                      overrides.value[f.name] = f.defaultValue ?? ''
-                      if (f.type === 'BOOLEAN') {
-                        booleanProxies.value[f.name] = (f.defaultValue + '').toLowerCase() === 'true'
-                      }
+                      // The switch compares with 'true', so booleans keep their lower-case form.
+                      overrides.value[f.name] = f.type === 'BOOLEAN' ? String(f.defaultValue).toLowerCase() : f.defaultValue ?? ''
                     }
                   }
                 })
                 .finally(() => (loadingFields.value = false))
-}
-
-const onBoolChange = (name: string, value: boolean) => {
-  overrides.value[name] = value ? 'true' : 'false'
 }
 
 const onCancel = () => {
@@ -98,19 +76,17 @@ const onCancel = () => {
 const onSubmit = () => {
   if (props.info) {
     loading.value = true
-    for (const f of fields.value) {
-      if (f.type === 'BOOLEAN') {
-        overrides.value[f.name] = booleanProxies.value[f.name] ? 'true' : 'false'
-      }
-    }
-    DatasetService.syncData(props.info.code, overrides.value)
+    const code = props.info.code
+    DatasetService.syncData(code, overrides.value)
                   .then(response => {
                     if (response.status) {
                       MfMessage.success(`${ t('dataset.common.syncData') } [ ${ props.info?.name } ] ${ t('common.successfully') }`)
                       onCancel()
+                      // Straight to this run's progress.
+                      router.push({ path: `/dataset/runs/${ code }`, query: { run: String(response.data?.id ?? '') } })
                     }
                     else {
-                      MfMessage.error(`${ t('dataset.common.syncData') } [ ${ props.info?.name } ] ${ t('common.fail') }`)
+                      MfMessage.error(String(response.message || `${ t('dataset.common.syncData') } [ ${ props.info?.name } ] ${ t('common.fail') }`))
                     }
                   })
                   .finally(() => (loading.value = false))

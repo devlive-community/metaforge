@@ -5,6 +5,7 @@ import org.devlive.metaforge.service.DataJdbcConfigure;
 import org.devlive.metaforge.service.persistence.FilterQuery;
 import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.persistence.References;
+import org.devlive.metaforge.service.repository.jdbc.DashboardShareRepository;
 import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.repository.jdbc.MenuAccessRepository;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -76,7 +77,8 @@ public final class PersistenceContext
     }
 
     @Configuration
-    @Import({DataJdbcConfigure.class, FilterQuery.class, References.class, Persistence.class, LinkRepository.class, MenuAccessRepository.class})
+    @Import({DataJdbcConfigure.class, FilterQuery.class, References.class, Persistence.class, LinkRepository.class, MenuAccessRepository.class,
+            DashboardShareRepository.class})
     static class Beans
     {
         @Bean
