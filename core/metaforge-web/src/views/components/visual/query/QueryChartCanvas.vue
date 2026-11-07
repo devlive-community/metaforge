@@ -173,5 +173,6 @@ onMounted(() => {
   observer.observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'data-theme'] })
 })
 onBeforeUnmount(() => observer?.disconnect())
-defineExpose({ exportImage: (name: string, type: 'png' | 'svg') => canvas.value?.exportImage(name, type) })
+defineExpose({ exportImage: (name: string, type: 'png' | 'svg') => canvas.value?.exportImage(name, type),
+  loading: computed(() => canvas.value?.loading !== false) })
 </script>

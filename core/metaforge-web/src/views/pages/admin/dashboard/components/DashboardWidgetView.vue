@@ -1,5 +1,6 @@
 <template>
-  <div v-if="widget.kind === 'metric'" class="flex h-full min-h-0 flex-col justify-center px-1">
+  <ChartLoading v-if="loading"/>
+  <div v-else-if="widget.kind === 'metric'" class="flex h-full min-h-0 flex-col justify-center px-1">
     <strong class="truncate text-3xl font-extrabold tabular-nums" :title="metricValue">{{ metricValue }}</strong>
     <span class="mt-1 truncate text-xs text-content-tertiary">{{ report?.name || $t('dashboard.studio.chooseAsset') }}</span>
   </div>
@@ -80,17 +81,19 @@ import DashboardProgress from './DashboardProgress.vue'
 import DashboardAdvancedContent from './DashboardAdvancedContent.vue'
 import DashboardAdvancedData from './DashboardAdvancedData.vue'
 import DashboardAdvancedDecoration from './DashboardAdvancedDecoration.vue'
+import ChartLoading from '@/views/components/visual/ChartLoading.vue'
+import ChartError from '@/views/components/visual/ChartError.vue'
+import EChart from '@/views/components/visual/EChart.vue'
 import type { EChartsOption } from 'echarts'
 import { aggregateQueryChart, chartFieldKind, defaultQueryChart, type QueryChartConfiguration, type QueryChartRow } from '@/model/query-chart'
 import { dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardMetric, dashboardMetricTool, dashboardResourceUrl, dashboardRowsInPeriod, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
 import type { ReportModel } from '@/model/report'
 import type { Configuration } from '@/views/components/visual/Configuration'
 
-const QueryChartPreview = defineAsyncComponent(() => import('@/views/components/visual/query/QueryChartPreview.vue'))
-const VisualView = defineAsyncComponent(() => import('@/views/components/visual/VisualView.vue'))
-const EChart = defineAsyncComponent(() => import('@/views/components/visual/EChart.vue'))
+const QueryChartPreview = defineAsyncComponent({ loader: () => import('@/views/components/visual/query/QueryChartPreview.vue'), loadingComponent: ChartLoading, errorComponent: ChartError, delay: 0 })
+const VisualView = defineAsyncComponent({ loader: () => import('@/views/components/visual/VisualView.vue'), loadingComponent: ChartLoading, errorComponent: ChartError, delay: 0 })
 
-const props = defineProps<{ widget: DashboardWidget; report?: ReportModel; snapshot?: QueryChartConfiguration; refreshed?: QueryChartRow[]; selection?: ReadonlySet<QueryChartRow>; days: number; wall?: boolean; editable?: boolean }>()
+const props = defineProps<{ widget: DashboardWidget; report?: ReportModel; snapshot?: QueryChartConfiguration; refreshed?: QueryChartRow[]; selection?: ReadonlySet<QueryChartRow>; days: number; wall?: boolean; editable?: boolean; loading?: boolean }>()
 const emit = defineEmits<{ filter: [rows: QueryChartRow[]] }>()
 const { locale } = useI18n()
 const snapshot = computed(() => props.snapshot)

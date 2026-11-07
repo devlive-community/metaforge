@@ -10,13 +10,14 @@
           <Table2 :size="14"/>{{ $t('queryChart.data') }}
         </MfButton>
         <template v-if="options.download && !showData && !showInlineDetails">
-          <MfButton v-for="format in formats" :key="format" size="sm" variant="ghost" :disabled="!chartAvailable || invalidCircular || failed" @click="download(format)">
+          <MfButton v-for="format in formats" :key="format" size="sm" variant="ghost" :disabled="chartLoading || !chartAvailable || invalidCircular || failed" @click="download(format)">
             <Download :size="14"/>{{ format.toUpperCase() }}
           </MfButton>
         </template>
       </div>
     </div>
-    <section class="flex min-h-0 flex-1 flex-col overflow-hidden" :class="!embedded && 'rounded-mf-lg border border-line bg-surface p-4'">
+    <section class="relative flex min-h-0 flex-1 flex-col overflow-hidden" :aria-busy="loading" :class="!embedded && 'rounded-mf-lg border border-line bg-surface p-4'">
+      <div class="contents" :class="{ invisible: loading }" :inert="loading" :aria-hidden="loading || undefined">
       <h3 v-if="options.name" class="shrink-0 break-words text-base font-semibold">{{ options.name }}</h3>
       <p v-if="options.description" class="mb-2 shrink-0 whitespace-pre-wrap break-words text-xs text-content-tertiary">{{ options.description }}</p>
       <ResultTable v-if="options.type === 'table' || (showData && rawSeries)" class="flex-1" fill :headers="options.fields" :rows="result.filtered" :page-size="pageSize">
@@ -43,6 +44,8 @@
       <MfAlert v-else-if="failed" variant="danger" :title="$t('queryChart.renderError')"/>
       <MfEmpty v-else-if="!chartAvailable" class="flex-1" :title="$t('queryChart.noPoints')"/>
       <QueryChartCanvas v-else ref="canvas" class="flex-1" :options="options" :points="chartRows" :prepared="prepared" :metric="metricLabel" :embedded="embedded" @point="selectPoint" @error="failed = true"/>
+      </div>
+      <ChartLoading v-if="loading" class="absolute inset-0 z-10 bg-surface/90"/>
     </section>
 
     <MfModal v-if="detailRows.length && options.detailsMode === 'dialog'" :open="activePoint !== undefined" width="min(880px, 94vw)" height="min(560px, 85dvh)"
@@ -67,8 +70,9 @@ import { prepareQueryChart } from '@/model/query-chart-series'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import ResultTable from '@/views/components/table/ResultTable.vue'
 import QueryChartCanvas from './QueryChartCanvas.vue'
+import ChartLoading from '../ChartLoading.vue'
 
-const props = defineProps<{ options: QueryChartOptions; rows: QueryChartRow[]; heading?: boolean; embedded?: boolean; linked?: boolean; aggregation?: ReturnType<typeof aggregateQueryChart> }>()
+const props = defineProps<{ options: QueryChartOptions; rows: QueryChartRow[]; heading?: boolean; embedded?: boolean; linked?: boolean; loading?: boolean; aggregation?: ReturnType<typeof aggregateQueryChart> }>()
 const emit = defineEmits<{ filter: [rows: QueryChartRow[]] }>()
 const formats = ['png', 'svg'] as const
 const { t } = useI18n()
@@ -79,6 +83,7 @@ const pageSize = 50
 const activePoint = ref<number[]>()
 const failed = ref(false)
 const canvas = ref<InstanceType<typeof QueryChartCanvas>>()
+const chartLoading = computed(() => props.loading || canvas.value?.loading !== false)
 const showData = computed(() => props.options.type === 'table' || view.value === 'data')
 const result = computed(() => props.aggregation ?? aggregateQueryChart(props.rows, props.options))
 const prepared = computed(() => prepareQueryChart(props.options, result.value))

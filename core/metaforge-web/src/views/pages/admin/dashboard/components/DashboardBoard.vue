@@ -56,9 +56,9 @@
           <div class="min-h-0 min-w-0 flex-1">
             <DashboardContainerView v-if="dashboardContainerTool(widget.kind)" :widget="widget" :widgets="board.widgets" :reports="reports"
                                     :days="days" :wall="wall" :editable="editable" :selected-id="selectedId" :refreshed-for="refreshed" :selection-for="selectionFor"
-                                    :failed-codes="data.failed.value" @filter="applyFilter" @expand="expanded = $event"/>
+                                    :failed-codes="data.failed.value" :pending-codes="data.pending.value" @filter="applyFilter" @expand="expanded = $event"/>
             <DashboardWidgetView v-else :widget="widget" :report="assets.get(widget.reportCode)" :snapshot="snapshots.get(widget.reportCode)" :refreshed="refreshed(widget)"
-                                 :days="days" :selection="selectionFor(widget)" :wall="wall" :editable="editable" @filter="applyFilter(widget, $event)"/>
+                                 :days="days" :selection="selectionFor(widget)" :wall="wall" :editable="editable" :loading="data.pending.value.has(widget.reportCode)" @filter="applyFilter(widget, $event)"/>
           </div>
         </div>
         <button v-if="editable" type="button" class="widget-overlay absolute inset-0 z-10 cursor-pointer rounded-[inherit] outline-none"
@@ -132,9 +132,9 @@
   <MfModal v-if="expandedWidget" :open="true" :title="expandedWidget.name" width="min(1040px, 95vw)" height="min(720px, 90dvh)"
            trap-focus @close="expanded = ''">
     <DashboardContainerView v-if="dashboardContainerTool(expandedWidget.kind)" class="h-full" :widget="expandedWidget" :widgets="board.widgets" :reports="reports"
-                            :days="days" :wall="wall" :refreshed-for="refreshed" :selection-for="selectionFor" :failed-codes="data.failed.value" @filter="applyFilter" @expand="expanded = $event"/>
+                            :days="days" :wall="wall" :refreshed-for="refreshed" :selection-for="selectionFor" :failed-codes="data.failed.value" :pending-codes="data.pending.value" @filter="applyFilter" @expand="expanded = $event"/>
     <DashboardWidgetView v-else class="h-full" :widget="expandedWidget" :report="assets.get(expandedWidget.reportCode)" :snapshot="snapshots.get(expandedWidget.reportCode)"
-                         :refreshed="refreshed(expandedWidget)" :days="days" :selection="selectionFor(expandedWidget)"
+                         :refreshed="refreshed(expandedWidget)" :days="days" :selection="selectionFor(expandedWidget)" :loading="data.pending.value.has(expandedWidget.reportCode)"
                          @filter="applyFilter(expandedWidget, $event)"/>
   </MfModal>
 </template>

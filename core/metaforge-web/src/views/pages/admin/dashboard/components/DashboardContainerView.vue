@@ -26,7 +26,7 @@ import DashboardWidgetView from './DashboardWidgetView.vue'
 
 const props = defineProps<{ widget: DashboardWidget; widgets: DashboardWidget[]; reports: ReportModel[]; days: number; wall?: boolean;
   editable?: boolean; selectedId?: string; refreshedFor: (widget: DashboardWidget) => QueryChartRow[] | undefined;
-  selectionFor: (widget: DashboardWidget) => ReadonlySet<QueryChartRow> | undefined; failedCodes: ReadonlySet<string> }>()
+  selectionFor: (widget: DashboardWidget) => ReadonlySet<QueryChartRow> | undefined; failedCodes: ReadonlySet<string>; pendingCodes?: ReadonlySet<string> }>()
 const emit = defineEmits<{ filter: [widget: DashboardWidget, rows: QueryChartRow[]]; expand: [id: string] }>()
 const { t } = useI18n()
 const ContainerComponent = getCurrentInstance()!.type
@@ -63,7 +63,8 @@ const RenderChild = defineComponent({
     const content = dashboardContainerTool(child.kind)
       ? h(ContainerComponent, { ...props, widget: child, onFilter: (widget: DashboardWidget, rows: QueryChartRow[]) => emit('filter', widget, rows), onExpand: (id: string) => emit('expand', id) })
       : h(DashboardWidgetView, { widget: child, report, snapshot: dashboardSnapshot(report), refreshed: props.refreshedFor(child),
-        selection: props.selectionFor(child), days: props.days, wall: props.wall, editable: props.editable, onFilter: rows => emit('filter', child, rows) })
+        selection: props.selectionFor(child), days: props.days, wall: props.wall, editable: props.editable,
+        loading: !!child.reportCode && props.pendingCodes?.has(child.reportCode), onFilter: rows => emit('filter', child, rows) })
     return h('div', { class: ['flex h-full min-h-0 min-w-0 flex-col overflow-hidden', child.showCard && 'border-line bg-surface shadow-mf-sm',
       child.showCard && child.border && 'border', props.editable && props.selectedId === child.id && 'outline-2 outline-primary',
       !props.editable && child.animation?.effect !== 'none' && child.animation && 'dashboard-widget-motion', child.animation?.trigger === 'hover' && 'motion-on-hover'],

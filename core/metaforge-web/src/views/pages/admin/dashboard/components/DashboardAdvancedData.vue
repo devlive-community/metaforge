@@ -34,7 +34,7 @@
   </div>
 </template>
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { EChartsOption } from 'echarts'
 import { aggregateQueryChart, type QueryChartOptions, type QueryChartRow } from '@/model/query-chart'
@@ -42,7 +42,7 @@ import { dashboardDataSettings, dashboardMetric, type DashboardWidget } from '@/
 import DashboardAnimatedNumber from './DashboardAnimatedNumber.vue'
 import DashboardProgress from './DashboardProgress.vue'
 import DashboardBulletMeter from './DashboardBulletMeter.vue'
-const EChart = defineAsyncComponent(() => import('@/views/components/visual/EChart.vue'))
+import EChart from '@/views/components/visual/EChart.vue'
 const props = defineProps<{ widget: DashboardWidget; options: QueryChartOptions; rows: QueryChartRow[] }>()
 const { locale } = useI18n()
 const settings = computed(() => dashboardDataSettings(props.widget.dataOptions))

@@ -1,76 +1,21 @@
 <template>
-  <div ref="host" class="min-h-0 min-w-0"/>
+  <div class="relative min-h-0 min-w-0" :aria-busy="pending">
+    <div ref="host" class="size-full" :class="{ invisible: pending }" :inert="pending"/>
+    <ChartLoading v-if="pending" class="absolute inset-0 z-10 bg-surface/90"/>
+    <ChartError v-else-if="failed" class="absolute inset-0"/>
+  </div>
 </template>
 
 <script setup lang="ts">
-import * as echarts from 'echarts'
-import 'echarts-wordcloud'
-import { onBeforeUnmount, ref, watch } from 'vue'
-
-const props = defineProps<{ option: echarts.EChartsOption; map?: { name: string; source: Parameters<typeof echarts.registerMap>[1] } }>()
+import { ref } from 'vue'
+import { useEChart, type EChartState } from '@/composables/useEChart'
+import ChartLoading from './ChartLoading.vue'
+import ChartError from './ChartError.vue'
+const props = defineProps<EChartState>()
 const emit = defineEmits<{ point: [data: unknown, name?: string]; error: [] }>()
 const host = ref<HTMLElement>()
-let chart: echarts.ECharts | undefined
-let observer: ResizeObserver | undefined
-
-function render() {
-  const element = host.value
-  if (!element?.clientWidth || !element.clientHeight) return
-  try {
-    if (props.map && !echarts.getMap(props.map.name)) echarts.registerMap(props.map.name, props.map.source)
-    if (!chart) {
-      chart = echarts.init(element)
-      chart.on('click', event => emit('point', event.data, event.name))
-    }
-    chart.setOption(props.option, { notMerge: true })
-  }
-  catch {
-    chart?.dispose()
-    chart = undefined
-    emit('error')
-  }
-}
-
-watch(host, element => {
-  observer?.disconnect()
-  chart?.dispose()
-  chart = undefined
-  if (!element) return
-  observer = new ResizeObserver(() => {
-    if (chart) chart.resize()
-    else render()
-  })
-  observer.observe(element)
-  render()
-}, { flush: 'post' })
-watch([() => props.option, () => props.map], render, { flush: 'post' })
-
-onBeforeUnmount(() => {
-  observer?.disconnect()
-  chart?.dispose()
+const { pending, failed, exportImage } = useEChart(host, props, {
+  point: (data, name) => emit('point', data, name), error: () => emit('error'),
 })
-
-defineExpose({
-  exportImage(name: string, type: 'png' | 'svg') {
-    if (!chart) return
-    const link = document.createElement('a')
-    link.download = name + '.' + type
-    if (type === 'png') {
-      link.href = chart.getDataURL({ type: 'png', pixelRatio: 2 })
-      link.click()
-      return
-    }
-    const svg = echarts.init(null, undefined, { renderer: 'svg', ssr: true, width: chart.getWidth(), height: chart.getHeight() })
-    try {
-      const option = chart.getOption() as echarts.EChartsOption
-      svg.setOption({ ...option, animation: false })
-      const blob = new Blob([svg.renderToSVGString()], { type: 'image/svg+xml;charset=utf-8' })
-      const url = URL.createObjectURL(blob)
-      link.href = url
-      link.click()
-      window.setTimeout(() => URL.revokeObjectURL(url), 1000)
-    }
-    finally { svg.dispose() }
-  }
-})
+defineExpose({ exportImage, loading: pending })
 </script>

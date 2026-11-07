@@ -11,13 +11,11 @@
           </MfButton>
         </div>
         <MfAlert v-if="refreshFailed" variant="warning" :title="$t('queryChart.refreshError')"/>
-        <QueryChartPreview class="min-h-0 flex-1" :options="snapshot.options" :rows="refreshedRows ?? snapshot.rows"/>
+        <QueryChartPreview class="min-h-0 flex-1" :options="snapshot.options" :rows="refreshedRows ?? snapshot.rows" :loading="refreshing"/>
       </div>
       <MfAlert v-else variant="danger" :title="$t('queryChart.renderError')"/>
     </template>
-    <div v-else-if="loading" class="flex items-center justify-center absolute inset-0">
-      <MfSpinner size="lg"/>
-    </div>
+    <ChartLoading v-else-if="loading" class="absolute inset-0"/>
 
     <div v-if="!configuration?.queryChart && localConfiguration && !loading">
       <div v-if="localConfiguration.message" class="p-4">
@@ -54,13 +52,15 @@ import { Type } from '@/views/components/visual/Type'
 import { Configuration } from './Configuration'
 import VisualChart from './components/VisualChart.vue'
 import VisualTable from '@/views/components/visual/components/VisualTable.vue'
+import ChartLoading from './ChartLoading.vue'
+import ChartError from './ChartError.vue'
 import DatasetService from '@/services/dataset'
 import { adhocRows } from '@/model/dataset-adhoc'
 import ExecuteService from '@/services/execute.ts'
 import { ExecuteModel } from '@/model/execute.ts'
 
 defineOptions({ name: 'VisualView' })
-const QueryChartPreview = defineAsyncComponent(() => import('./query/QueryChartPreview.vue'))
+const QueryChartPreview = defineAsyncComponent({ loader: () => import('./query/QueryChartPreview.vue'), loadingComponent: ChartLoading, errorComponent: ChartError, delay: 0 })
 
 const props = withDefaults(defineProps<{
   configuration?: Configuration | null
@@ -98,6 +98,7 @@ const refreshedAt = ref('')
 const refreshedRows = shallowRef<QueryChartRow[]>()
 let generation = 0
 let timer: number | undefined
+let legacyTimer: number | undefined
 
 async function refreshChart() {
   const code = dynamicCode.value
@@ -125,6 +126,7 @@ async function refreshChart() {
 watch([dynamicCode, refreshInterval], ([code, seconds]) => {
   generation++
   window.clearInterval(timer)
+  window.clearTimeout(legacyTimer)
   refreshing.value = false
   refreshedRows.value = undefined
   refreshedAt.value = ''
@@ -138,6 +140,7 @@ watch([dynamicCode, refreshInterval], ([code, seconds]) => {
 onBeforeUnmount(() => {
   generation++
   window.clearInterval(timer)
+  window.clearTimeout(legacyTimer)
 })
 
 const loading = ref(false)
@@ -161,9 +164,9 @@ const formatRaw = (response: any) => {
 }
 
 const handleInitialize = () => {
+  loading.value = true
   localConfiguration.value = cloneDeep(props.configuration) as Configuration
-  setTimeout(() => {
-    loading.value = true
+  legacyTimer = window.setTimeout(() => {
     if (props.shareToken) {
       PublicReportService.data(props.shareToken)
                          .then((response) => {
