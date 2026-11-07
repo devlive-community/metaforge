@@ -89,12 +89,13 @@ const queueChart = computed(() => {
 })
 const series = computed(() => has('series') ? ratePoints(props.metrics) : [])
 const trendChart = computed(() => {
-  const reference = (value: number | undefined, name: string, color: string) => value && value > 0
-    ? [{ yAxis: Math.round(value), name, lineStyle: { color, type: 'dashed' as const, width: 1 }, label: { formatter: `${name} ${Math.round(value)}`, color: colors.value.axis, fontSize: 10, position: 'insideEndTop' as const } }] : []
+  const reference = (value: number | undefined, name: string, color: string, position: 'insideStartTop' | 'insideEndTop') => value && value > 0
+    ? [{ yAxis: Math.round(value), name, lineStyle: { color, type: 'dashed' as const, width: 1 }, label: { formatter: `${name} ${Math.round(value)}`, color: colors.value.axis, fontSize: 10, position } }] : []
   return {
     color: [colors.value.read, colors.value.write],
-    grid: { left: 8, right: 16, top: 36, bottom: 8, containLabel: true },
-    legend: { top: 0, left: 0, icon: 'roundRect', itemWidth: 10, itemHeight: 4, textStyle: { color: colors.value.axis, fontSize: 11 } },
+    // Keep the legend on one row and reserve a separate line for the axis unit.
+    grid: { left: 8, right: 16, top: 56, bottom: 8, containLabel: true },
+    legend: { type: 'scroll' as const, top: 0, left: 0, right: 0, icon: 'roundRect', itemWidth: 10, itemHeight: 4, textStyle: { color: colors.value.axis, fontSize: 11 }, pageIconColor: colors.value.axis, pageTextStyle: { color: colors.value.axis } },
     tooltip: { ...tooltip.value, trigger: 'axis' as const, axisPointer: { type: 'line' as const, lineStyle: { color: colors.value.axis } } },
     xAxis: { type: 'category' as const, boundaryGap: false, data: series.value.map(point => duration(point.at)), axisLabel: axisLabel.value, axisLine: { lineStyle: { color: colors.value.track } }, axisTick: { show: false } },
     yAxis: { type: 'value' as const, name: 'rows/s', nameTextStyle: { color: colors.value.axis, fontSize: 10, align: 'left' as const }, axisLabel: axisLabel.value, splitLine: splitLine.value },
@@ -102,8 +103,8 @@ const trendChart = computed(() => {
       { name: label('readRowsPerSecond'), type: 'line' as const, smooth: true, showSymbol: false, lineStyle: { width: 2 }, data: series.value.map(point => Math.round(point.read)) },
       { name: label('writeRowsPerSecond'), type: 'line' as const, smooth: true, showSymbol: false, lineStyle: { width: 2 }, data: series.value.map(point => Math.round(point.write)),
         markLine: { symbol: 'none', silent: true, data: [
-          ...(has('avgWriteRowsPerSecond') ? reference(num('avgWriteRowsPerSecond'), t('workflow.studio.metricAverage'), colors.value.axis) : []),
-          ...(has('peakWriteRowsPerSecond') ? reference(num('peakWriteRowsPerSecond'), t('workflow.studio.metricPeak'), colors.value.write) : []),
+          ...(has('avgWriteRowsPerSecond') ? reference(num('avgWriteRowsPerSecond'), t('workflow.studio.metricAverage'), colors.value.axis, 'insideStartTop') : []),
+          ...(has('peakWriteRowsPerSecond') ? reference(num('peakWriteRowsPerSecond'), t('workflow.studio.metricPeak'), colors.value.write, 'insideEndTop') : []),
         ] } },
     ],
   }
