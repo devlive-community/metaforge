@@ -73,7 +73,7 @@ public class PluginStore
 
     // Two constructors: Spring must be told which one to use, or it looks for a no-argument one.
     @Autowired
-    public PluginStore(@Value("${plugin.store.stats-url:https://stats.devlive.org}") String statsUrl,
+    public PluginStore(@Value("${plugin.store.stats-url:https://forgestats.devlive.org}") String statsUrl,
             @Value("${plugin.store.app:metaforge}") String app,
             @Value("${plugin.store.source:maven}") String source,
             @Value("${plugin.store.mirror:}") String mirror,
