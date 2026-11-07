@@ -15,6 +15,15 @@ public interface BatchWriter
 
     long writtenCount();
 
+    /**
+     * 写入失败的一批是否不留下任何行，因而可以安全地重写其中一部分。
+     * Whether a failed write leaves none of its rows behind, so part of it can safely be written again.
+     */
+    default boolean failedWritesLeaveNoRows()
+    {
+        return false;
+    }
+
     @Override
     void close();
 }

@@ -70,4 +70,22 @@ public interface DataSetService
      * Live metrics, state and transitions of one sync; the persisted final result once it has finished
      */
     CommonResponse<org.devlive.metaforge.service.dataset.sync.SyncMetricsView> getHistoryMetrics(Long id);
+
+    /**
+     * 暂停运行中的同步，提交完已成形的批次后保存断点。只有按键分片的同步能暂停。
+     * Pause a running sync; it saves a checkpoint after committing the batches already formed.
+     */
+    CommonResponse<Boolean> pauseHistory(Long id);
+
+    /**
+     * 继续已暂停的同步，回到队列后从断点续传。
+     * Resume a paused sync: back into the queue, continuing from its checkpoint.
+     */
+    CommonResponse<Boolean> resumeHistory(Long id);
+
+    /**
+     * 让失败、超时、停止或中断的同步再次运行，只在不会重复写入时允许。
+     * Run a failed, timed-out, stopped or interrupted sync again, only when that writes nothing twice.
+     */
+    CommonResponse<Boolean> retryHistory(Long id);
 }

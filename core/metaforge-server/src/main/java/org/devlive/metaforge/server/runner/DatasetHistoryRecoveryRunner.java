@@ -58,6 +58,11 @@ public class DatasetHistoryRecoveryRunner
             Date updateTime = new Date();
             for (DatasetHistoryEntity history : stale) {
                 RunState previous = history.getState();
+                // 只有暂停或等待重试时的断点是精确的：运行中崩溃时断点之后可能还提交过行
+                // Only a paused or waiting run has an exact checkpoint: a crash mid-run may have committed rows past it.
+                if (previous != RunState.PAUSED && previous != RunState.RETRYING) {
+                    history.setCheckpoint(null);
+                }
                 history.setState(RunState.INTERRUPTED);
                 history.setMessage(message);
                 history.setUpdateTime(updateTime);

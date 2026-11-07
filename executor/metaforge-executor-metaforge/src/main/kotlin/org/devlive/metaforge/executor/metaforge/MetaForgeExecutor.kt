@@ -28,6 +28,7 @@ class MetaForgeExecutor : ExecutorPlugin()
                     RuntimeConfigureFieldType.SELECT,
                     SplitPlan.NONE,
                     "How to split the query: NONE keeps one query; AUTO splits when concurrency is above 1; RANGE always splits. " +
+                            "Splits read in key order and can pause and resume exactly. " +
                             "Queries that cannot be split safely (LIMIT, GROUP BY, DISTINCT, UNION and so on) or a column that is not an integer or date fall back to one query.",
                     true,
                     listOf(SplitPlan.NONE, SplitPlan.AUTO, SplitPlan.RANGE),
@@ -106,6 +107,49 @@ class MetaForgeExecutor : ExecutorPlugin()
                             "Default 0 disables the timeout (sync runs to completion).",
                     true,
                     GROUP_GENERAL
+            ),
+            RuntimeConfigureField(
+                    "maxErrorRows",
+                    RuntimeConfigureFieldType.NUMBER,
+                    "0",
+                    "Rows the target may reject before the sync fails. Rejected rows are skipped and saved to <task>.dirty.jsonl in the work directory. " +
+                            "0 fails on the first rejected row. Skipping needs a target that writes nothing on a failed batch.",
+                    true,
+                    GROUP_FAULT
+            ),
+            RuntimeConfigureField(
+                    "writeRetries",
+                    RuntimeConfigureFieldType.NUMBER,
+                    "3",
+                    "Times a batch is written again after a transient error such as a lost connection, on a new connection. " +
+                            "A connection lost during a write leaves that batch's outcome unknown, so it may repeat, most likely on targets without transactions such as ClickHouse. 0 fails instead.",
+                    true,
+                    GROUP_FAULT
+            ),
+            RuntimeConfigureField(
+                    "writeRetryBackoffMs",
+                    RuntimeConfigureFieldType.NUMBER,
+                    "1000",
+                    "Wait before the first batch retry in milliseconds; it doubles with each retry.",
+                    true,
+                    GROUP_FAULT
+            ),
+            RuntimeConfigureField(
+                    "maxRetries",
+                    RuntimeConfigureFieldType.NUMBER,
+                    "0",
+                    "Times the whole sync runs again after a transient failure. It continues from the checkpoint, or starts over only if nothing was written yet. " +
+                            "If the connection was lost during a write, that batch may repeat.",
+                    true,
+                    GROUP_FAULT
+            ),
+            RuntimeConfigureField(
+                    "retryIntervalSeconds",
+                    RuntimeConfigureFieldType.NUMBER,
+                    "30",
+                    "Seconds to wait before the sync runs again after a transient failure.",
+                    true,
+                    GROUP_FAULT
             )
     )
 
@@ -114,5 +158,6 @@ class MetaForgeExecutor : ExecutorPlugin()
         const val GROUP_PARALLEL = "parallel"
         const val GROUP_THROUGHPUT = "throughput"
         const val GROUP_GENERAL = "general"
+        const val GROUP_FAULT = "fault"
     }
 }

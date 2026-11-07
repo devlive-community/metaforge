@@ -14,6 +14,16 @@ interface ExecutorService : Service
     fun stop(request: ExecutorRequest): ExecutorResponse
 
     /**
+     * 请求暂停：执行器提交完已成形的批次后，[start] 以 PAUSED 返回并带上断点（[ExecutorResponse.checkpoint]）。
+     * 把断点放进 [ExecutorRequest.checkpoint] 再次 [start] 即可续传。默认不支持。
+     *
+     * Ask a running task to pause: [start] then returns PAUSED with a checkpoint, which a later
+     * [start] resumes from through [ExecutorRequest.checkpoint]. Unsupported by default.
+     */
+    fun pause(request: ExecutorRequest): ExecutorResponse =
+        ExecutorResponse(false, false, null, "Executor ${name()} does not support pausing")
+
+    /**
      * 当前 Executor 的短名。默认实现：去掉类名末尾的 "ExecutorService"。
      * 例如 MetaForgeExecutorService -> "MetaForge"，SeatunnelExecutorService -> "Seatunnel"。
      * 大小写转换由调用方按业务需要处理。

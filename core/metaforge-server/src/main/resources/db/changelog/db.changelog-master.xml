@@ -44,4 +44,5 @@
     <include file="core/core-0016-user-home-page.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0017-screen-paths.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0018-dashboard-share.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0019-dataset-history-checkpoint.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>

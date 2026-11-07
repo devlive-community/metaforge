@@ -42,15 +42,28 @@ class MetaForgeExecutorService : ExecutorService
         val metrics = MetricsCollector()
         val publisher = MetricsPublisher(metrics, request.metricsListener, taskLog)
         val stages = StageTracker(metrics)
+        var transfer: Transfer? = null
+        var failureKind: SyncErrors.Kind? = null
+        val resume: SyncCheckpoint? = try
+        {
+            request.checkpoint?.takeIf { it.isNotBlank() }?.let { SyncCheckpoint.fromJson(it) }
+        }
+        catch (ex: Exception)
+        {
+            loggerExecutor?.destroy()
+            return ExecutorResponse(false, false, RunState.FAILURE, "The checkpoint cannot be read: ${ex.message}")
+        }
+        resume?.let { metrics.restore(it) }
         if (request.taskName.isNotBlank())
         {
             TaskRegistry.register(request.taskName, handle)
         }
         // 整任务超时看门狗：timeout<=0 表示不限时（默认）。到点后触发一次“超时取消”。
+        // 超时只计运行时间：续传时扣除之前已运行的部分 / the timeout counts running time, so a resume subtracts what already ran
         val timeoutFuture: ScheduledFuture<*>? =
             if (request.timeout > 0)
             {
-                TaskRegistry.scheduleTimeout(request.timeout)
+                TaskRegistry.scheduleTimeout((request.timeout - metrics.elapsedMillis / 1000).coerceAtLeast(1))
                 {
                     taskLog.warn("Task [ {} ] exceeded timeout of {}s, cancelling", request.taskName, request.timeout)
                     requestCancel(handle, request.taskName, CancelReason.TIMEOUT)
@@ -79,6 +92,10 @@ class MetaForgeExecutorService : ExecutorService
             val database = input.database ?: throw IllegalArgumentException("Target database is null")
             val table = input.table ?: throw IllegalArgumentException("Target table is null")
             val query = input.query ?: throw IllegalArgumentException("Input query is null")
+            if (resume != null && resume.query != query)
+            {
+                throw IllegalStateException("The query changed after the run was interrupted, so it cannot resume")
+            }
 
             val originColumns = input.originColumns.toList()
             if (originColumns.isEmpty())
@@ -118,8 +135,8 @@ class MetaForgeExecutorService : ExecutorService
 
             // 可选：先跑 SELECT COUNT(*) 拿到源端总行数，作为进度分母
             // Optional: pre-count to populate the total row count used for progress percentage
-            var totalKnown = false
-            if (preCountEnabled)
+            var totalKnown = resume != null && resume.totalRows >= 0
+            if (preCountEnabled && resume == null)
             {
                 stages.begin(STAGE_PRECOUNT)
                 val totalCount = preCount(inputPlugin, inputConfigure, query, taskLog)
@@ -138,45 +155,71 @@ class MetaForgeExecutorService : ExecutorService
                 metrics.skipStage(STAGE_PRECOUNT)
             }
 
-            // 全量回退读取无法分片 / the materialized fallback cannot be split
+            // 全量回退读取无法分片；续传沿用断点里的分片 / the materialized fallback cannot be split; a resume keeps its splits
             stages.begin(STAGE_PLAN)
-            val plan = if (inputPlugin.supportsStreaming())
+            val plan = when
             {
-                SplitPlanner(inputPlugin, inputConfigure, taskLog).plan(
+                resume != null -> SplitPlan(
+                    SplitPlan.RANGE, resume.column,
+                    resume.splits.map { Split(it.id, it.query, it.range, resume.column, it.nullOnly) }
+                )
+                inputPlugin.supportsStreaming() -> SplitPlanner(inputPlugin, inputConfigure, taskLog).plan(
                     query,
                     options["splitStrategy"] ?: SplitPlan.NONE,
                     options["splitColumn"],
                     concurrency,
                     options["splitCount"]?.toIntOrNull() ?: 0
                 )
+                else -> SplitPlan(SplitPlan.NONE, null, listOf(Split(1, query, "ALL")))
             }
-            else
-            {
-                SplitPlan(SplitPlan.NONE, null, listOf(Split(1, query, "ALL")))
-            }
+            val progress = plan.splits.map { SplitProgress(it) }
+            resume?.splits?.forEach { saved -> progress.firstOrNull { it.split.id == saved.id }?.restore(saved) }
             val previewLimit = (options["previewRows"]?.toIntOrNull() ?: 0).coerceIn(0, 50)
             val preview = PreviewSampler(previewLimit, originColumns.map { it.name })
             val sourceKeys = originColumns.map { it.original }
-            val readerFor = { split: Split ->
+            val readerFor = { split: SplitProgress ->
                 val reader: SourceReader =
                     if (inputPlugin.supportsStreaming())
                     {
-                        StreamingSourceReader(inputPlugin, inputConfigure, split.query, fetchSize, sourceKeys, handle, taskLog)
+                        StreamingSourceReader(
+                            inputPlugin, inputConfigure, split.split.readQuery(split.watermark), fetchSize, sourceKeys,
+                            split.split.keyColumn, handle, taskLog
+                        )
                     }
                     else
                     {
-                        MaterializedSourceReader(inputPlugin, inputConfigure, split.query, sourceKeys, metrics, totalKnown, taskLog)
+                        MaterializedSourceReader(inputPlugin, inputConfigure, split.split.query, sourceKeys, metrics, totalKnown, taskLog)
                     }
                 if (previewLimit > 0) preview.wrap(reader) else reader
             }
+            metrics.splitStrategy = plan.strategy
+            metrics.splitColumn = plan.column
+            metrics.splitSource = { progress.map { it.metrics() } }
+            metrics.resumable = plan.strategy == SplitPlan.RANGE
+            handle.pausable = metrics.resumable
             stages.end(STAGE_PLAN)
 
             stages.begin(STAGE_TRANSFER)
-            taskLog.info("Transfer start: target=`{}`.`{}` columns={} splits={} strategy={} batchSize={} queueCapacity={}",
-                database, table, originColumns.size, plan.splits.size, plan.strategy, batchSize, queueCapacity)
+            taskLog.info("Transfer start: target=`{}`.`{}` columns={} splits={} strategy={} resumed={} batchSize={} queueCapacity={}",
+                database, table, originColumns.size, plan.splits.size, plan.strategy, resume != null, batchSize, queueCapacity)
             val targetColumns = originColumns.map { it.name }
-            val written = Transfer(request.taskName, batchSize, queueCapacity, concurrency, handle, metrics, limiter, taskLog)
-                .run(plan, readerFor) { outputPlugin.openBatchWriter(outputConfigure, database, table, targetColumns, batchSize) }
+            val maxGroupRows = (options["maxGroupRows"]?.toIntOrNull()?.takeIf { it > 0 } ?: DEFAULT_MAX_GROUP_ROWS).coerceAtLeast(batchSize)
+            val tolerance = WriteTolerance(
+                options["writeRetries"]?.toIntOrNull()?.coerceAtLeast(0) ?: DEFAULT_WRITE_RETRIES,
+                options["writeRetryBackoffMs"]?.toLongOrNull()?.coerceAtLeast(0) ?: DEFAULT_WRITE_BACKOFF_MS,
+                options["maxErrorRows"]?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
+            )
+            val dirty = DirtyLog(request.workHome, request.taskName, targetColumns, taskLog)
+            metrics.dirtySource = { dirty.samples() }
+            val current = Transfer(
+                request.taskName, batchSize, queueCapacity, concurrency, maxGroupRows, tolerance, dirty,
+                handle, metrics, limiter, taskLog, progress
+            )
+            transfer = current
+            // 由通道显式提交每一批，writer 自身不再按行数自动提交 / channels commit each batch; the writer never auto-commits
+            val written = current.run(readerFor) {
+                outputPlugin.openBatchWriter(outputConfigure, database, table, targetColumns, maxGroupRows + 1)
+            }
             if (previewLimit > 0)
             {
                 response.preview = preview.rows()
@@ -190,7 +233,7 @@ class MetaForgeExecutorService : ExecutorService
         }
         catch (ex: TaskCancelledException)
         {
-            stages.fail("CANCELLED")
+            stages.fail(cancelledStage(handle))
             applyCancelled(response, handle, request, ex.processed, taskLog)
         }
         catch (ex: Exception)
@@ -200,13 +243,14 @@ class MetaForgeExecutorService : ExecutorService
             // 此时尚无已提交行数，count 记 0。
             if (handle.cancellation.isCancelled)
             {
-                stages.fail("CANCELLED")
-                applyCancelled(response, handle, request, 0L, taskLog)
+                stages.fail(cancelledStage(handle))
+                applyCancelled(response, handle, request, metrics.rowsWrittenCount, taskLog)
             }
             else
             {
                 stages.fail("FAILED")
                 taskLog.error("MetaForge executor failed", ex)
+                failureKind = SyncErrors.classify(ex)
                 response.successful = false
                 response.state = RunState.FAILURE
                 response.message = ex.message
@@ -215,6 +259,14 @@ class MetaForgeExecutorService : ExecutorService
         finally
         {
             metricsFuture.cancel(false)
+            // 未完成且仍能精确续传时留下断点；暂时性失败在不会重复写入时才允许再次运行
+            // An unfinished run that can still resume exactly leaves a checkpoint; a transient failure may
+            // run again only when that writes nothing twice.
+            if (!response.successful && metrics.resumable)
+            {
+                response.checkpoint = transfer?.let { checkpoint(query = request.input.query.orEmpty(), metrics = metrics, transfer = it) }
+            }
+            response.retryable = failureKind == SyncErrors.Kind.TRANSIENT && (response.checkpoint != null || metrics.rowsWrittenCount == 0L)
             // 最终上报一次：成功时进度 100%；之后不再有定时上报
             response.metrics = publisher.close(response.successful)
             // 任务已结束：撤掉尚未触发的超时看门狗，避免事后误触发
@@ -254,6 +306,27 @@ class MetaForgeExecutorService : ExecutorService
 
     override fun compile(plan: WorkflowPlan): ExecutorRequest = MetaForgeWorkflowCompiler.compile(plan)
 
+    private fun cancelledStage(handle: TaskHandle): String =
+        if (handle.cancellation.reason == CancelReason.PAUSE) "PAUSED" else "CANCELLED"
+
+    private fun checkpoint(query: String, metrics: MetricsCollector, transfer: Transfer): String =
+        SyncCheckpoint(
+            query, metrics.splitColumn, metrics.rowsWrittenCount, metrics.rowsSkippedCount, metrics.bytesWrittenCount,
+            metrics.elapsedMillis, metrics.total, metrics.source, transfer.progress.map { it.checkpoint() }.toMutableList()
+        ).toJson()
+
+    override fun pause(request: ExecutorRequest): ExecutorResponse
+    {
+        val handle = TaskRegistry.find(request.taskName)
+            ?: return ExecutorResponse(false, false, null, "Task [ ${request.taskName} ] is not running on this node")
+        if (!handle.pausable)
+        {
+            return ExecutorResponse(false, false, null, "This sync cannot be paused: only a sync split by a key column can resume exactly")
+        }
+        requestCancel(handle, request.taskName, CancelReason.PAUSE)
+        return ExecutorResponse(false, true, RunState.PAUSING, null)
+    }
+
     override fun stop(request: ExecutorRequest): ExecutorResponse
     {
         val taskName = request.taskName
@@ -277,7 +350,12 @@ class MetaForgeExecutorService : ExecutorService
     private fun requestCancel(handle: TaskHandle, taskName: String, reason: CancelReason)
     {
         handle.cancellation.cancel(reason)
-        val what = if (reason == CancelReason.TIMEOUT) "Timeout cancel" else "Cancel"
+        val what = when (reason)
+        {
+            CancelReason.TIMEOUT -> "Timeout cancel"
+            CancelReason.PAUSE -> "Pause"
+            CancelReason.USER -> "Cancel"
+        }
         log.info("{} requested for task [ {} ]", what, taskName)
         handle.taskLog?.warn("{} requested for task [ {} ]", what, taskName)
         handle.cancelStatements()
@@ -297,7 +375,12 @@ class MetaForgeExecutorService : ExecutorService
     {
         response.count = if (processed > Int.MAX_VALUE.toLong()) Int.MAX_VALUE else processed.toInt()
         response.successful = false
-        if (handle.cancellation.reason == CancelReason.TIMEOUT)
+        if (handle.cancellation.reason == CancelReason.PAUSE)
+        {
+            taskLog.info("MetaForge executor task paused: rows={} task={}", processed, request.taskName)
+            response.state = RunState.PAUSED
+        }
+        else if (handle.cancellation.reason == CancelReason.TIMEOUT)
         {
             taskLog.warn("MetaForge executor task timed out: rows={} task={}", processed, request.taskName)
             response.state = RunState.TIMEOUT
@@ -356,6 +439,9 @@ class MetaForgeExecutorService : ExecutorService
         private const val DEFAULT_BATCH_SIZE = 1000
         private const val DEFAULT_QUEUE_CAPACITY = 4
         private const val MAX_CONCURRENCY = 16
+        private const val DEFAULT_MAX_GROUP_ROWS = 100_000
+        private const val DEFAULT_WRITE_RETRIES = 3
+        private const val DEFAULT_WRITE_BACKOFF_MS = 1000L
         private const val DEFAULT_METRICS_INTERVAL_MS = 1000L
         private const val MIN_METRICS_INTERVAL_MS = 200L
 

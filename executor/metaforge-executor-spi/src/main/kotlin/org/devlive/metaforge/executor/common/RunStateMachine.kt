@@ -19,7 +19,7 @@ import org.devlive.metaforge.executor.common.RunState.TIMEOUT
  *
  * - 终态：SUCCESS / FAILURE / TIMEOUT / STOPPED / INTERRUPTED；除 SUCCESS 外都可手动重试回到 QUEUE
  * - STOPPING / PAUSING 期间任务可能已自然结束，所以允许直接落到 SUCCESS / FAILURE / TIMEOUT
- * - RUNNING -> STOPPED 允许：取消可能先于 STOPPING 落库就完成
+ * - RUNNING -> STOPPED / PAUSED 允许：取消或暂停可能先于 STOPPING / PAUSING 落库就完成
  * - 任何非终态在服务重启后都会被标记为 INTERRUPTED
  *
  * Legal state transitions of a sync task. Every non-terminal state may become INTERRUPTED on restart.
@@ -30,7 +30,7 @@ object RunStateMachine
     private val transitions: Map<RunState, Set<RunState>> = mapOf(
         CREATED to setOf(QUEUE, STOPPED, FAILURE, INTERRUPTED),
         QUEUE to setOf(RUNNING, STOPPED, FAILURE, INTERRUPTED),
-        RUNNING to setOf(PAUSING, STOPPING, RETRYING, SUCCESS, FAILURE, TIMEOUT, STOPPED, INTERRUPTED),
+        RUNNING to setOf(PAUSING, PAUSED, STOPPING, RETRYING, SUCCESS, FAILURE, TIMEOUT, STOPPED, INTERRUPTED),
         PAUSING to setOf(PAUSED, STOPPING, SUCCESS, FAILURE, TIMEOUT, STOPPED, INTERRUPTED),
         PAUSED to setOf(QUEUE, STOPPED, INTERRUPTED),
         STOPPING to setOf(STOPPED, SUCCESS, FAILURE, TIMEOUT, INTERRUPTED),

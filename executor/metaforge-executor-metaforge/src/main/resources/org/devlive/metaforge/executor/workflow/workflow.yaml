@@ -11,12 +11,13 @@ limits:
   sources: 1
   transforms: 0
   sinks: 1
-# Metrics reported by MetricsCollector (ExecutorMetrics field names). rowsFailed and rowsSkipped are
-# never filled by this executor, so they are not listed. Keep this list, the web metric registry
-# (model/workflow-metrics.ts) and the collector in step.
+# Metrics reported by MetricsCollector (ExecutorMetrics field names). Keep this list, the web metric
+# registry (model/workflow-metrics.ts), the labels and the run pages in step.
 metrics:
   - rowsRead
   - rowsWritten
+  - rowsSkipped
+  - rowsFailed
   - totalRows
   - progress
   - etaSeconds
@@ -30,6 +31,7 @@ metrics:
   - readBytesPerSecond
   - writeBytesPerSecond
   - batchesCommitted
+  - batchRetries
   - avgBatchMs
   - channels
   - queue
@@ -39,6 +41,8 @@ metrics:
   - bottleneck
   - stages
   - series
+  - splits
+  - dirtySamples
 # Job settings filled per workflow; empty values fall back to the executor's runtime configuration.
 settings:
   - field: fetchSize
@@ -98,6 +102,21 @@ settings:
     type: number
     min: 0
     description: Upper limit on estimated bytes read per second across all channels. 0 means no limit.
+  - field: maxErrorRows
+    label: Max rejected rows
+    type: number
+    min: 0
+    description: Rows the target may reject before the run fails. Rejected rows are skipped and listed in the run metrics. 0 fails on the first one.
+  - field: writeRetries
+    label: Batch retries
+    type: number
+    min: 0
+    description: Times a batch is written again after a transient error such as a lost connection.
+  - field: writeRetryBackoffMs
+    label: Batch retry wait
+    type: number
+    min: 0
+    description: Wait before the first batch retry in milliseconds; it doubles with each retry.
 nodes:
   - nodes/metaforge-source.yaml
   - nodes/metaforge-sink.yaml

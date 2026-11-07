@@ -49,6 +49,30 @@
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-test-e2e</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-plugin-postgresql</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-plugin-mysql</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-plugin-clickhouse</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
         <!-- 真实数据库端到端测试：PostgreSQL 容器 + JDBC 驱动 -->
         <dependency>
             <groupId>org.testcontainers</groupId>

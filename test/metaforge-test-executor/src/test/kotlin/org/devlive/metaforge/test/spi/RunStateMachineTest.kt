@@ -36,6 +36,7 @@ class RunStateMachineTest
         allowed(RunState.RUNNING, RunState.PAUSING, RunState.STOPPING, RunState.RETRYING,
             RunState.SUCCESS, RunState.FAILURE, RunState.TIMEOUT, RunState.STOPPED)
         allowed(RunState.PAUSING, RunState.PAUSED, RunState.STOPPING, RunState.SUCCESS)
+        allowed(RunState.RUNNING, RunState.PAUSED)
         allowed(RunState.PAUSED, RunState.QUEUE, RunState.STOPPED)
         rejected(RunState.PAUSED, RunState.RUNNING, RunState.SUCCESS)
         allowed(RunState.STOPPING, RunState.STOPPED, RunState.SUCCESS, RunState.FAILURE)

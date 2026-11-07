@@ -153,6 +153,24 @@ public class DataSetController
         return this.service.stopHistory(id);
     }
 
+    @PutMapping(value = "history/pause/{id}")
+    public CommonResponse<Boolean> historyPause(@PathVariable Long id)
+    {
+        return this.service.pauseHistory(id);
+    }
+
+    @PutMapping(value = "history/resume/{id}")
+    public CommonResponse<Boolean> historyResume(@PathVariable Long id)
+    {
+        return this.service.resumeHistory(id);
+    }
+
+    @PutMapping(value = "history/retry/{id}")
+    public CommonResponse<Boolean> historyRetry(@PathVariable Long id)
+    {
+        return this.service.retryHistory(id);
+    }
+
     @GetMapping(value = "history/metrics/{id}")
     public CommonResponse<SyncMetricsView> historyMetrics(@PathVariable Long id)
     {

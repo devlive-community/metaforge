@@ -8,10 +8,13 @@ import org.devlive.metaforge.spi.adapter.RowCallback
 import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.slf4j.Logger
 
-/** 接收一行已投影到目标列顺序的数据 / receives one row already projected to the target column order */
+/**
+ * 接收一行已投影到目标列顺序的数据，以及它的分片键（没有分片键时为 null）。
+ * Receives one row projected to the target column order, with its split key (null without one).
+ */
 internal fun interface RowSink
 {
-    fun accept(row: List<Any?>)
+    fun accept(row: List<Any?>, key: Any?)
 }
 
 /**
@@ -37,6 +40,7 @@ internal class StreamingSourceReader(
     private val query: String,
     private val fetchSize: Int,
     private val sourceKeys: List<String>,
+    private val keyColumn: String?,
     private val handle: TaskHandle,
     private val taskLog: Logger
 ) : SourceReader
@@ -44,6 +48,7 @@ internal class StreamingSourceReader(
     override fun read(sink: RowSink)
     {
         var keyIndexes = IntArray(0)
+        var splitKeyIndex = -1
         var running: java.sql.Statement? = null
         try
         {
@@ -56,6 +61,11 @@ internal class StreamingSourceReader(
                     keyIndexes = IntArray(sourceKeys.size) { k ->
                         indexByHeader[sourceKeys[k].lowercase()]
                             ?: throw IllegalStateException("Source column '${sourceKeys[k]}' not found in query result")
+                    }
+                    if (keyColumn != null)
+                    {
+                        splitKeyIndex = indexByHeader[keyColumn.lowercase()]
+                            ?: throw IllegalStateException("Split column '$keyColumn' not found in query result")
                     }
                     taskLog.info("Streaming read: source returned headers={}", headers)
                 }
@@ -73,7 +83,7 @@ internal class StreamingSourceReader(
                     {
                         projected.add(row[idx])
                     }
-                    sink.accept(projected)
+                    sink.accept(projected, if (splitKeyIndex >= 0) row[splitKeyIndex] else null)
                 }
             })
         }
@@ -124,7 +134,7 @@ internal class MaterializedSourceReader(
             {
                 projected.add(ValueCodec.jsonNodeToJdbcValue(node.get(key)))
             }
-            sink.accept(projected)
+            sink.accept(projected, null)
         }
     }
 }
@@ -149,8 +159,8 @@ internal class PreviewSampler(private val limit: Int, private val columns: List<
     {
         override fun read(sink: RowSink)
         {
-            reader.read { row ->
-                sink.accept(row)
+            reader.read { row, key ->
+                sink.accept(row, key)
                 if (!full)
                 {
                     sample(row)

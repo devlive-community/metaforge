@@ -28,4 +28,6 @@ public class SyncMetricsView
     private String message;
     private ExecutorMetrics metrics;
     private List<SyncTransition> transitions;
+    /** 已结束的同步能否继续运行而不重复写入 / whether a finished sync can run again without writing anything twice */
+    private boolean retryable;
 }

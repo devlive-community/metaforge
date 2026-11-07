@@ -16,9 +16,9 @@ data class ExecutorMetrics(
     var rowsRead: Long = 0,
     /** 已提交到目标端的行数 / rows committed to the target */
     var rowsWritten: Long = 0,
-    /** 因坏数据被跳过的行数 / rows skipped as bad data */
+    /** 被目标端拒绝、在容错上限内跳过的行数，见 [dirtySamples] / rows the target rejected and were skipped within the limit */
     var rowsSkipped: Long = 0,
-    /** 写入失败的行数 / rows that failed to write */
+    /** 任务失败时未能写入的行数 / rows that could not be written when the task failed */
     var rowsFailed: Long = 0,
     /** 读取的字节数（按值估算）/ estimated bytes read */
     var bytesRead: Long = 0,
@@ -42,6 +42,8 @@ data class ExecutorMetrics(
     var avgWriteRowsPerSecond: Double = 0.0,
     /** 写入速率峰值（按采样窗口）/ peak write rate over the sampling windows */
     var peakWriteRowsPerSecond: Double = 0.0,
+    /** 暂时性错误后重试的批次次数 / batch retries after transient errors */
+    var batchRetries: Long = 0,
     /** 已提交的批次数 / committed batches */
     var batchesCommitted: Long = 0,
     /** 每批写入平均耗时（毫秒）/ average write time per batch in ms */
@@ -59,12 +61,16 @@ data class ExecutorMetrics(
     var throttleWaitMs: Long = 0,
     /** 最近窗口的瓶颈 / the bottleneck over the last window */
     var bottleneck: Bottleneck = Bottleneck.NONE,
+    /** 能否暂停并精确续传 / whether the task can pause and resume exactly */
+    var resumable: Boolean = false,
     /** 实际采用的分片方式 NONE / RANGE / the split strategy actually used */
     var splitStrategy: String = "NONE",
     /** 分片列，未分片为 null / the split column, null without splitting */
     var splitColumn: String? = null,
     /** 各分片进度 / per-split progress */
     var splits: MutableList<SplitMetrics> = mutableListOf(),
+    /** 被跳过的行的样本，最多 20 条 / samples of the skipped rows, at most 20 */
+    var dirtySamples: MutableList<DirtyRow> = mutableListOf(),
     /** 各阶段进度 / per-stage progress */
     var stages: MutableList<StageMetrics> = mutableListOf(),
     /** 最近的速率采样，按时间先后 / recent rate samples, oldest first */
@@ -98,7 +104,21 @@ data class SplitMetrics(
     var channel: Int = 0,
     var rowsRead: Long = 0,
     var rowsWritten: Long = 0,
-    var elapsedMs: Long = 0
+    var elapsedMs: Long = 0,
+    /** 暂时性错误后重试的批次次数 / batch retries after transient errors */
+    var retries: Long = 0,
+    /** 已提交到的分片键，续传由此继续 / the split key committed so far, where a resume continues */
+    var watermark: String? = null
+)
+
+/** 一条被目标端拒绝的行 / one row the target rejected */
+@SuppressFBWarnings(value = ["EI_EXPOSE_REP", "EI_EXPOSE_REP2"])
+data class DirtyRow(
+    var split: Int = 0,
+    /** 目标端的错误信息 / the target's error */
+    var error: String = "",
+    /** 目标列名到值，长值已截断 / target column to value, long values truncated */
+    var row: MutableMap<String, Any?> = linkedMapOf()
 )
 
 /** 一个速率采样点 / one rate sample */

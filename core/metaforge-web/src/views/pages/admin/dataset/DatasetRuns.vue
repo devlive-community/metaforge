@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { Database, History, LayoutDashboard, Play, RefreshCw, Square } from '@lucide/vue'
+import { Database, History, LayoutDashboard, Pause, Play, RefreshCw, RotateCcw, Square } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
 import DatasetService from '@/services/dataset'
 import WorkflowService from '@/services/workflow'
@@ -25,7 +25,7 @@ interface SyncRecord {
   rowsRead?: number; rowsWritten?: number; attempt?: number; createTime?: string; updateTime?: string
 }
 interface SyncView {
-  state?: string; attempt?: number; live?: boolean; message?: string; metrics?: WorkflowMetricsSnapshot | null
+  state?: string; attempt?: number; live?: boolean; retryable?: boolean; message?: string; metrics?: WorkflowMetricsSnapshot | null
   transitions?: { from?: string; to?: string; time?: string; message?: string }[]
 }
 const route = useRoute(), router = useRouter(), { t } = useI18n()
@@ -45,6 +45,8 @@ const selected = computed(() => {
 const state = computed(() => view.value?.state || selected.value?.state)
 const active = computed(() => !!state.value && !TERMINAL.includes(state.value))
 const metrics = computed(() => view.value?.metrics || undefined)
+const canPause = computed(() => state.value === 'RUNNING' && metrics.value?.resumable === true)
+const paused = computed(() => state.value === 'PAUSED')
 const declared = computed(() => executors.value.find(item => item.name === dataset.value?.executor)?.metrics || [])
 const stateText = (value?: string) => t('dataTable.state' + (value || 'CREATED'))
 // The dataset's own build state is the last of its recorded steps, labelled as on the detail page.
@@ -151,6 +153,20 @@ async function stop() {
   } catch (error) { MfMessage.error(error instanceof Error ? error.message : t('dataset.runs.stopFailed')) }
   finally { busy.value = false }
 }
+/** Pause, resume and run again share one shape: call, refresh, and show the server's reason on failure. */
+async function act(call: (id: number) => Promise<any>, failed: string) {
+  if (busy.value || !selected.value) return
+  busy.value = true
+  try {
+    const response = await call(selected.value.id)
+    if (!response.status) throw Error(String(response.message))
+    await refresh()
+  } catch (error) { MfMessage.error(error instanceof Error ? error.message : failed) }
+  finally { busy.value = false }
+}
+const pause = () => act(id => DatasetService.pauseHistory(id), t('dataset.runs.pauseFailed'))
+const resume = () => act(id => DatasetService.resumeHistory(id), t('dataset.runs.resumeFailed'))
+const retry = () => act(id => DatasetService.retryHistory(id), t('dataset.runs.retryFailed'))
 onBeforeUnmount(() => { alive = false; generation++; logGeneration++; clearTimeout(timer) })
 </script>
 <template>
@@ -163,8 +179,12 @@ onBeforeUnmount(() => { alive = false; generation++; logGeneration++; clearTimeo
         </div>
         <div class="flex shrink-0 items-center gap-2">
           <MfButton size="sm" :loading="refreshing" @click="refresh(); loadLogs()"><RefreshCw :size="14"/>{{ $t('common.refresh') }}</MfButton>
+          <MfButton v-if="canPause" size="sm" :loading="busy" @click="pause"><Pause :size="14"/>{{ $t('dataset.runs.pause') }}</MfButton>
+          <MfButton v-if="paused" variant="primary" size="sm" :loading="busy" @click="resume"><Play :size="14"/>{{ $t('dataset.runs.resume') }}</MfButton>
+          <MfButton v-if="paused" variant="danger" size="sm" :loading="busy" @click="stop"><Square :size="14"/>{{ $t('dataset.runs.cancel') }}</MfButton>
           <MfButton v-if="active" variant="danger" size="sm" :loading="busy" @click="stop"><Square :size="14"/>{{ $t('workflow.studio.stop') }}</MfButton>
-          <MfButton v-else variant="primary" size="sm" :loading="busy" :disabled="!dataset" @click="sync"><Play :size="14"/>{{ $t('dataset.runs.syncNow') }}</MfButton>
+          <MfButton v-if="view?.retryable" size="sm" :loading="busy" @click="retry"><RotateCcw :size="14"/>{{ $t('dataset.runs.retry') }}</MfButton>
+          <MfButton v-if="!active && !paused" variant="primary" size="sm" :loading="busy" :disabled="!dataset" @click="sync"><Play :size="14"/>{{ $t('dataset.runs.syncNow') }}</MfButton>
         </div>
       </header>
       <MfTabs class="mt-3" :active-key="tab" @update:active-key="selectTab(String($event))">

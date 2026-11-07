@@ -192,7 +192,7 @@ public class SyncJobManagerTest
     public void illegalTransitionsAreRejectedAndUnfinishedBodiesFail()
     {
         SyncJob job = submit(5, running -> {
-            assertFalse(running.transition(RunState.PAUSED, null), "RUNNING cannot jump to PAUSED");
+            assertFalse(running.transition(RunState.QUEUE, null), "RUNNING cannot go back to QUEUE");
             assertTrue(running.transition(RunState.STOPPING, null));
             assertFalse(running.transition(RunState.RUNNING, null));
             throw new IllegalStateException("boom");
@@ -234,6 +234,121 @@ public class SyncJobManagerTest
         assertFalse(view.isLive());
         assertEquals(100L, view.getMetrics().getRowsWritten());
         assertEquals(4, view.getTransitions().size());
+    }
+
+    private void awaitFinished(SyncJob job)
+    {
+        long deadline = System.currentTimeMillis() + 10_000;
+        while (manager.find(job.getHistoryId()).isPresent() && System.currentTimeMillis() < deadline) {
+            Thread.onSpinWait();
+        }
+        assertTrue(manager.find(job.getHistoryId()).isEmpty());
+    }
+
+    @Test
+    public void aPausedSyncKeepsItsDatasetAndRunsAgainWhenResumed()
+    {
+        AtomicInteger runs = new AtomicInteger();
+        SyncJob job = submit(9, running -> {
+            if (runs.incrementAndGet() == 1) {
+                running.update(history -> history.setCheckpoint("at-500"));
+                running.transition(RunState.PAUSED, null);
+            }
+            else {
+                assertEquals("at-500", running.getCheckpoint());
+                running.transition(RunState.SUCCESS, null);
+            }
+        }).orElseThrow();
+        awaitState(job.getHistoryId(), RunState.PAUSED);
+        long deadline = System.currentTimeMillis() + 10_000;
+        while (runs.get() == 0 && System.currentTimeMillis() < deadline) {
+            Thread.onSpinWait();
+        }
+
+        assertTrue(manager.isActive(9L), "a paused sync still holds the dataset");
+        assertTrue(manager.find(job.getHistoryId()).isPresent());
+        assertTrue(submit(9, running -> {}).isEmpty());
+
+        assertTrue(manager.resume(job));
+        awaitState(job.getHistoryId(), RunState.SUCCESS);
+        awaitFinished(job);
+        assertEquals(2, runs.get());
+        assertFalse(manager.isActive(9L));
+        assertFalse(manager.resume(job), "only a paused sync can resume");
+    }
+
+    @Test
+    public void aPausedSyncCanBeCancelledAndCanThenRunAgain()
+    {
+        SyncJob job = submit(10, running -> {
+            running.update(history -> history.setCheckpoint("at-500"));
+            running.transition(RunState.PAUSED, null);
+        }).orElseThrow();
+        awaitState(job.getHistoryId(), RunState.PAUSED);
+        // 工作线程退出后再取消，模拟用户稍后操作 / cancel after the worker has left, as a user would
+        long deadline = System.currentTimeMillis() + 10_000;
+        while (!job.getState().equals(RunState.PAUSED) && System.currentTimeMillis() < deadline) {
+            Thread.onSpinWait();
+        }
+
+        assertTrue(manager.cancelQueued(job));
+        DatasetHistoryEntity row = rows.get(job.getHistoryId());
+        assertEquals(RunState.STOPPED, row.getState());
+        assertEquals("Cancelled while paused", row.getMessage());
+        assertFalse(manager.isActive(10L));
+        assertTrue(SyncJobManager.canRetry(row));
+
+        AtomicBoolean ran = new AtomicBoolean();
+        SyncJob again = manager.retry(row, running -> {
+            ran.set(true);
+            running.transition(RunState.SUCCESS, null);
+        }).orElseThrow();
+        awaitState(again.getHistoryId(), RunState.SUCCESS);
+        awaitFinished(again);
+        assertTrue(ran.get());
+        assertEquals(2, row.getAttempt());
+        assertEquals(List.of(RunState.CREATED, RunState.QUEUE, RunState.RUNNING, RunState.PAUSED, RunState.STOPPED, RunState.QUEUE, RunState.RUNNING, RunState.SUCCESS),
+                manager.view(row.getId()).orElseThrow().getTransitions().stream().map(SyncTransition::getTo).collect(Collectors.toList()));
+    }
+
+    @Test
+    public void onlyRunsThatWriteNothingTwiceMayRunAgain()
+    {
+        DatasetHistoryEntity row = created(11);
+        row.setState(RunState.SUCCESS);
+        row.setCheckpoint("at-500");
+        assertFalse(SyncJobManager.canRetry(row), "a successful run is final");
+
+        row.setState(RunState.RUNNING);
+        assertFalse(SyncJobManager.canRetry(row), "a running sync is not finished");
+
+        for (RunState state : List.of(RunState.FAILURE, RunState.STOPPED, RunState.TIMEOUT, RunState.INTERRUPTED)) {
+            row.setState(state);
+            row.setCheckpoint("at-500");
+            assertTrue(SyncJobManager.canRetry(row), state + " with a checkpoint");
+            row.setCheckpoint(null);
+            row.setRowsWritten(500L);
+            assertFalse(SyncJobManager.canRetry(row), state + " that wrote rows without a checkpoint");
+            row.setRowsWritten(0L);
+            assertEquals(state != RunState.INTERRUPTED, SyncJobManager.canRetry(row), state + " that wrote nothing");
+        }
+    }
+
+    @Test
+    public void aDatasetWithAnUnfinishedSyncRefusesToRunAnotherAgain()
+    {
+        CountDownLatch release = new CountDownLatch(1);
+        SyncJob active = submit(12, running -> {
+            await(release);
+            running.transition(RunState.SUCCESS, null);
+        }).orElseThrow();
+        DatasetHistoryEntity finished = created(12);
+        finished.setId(ids.incrementAndGet());
+        finished.setState(RunState.STOPPED);
+        finished.setCheckpoint("at-500");
+        assertTrue(manager.retry(finished, running -> {}).isEmpty());
+        release.countDown();
+        awaitState(active.getHistoryId(), RunState.SUCCESS);
     }
 
     private static ExecutorMetrics metrics(long written, long total)

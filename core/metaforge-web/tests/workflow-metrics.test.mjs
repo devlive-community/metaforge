@@ -50,6 +50,22 @@ test('metrics render only what is known and declared', () => {
   assert.deepEqual(metricGroups([]), [])
 })
 
+test('splits and rejected rows tolerate partial and malformed reports', async () => {
+  const { splitList, dirtyList } = await sourceModule('../../metaforge-web/src/model/workflow-metrics.ts')
+  for (const metrics of [undefined, null, {}, { splits: 'x', dirtySamples: 5 }]) {
+    assert.deepEqual(splitList(metrics), [])
+    assert.deepEqual(dirtyList(metrics), [])
+  }
+  assert.deepEqual(splitList({ splits: [null, { range: 'no id' }, { id: 2, range: '>= 5', state: 'DONE', channel: 3, rowsRead: 9, rowsWritten: 8, elapsedMs: 40, retries: 1 }, { id: 3, rowsRead: -1 }] }), [
+    { id: 2, range: '>= 5', state: 'DONE', channel: 3, rowsRead: 9, rowsWritten: 8, elapsedMs: 40, retries: 1 },
+    { id: 3, range: '', state: 'PENDING', channel: 0, rowsRead: 0, rowsWritten: 0, elapsedMs: 0, retries: 0 },
+  ])
+  assert.deepEqual(dirtyList({ dirtySamples: [null, { split: 2, error: 'too long', row: { id: 1, name: 'x' } }, {}] }), [
+    { key: 1, split: 2, error: 'too long', row: '{"id":1,"name":"x"}' },
+    { key: 2, split: 0, error: '', row: '{}' },
+  ])
+})
+
 test('executors that report no or partial metrics never break the run pages', async () => {
   const { metricNumber, ratePoints, stageList } = await sourceModule('../../metaforge-web/src/model/workflow-metrics.ts')
   // An executor without metrics (SeaTunnel), an old record, and a partial or malformed report.

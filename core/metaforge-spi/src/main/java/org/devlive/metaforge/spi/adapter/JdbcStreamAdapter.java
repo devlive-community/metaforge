@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLRecoverableException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -209,7 +210,7 @@ public final class JdbcStreamAdapter
                 this.transactional = false;
             }
 
-            String sql = buildInsertTemplate(database, table, columns);
+            String sql = buildInsertTemplate(identifierQuote(connection), database, table, columns);
             try {
                 this.statement = connection.prepareStatement(sql);
             }
@@ -243,6 +244,8 @@ public final class JdbcStreamAdapter
                 }
             }
             catch (SQLException ex) {
+                // Rows bound so far must not leak into the caller's next attempt.
+                discardFailedBatch();
                 throw new IllegalStateException("Add batch row failed: " + ex.getMessage(), ex);
             }
         }
@@ -258,6 +261,27 @@ public final class JdbcStreamAdapter
             }
             catch (SQLException ex) {
                 throw new IllegalStateException("Flush batch failed: " + ex.getMessage(), ex);
+            }
+        }
+
+        /**
+         * Transactions roll back; a ClickHouse INSERT is parsed before it is written, so a rejected
+         * one writes nothing. Other engines without transactions may keep part of a failed batch.
+         */
+        @Override
+        public boolean failedWritesLeaveNoRows()
+        {
+            return transactional || clickHouse();
+        }
+
+        private boolean clickHouse()
+        {
+            try {
+                String product = connection.getMetaData().getDatabaseProductName();
+                return product != null && product.toLowerCase(java.util.Locale.ROOT).contains("clickhouse");
+            }
+            catch (SQLException | RuntimeException ex) {
+                return false;
             }
         }
 
@@ -309,6 +333,11 @@ public final class JdbcStreamAdapter
             catch (SQLException ex) {
                 discardFailedBatch();
                 throw ex;
+            }
+            catch (AssertionError ex) {
+                // pgjdbc reports a connection lost during executeBatch with an AssertionError.
+                discardFailedBatch();
+                throw new SQLRecoverableException(ex.getMessage(), "08003", ex);
             }
             written += pending;
             pending = 0;
@@ -370,19 +399,30 @@ public final class JdbcStreamAdapter
         }
     }
 
-    private static String buildInsertTemplate(String database, String table, List<String> columns)
+    /** The target's identifier quote: a double quote on PostgreSQL and most engines, a backtick on MySQL and ClickHouse. */
+    private static String identifierQuote(Connection connection)
+    {
+        try {
+            return connection.getMetaData().getIdentifierQuoteString().trim();
+        }
+        catch (SQLException | RuntimeException ex) {
+            return "`";
+        }
+    }
+
+    private static String buildInsertTemplate(String quote, String database, String table, List<String> columns)
     {
         StringBuilder sb = new StringBuilder();
         sb.append("INSERT INTO ");
         if (database != null && !database.isEmpty()) {
-            sb.append('`').append(database).append("`.");
+            sb.append(quote).append(database).append(quote).append('.');
         }
-        sb.append('`').append(table).append("` (");
+        sb.append(quote).append(table).append(quote).append(" (");
         for (int i = 0; i < columns.size(); i++) {
             if (i > 0) {
                 sb.append(", ");
             }
-            sb.append('`').append(columns.get(i)).append('`');
+            sb.append(quote).append(columns.get(i)).append(quote);
         }
         sb.append(") VALUES (");
         for (int i = 0; i < columns.size(); i++) {

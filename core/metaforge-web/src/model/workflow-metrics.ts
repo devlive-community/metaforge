@@ -11,7 +11,10 @@ export interface WorkflowMetricsSnapshot {
   readRowsPerSecond?: number; writeRowsPerSecond?: number; readBytesPerSecond?: number; writeBytesPerSecond?: number
   avgReadRowsPerSecond?: number; avgWriteRowsPerSecond?: number; peakWriteRowsPerSecond?: number
   batchesCommitted?: number; avgBatchMs?: number; channels?: number; queueDepth?: number; queueCapacity?: number
-  readerWaitMs?: number; writerWaitMs?: number; throttleWaitMs?: number; bottleneck?: string
+  batchRetries?: number; readerWaitMs?: number; writerWaitMs?: number; throttleWaitMs?: number; bottleneck?: string
+  resumable?: boolean; splitStrategy?: string; splitColumn?: string | null
+  splits?: { id: number; range: string; state: string; channel: number; rowsRead: number; rowsWritten: number; elapsedMs: number; retries?: number; watermark?: string | null }[]
+  dirtySamples?: { split: number; error: string; row: Record<string, unknown> }[]
   stages?: { name: string; state: string; startedAt?: number; elapsedMs: number }[]
   series?: { at: number; readRowsPerSecond: number; writeRowsPerSecond: number }[]
 }
@@ -38,6 +41,7 @@ export const WORKFLOW_METRICS: Record<string, { group: WorkflowMetricGroup; form
   readBytesPerSecond: { group: 'throughput', format: 'bytesRate' },
   writeBytesPerSecond: { group: 'throughput', format: 'bytesRate' },
   batchesCommitted: { group: 'pipeline', format: 'count' },
+  batchRetries: { group: 'pipeline', format: 'count' },
   avgBatchMs: { group: 'pipeline', format: 'ms' },
   channels: { group: 'pipeline', format: 'count' },
   queue: { group: 'pipeline', format: 'queue' },
@@ -47,7 +51,7 @@ export const WORKFLOW_METRICS: Record<string, { group: WorkflowMetricGroup; form
   bottleneck: { group: 'pipeline', format: 'bottleneck' },
 }
 /** Declared metrics drawn as charts rather than cards. */
-export const WORKFLOW_METRIC_CHARTS = ['stages', 'series'] as const
+export const WORKFLOW_METRIC_CHARTS = ['stages', 'series', 'splits', 'dirtySamples'] as const
 export const WORKFLOW_METRIC_GROUPS: WorkflowMetricGroup[] = ['volume', 'throughput', 'pipeline']
 
 const units = ['B', 'KB', 'MB', 'GB', 'TB']
@@ -107,6 +111,22 @@ export function ratePoints(metrics: WorkflowMetricsSnapshot | undefined | null):
     const at = finite(point?.at)
     return at === undefined ? [] : [{ at, read: Math.max(0, finite(point.readRowsPerSecond) ?? 0), write: Math.max(0, finite(point.writeRowsPerSecond) ?? 0) }]
   }).sort((left, right) => left.at - right.at)
+}
+/** Splits with an id and every count present; malformed entries are dropped. */
+export function splitList(metrics: WorkflowMetricsSnapshot | undefined | null) {
+  const splits = Array.isArray(metrics?.splits) ? metrics!.splits : []
+  return splits.flatMap(split => finite(split?.id) === undefined ? [] : [{
+    id: split.id, range: typeof split.range === 'string' ? split.range : '', state: typeof split.state === 'string' ? split.state : 'PENDING',
+    channel: Math.max(0, finite(split.channel) ?? 0), rowsRead: Math.max(0, finite(split.rowsRead) ?? 0), rowsWritten: Math.max(0, finite(split.rowsWritten) ?? 0),
+    elapsedMs: Math.max(0, finite(split.elapsedMs) ?? 0), retries: Math.max(0, finite(split.retries) ?? 0),
+  }])
+}
+/** Rejected-row samples with the row shown as one line of JSON; malformed entries are dropped. */
+export function dirtyList(metrics: WorkflowMetricsSnapshot | undefined | null) {
+  const samples = Array.isArray(metrics?.dirtySamples) ? metrics!.dirtySamples : []
+  return samples.flatMap((sample, index) => !sample || typeof sample !== 'object' ? [] : [{
+    key: index, split: finite(sample.split) ?? 0, error: typeof sample.error === 'string' ? sample.error : '', row: JSON.stringify(sample.row ?? {}),
+  }])
 }
 /** Stages with a name, a state and a non-negative duration; malformed entries are dropped. */
 export function stageList(metrics: WorkflowMetricsSnapshot | undefined | null): { name: string; state: string; elapsedMs: number }[] {

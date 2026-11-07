@@ -101,6 +101,24 @@ export class DatasetService
         return new HttpUtils().put(`${ DEFAULT_PATH }/history/stop/${ id }`)
     }
 
+    /** Pause a running sync; only a sync split by a key column can pause. */
+    pauseHistory(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ DEFAULT_PATH }/history/pause/${ id }`)
+    }
+
+    /** Resume a paused sync from its checkpoint. */
+    resumeHistory(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ DEFAULT_PATH }/history/resume/${ id }`)
+    }
+
+    /** Run a finished sync again from its checkpoint, when that writes nothing twice. */
+    retryHistory(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ DEFAULT_PATH }/history/retry/${ id }`)
+    }
+
     /**
      * Live metrics, state and transitions of one sync; the final result once it has finished.
      *

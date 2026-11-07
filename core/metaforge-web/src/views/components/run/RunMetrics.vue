@@ -2,7 +2,8 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import EChart from '@/views/components/visual/EChart.vue'
-import { duration, metricNumber, metricText, ratePoints, type WorkflowMetricsSnapshot } from '@/model/workflow-metrics'
+import { dirtyList, duration, metricNumber, metricText, ratePoints, splitList, type WorkflowMetricsSnapshot } from '@/model/workflow-metrics'
+import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 /**
  * The metrics an executor declared for its runs, drawn as charts: progress, read-versus-written
  * volumes, the rate trend with its average and peak, and the reader/writer pipeline. A chart only
@@ -111,9 +112,30 @@ const trendChart = computed(() => {
 })
 /** Small figures beside a chart: only declared metrics, in the given order. */
 const chips = (keys: string[]) => keys.filter(key => has(key)).map(key => ({ key, label: label(key), value: text(key) }))
-const volumeChips = computed(() => chips(['totalRows', 'etaSeconds']))
+const volumeChips = computed(() => chips(['totalRows', 'etaSeconds', 'rowsSkipped', 'rowsFailed']))
 const rateChips = computed(() => chips(['readRowsPerSecond', 'writeRowsPerSecond', 'avgWriteRowsPerSecond', 'peakWriteRowsPerSecond', 'readBytesPerSecond', 'writeBytesPerSecond']))
-const pipelineChips = computed(() => chips(['batchesCommitted', 'avgBatchMs', 'channels']))
+const pipelineChips = computed(() => chips(['batchesCommitted', 'batchRetries', 'avgBatchMs', 'channels', 'throttleWaitMs']))
+// Splits: only worth a table when the run really split the query; rejected rows only when there are any.
+const splits = computed(() => has('splits') ? splitList(props.metrics) : [])
+const splitsDone = computed(() => splits.value.filter(split => split.state === 'DONE').length)
+const splitColumns = computed(() => [
+  { title: t('workflow.studio.split.id'), dataIndex: 'id', key: 'id' },
+  { title: t('workflow.studio.split.range'), dataIndex: 'range', key: 'range', width: 260, ellipsis: true },
+  { title: t('common.state'), dataIndex: 'state', key: 'state' },
+  { title: t('workflow.studio.split.channel'), dataIndex: 'channel', key: 'channel' },
+  { title: label('rowsRead'), dataIndex: 'rowsRead', key: 'rowsRead' },
+  { title: label('rowsWritten'), dataIndex: 'rowsWritten', key: 'rowsWritten' },
+  { title: label('batchRetries'), dataIndex: 'retries', key: 'retries' },
+  { title: t('workflow.studio.duration'), dataIndex: 'elapsedMs', key: 'elapsedMs' },
+])
+const splitVariant = (state: string) => state === 'DONE' ? 'success' : state === 'FAILED' ? 'danger' : state === 'RUNNING' ? 'primary' : 'default'
+const stageState = (state: string) => te('workflow.studio.stageState.' + state) ? t('workflow.studio.stageState.' + state) : state
+const dirty = computed(() => has('dirtySamples') ? dirtyList(props.metrics) : [])
+const dirtyColumns = computed(() => [
+  { title: t('workflow.studio.split.id'), dataIndex: 'split', key: 'split' },
+  { title: t('workflow.studio.dirty.error'), dataIndex: 'error', key: 'error', width: 320, ellipsis: true },
+  { title: t('workflow.studio.dirty.row'), dataIndex: 'row', key: 'row', width: 420, ellipsis: true },
+])
 const bottleneck = computed(() => has('bottleneck') && typeof props.metrics?.bottleneck === 'string' ? props.metrics.bottleneck : undefined)
 const card = computed(() => props.compact ? 'rounded-mf-md border border-line bg-surface p-3' : 'rounded-mf-lg border border-line bg-surface p-5')
 const title = computed(() => props.compact ? 'mb-2 text-xs font-semibold text-content-secondary' : 'mb-3 text-sm font-semibold text-content')
@@ -153,7 +175,40 @@ const chartHeight = computed(() => props.compact ? 'h-28' : 'h-36')
       <div class="grid items-center gap-4" :class="compact ? 'grid-cols-1 md:grid-cols-[160px_minmax(0,1fr)_minmax(0,1fr)]' : 'grid-cols-1 md:grid-cols-[200px_minmax(0,1fr)_minmax(0,1fr)]'">
         <EChart v-if="has('queue')" :class="chartHeight" :option="queueChart"/>
         <div v-if="has('readerWaitMs', 'writerWaitMs')" class="min-w-0"><p class="mb-1 text-[11px] text-content-tertiary">{{ $t('workflow.studio.metricWaits') }}</p><EChart :class="compact ? 'h-20' : 'h-24'" :option="waitChart"/></div>
-        <dl v-if="pipelineChips.length" class="grid grid-cols-[repeat(auto-fill,minmax(110px,1fr))] gap-2 text-xs"><div v-for="chip in pipelineChips" :key="chip.key" class="min-w-0 rounded-mf-md bg-surface-hover px-2.5 py-1.5"><dt class="truncate text-content-tertiary">{{ chip.label }}</dt><dd class="truncate font-medium text-content tabular-nums">{{ chip.value }}</dd></div></dl>
+        <dl v-if="pipelineChips.length" class="grid grid-cols-[repeat(auto-fill,minmax(120px,1fr))] gap-2 text-xs"><div v-for="chip in pipelineChips" :key="chip.key" class="min-w-0 rounded-mf-md bg-surface-hover px-2.5 py-1.5"><dt class="truncate text-content-tertiary">{{ chip.label }}</dt><dd class="truncate font-medium text-content tabular-nums">{{ chip.value }}</dd></div></dl>
+      </div>
+    </section>
+    <!-- Splits: how the query was divided and how far each part got -->
+    <section v-if="splits.length > 1" :class="[card, compact ? 'md:col-span-2 xl:col-span-4' : 'lg:col-span-2 xl:col-span-4']">
+      <div class="flex flex-wrap items-center gap-2" :class="compact ? 'mb-2' : 'mb-3'">
+        <h3 class="m-0" :class="title.replace(/mb-\d/, '')">{{ $t('workflow.studio.split.title') }}</h3>
+        <MfTag size="sm">{{ splitsDone }} / {{ splits.length }}</MfTag>
+        <MfTag v-if="metrics.splitColumn" size="sm">{{ $t('workflow.studio.split.column') }} · {{ metrics.splitColumn }}</MfTag>
+        <MfTag size="sm" :variant="metrics.resumable ? 'primary' : 'default'">{{ metrics.resumable ? $t('workflow.studio.split.resumable') : $t('workflow.studio.split.notResumable') }}</MfTag>
+      </div>
+      <div class="max-h-80 overflow-auto [&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-20">
+        <MfTable :columns="splitColumns" :data-source="splits" row-key="id" density="compact">
+          <template #cell-range="{ record }"><EllipsisCell :text="String(record.range)"/></template>
+          <template #cell-state="{ record }"><MfTag size="sm" :variant="splitVariant(String(record.state))">{{ stageState(String(record.state)) }}</MfTag></template>
+          <template #cell-channel="{ record }">{{ record.channel || '—' }}</template>
+          <template #cell-rowsRead="{ record }"><span class="tabular-nums">{{ count(Number(record.rowsRead)) }}</span></template>
+          <template #cell-rowsWritten="{ record }"><span class="tabular-nums">{{ count(Number(record.rowsWritten)) }}</span></template>
+          <template #cell-retries="{ record }"><span class="tabular-nums">{{ count(Number(record.retries)) }}</span></template>
+          <template #cell-elapsedMs="{ record }"><span class="tabular-nums">{{ ms(Number(record.elapsedMs)) }}</span></template>
+        </MfTable>
+      </div>
+    </section>
+    <!-- Rejected rows: the first samples; all of them are in the task's dirty file -->
+    <section v-if="dirty.length" :class="[card, compact ? 'md:col-span-2 xl:col-span-4' : 'lg:col-span-2 xl:col-span-4']">
+      <div class="flex flex-wrap items-center gap-2" :class="compact ? 'mb-2' : 'mb-3'">
+        <h3 class="m-0" :class="title.replace(/mb-\d/, '')">{{ $t('workflow.studio.dirty.title') }}</h3>
+        <MfTag size="sm" variant="warning">{{ text('rowsSkipped') }}</MfTag>
+      </div>
+      <div class="max-h-80 overflow-auto [&_thead_th]:sticky [&_thead_th]:top-0 [&_thead_th]:z-20">
+        <MfTable :columns="dirtyColumns" :data-source="dirty" row-key="key" density="compact">
+          <template #cell-error="{ record }"><EllipsisCell :text="String(record.error)"/></template>
+          <template #cell-row="{ record }"><EllipsisCell :text="String(record.row)"/></template>
+        </MfTable>
       </div>
     </section>
   </div>

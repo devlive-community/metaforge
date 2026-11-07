@@ -22,7 +22,8 @@ internal object MetaForgeWorkflowCompiler
     /** 可按工作流覆盖的执行器配置 / executor options a workflow may override */
     private val SETTINGS = setOf(
         "fetchSize", "batchSize", "queueCapacity", "preCount",
-        "concurrency", "splitStrategy", "splitColumn", "splitCount", "maxRowsPerSecond", "maxBytesPerSecond"
+        "concurrency", "splitStrategy", "splitColumn", "splitCount", "maxRowsPerSecond", "maxBytesPerSecond",
+        "maxErrorRows", "writeRetries", "writeRetryBackoffMs"
     )
 
     fun compile(plan: WorkflowPlan): ExecutorRequest

@@ -14,6 +14,18 @@ data class ExecutorResponse(var timeout: Boolean = false,
     /** Additive property: keep existing plugin constructor/copy signatures compatible. */
     var preview: List<Map<String, Any?>>? = null
 
+    /**
+     * 未完成时可用于续传的断点；为空表示不能精确续传（再次运行可能重复写入）。附加属性。
+     * Checkpoint to resume an unfinished run from; null when it cannot resume exactly. Additive property.
+     */
+    var checkpoint: String? = null
+
+    /**
+     * 失败是暂时性的（如断连），且再次运行不会重复写入。附加属性。
+     * The failure was transient (a lost connection, say) and running again writes nothing twice. Additive property.
+     */
+    var retryable: Boolean = false
+
     constructor(timeout: Boolean = false,
                 successful: Boolean = false,
                 state: RunState? = null,

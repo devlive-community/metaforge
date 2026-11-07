@@ -41,6 +41,12 @@ data class ExecutorRequest @JvmOverloads constructor(
      */
     var transforms: List<ExecutorConfigure> = emptyList()
 
+    /**
+     * 上次运行留下的断点，非空时从断点续传。内容由执行器定义。附加属性，保持构造签名兼容。
+     * Checkpoint of an earlier run to resume from; its content belongs to the executor. Additive property.
+     */
+    var checkpoint: String? = null
+
     fun transformChain(): List<ExecutorConfigure> = transforms.ifEmpty { listOfNotNull(transform) }
 
     /** 便捷构造：仅指定 workHome 与源/汇，其余用默认值。主要给测试和简单调用使用。 */

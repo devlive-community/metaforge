@@ -74,4 +74,4 @@ export interface WorkflowRun {
   metrics?: WorkflowMetricsSnapshot
 }
 export const workflowStateVariant = (state?: string): 'success' | 'danger' | 'primary' | 'default' =>
-  state === 'SUCCESS' ? 'success' : ['FAILURE', 'TIMEOUT'].includes(state || '') ? 'danger' : state === 'RUNNING' ? 'primary' : 'default'
+  state === 'SUCCESS' ? 'success' : ['FAILURE', 'TIMEOUT'].includes(state || '') ? 'danger' : ['RUNNING', 'RETRYING', 'PAUSING'].includes(state || '') ? 'primary' : 'default'

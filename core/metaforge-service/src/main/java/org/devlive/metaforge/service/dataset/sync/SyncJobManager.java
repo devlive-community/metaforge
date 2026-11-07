@@ -99,7 +99,7 @@ public class SyncJobManager
         SyncJob job;
         try {
             DatasetHistoryEntity history = historyFactory.get();
-            job = new SyncJob(this, history);
+            job = new SyncJob(this, history, body);
             jobs.put(job.getHistoryId(), job);
             activeByDataset.put(datasetId, job.getHistoryId());
             job.recordTransition(new SyncTransition(null, history.getState(), System.currentTimeMillis(), null));
@@ -110,13 +110,69 @@ public class SyncJobManager
         }
         transition(job, RunState.QUEUE, null);
         resizePool();
-        pool.execute(() -> run(job, body));
+        pool.execute(() -> run(job));
         return Optional.of(job);
     }
 
     public Optional<SyncJob> find(Long historyId)
     {
         return Optional.ofNullable(historyId == null ? null : jobs.get(historyId));
+    }
+
+    /**
+     * 继续一个已暂停的同步：回到队列，轮到时从断点续传。
+     * Resume a paused sync: back into the queue, continuing from its checkpoint when its turn comes.
+     */
+    public boolean resume(SyncJob job)
+    {
+        if (job.getState() != RunState.PAUSED || !transition(job, RunState.QUEUE, null)) {
+            return false;
+        }
+        resizePool();
+        pool.execute(() -> run(job));
+        return true;
+    }
+
+    /**
+     * 让已结束的同步再次运行：同一条历史，尝试次数加一，有断点时从断点续传。数据集已有未结束的同步时返回 empty。
+     * Run a finished sync again on the same history row, one attempt up, from its checkpoint if it has one.
+     * Returns empty while the dataset has an unfinished sync.
+     */
+    public Optional<SyncJob> retry(DatasetHistoryEntity history, Consumer<SyncJob> body)
+    {
+        Long datasetId = history.getDatasetId();
+        if (activeByDataset.putIfAbsent(datasetId, history.getId()) != null) {
+            return Optional.empty();
+        }
+        SyncJob job = new SyncJob(this, history, body);
+        readTransitions(history.getTransitions()).forEach(job::recordTransition);
+        jobs.put(history.getId(), job);
+        job.update(row -> {
+            row.setAttempt(attemptOf(row) + 1);
+            row.setMessage(null);
+        });
+        transition(job, RunState.QUEUE, null);
+        resizePool();
+        pool.execute(() -> run(job));
+        return Optional.of(job);
+    }
+
+    /**
+     * 已结束的同步能否再次运行而不重复写入：有精确断点，或确认没有写入过任何行。异常中断时已写行数未必是最新的，
+     * 只认断点。
+     * A finished sync may run again only with an exact checkpoint or when it certainly wrote nothing. After
+     * a crash the saved row count may be stale, so only a checkpoint counts.
+     */
+    public static boolean canRetry(DatasetHistoryEntity history)
+    {
+        RunState state = history.getState();
+        if (state == null || !RunStateMachine.canTransition(state, RunState.QUEUE) || !RunStateMachine.isTerminal(state)) {
+            return false;
+        }
+        if (history.getCheckpoint() != null) {
+            return true;
+        }
+        return state != RunState.INTERRUPTED && (history.getRowsWritten() == null || history.getRowsWritten() == 0);
     }
 
     /** 该数据集是否有排队或运行中的同步 / whether the dataset has a queued or running sync */
@@ -126,19 +182,19 @@ public class SyncJobManager
     }
 
     /**
-     * 取消尚未开始的同步（CREATED / QUEUE），直接进入 STOPPED 并释放数据集。已开始的返回 false，
+     * 取消没有在运行的同步（CREATED / QUEUE / PAUSED），直接进入 STOPPED 并释放数据集。运行中的返回 false，
      * 由调用方请求执行器停止。
      *
-     * Cancel a sync that has not started yet; false when it already runs and the executor must stop it.
+     * Cancel a sync that is not running (queued or paused); false when the executor must stop it.
      */
     public boolean cancelQueued(SyncJob job)
     {
         synchronized (job) {
             RunState state = job.getState();
-            if (state != RunState.CREATED && state != RunState.QUEUE) {
+            if (state != RunState.CREATED && state != RunState.QUEUE && state != RunState.PAUSED) {
                 return false;
             }
-            if (!transition(job, RunState.STOPPED, "Cancelled before it started")) {
+            if (!transition(job, RunState.STOPPED, state == RunState.PAUSED ? "Cancelled while paused" : "Cancelled before it started")) {
                 return false;
             }
         }
@@ -185,12 +241,12 @@ public class SyncJobManager
             DatasetHistoryEntity history = job.history();
             synchronized (job) {
                 return Optional.of(new SyncMetricsView(historyId, history.getState(), attemptOf(history), true,
-                        history.getMessage(), job.getMetrics(), job.getTransitions()));
+                        history.getMessage(), job.getMetrics(), job.getTransitions(), canRetry(history)));
             }
         }
         return historyRepository.findById(historyId)
                 .map(history -> new SyncMetricsView(historyId, history.getState(), attemptOf(history), false,
-                        history.getMessage(), readMetrics(history.getMetrics()), readTransitions(history.getTransitions())));
+                        history.getMessage(), readMetrics(history.getMetrics()), readTransitions(history.getTransitions()), canRetry(history)));
     }
 
     boolean transition(SyncJob job, RunState to, String message)
@@ -226,24 +282,27 @@ public class SyncJobManager
         }
     }
 
-    private void run(SyncJob job, Consumer<SyncJob> body)
+    private void run(SyncJob job)
     {
         if (!transition(job, RunState.RUNNING, null)) {
             // 排队期间已被取消 / cancelled while queued
             return;
         }
         try {
-            body.accept(job);
+            job.body().accept(job);
         }
         catch (Throwable e) {
             log.warn("Sync history [ {} ] failed", job.getHistoryId(), e);
             transition(job, RunState.FAILURE, e.getMessage());
         }
         finally {
-            if (!RunStateMachine.isTerminal(job.getState())) {
-                transition(job, RunState.FAILURE, "The sync ended without a final state");
+            // 已暂停的同步继续占着数据集，等继续或取消 / a paused sync keeps the dataset until it resumes or is cancelled
+            if (job.getState() != RunState.PAUSED) {
+                if (!RunStateMachine.isTerminal(job.getState())) {
+                    transition(job, RunState.FAILURE, "The sync ended without a final state");
+                }
+                finish(job);
             }
-            finish(job);
         }
     }
 
@@ -255,7 +314,11 @@ public class SyncJobManager
             if (metrics != null) {
                 applyMetrics(history, metrics);
             }
-            if (startedAt > 0) {
+            // 指标里的耗时不含暂停和排队 / the metrics' elapsed time excludes paused and queued time
+            if (metrics != null) {
+                history.setElapsed(metrics.getElapsedMs() / 1000);
+            }
+            else if (startedAt > 0) {
                 history.setElapsed((System.currentTimeMillis() - startedAt) / 1000);
             }
         });

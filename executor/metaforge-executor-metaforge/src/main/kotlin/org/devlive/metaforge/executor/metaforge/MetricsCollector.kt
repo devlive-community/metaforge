@@ -2,6 +2,7 @@ package org.devlive.metaforge.executor.metaforge
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.executor.configure.Bottleneck
+import org.devlive.metaforge.executor.configure.DirtyRow
 import org.devlive.metaforge.executor.configure.ExecutorMetrics
 import org.devlive.metaforge.executor.configure.MetricsSample
 import org.devlive.metaforge.executor.configure.SplitMetrics
@@ -23,12 +24,15 @@ import java.util.concurrent.atomic.LongAdder
 @SuppressFBWarnings(value = ["EI_EXPOSE_REP", "EI_EXPOSE_REP2", "BC_BAD_CAST_TO_ABSTRACT_COLLECTION"])
 class MetricsCollector(private val clock: () -> Long = System::nanoTime)
 {
-    private val startNanos: Long = clock()
+    private var startNanos: Long = clock()
 
     private val rowsRead = LongAdder()
     private val bytesRead = LongAdder()
     private val rowsWritten = LongAdder()
     private val bytesWritten = LongAdder()
+    private val rowsSkipped = LongAdder()
+    private val rowsFailed = LongAdder()
+    private val batchRetries = LongAdder()
     private val batches = LongAdder()
     private val batchNanos = LongAdder()
     private val readerWaitNanos = LongAdder()
@@ -46,6 +50,13 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
 
     @Volatile
     var queueCapacity: Int = 0
+
+    @Volatile
+    var resumable: Boolean = false
+
+    /** 被跳过的行的样本，由传输设置 / samples of skipped rows, set by the transfer */
+    @Volatile
+    var dirtySource: (() -> MutableList<DirtyRow>)? = null
 
     @Volatile
     var splitStrategy: String = "NONE"
@@ -83,6 +94,50 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
 
     val rowsWrittenCount: Long
         get() = rowsWritten.sum()
+
+    val rowsSkippedCount: Long
+        get() = rowsSkipped.sum()
+
+    val bytesWrittenCount: Long
+        get() = bytesWritten.sum()
+
+    val elapsedMillis: Long
+        get() = (clock() - startNanos) / 1_000_000
+
+    val total: Long
+        get() = totalRows
+
+    val source: TotalSource
+        get() = totalSource
+
+    /**
+     * 续传时恢复断点里的累计量：已提交的行算作已读，耗时接着算（不含暂停和排队的时间）。
+     * Restore the totals of a checkpoint when resuming: committed rows count as read, and the elapsed
+     * time continues without the time spent paused or queued.
+     */
+    fun restore(checkpoint: SyncCheckpoint)
+    {
+        rowsRead.add(checkpoint.rowsWritten + checkpoint.rowsSkipped)
+        bytesRead.add(checkpoint.bytesWritten)
+        rowsWritten.add(checkpoint.rowsWritten)
+        bytesWritten.add(checkpoint.bytesWritten)
+        rowsSkipped.add(checkpoint.rowsSkipped)
+        startNanos = clock() - checkpoint.elapsedMs * 1_000_000
+        setTotal(checkpoint.totalRows, checkpoint.totalSource)
+    }
+
+    /** 读出但被放弃的行，续传时会重新读取 / rows read but dropped; a resume reads them again */
+    fun undoRead(rows: Long, bytes: Long)
+    {
+        rowsRead.add(- rows)
+        bytesRead.add(- bytes)
+    }
+
+    fun recordSkipped() = rowsSkipped.increment()
+
+    fun recordFailed(rows: Long) = rowsFailed.add(rows)
+
+    fun recordBatchRetry() = batchRetries.increment()
 
     fun recordRead(bytes: Long)
     {
@@ -199,6 +254,8 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
         return ExecutorMetrics(
             rowsRead = point.read,
             rowsWritten = written,
+            rowsSkipped = rowsSkipped.sum(),
+            rowsFailed = rowsFailed.sum(),
             bytesRead = point.bytesRead,
             bytesWritten = point.bytesWritten,
             totalRows = total,
@@ -218,6 +275,7 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
             avgReadRowsPerSecond = if (elapsed > 0) point.read / elapsed else 0.0,
             avgWriteRowsPerSecond = if (elapsed > 0) written / elapsed else 0.0,
             peakWriteRowsPerSecond = peakWrite,
+            batchRetries = batchRetries.sum(),
             batchesCommitted = batchCount,
             avgBatchMs = if (batchCount > 0) batchNanos.sum() / 1e6 / batchCount else 0.0,
             channels = channels,
@@ -226,6 +284,8 @@ class MetricsCollector(private val clock: () -> Long = System::nanoTime)
             readerWaitMs = point.readerWait / 1_000_000,
             writerWaitMs = point.writerWait / 1_000_000,
             throttleWaitMs = point.throttleWait / 1_000_000,
+            resumable = resumable,
+            dirtySamples = dirtySource?.invoke() ?: mutableListOf(),
             splitStrategy = splitStrategy,
             splitColumn = splitColumn,
             splits = splits.toMutableList(),

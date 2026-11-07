@@ -5,11 +5,12 @@ import org.slf4j.Logger
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
-/** 取消原因：区分“用户主动停止”与“任务超时”，供 start() 映射成 STOPPED / TIMEOUT。 */
+/** 取消原因：供 start() 映射成 STOPPED / TIMEOUT / PAUSED。 */
 internal enum class CancelReason
 {
     USER,
-    TIMEOUT
+    TIMEOUT,
+    PAUSE
 }
 
 /**
@@ -23,7 +24,7 @@ internal class CancellationToken
 {
     private val cancelled: AtomicBoolean = AtomicBoolean(false)
 
-    /** 首个取消原因胜出（用户停止与超时若竞争，以先到者为准） */
+    /** 首个取消原因胜出（用户停止与超时若竞争，以先到者为准）；只有暂停可被随后的停止或超时取代 */
     @Volatile
     var reason: CancelReason? = null
         private set
@@ -33,7 +34,7 @@ internal class CancellationToken
 
     fun cancel(reason: CancelReason = CancelReason.USER)
     {
-        if (cancelled.compareAndSet(false, true))
+        if (cancelled.compareAndSet(false, true) || this.reason == CancelReason.PAUSE)
         {
             this.reason = reason
         }
@@ -65,6 +66,10 @@ internal class TaskHandle
 
     @Volatile
     private var cancelRequested: Boolean = false
+
+    /** 规划完成且可续传后才能暂停 / pausing needs a finished plan that can resume */
+    @Volatile
+    var pausable: Boolean = false
 
     @Volatile
     var taskLog: Logger? = null

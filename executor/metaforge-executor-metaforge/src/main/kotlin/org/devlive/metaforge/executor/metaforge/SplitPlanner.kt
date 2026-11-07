@@ -14,8 +14,26 @@ import java.time.LocalTime
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 
-/** 一个分片：一条可独立执行的查询，以及它范围的可读描述 / one independently runnable query and its range */
-class Split(val id: Int, val query: String, val range: String)
+/**
+ * 一个分片：一条可独立执行的查询和它范围的可读描述。
+ * [keyColumn] 不为空时可续传：分片内按键排序读取（NULL 分片只有一组，不需要排序）。
+ *
+ * One independently runnable query and its range. With a [keyColumn] it can resume: rows are read in
+ * key order (the NULL split is a single group and needs no order).
+ */
+class Split(val id: Int, val query: String, val range: String, val keyColumn: String? = null, val nullOnly: Boolean = false)
+{
+    /** 实际执行的查询，[watermark] 不为空时从它之后继续 / the query to run, continuing after [watermark] when given */
+    fun readQuery(watermark: String?): String
+    {
+        if (keyColumn == null || nullOnly)
+        {
+            return query
+        }
+        val resumed = if (watermark == null) query else "$query AND $keyColumn > $watermark"
+        return "$resumed ORDER BY $keyColumn"
+    }
+}
 
 /** 分片规划结果。strategy 为实际采用的方式 / the plan; strategy is what was actually applied */
 @SuppressFBWarnings(value = ["EI_EXPOSE_REP", "EI_EXPOSE_REP2"])
@@ -127,18 +145,18 @@ class SplitPlanner(
         val select = "SELECT * $derived WHERE"
         if (cuts.isEmpty())
         {
-            splits.add(Split(1, "$select $column IS NOT NULL", "IS NOT NULL"))
+            splits.add(Split(1, "$select $column IS NOT NULL", "IS NOT NULL", column))
         }
         else
         {
-            splits.add(Split(1, "$select $column < ${cuts[0]}", "< ${cuts[0]}"))
+            splits.add(Split(1, "$select $column < ${cuts[0]}", "< ${cuts[0]}", column))
             for (i in 1 until cuts.size)
             {
-                splits.add(Split(i + 1, "$select $column >= ${cuts[i - 1]} AND $column < ${cuts[i]}", "[${cuts[i - 1]}, ${cuts[i]})"))
+                splits.add(Split(i + 1, "$select $column >= ${cuts[i - 1]} AND $column < ${cuts[i]}", "[${cuts[i - 1]}, ${cuts[i]})", column))
             }
-            splits.add(Split(cuts.size + 1, "$select $column >= ${cuts.last()}", ">= ${cuts.last()}"))
+            splits.add(Split(cuts.size + 1, "$select $column >= ${cuts.last()}", ">= ${cuts.last()}", column))
         }
-        splits.add(Split(splits.size + 1, "$select $column IS NULL", "IS NULL"))
+        splits.add(Split(splits.size + 1, "$select $column IS NULL", "IS NULL", column, true))
         taskLog.info("Planned {} splits on '{}' ({} .. {})", splits.size, column, low, high)
         return SplitPlan(SplitPlan.RANGE, column, splits)
     }

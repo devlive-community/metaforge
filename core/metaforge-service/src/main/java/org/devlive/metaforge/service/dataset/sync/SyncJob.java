@@ -24,15 +24,17 @@ public class SyncJob
     private final DatasetHistoryEntity history;
     private final Long datasetId;
     private final List<SyncTransition> transitions = new ArrayList<>();
+    private final Consumer<SyncJob> body;
 
     private volatile ExecutorMetrics metrics;
     private volatile long startedAt;
     private long lastPersistAt;
 
-    SyncJob(SyncJobManager manager, DatasetHistoryEntity history)
+    SyncJob(SyncJobManager manager, DatasetHistoryEntity history, Consumer<SyncJob> body)
     {
         this.manager = manager;
         this.history = history;
+        this.body = body;
         this.datasetId = history.getDatasetId();
     }
 
@@ -49,6 +51,29 @@ public class SyncJob
     public synchronized RunState getState()
     {
         return history.getState();
+    }
+
+    /** 续传用的断点，没有则为 null / the checkpoint to resume from, null without one */
+    public synchronized String getCheckpoint()
+    {
+        return history.getCheckpoint();
+    }
+
+    /** 首次运行前为 null，之后沿用同一任务名 / null before the first run; later runs keep the task name */
+    public synchronized String getTaskName()
+    {
+        return history.getTaskName();
+    }
+
+    /** 首次运行时确定的配置 JSON，续传沿用 / the configuration JSON fixed by the first run, kept by later runs */
+    public synchronized String getExecutorConfigure()
+    {
+        return history.getExecutorConfigure();
+    }
+
+    Consumer<SyncJob> body()
+    {
+        return body;
     }
 
     public ExecutorMetrics getMetrics()

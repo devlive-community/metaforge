@@ -1,5 +1,6 @@
 package org.devlive.metaforge.service.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -75,6 +76,11 @@ public class DatasetHistoryEntity
     /** 状态转换记录 JSON 数组 / state transitions as a JSON array */
     @Column("transitions")
     private String transitions;
+
+    /** 未完成时用于精确续传的断点（内容由执行器定义）/ checkpoint to resume an unfinished run exactly, owned by the executor */
+    @JsonIgnore
+    @Column("checkpoint")
+    private String checkpoint;
 
     @Column("task_name")
     private String taskName;
