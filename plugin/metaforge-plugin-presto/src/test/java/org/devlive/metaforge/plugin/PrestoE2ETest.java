@@ -50,7 +50,7 @@ public class PrestoE2ETest
     }
 
     @Test
-    public void schemasTablesAndColumnsAreListedAndRead()
+    public void schemasTablesAndColumnsAreListedAndRead() throws Exception
     {
         try (GenericContainer<?> container = new GenericContainer<>("prestodb/presto:" + version)
                 .withCopyToContainer(Transferable.of("connector.name=memory\n"), "/opt/presto-server/etc/catalog/memory.properties")
