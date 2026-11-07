@@ -79,7 +79,8 @@ public class DatasetHistoryEntity
 
     /** 未完成时用于精确续传的断点（内容由执行器定义）/ checkpoint to resume an unfinished run exactly, owned by the executor */
     @JsonIgnore
-    @Column("checkpoint")
+    // checkpoint itself is a T-SQL reserved word and breaks SQL Server reads.
+    @Column("checkpoint_payload")
     private String checkpoint;
 
     @Column("task_name")

@@ -8,7 +8,8 @@
 
     <changeSet id="core-0019-dataset-history-checkpoint" author="metaforge">
         <addColumn tableName="metaforge_dataset_history">
-            <column name="checkpoint" type="${text}"/>
+            <!-- checkpoint itself is a T-SQL reserved word and breaks SQL Server reads. -->
+            <column name="checkpoint_payload" type="${text}"/>
         </addColumn>
     </changeSet>
 </databaseChangeLog>
