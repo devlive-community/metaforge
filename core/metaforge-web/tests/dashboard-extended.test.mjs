@@ -74,7 +74,8 @@ test('new full-screen effects are bounded overlays with working paint functions'
   for(const kind of ['matrixGrid','searchBeams','floatingHexagons','digitalScan',
     'rainRipples','pollenDrift','orbitalTrails','floatingLanterns','sonarSweeps','shimmerCurtain','paperKites','inkBloom',
     'fallingFeathers','prismShards','concentricWaves','signalBars','isometricMesh','wovenRibbons',
-    'constellationMarks','spiralDust','horizonGlow','mosaicFade']){
+    'constellationMarks','spiralDust','horizonGlow','mosaicFade','streamlineFlow','bokehField','polygonBloom','glowRails',
+    'twilightBands','starFlares','paperStreamers','rasterSweep','wireframeTunnel','magneticArcs','grainDrift','waveParticles']){
     assert.equal(dashboardScreenEffectTool(kind),true)
     const widget=dashboardWidget(kind,kind,kind,'wall');assert.equal(widget.movable,false);assert.equal(widget.showCard,false)
     assert.ok(dashboardScreenEffectSettings(kind,{quantity:99999}).quantity<=200)

@@ -253,6 +253,10 @@ const toolGroups = [
     { kind: 'isometricMesh', icon: Grid2x2 }, { kind: 'wovenRibbons', icon: Waves },
     { kind: 'constellationMarks', icon: Star }, { kind: 'spiralDust', icon: Sparkles },
     { kind: 'horizonGlow', icon: Blend }, { kind: 'mosaicFade', icon: LayoutGrid },
+    { kind: 'streamlineFlow', icon: Waves }, { kind: 'bokehField', icon: Blend }, { kind: 'polygonBloom', icon: Shapes },
+    { kind: 'glowRails', icon: Activity }, { kind: 'twilightBands', icon: Blend }, { kind: 'starFlares', icon: Star },
+    { kind: 'paperStreamers', icon: PartyPopper }, { kind: 'rasterSweep', icon: Layers }, { kind: 'wireframeTunnel', icon: Frame },
+    { kind: 'magneticArcs', icon: Waves }, { kind: 'grainDrift', icon: Sparkles }, { kind: 'waveParticles', icon: Waves },
   ] },
 ] as const
 

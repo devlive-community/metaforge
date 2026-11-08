@@ -52,7 +52,9 @@ export const dashboardScreenEffectTools = ['snow', 'rain', 'stars', 'meteors', '
   'fog', 'smoke', 'clouds', 'sandstorm', 'embers', 'leaves', 'hearts', 'sparkles', 'lightning', 'fireworks', 'risingDigits', 'warpStars', 'oceanWaves', 'sunRays', 'matrixGrid', 'searchBeams', 'floatingHexagons', 'digitalScan', 'waterCaustics', 'lightTrails', 'pulseGrid', 'contourLines',
   'rainRipples', 'pollenDrift', 'orbitalTrails', 'floatingLanterns', 'sonarSweeps', 'shimmerCurtain', 'paperKites', 'inkBloom',
   'fallingFeathers', 'prismShards', 'concentricWaves', 'signalBars', 'isometricMesh', 'wovenRibbons',
-  'constellationMarks', 'spiralDust', 'horizonGlow', 'mosaicFade'] as const
+  'constellationMarks', 'spiralDust', 'horizonGlow', 'mosaicFade',
+  'streamlineFlow', 'bokehField', 'polygonBloom', 'glowRails', 'twilightBands', 'starFlares',
+  'paperStreamers', 'rasterSweep', 'wireframeTunnel', 'magneticArcs', 'grainDrift', 'waveParticles'] as const
 export type DashboardScreenEffectKind = typeof dashboardScreenEffectTools[number]
 export interface DashboardScreenEffectOptions {
   quantity: number
@@ -105,6 +107,18 @@ export const dashboardScreenEffectPresets: Record<DashboardScreenEffectKind, { q
   spiralDust: { quantity: 26, size: 31, color: '#DEAF75', maxQuantity: 65, maxSize: 110 },
   horizonGlow: { quantity: 10, size: 140, color: '#ECAB80', maxQuantity: 24, maxSize: 300 },
   mosaicFade: { quantity: 52, size: 18, color: '#7CA6E7', maxQuantity: 144, maxSize: 64 },
+  streamlineFlow: { quantity: 34, size: 42, color: '#5AD5CD', maxQuantity: 90, maxSize: 150 },
+  bokehField: { quantity: 24, size: 34, color: '#EEC78F', maxQuantity: 50, maxSize: 160 },
+  polygonBloom: { quantity: 22, size: 28, color: '#A69BEE', maxQuantity: 60, maxSize: 130 },
+  glowRails: { quantity: 20, size: 56, color: '#65CAFA', maxQuantity: 55, maxSize: 170 },
+  twilightBands: { quantity: 5, size: 82, color: '#CF9AF1', maxQuantity: 14, maxSize: 230 },
+  starFlares: { quantity: 38, size: 10, color: '#D7E4FF', maxQuantity: 100, maxSize: 55 },
+  paperStreamers: { quantity: 25, size: 14, color: '#F398B3', maxQuantity: 72, maxSize: 44 },
+  rasterSweep: { quantity: 5, size: 62, color: '#72C5DE', maxQuantity: 18, maxSize: 180 },
+  wireframeTunnel: { quantity: 12, size: 50, color: '#75A9F4', maxQuantity: 35, maxSize: 180 },
+  magneticArcs: { quantity: 18, size: 30, color: '#78D6B1', maxQuantity: 55, maxSize: 120 },
+  grainDrift: { quantity: 60, size: 2, color: '#D2D9E5', maxQuantity: 150, maxSize: 12 },
+  waveParticles: { quantity: 50, size: 30, color: '#80C6F8', maxQuantity: 145, maxSize: 115 },
 }
 export const dashboardAnimationEffects = [
   'none', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'zoomOut', 'dropIn', 'bounceIn', 'blurIn',
@@ -113,6 +127,8 @@ export const dashboardAnimationEffects = [
   'tiltIn', 'skewIn', 'verticalStretchIn', 'splitReveal', 'diamondReveal', 'focusPop', 'flipIn', 'pendulum', 'sway3d', 'slideDiagonal',
   'foldDown', 'foldUp', 'rotateScaleIn', 'curtainVertical', 'ellipseReveal', 'stripeReveal',
   'arcInLeft', 'arcInRight', 'floatTilt', 'stretchPulse', 'edgePulse', 'colorCycle',
+  'hingeLeft', 'hingeRight', 'frameInset', 'cornerSweep', 'rollUp', 'rollDown',
+  'compressRelease', 'stepBounce', 'stretchTwist', 'softDrift', 'opacityBreath', 'slideFocus',
 ] as const
 export interface DashboardAnimation {
   effect: typeof dashboardAnimationEffects[number]

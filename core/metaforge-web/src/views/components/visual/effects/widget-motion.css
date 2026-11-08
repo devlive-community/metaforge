@@ -223,6 +223,65 @@
   42% { filter: hue-rotate(38deg) saturate(1.22); }
   73% { filter: hue-rotate(-24deg) saturate(1.08); }
 }
+@keyframes mf-dashboard-hingeLeft {
+  from { opacity: 0; transform-origin: left center; transform: perspective(760px) rotateY(78deg); }
+  to { opacity: 1; transform-origin: left center; transform: perspective(760px) rotateY(0); }
+}
+@keyframes mf-dashboard-hingeRight {
+  from { opacity: 0; transform-origin: right center; transform: perspective(760px) rotateY(-78deg); }
+  to { opacity: 1; transform-origin: right center; transform: perspective(760px) rotateY(0); }
+}
+@keyframes mf-dashboard-frameInset {
+  from { clip-path: inset(34% 24% round 14px); opacity: 0; }
+  to { clip-path: inset(0 round 0); opacity: 1; }
+}
+@keyframes mf-dashboard-cornerSweep {
+  from { clip-path: polygon(0 0, 0 0, 0 0, 0 0, 0 0); }
+  50% { clip-path: polygon(0 0, 72% 0, 55% 39%, 30% 67%, 0 85%); }
+  to { clip-path: polygon(0 0, 100% 0, 100% 100%, 100% 100%, 0 100%); }
+}
+@keyframes mf-dashboard-rollUp {
+  from { opacity: 0; transform: translateY(38px) rotate(14deg) scale(.93); }
+  70% { opacity: 1; transform: translateY(-4px) rotate(-2deg) scale(1); }
+  to { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}
+@keyframes mf-dashboard-rollDown {
+  from { opacity: 0; transform: translateY(-38px) rotate(-14deg) scale(.93); }
+  70% { opacity: 1; transform: translateY(4px) rotate(2deg) scale(1); }
+  to { opacity: 1; transform: translateY(0) rotate(0) scale(1); }
+}
+@keyframes mf-dashboard-compressRelease {
+  0%, 100% { transform: scale(1); }
+  24% { transform: scale(.88, .94); }
+  53% { transform: scale(1.08, 1.04); }
+  76% { transform: scale(.98, .99); }
+}
+@keyframes mf-dashboard-stepBounce {
+  0%, 100% { transform: translateY(0); }
+  24% { transform: translateY(-10px); animation-timing-function: steps(2, end); }
+  52% { transform: translateY(0); }
+  74% { transform: translateY(-4px); }
+}
+@keyframes mf-dashboard-stretchTwist {
+  0%, 100% { transform: scale(1) rotate(0); }
+  34% { transform: scale(1.12, .92) rotate(-4deg); }
+  68% { transform: scale(.94, 1.07) rotate(3deg); }
+}
+@keyframes mf-dashboard-softDrift {
+  0%, 100% { transform: translate(0, 0); }
+  26% { transform: translate(8px, -4px); }
+  56% { transform: translate(1px, -7px); }
+  78% { transform: translate(-5px, -3px); }
+}
+@keyframes mf-dashboard-opacityBreath {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .68; }
+}
+@keyframes mf-dashboard-slideFocus {
+  from { opacity: 0; transform: translateX(24px); filter: blur(6px); }
+  72% { opacity: 1; transform: translateX(-2px); filter: blur(0); }
+  to { opacity: 1; transform: translateX(0); filter: blur(0); }
+}
 @media (prefers-reduced-motion: reduce) {
   .dashboard-widget-motion, .dashboard-widget-motion.motion-on-hover:hover, .dashboard-motion-preview { animation: none; }
 }
