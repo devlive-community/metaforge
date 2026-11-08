@@ -161,7 +161,9 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # The web tests are written and validated on the local node 22; node 20's
+          # test runner fails files on unhandled rejections they do not produce.
+          node-version: 22
           cache: pnpm
           cache-dependency-path: core/pnpm-lock.yaml
 
