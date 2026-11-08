@@ -124,7 +124,7 @@ const spec = computed<EChartsOption>(() => {
     ...(options.type === 'pictorialBar' ? { symbol: 'roundRect' } : {}),
     smooth: !geometry?.step && options.smooth, showSymbol: options.points, symbolSize: options.pointSize,
     lineStyle: { width: options.lineWidth, type: options.dashed ? 'dashed' : 'solid' },
-    areaStyle: geometry?.area || (geometry?.series === 'line' && options.fill) ? {
+    areaStyle: geometry?.area || (geometry?.series === 'line' && !geometry.stacked && options.fill) ? {
       opacity: options.opacity / 100,
       color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
         colorStops: [{ offset: 0, color: chartColors[index % chartColors.length] }, { offset: 1, color: 'transparent' }] }

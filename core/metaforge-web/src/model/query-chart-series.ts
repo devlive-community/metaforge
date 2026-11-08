@@ -194,7 +194,7 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
             tooltip: { show: false }, lineStyle: { opacity: 0 }, data: categories.map(label => left.get(label)?.value ?? null) },
           { type: 'line', stack: 'range', stackStrategy: 'all', name: fields[1], symbolSize: options.pointSize,
             dimensions: ['span', fields[0], fields[1]], encode: { y: 0, tooltip: [1, 2] },
-            areaStyle: { opacity: Math.max(.15, options.opacity / 100) }, data: ranges },
+            areaStyle: { opacity: options.opacity / 100 }, data: ranges },
         ] })
       }
       const seriesValues = (map: typeof left, data: Aggregated) => categories.map(label => {

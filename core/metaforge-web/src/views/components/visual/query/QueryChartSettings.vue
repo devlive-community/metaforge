@@ -61,6 +61,8 @@ const groups = computed(() => {
   const cartesian = !!geometry || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom',
     'waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'dualAxis'].includes(type)
   const line = geometry?.series === 'line'
+  const fillToggle = line && !geometry.area && !geometry.stacked
+  const fillOpacity = fillToggle || geometry?.area || type === 'rangeBand'
   const variableScale = geometry?.percentage || type === 'dualAxis' ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
   if (props.panel === 'axes') return [
     { title: 'xAxis', fields: [text('xTitle'), ...(props.timeCategory ? [select('dateFormat', ['short', 'full', 'time'])] : []),
@@ -77,7 +79,7 @@ const groups = computed(() => {
     ...(line || type === 'scatter' || type === 'bubble' ? [{ title: 'marks', fields: [
       ...(line ? [...(geometry?.step ? [] : [toggle('smooth')]), toggle('dashed'), number('lineWidth', 1, 6), toggle('points')] : []),
       number('pointSize', 1, 18)] }] : []),
-    { title: 'background', fields: [...(line && !geometry?.area ? [toggle('fill')] : []), ...(line ? [number('opacity', 0, 100)] : []), toggle('transparent')] }
+    { title: 'background', fields: [...(fillToggle ? [toggle('fill')] : []), ...(fillOpacity ? [number('opacity', 0, 100)] : []), toggle('transparent')] }
   ]
   if (props.panel === 'interaction') return [
     { title: 'tooltipSettings', fields: [select('tooltip', ['dimension', 'mark', 'off']), { key: 'tooltipTemplate', control: 'textarea', placeholder: '{x} · {series}: {value}' } as Field] },
