@@ -157,6 +157,10 @@ const toolGroups = [
     { kind: 'rankMovement', icon: ListOrdered }, { kind: 'shareMovement', icon: ChartNoAxesCombined },
     { kind: 'pairedDifference', icon: SlidersHorizontal }, { kind: 'comparisonDistribution', icon: Columns2 },
   ] },
+  { title: 'planningTools', icon: CalendarRange, items: [
+    { kind: 'taskBoard', icon: Columns2 }, { kind: 'planCalendar', icon: CalendarRange }, { kind: 'dueAgenda', icon: CalendarClock },
+    { kind: 'overdueAging', icon: Clock }, { kind: 'groupCompletion', icon: Gauge }, { kind: 'onTimeCompletion', icon: ClipboardCheck },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },

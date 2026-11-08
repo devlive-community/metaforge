@@ -18,8 +18,10 @@ export const dashboardTemporalTools = ['cumulativeTrend', 'rollingAverageTrend',
 export function dashboardTemporalTool(kind?: DashboardWidgetKind) { return dashboardTemporalTools.some(tool => tool === kind) }
 export const dashboardComparativeTools = ['metricCorrelation', 'metricQuadrants', 'rankMovement', 'shareMovement', 'pairedDifference', 'comparisonDistribution'] as const
 export function dashboardComparativeTool(kind?: DashboardWidgetKind) { return dashboardComparativeTools.some(tool => tool === kind) }
+export const dashboardPlanningTools = ['taskBoard', 'planCalendar', 'dueAgenda', 'overdueAging', 'groupCompletion', 'onTimeCompletion'] as const
+export function dashboardPlanningTool(kind?: DashboardWidgetKind) { return dashboardPlanningTools.some(tool => tool === kind) }
 export const dashboardAdvancedDataTools = ['metricTicker', 'metricComparison', 'metricTrend', 'bulletMetric', 'rankList', 'distributionList', 'statusGrid', 'recordCards', ...dashboardExtendedDataTools, ...dashboardMonitoringTools] as const
-const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools, ...dashboardAuditTools, ...dashboardTemporalTools, ...dashboardComparativeTools] as const
+const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools, ...dashboardAuditTools, ...dashboardTemporalTools, ...dashboardComparativeTools, ...dashboardPlanningTools] as const
 export type DashboardDataTool = typeof dataDisplays[number]
 export const dashboardExtendedContentTools = ['markdown', 'codeBlock', 'imageCompare', 'iconLinks', 'stepGuide', 'worldClock'] as const
 export const dashboardAdvancedContentTools = ['imageCarousel', 'imageGallery', 'announcement', 'textTicker', 'tabsContent', 'accordion', 'quote', 'embed', 'actionButton', 'tagCloud', ...dashboardExtendedContentTools] as const
@@ -157,6 +159,16 @@ export interface DashboardComparativeOptions {
   yThreshold: number | null
   minSamples: number
 }
+export interface DashboardPlanningOptions {
+  statusField: string
+  labelField: string
+  ownerField: string
+  groupField: string
+  completedField: string
+  doneValues: string
+  horizonDays: number
+  includeCompleted: boolean
+}
 export interface DashboardDecorationOptions { count: number; rotation: number; filled: boolean; opacity: number; animate: boolean }
 export const dashboardThresholdComparators = ['above', 'atLeast', 'below', 'atMost'] as const
 export interface DashboardOperationsOptions {
@@ -215,6 +227,7 @@ export interface DashboardWidget extends DashboardRect {
   auditOptions?: DashboardAuditOptions
   temporalOptions?: DashboardTemporalOptions
   comparativeOptions?: DashboardComparativeOptions
+  planningOptions?: DashboardPlanningOptions
   contentOptions?: DashboardContentOptions
   layoutOptions?: DashboardLayoutOptions
   decorationOptions?: DashboardDecorationOptions
@@ -334,7 +347,7 @@ export function dashboardWidget(id: string, kind: DashboardWidgetKind, name: str
   return {
     id, kind, name, description: '', x: 0, y: 0, w: 6, h: 4,
     text: '', image: '', url: '', target: 100, shape: 'rectangle', color: '', alignment: 'left', tone: 'info', clockDate: true,
-    refresh: 'saved', action: dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage' ? 'filter' : 'saved',
+    refresh: 'saved', action: dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage' ? 'filter' : 'saved',
     field: '', operation: ['metricGrid', 'metricComparison', 'comparisonTable'].includes(kind) ? 'sum' : 'count',
     padding: [10, 12, 10, 12], corners: mode === 'wall' ? [0, 0, 0, 0] : [12, 12, 12, 12], titleSize: 14, background: '',
     border: !['spacer', 'divider', 'verticalDivider', 'sectionDivider'].includes(kind),
@@ -638,6 +651,19 @@ export function dashboardComparativeSettings(value?: unknown): DashboardComparat
     minSamples: integer(raw.minSamples, 3, 2, 100),
   }
 }
+export function dashboardPlanningSettings(value?: unknown): DashboardPlanningOptions {
+  const raw = record(value) ?? {}
+  return {
+    statusField: text(raw.statusField).slice(0, 500),
+    labelField: text(raw.labelField).slice(0, 500),
+    ownerField: text(raw.ownerField).slice(0, 500),
+    groupField: text(raw.groupField).slice(0, 500),
+    completedField: text(raw.completedField).slice(0, 500),
+    doneValues: text(raw.doneValues, 'done, completed, closed, 已完成, 完成').slice(0, 400),
+    horizonDays: integer(raw.horizonDays, 14, 1, 90),
+    includeCompleted: raw.includeCompleted === true,
+  }
+}
 export function dashboardDecorationSettings(value?: unknown): DashboardDecorationOptions {
   const raw = record(value) ?? {}
   return { count: integer(raw.count, 6, 2, 24), rotation: integer(raw.rotation, 0, -180, 180), filled: raw.filled === true, animate: raw.animate !== false,
@@ -743,6 +769,7 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       auditOptions: dashboardAuditTool(kind) ? dashboardAuditSettings(item.auditOptions) : undefined,
       temporalOptions: dashboardTemporalTool(kind) ? dashboardTemporalSettings(item.temporalOptions) : undefined,
       comparativeOptions: dashboardComparativeTool(kind) ? dashboardComparativeSettings(item.comparativeOptions) : undefined,
+      planningOptions: dashboardPlanningTool(kind) ? dashboardPlanningSettings(item.planningOptions) : undefined,
       contentOptions: record(item.contentOptions) ? dashboardContentSettings(item.contentOptions) : undefined,
       layoutOptions: record(item.layoutOptions) ? dashboardLayoutSettings(item.layoutOptions) : widget.layoutOptions,
       decorationOptions: record(item.decorationOptions) ? dashboardDecorationSettings(item.decorationOptions) : undefined,
