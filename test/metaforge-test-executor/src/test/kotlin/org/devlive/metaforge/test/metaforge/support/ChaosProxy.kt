@@ -22,6 +22,10 @@ class ChaosProxy(private val host: String, private val targetPort: Int) : AutoCl
     @Volatile
     var down: Boolean = false
 
+    /** 当前正被转发的连接数 / the connections currently being forwarded */
+    val openConnections: Int
+        get() = sockets.size
+
     val port: Int
         get() = server.localPort
 

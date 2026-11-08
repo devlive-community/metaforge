@@ -363,15 +363,27 @@ class MetaForgeExecutorFaultE2ETest(private val sourceEngine: Engine, private va
         val rows = if (sourceEngine == Engine.CLICKHOUSE) 1_500_000 else ROWS
         sourceEngine.seed(rows, if (sourceEngine == Engine.POSTGRES) "'v' || {id}" else "concat('v', {id})")
         val service = MetaForgeExecutorService()
-        val request = request(split(mapOf("maxRowsPerSecond" to "15000")))
+        // writeRetries=0: the lost connection must surface as a retryable failure instead of
+        // being absorbed by the batch retry, which would just rewrite the batch on a new
+        // connection and let the run finish successfully.
+        val request = request(split(mapOf("maxRowsPerSecond" to "15000", "writeRetries" to "0")))
 
-        // Cut the proxy halfway through the rows: the pipeline's read-ahead is bounded, so at
-        // half the rows the source stream is still live and the drop lands inside the run. A
-        // fixed small threshold can be outrun on a fast runner, where the whole stream drains
-        // before the cut and the run succeeds instead of failing.
-        val failed = runAndAct(service, request, rows / 2L) {
-            sourceEngine.proxy.dropAll()
+        // Cut the proxy the moment the source connection is being forwarded: the executor
+        // materializes the whole source read before the throttled write, so any threshold
+        // keyed on the written rows lands after the read and changes nothing — while the
+        // forwarded connection is open, the cut breaks the read itself.
+        val result = AtomicReference<ExecutorResponse>()
+        val worker = Thread { result.set(service.start(request)) }
+        worker.start()
+        val deadline = System.currentTimeMillis() + 120_000
+        while (sourceEngine.proxy.openConnections == 0 && worker.isAlive && System.currentTimeMillis() < deadline) {
+            Thread.sleep(20)
         }
+        assertTrue("the run never connected through the source proxy", worker.isAlive || result.get() != null)
+        sourceEngine.proxy.dropAll()
+        worker.join(300_000)
+        assertFalse("the run did not end", worker.isAlive)
+        val failed = result.get()
 
         assertEquals(failed.message, RunState.FAILURE, failed.state)
         assertTrue("a lost connection is worth retrying: ${failed.message}", failed.retryable)
