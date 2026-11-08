@@ -80,7 +80,11 @@ export const dashboardScreenEffectPresets: Record<DashboardScreenEffectKind, { q
   pulseGrid: { quantity: 14, size: 26, color: '#56C8AB', maxQuantity: 26, maxSize: 60 },
   contourLines: { quantity: 10, size: 35, color: '#9BAFF6', maxQuantity: 24, maxSize: 120 },
 }
-export const dashboardAnimationEffects = ['none', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'rotate', 'pulse', 'bounce', 'float', 'shake', 'flip', 'glow'] as const
+export const dashboardAnimationEffects = [
+  'none', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'zoomOut', 'dropIn', 'bounceIn', 'blurIn',
+  'wipeLeft', 'wipeRight', 'wipeUp', 'wipeDown', 'circleReveal', 'stretchIn', 'rollIn', 'rotate', 'flip', 'flipX',
+  'pulse', 'heartbeat', 'bounce', 'float', 'shake', 'swing', 'rubberBand', 'wobble', 'jello', 'tada', 'glow', 'highlight',
+] as const
 export interface DashboardAnimation {
   effect: typeof dashboardAnimationEffects[number]
   duration: number

@@ -495,7 +495,8 @@
           <DashboardInspectorGroup v-if="widget && ['radarSweep','scanFrame','bezierConnector'].includes(widget.kind)" icon="appearance" :title="$t('dashboard.studio.internalMotion')"><label class="toggle-row">{{ $t('dashboard.studio.autoplay') }}<MfSwitch :model-value="decorationSettings.animate" @update:model-value="value => updateDecoration({ animate: value })"/></label></DashboardInspectorGroup>
           <DashboardInspectorGroup icon="appearance" :title="$t('dashboard.studio.widgetAnimation')">
             <MfFormItem name="animation.effect" :label="$t('dashboard.studio.animationType')">
-              <MfSelect :model-value="animation.effect" :options="animationOptions" @update:model-value="setAnimationEffect"/>
+              <MfSelect :model-value="animation.effect" :options="animationOptions" :aria-label="$t('dashboard.studio.animationType')"
+                        searchable @update:model-value="setAnimationEffect"/>
             </MfFormItem>
             <template v-if="animation.effect !== 'none'">
               <div class="grid grid-cols-2 gap-2">
@@ -511,7 +512,7 @@
                 <MfSelect :model-value="animation.easing" :options="choices('animationEasing', ['linear', 'ease-in', 'ease-out', 'ease-in-out'])" @update:model-value="setAnimationEasing"/>
               </MfFormItem>
               <label class="toggle-row">{{ $t('dashboard.studio.animationRepeat') }}<MfSwitch :model-value="animation.repeat" @update:model-value="updateAnimation({ repeat: $event })"/></label>
-              <MfButton size="sm" @click="emit('preview')"><Play :size="14"/>{{ $t('dashboard.studio.previewAnimation') }}</MfButton>
+              <MfButton size="sm" @click="previewWidgetAnimation"><Play :size="14"/>{{ $t('dashboard.studio.previewAnimation') }}</MfButton>
             </template>
             <p class="text-xs text-content-tertiary">{{ $t('dashboard.studio.animationHint') }}</p>
           </DashboardInspectorGroup>
@@ -577,7 +578,7 @@ const emit = defineEmits<{
   widget: [change: Partial<DashboardWidget>]; board: [change: Partial<DashboardBoard>]
   page: [change: Partial<Pick<DashboardDesign, 'name' | 'description'>>]; group: [change: Partial<DashboardRect>];
   ungroup: []; remove: []; save: []; preview: []; pin: []; close: []; children: [ids: string[]]; 'add-child': [kind: string]; 'select-child': [id: string]; detach: [];
-  'background-image': [mode: DashboardMode, url: string]
+  'background-image': [mode: DashboardMode, url: string]; 'preview-animation': [id: string]
 }>()
 const { t, locale } = useI18n()
 const tab = ref<string | number>('data')
@@ -719,9 +720,12 @@ const animation = computed(() => props.widget?.animation ?? dashboardAnimationDe
 const animationOptions = computed(() => dashboardAnimationEffects.map(value => ({ value, label: t('dashboard.studio.animationEffect.' + value) })))
 const animationNumbers = ['duration', 'delay'] as const
 function updateAnimation(change: Partial<DashboardAnimation>) { emit('widget', { animation: { ...animation.value, ...change } }) }
+function previewWidgetAnimation() { if (props.widget) emit('preview-animation', props.widget.id) }
 function setAnimationEffect(value: unknown) {
   const effect = dashboardAnimationEffects.find(effect => effect === value)
-  if (effect) updateAnimation({ effect })
+  if (!effect) return
+  if (effect !== animation.value.effect) updateAnimation({ effect })
+  previewWidgetAnimation()
 }
 function setAnimationTrigger(value: unknown) { if (value === 'load' || value === 'hover') updateAnimation({ trigger: value }) }
 function setAnimationEasing(value: unknown) {

@@ -7,13 +7,18 @@
 .dashboard-frame.is-editing::-webkit-scrollbar,
 .dashboard-frame.is-editing *::-webkit-scrollbar { display: none; }
 
-.dashboard-widget-motion {
+.dashboard-widget-motion, .dashboard-motion-preview {
   animation-name: var(--widget-motion-name);
   animation-duration: var(--widget-motion-duration);
   animation-delay: var(--widget-motion-delay);
   animation-iteration-count: var(--widget-motion-repeat);
   animation-timing-function: var(--widget-motion-easing);
   animation-fill-mode: both;
+}
+.dashboard-motion-preview {
+  animation-delay: 0s;
+  animation-iteration-count: 1;
+  animation-fill-mode: none;
 }
 .dashboard-widget-motion.motion-on-hover { animation-name: none; }
 .dashboard-widget-motion.motion-on-hover:hover { animation-name: var(--widget-motion-name); }
@@ -33,6 +38,98 @@
 @keyframes mf-dashboard-shake { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-5px); } 40%, 80% { transform: translateX(5px); } }
 @keyframes mf-dashboard-flip { from { transform: perspective(800px) rotateY(0); } to { transform: perspective(800px) rotateY(360deg); } }
 @keyframes mf-dashboard-glow { 0%, 100% { filter: drop-shadow(0 0 0 transparent); } 50% { filter: drop-shadow(0 0 10px var(--mf-color-primary)); } }
+@keyframes mf-dashboard-zoomOut {
+  from { opacity: 0; transform: scale(1.18); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes mf-dashboard-dropIn {
+  from { opacity: 0; transform: translateY(-36px); }
+  65% { opacity: 1; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes mf-dashboard-bounceIn {
+  from { opacity: 0; transform: scale(.65); }
+  55% { opacity: 1; transform: scale(1.08); }
+  75% { transform: scale(.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes mf-dashboard-blurIn {
+  from { opacity: 0; filter: blur(9px); }
+  to { opacity: 1; filter: blur(0); }
+}
+@keyframes mf-dashboard-wipeLeft {
+  from { clip-path: inset(0 0 0 100%); }
+  to { clip-path: inset(0); }
+}
+@keyframes mf-dashboard-wipeRight {
+  from { clip-path: inset(0 100% 0 0); }
+  to { clip-path: inset(0); }
+}
+@keyframes mf-dashboard-wipeUp {
+  from { clip-path: inset(100% 0 0 0); }
+  to { clip-path: inset(0); }
+}
+@keyframes mf-dashboard-wipeDown {
+  from { clip-path: inset(0 0 100% 0); }
+  to { clip-path: inset(0); }
+}
+@keyframes mf-dashboard-circleReveal {
+  from { clip-path: circle(0% at 50% 50%); }
+  to { clip-path: circle(75% at 50% 50%); }
+}
+@keyframes mf-dashboard-stretchIn {
+  from { opacity: 0; transform: scaleX(.7); }
+  to { opacity: 1; transform: scaleX(1); }
+}
+@keyframes mf-dashboard-rollIn {
+  from { opacity: 0; transform: translateX(-36px) rotate(-22deg); }
+  to { opacity: 1; transform: translateX(0) rotate(0); }
+}
+@keyframes mf-dashboard-flipX {
+  from { transform: perspective(800px) rotateX(0); }
+  to { transform: perspective(800px) rotateX(360deg); }
+}
+@keyframes mf-dashboard-heartbeat {
+  0%, 30%, 60%, 100% { transform: scale(1); }
+  14%, 45% { transform: scale(1.07); }
+}
+@keyframes mf-dashboard-swing {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(9deg); }
+  50% { transform: rotate(-6deg); }
+  75% { transform: rotate(3deg); }
+}
+@keyframes mf-dashboard-rubberBand {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.12, .88); }
+  45% { transform: scale(.9, 1.1); }
+  65% { transform: scale(1.05, .95); }
+  80% { transform: scale(.98, 1.02); }
+}
+@keyframes mf-dashboard-wobble {
+  0%, 100% { transform: translateX(0) rotate(0); }
+  20% { transform: translateX(-12px) rotate(-5deg); }
+  40% { transform: translateX(8px) rotate(4deg); }
+  60% { transform: translateX(-5px) rotate(-2deg); }
+  80% { transform: translateX(3px) rotate(1deg); }
+}
+@keyframes mf-dashboard-jello {
+  0%, 100% { transform: skew(0); }
+  25% { transform: skew(-8deg, -5deg); }
+  45% { transform: skew(5deg, 3deg); }
+  65% { transform: skew(-3deg, -2deg); }
+  80% { transform: skew(1deg, 1deg); }
+}
+@keyframes mf-dashboard-tada {
+  0%, 100% { transform: scale(1) rotate(0); }
+  18% { transform: scale(.96) rotate(-3deg); }
+  36%, 68% { transform: scale(1.06) rotate(3deg); }
+  52%, 84% { transform: scale(1.06) rotate(-3deg); }
+}
+@keyframes mf-dashboard-highlight {
+  0%, 100% { filter: brightness(1); }
+  45% { filter: brightness(1.2); }
+}
 @media (prefers-reduced-motion: reduce) {
-  .dashboard-widget-motion, .dashboard-widget-motion.motion-on-hover:hover { animation: none; }
+  .dashboard-widget-motion, .dashboard-widget-motion.motion-on-hover:hover, .dashboard-motion-preview { animation: none; }
 }

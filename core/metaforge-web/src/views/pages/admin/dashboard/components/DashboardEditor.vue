@@ -91,7 +91,7 @@
                 class="absolute inset-0 z-[5] bg-black/25" @click="closeCompactPanel()"/>
       </Transition>
 
-      <Transition name="side-panel-slide">
+      <Transition name="side-panel-slide" @after-leave="playQueuedAnimation" @leave-cancelled="queuedAnimationId = ''">
         <div v-show="propertiesVisible" id="dashboard-properties" data-dashboard-panel="properties" tabindex="-1" :inert="!propertiesVisible"
              class="properties-panel inset-y-0 right-0 z-10 shrink-0 outline-none"
              :class="wide && pinnedPanels.properties ? 'side-panel-docked relative' : 'absolute'" @focusout="schedulePanelHide('properties')">
@@ -102,7 +102,7 @@
                               @widget="updateWidget" @board="updateBoard" @page="updatePage" @group="updateGroup" @ungroup="ungroup(selectedId)"
                               @children="assignChildren" @add-child="kind => add(kind, undefined, selectedId)" @select-child="id => selectedId = id" @detach="detachChild"
                               @background-image="setBackgroundImage"
-                              @remove="remove" @save="save(false)" @preview="previewing = true"/>
+                              @remove="remove" @save="save(false)" @preview="previewing = true" @preview-animation="playSelectedAnimation"/>
           <MfResizeHandle v-if="wide" v-model="propertiesSizing.width.value" reverse class="absolute inset-y-0 -left-1 z-20 mx-0!" :min="280" :max="panelMax" :label="$t('dashboard.studio.resizeProperties')" @pointerdown.capture="startPanelResize('properties')" @change="propertiesSizing.save"/>
         </div>
       </Transition>
@@ -178,6 +178,7 @@ const selectedIds = ref<string[]>([])
 const selectedId = computed({ get: () => selectedIds.value.at(-1) ?? '', set: id => { selectedIds.value = id ? [id] : [] } })
 const viewport = ref<HTMLElement>()
 const editorBoard = ref<InstanceType<typeof DashboardBoard>>()
+let queuedAnimationId = ''
 const wall = computed(() => design.value.mode === 'wall')
 const board = computed(() => design.value.boards[design.value.mode])
 const otherBoard = computed(() => design.value.boards[wall.value ? 'dashboard' : 'wall'])
@@ -387,6 +388,20 @@ function closeCompactPanel(event?: KeyboardEvent) {
   if (wide.value || !panel || event?.defaultPrevented) return
   compactPanel.value = undefined
   panelToggle(panel)?.focus()
+}
+function playSelectedAnimation(id: string) {
+  if (selectedId.value !== id) return
+  if (!wide.value && compactPanel.value === 'properties' && selected.value?.animation?.effect !== 'none') {
+    queuedAnimationId = id
+    closeCompactPanel()
+    return
+  }
+  void editorBoard.value?.playAnimation(id)
+}
+function playQueuedAnimation() {
+  const id = queuedAnimationId
+  queuedAnimationId = ''
+  if (id && selectedId.value === id) void editorBoard.value?.playAnimation(id)
 }
 function selectFromLibrary(id: string, event: MouseEvent) {
   const additive = wall.value && (event.shiftKey || event.ctrlKey || event.metaKey)

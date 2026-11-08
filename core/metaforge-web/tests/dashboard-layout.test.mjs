@@ -196,11 +196,19 @@ test('saved animations keep timing and triggers and reject unknown effects', () 
   draft.boards.wall.widgets.push(
     { ...dashboardWidget('ring', 'glowRing', 'Ring', 'wall'), animation: { effect: 'pulse', duration: 2.5, delay: .2, repeat: true, trigger: 'hover', easing: 'linear' } },
     { ...dashboardWidget('invalid', 'ribbon', 'Ribbon', 'wall'), animation: { effect: 'unknown', duration: -1, delay: 100 } },
+    { ...dashboardWidget('reveal', 'ribbon', 'Reveal', 'wall'), animation: { effect: 'circleReveal', duration: 1.2, delay: 0, repeat: false, trigger: 'load', easing: 'ease-out' } },
   )
   const { widgets } = readDashboardDocument(JSON.stringify({ version: 3, draft })).draft.boards.wall
   assert.deepEqual(widgets[0].animation, { effect: 'pulse', duration: 2.5, delay: .2, repeat: true, trigger: 'hover', easing: 'linear' })
   assert.deepEqual(widgets[1].animation, { effect: 'none', duration: .1, delay: 60, repeat: false, trigger: 'load', easing: 'ease-out' })
+  assert.deepEqual(widgets[2].animation, draft.boards.wall.widgets[2].animation)
   assert.equal(dashboardWidgetUsesAsset('glowRing'), false)
+})
+
+test('every selectable animation has a keyframe sequence for canvas and presentation playback', async () => {
+  const css = await readFile(new URL('../src/views/pages/admin/dashboard/components/dashboard-motion.css', import.meta.url), 'utf8')
+  const effects = new Set([...css.matchAll(/@keyframes\s+mf-dashboard-(\w+)/g)].map(match => match[1]))
+  assert.deepEqual(effects, new Set(dashboardAnimationEffects.filter(effect => effect !== 'none')))
 })
 
 test('screen effects persist their bounded settings without occupying the component grid', () => {

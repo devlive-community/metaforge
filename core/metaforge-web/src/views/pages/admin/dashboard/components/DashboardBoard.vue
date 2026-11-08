@@ -1,5 +1,5 @@
 <template>
-  <section class="dashboard-frame relative isolate min-w-0" :class="[wall ? ['wall-frame', 'wall-' + board.theme] : 'dashboard-paper', editable && 'is-editing', board.grid && editable && 'show-grid']"
+  <section ref="frame" class="dashboard-frame relative isolate min-w-0" :class="[wall ? ['wall-frame', 'wall-' + board.theme] : 'dashboard-paper', editable && 'is-editing', board.grid && editable && 'show-grid']"
            :style="[frameStyle, transparent && { backgroundColor: 'transparent' }]" @dragover="onDragOver" @drop="onDrop" @click.self="emit('select', '')">
     <DashboardCanvasBackground v-if="editable || thumbnail" :board="board" class="-z-10"/>
     <header v-if="wall && board.showTitle" class="wall-heading">
@@ -38,6 +38,7 @@
       <MfEmpty v-if="!board.widgets.length" :title="$t('dashboard.studio.emptyCanvas')" :description="editable ? $t('dashboard.studio.emptyHint') : undefined"
                class="board-empty"/>
       <article v-for="widget in regularWidgets" :key="widget.id"
+               :data-animation-widget="editable ? widget.id : undefined"
                class="board-widget flex min-h-0 min-w-0 flex-col overflow-hidden"
                :class="{ 'is-selected': editable && !wall && selectedId === widget.id, 'is-marked': editable && wall && selectedIds?.includes(widget.id) && selectedId !== widget.id,
                          'is-framed': editable && wall && !!selectedId && (selectedId === widget.id || selectedId === widget.groupId),
@@ -81,6 +82,8 @@
                 @pointerdown.stop="startDrag($event, wallSelection, true)" @keydown="onMoveKey($event, wallSelection, true)"><MoveDiagonal2 :size="13"/></button>
       </div>
     </div>
+    <DashboardScreenEffect v-if="screenAnimationPreview" :widget="screenAnimationPreview" :kind="screenAnimationPreview.kind"
+                           :data-animation-widget="screenAnimationPreview.id" class="z-[3]"/>
   </section>
 
   <Teleport to="body">
@@ -148,13 +151,15 @@ import { useDismissableLayer } from 'metaforge-ui'
 import type { ReportModel } from '@/model/report'
 import { chartFieldKind, type QueryChartRow } from '@/model/query-chart'
 import { constrainDashboardGroup, constrainDashboardRect, dashboardCanvasColor, dashboardCardStyle, dashboardChartType, dashboardColumns, dashboardContainerTool, dashboardFilterTool, dashboardGridTarget, dashboardGroupBounds,
-  dashboardLayerMembers, dashboardMotionStyle, dashboardScreenEffectTool, dashboardSnapshot, resizeDashboardGroup, type DashboardDesign, type DashboardRect, type DashboardWidget } from '@/model/dashboard-layout'
+  dashboardLayerMembers, dashboardMotionStyle, dashboardScreenEffectSettings, dashboardScreenEffectTool, dashboardSnapshot, resizeDashboardGroup,
+  type DashboardDesign, type DashboardRect, type DashboardScreenEffectKind, type DashboardWidget } from '@/model/dashboard-layout'
 import { useDashboardReports } from '@/composables/useDashboardReports'
 import { dashboardFiltersContext } from '@/composables/dashboardFiltersContext'
 import { dashboardFilteredReports, dashboardFilterHasValue, dashboardFilterMatchesWidget, type DashboardFilter } from '@/model/dashboard-filters'
 import DashboardWidgetView from './DashboardWidgetView.vue'
 import DashboardContainerView from './DashboardContainerView.vue'
 import DashboardCanvasBackground from './DashboardCanvasBackground.vue'
+import DashboardScreenEffect from './DashboardScreenEffect.vue'
 import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIcon.vue'
 import './dashboard-motion.css'
 
@@ -164,7 +169,9 @@ const emit = defineEmits<{
   group: [ids: string[]]; ungroup: [id: string]; remove: [id: string]
 }>()
 const { t } = useI18n()
+const frame = ref<HTMLElement>()
 const surface = ref<HTMLElement>()
+const screenAnimationPreview = shallowRef<DashboardWidget & { kind: DashboardScreenEffectKind }>()
 const expanded = ref('')
 const days = ref(0)
 const selection = shallowRef<{ reportCode: string; widgetId: string; rows: Set<QueryChartRow> }>()
@@ -285,7 +292,19 @@ const wallSelectionStyle = computed(() => {
     borderRadius: widget?.showCard ? widget.corners.map(value => value + 'px').join(' ') : '0' }
 })
 let stopPointer: (() => void) | undefined
-onBeforeUnmount(() => stopPointer?.())
+let animationRequest = 0
+let clearAnimationPreview: (() => void) | undefined
+function stopAnimationPreview() {
+  animationRequest++
+  clearAnimationPreview?.()
+  clearAnimationPreview = undefined
+  screenAnimationPreview.value = undefined
+}
+watch([() => props.selectedId, () => props.design.mode, () => props.editable], stopAnimationPreview)
+onBeforeUnmount(() => {
+  stopPointer?.()
+  stopAnimationPreview()
+})
 function wallRect(rect: DashboardRect) {
   return { left: rect.x / board.value.width * 100 + '%', top: rect.y / board.value.height * 100 + '%',
     width: rect.w / board.value.width * 100 + '%', height: rect.h / board.value.height * 100 + '%' }
@@ -313,6 +332,7 @@ function interactionTarget(widget: DragTarget): DragTarget {
 function startDrag(event: PointerEvent, widget: DragTarget, resize: boolean) {
   if (event.button !== 0 || !props.editable) return
   if (wall.value && (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey)) return
+  stopAnimationPreview()
   widget = interactionTarget(widget)
   if (event.currentTarget instanceof HTMLElement) event.currentTarget.focus({ preventScroll: true })
   emit('select', widget.id)
@@ -392,6 +412,42 @@ function focusWidget(id: string) {
   surface.value?.parentElement?.querySelector<HTMLElement>(`[data-widget-id="${key}"], [data-selection-id="${key}"], [data-contained-widget="${key}"]`)?.focus({ preventScroll: true })
 }
 
+async function playAnimation(id: string) {
+  stopAnimationPreview()
+  const request = animationRequest
+  const widget = board.value.widgets.find(item => item.id === id)
+  if (!props.editable || !widget?.animation || widget.animation.effect === 'none'
+    || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+  const style = dashboardMotionStyle(widget)
+  const kind = widget.kind
+  if (dashboardScreenEffectTool(kind)) {
+    screenAnimationPreview.value = { ...widget, kind, animation: undefined,
+      screenEffect: { ...dashboardScreenEffectSettings(kind, widget.screenEffect), enabled: true } }
+  }
+
+  await nextTick()
+  if (request !== animationRequest) return
+  const target = frame.value?.querySelector<HTMLElement>(`[data-animation-widget="${CSS.escape(id)}"]`)
+  if (!target?.getClientRects().length) {
+    stopAnimationPreview()
+    return
+  }
+  if (!screenAnimationPreview.value) target.scrollIntoView({ block: 'nearest', inline: 'nearest' })
+  const names = Object.keys(style)
+  for (const [name, value] of Object.entries(style)) target.style.setProperty(name, value)
+  // Resolve the removed class before adding it again so the same preset restarts.
+  void getComputedStyle(target).animationName
+  target.classList.add('dashboard-motion-preview')
+  clearAnimationPreview = () => {
+    target.classList.remove('dashboard-motion-preview')
+    for (const name of names) target.style.removeProperty(name)
+  }
+  const playback = target.getAnimations().find(item => 'animationName' in item && item.animationName === style['--widget-motion-name'])
+  try { await playback?.finished }
+  catch { /* A change of selection or motion preference can cancel playback. */ }
+  finally { if (request === animationRequest) stopAnimationPreview() }
+}
+
 function hitWidgets(event: MouseEvent) {
   const bounds = surface.value?.getBoundingClientRect()
   if (!bounds?.width || !bounds.height) return []
@@ -461,7 +517,7 @@ function deleteContext() {
   closeContext()
 }
 
-defineExpose({ refresh: refreshBoard, focusWidget, openContext })
+defineExpose({ refresh: refreshBoard, focusWidget, openContext, playAnimation })
 </script>
 
 <style scoped>

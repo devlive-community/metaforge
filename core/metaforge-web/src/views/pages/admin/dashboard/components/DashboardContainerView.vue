@@ -151,7 +151,7 @@ const RenderChild = defineComponent({
     return h('div', { class: ['flex h-full min-h-0 min-w-0 flex-col overflow-hidden', child.showCard && 'border-line bg-surface shadow-mf-sm',
       child.showCard && child.border && 'border', props.editable && props.selectedId === child.id && 'outline-2 outline-primary',
       !props.editable && child.animation?.effect !== 'none' && child.animation && 'dashboard-widget-motion', child.animation?.trigger === 'hover' && 'motion-on-hover'],
-      'data-contained-widget': child.id, tabindex: props.editable ? -1 : undefined,
+      'data-contained-widget': child.id, 'data-animation-widget': props.editable ? child.id : undefined, tabindex: props.editable ? -1 : undefined,
       style: { ...dashboardCardStyle(child), ...(!props.editable ? dashboardMotionStyle(child) : {}) } }, [
       heading,
       child.reportCode && props.failedCodes.has(child.reportCode) ? h('p', { class: 'mb-1 text-xs text-warning' }, t('queryChart.refreshError')) : null,
