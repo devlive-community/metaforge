@@ -7,7 +7,7 @@ import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'
 import { useUserStore } from '@/stores/user'
-import DashboardPresentationCanvas from '@/views/pages/admin/dashboard/components/DashboardPresentationCanvas.vue'
+import ScreenPresentation from '@/views/pages/admin/dashboard/components/ScreenPresentation.vue'
 import { dashboardScreenKey } from '@/composables/useDashboardReports'
 
 /**
@@ -61,7 +61,7 @@ onScopeDispose(() => { request++ })
       </MfEmpty>
     </div>
     <template v-else>
-      <DashboardPresentationCanvas :design="design" :reports="data?.reports || []"/>
+      <ScreenPresentation :design="design" :reports="data?.reports || []"/>
     </template>
   </div>
 </template>

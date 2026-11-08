@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
 import { screenPreview } from '@/model/screen-preview'
-import DashboardBoard from './DashboardBoard.vue'
+import ScreenBoard from '@/views/pages/admin/dashboard/components/ScreenBoard.vue'
 
 const props = defineProps<{ screen: DashboardModel }>()
 const { t } = useI18n()
@@ -48,7 +48,7 @@ onBeforeUnmount(() => { generation++; intersection?.disconnect(); resize?.discon
     <img v-if="cover" :src="cover" alt="" loading="lazy" class="size-full object-cover" @error="coverFailed = true"/>
     <MfEmpty v-else-if="failed" class="h-full" size="sm" :title="t('screenLibrary.previewUnavailable')"/>
     <div v-else-if="visible" class="pointer-events-none absolute left-1/2 top-1/2 origin-center" :style="frame">
-      <DashboardBoard :design="preview.design" :reports="preview.reports" thumbnail/>
+      <ScreenBoard :design="preview.design" :reports="preview.reports" thumbnail/>
     </div>
     <div v-if="pending" class="absolute inset-0 flex items-center justify-center bg-surface/40"><MfSpinner size="sm"/></div>
   </div>

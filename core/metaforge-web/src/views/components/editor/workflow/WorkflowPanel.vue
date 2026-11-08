@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { Database, Download, Search, Settings2 } from '@lucide/vue'
 import { categoryLimit, workflowCategories, type WorkflowCategory, type WorkflowExecutor } from '@/model/workflow'
-import DashboardPanelHeader from '@/views/pages/admin/dashboard/components/DashboardPanelHeader.vue'
+import StudioPanelHeader from '@/views/components/studio/StudioPanelHeader.vue'
 import type { NodeDefinition } from './types'
 
 const props = defineProps<{ executor: WorkflowExecutor; disabled?: boolean }>()
@@ -33,7 +33,7 @@ function start(event: DragEvent, node: NodeDefinition) {
 
 <template>
   <aside class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-line bg-surface shadow-mf-sm">
-    <DashboardPanelHeader :title="$t('workflow.studio.library')"
+    <StudioPanelHeader :title="$t('workflow.studio.library')"
                           :pinned="true" :pinnable="false" @close="emit('close')"/>
     <MfTabs v-if="groups.length" :key="tabsKey" v-model:active-key="category" fill class="workflow-library-tabs">
       <MfTabPane v-for="group in groups" :key="group.category" :item-key="group.category" :tab="$t('workflow.studio.category.' + group.category)">

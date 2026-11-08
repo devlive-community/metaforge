@@ -11,7 +11,7 @@
   </div>
   <!-- Viewing shows the published screen only; editing, sharing and the home page live on the list. -->
   <div v-else class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-surface">
-    <DashboardPresentationCanvas :design="design" :reports="data?.reports || []"/>
+    <ScreenPresentation :design="design" :reports="data?.reports || []"/>
   </div>
 </template>
 
@@ -23,7 +23,7 @@ import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
 import { readDashboardDocument } from '@/model/dashboard-layout'
 import { SCREEN_LIST_PATH, screenDesignPath } from '@/model/screen-route'
-import DashboardPresentationCanvas from './components/DashboardPresentationCanvas.vue'
+import ScreenPresentation from '@/views/pages/admin/dashboard/components/ScreenPresentation.vue'
 import { dashboardScreenKey } from '@/composables/useDashboardReports'
 
 const route = useRoute()

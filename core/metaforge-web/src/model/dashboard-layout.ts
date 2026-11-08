@@ -1033,7 +1033,7 @@ export function dashboardScreenEffectSettings(kind: DashboardScreenEffectKind, v
   }
 }
 
-export function dashboardMotionStyle(widget: DashboardWidget) {
+export function dashboardMotionStyle(widget: Pick<DashboardWidget, 'animation'>) {
   const animation = widget.animation
   return animation ? {
     '--widget-motion-name': 'mf-dashboard-' + animation.effect, '--widget-motion-duration': animation.duration + 's',

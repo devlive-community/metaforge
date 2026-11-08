@@ -9,8 +9,8 @@ import { useStudioPanels } from '@/composables/useStudioPanels'
 import { adhocColumnIssue, adhocCsv, fieldLabel, isAdhocNumeric, type AdhocColumn, type AdhocField, type AdhocMode } from '@/model/dataset-adhoc'
 import { createQueryChartSnapshot } from '@/model/query-chart'
 import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
-import DashboardPanelHeader from '@/views/pages/admin/dashboard/components/DashboardPanelHeader.vue'
-import DashboardInspectorGroup from '@/views/pages/admin/dashboard/components/DashboardInspectorGroup.vue'
+import StudioPanelHeader from '@/views/components/studio/StudioPanelHeader.vue'
+import InspectorSection from '@/views/components/studio/InspectorSection.vue'
 import ResultTable from '@/views/components/table/ResultTable.vue'
 import SqlCodeBlock from '@/views/components/sql/SqlCodeBlock.vue'
 import QueryChartPreview from '@/views/components/visual/query/QueryChartPreview.vue'
@@ -32,8 +32,8 @@ const legacySettings = ref(false)
 const legacyPreview = computed(() => legacy.value ? { ...legacy.value, headers: headers.value, columns: rows.value } as unknown as import('@/views/components/visual/Configuration').Configuration : null)
 const legacyGroups = computed(() => legacy.value ? createdConfigure(legacy.value.type, { t } as any) : [])
 const settings = ref<InstanceType<typeof DatasetAdhocFieldSettings>>(), queryForm = ref<InstanceType<typeof MfForm>>()
-const querySettingsGroup = ref<InstanceType<typeof DashboardInspectorGroup>>()
-const fieldSettingsGroup = ref<InstanceType<typeof DashboardInspectorGroup>>()
+const querySettingsGroup = ref<InstanceType<typeof InspectorSection>>()
+const fieldSettingsGroup = ref<InstanceType<typeof InspectorSection>>()
 const limitModel = computed(() => ({ limit: limit.value }))
 const zones = [
   { mode: 'METRIC' as const, label: 'dataset.adhoc.measures', hint: 'dataset.adhoc.dropMetric', icon: ChartColumn },
@@ -111,7 +111,7 @@ watch([code, reportCode], () => { savedCode.value = ''; publishVisible.value = f
       <Transition name="adhoc-panel">
         <aside v-show="leftVisible" id="adhoc-field-library" :inert="!leftVisible" class="adhoc-side adhoc-left inset-y-0 left-0 z-30 border-r border-line bg-surface" :class="wide ? 'adhoc-docked relative' : 'absolute shadow-mf-lg'">
           <div class="adhoc-panel-content flex h-full min-h-0 flex-col">
-            <DashboardPanelHeader :title="$t('dataset.adhoc.fieldLibrary')" :pinnable="false" :pinned="true" @close="close('left')"/>
+            <StudioPanelHeader :title="$t('dataset.adhoc.fieldLibrary')" :pinnable="false" :pinned="true" @close="close('left')"/>
             <div class="shrink-0 p-3"><MfInput v-model="keyword" size="sm" :placeholder="$t('dataset.search.fields')" clearable><template #prefix><Search :size="14"/></template></MfInput></div>
             <MfTabs v-model:active-key="fieldTab" class="shrink-0 px-3"><MfTabPane item-key="all" :tab="$t('dataset.adhoc.all')"/><MfTabPane item-key="DIMENSION" :tab="$t('dataset.adhoc.dimensions')"/><MfTabPane item-key="METRIC" :tab="$t('dataset.adhoc.measures')"/></MfTabs>
             <div v-if="addingTo" class="flex shrink-0 items-center justify-between gap-2 bg-primary/5 px-3 py-2 text-xs text-primary"><span>{{ $t('dataset.adhoc.chooseField', { mode: $t(zones.find(zone => zone.mode === addingTo)!.label) }) }}</span><MfButton variant="ghost" size="sm" :aria-label="$t('common.cancel')" @click="addingTo = undefined"><X :size="13"/></MfButton></div>
@@ -167,30 +167,30 @@ watch([code, reportCode], () => { savedCode.value = ''; publishVisible.value = f
       <Transition name="adhoc-panel">
         <aside v-show="rightVisible" id="adhoc-properties" :inert="!rightVisible" class="adhoc-side adhoc-right inset-y-0 right-0 z-30 border-l border-line bg-surface" :class="wide ? 'adhoc-docked relative' : 'absolute shadow-mf-lg'">
           <div class="adhoc-panel-content flex h-full min-h-0 flex-col">
-            <DashboardPanelHeader :title="$t('dataset.adhoc.properties')" :pinnable="false" :pinned="true" @close="close('right')"/>
+            <StudioPanelHeader :title="$t('dataset.adhoc.properties')" :pinnable="false" :pinned="true" @close="close('right')"/>
             <MfTabs v-model:active-key="inspectorTab" fill class="adhoc-inspector-tabs min-h-0 flex-1">
               <MfTabPane item-key="query" :tab="$t('dataset.adhoc.querySettings')">
                 <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 p-3">
-                  <DashboardInspectorGroup ref="querySettingsGroup" icon="actions" :title="$t('dataset.adhoc.querySettings')">
+                  <InspectorSection ref="querySettingsGroup" icon="actions" :title="$t('dataset.adhoc.querySettings')">
                     <MfForm ref="queryForm" :model="limitModel" :disabled="running">
                       <MfFormItem name="limit" :label="$t('dataset.adhoc.rowLimit')" :rules="[{ required: true, type: 'number', min: 1, validator: value => Number.isInteger(value), message: $t('dataset.adhoc.invalidLimit') }]">
                         <MfInputNumber v-model="limit" class="w-full" decimal-only commit-on-change :min="1" :precision="0" :aria-label="$t('dataset.adhoc.rowLimit')"/>
                       </MfFormItem>
                     </MfForm>
-                  </DashboardInspectorGroup>
-                  <DashboardInspectorGroup ref="fieldSettingsGroup" icon="data" :title="$t('dataset.adhoc.fieldSettings')">
+                  </InspectorSection>
+                  <InspectorSection ref="fieldSettingsGroup" icon="data" :title="$t('dataset.adhoc.fieldSettings')">
                     <DatasetAdhocFieldSettings v-if="selectedColumn" ref="settings" :key="selectedColumn.key" :column="selectedColumn" :disabled="running" @change="update"/>
                     <MfEmpty v-else size="sm" :title="$t('dataset.adhoc.selectField')"/>
-                  </DashboardInspectorGroup>
+                  </InspectorSection>
                 </div>
               </MfTabPane>
               <MfTabPane item-key="chart" :tab="$t('queryChart.chart')">
                 <div v-if="legacy" class="p-3">
-                  <DashboardInspectorGroup icon="appearance" :title="$t('dataset.adhoc.chartSettings')">
+                  <InspectorSection icon="appearance" :title="$t('dataset.adhoc.chartSettings')">
                     <MfAlert variant="info" :title="$t('dataset.adhoc.legacyChart')"/>
                     <MfButton v-if="legacy.type !== 'TABLE'" @click="legacySettings = true">{{ $t('common.configure') }}</MfButton>
                     <MfButton @click="legacy = null">{{ $t('dataset.adhoc.upgradeChart') }}</MfButton>
-                  </DashboardInspectorGroup>
+                  </InspectorSection>
                 </div>
                 <DatasetAdhocChartSettings v-else-if="headers.length" class="p-3" :options="options" :headers="headers" :rows="rows" @change="options = $event; resultTab = 'chart'"/>
                 <MfEmpty v-else class="h-full" size="sm" variant="initial" :title="$t('dataset.adhoc.queryFirst')"/>

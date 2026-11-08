@@ -5,7 +5,7 @@
       <MfEmpty :title="$t('dashboard.share.public.unavailable')" :description="$t('dashboard.share.public.unavailableHint')"/>
     </div>
     <!-- The published screen only, as the owner chose to show it; no toolbar or navigation. -->
-    <DashboardPresentationCanvas v-else :design="design" :reports="screen?.reports || []"/>
+    <ScreenPresentation v-else :design="design" :reports="screen?.reports || []"/>
   </div>
 </template>
 
@@ -16,7 +16,7 @@ import PublicScreenService from '@/services/public-screen'
 import { readDashboardDocument } from '@/model/dashboard-layout'
 import type { ReportModel } from '@/model/report'
 import { dashboardRefreshKey } from '@/composables/useDashboardReports'
-import DashboardPresentationCanvas from '@/views/pages/admin/dashboard/components/DashboardPresentationCanvas.vue'
+import ScreenPresentation from '@/views/pages/admin/dashboard/components/ScreenPresentation.vue'
 
 defineOptions({ name: 'PublicScreen' })
 

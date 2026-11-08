@@ -5,7 +5,7 @@
       <MfButton size="sm" @click="load">{{ $t('common.refresh') }}</MfButton>
     </MfAlert>
   </div>
-  <DashboardEditor v-else :key="code" :info="data"/>
+  <ScreenEditor v-else :key="code" :info="data"/>
 </template>
 
 <script setup lang="ts">
@@ -15,7 +15,7 @@ import { permits } from '@/model/dashboard'
 import { screenViewPath } from '@/model/screen-route'
 import DashboardService from '@/services/dashboard'
 import type { DashboardModel } from '@/model/dashboard'
-import DashboardEditor from './components/DashboardEditor.vue'
+import ScreenEditor from '@/views/pages/admin/dashboard/components/ScreenEditor.vue'
 
 const route = useRoute()
 const router = useRouter()

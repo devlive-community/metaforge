@@ -1,5 +1,5 @@
 <template>
-  <component :is="collapsible ? DashboardInspectorGroup : 'section'" v-for="group in groups" :key="group.title"
+  <component :is="collapsible ? InspectorSection : 'section'" v-for="group in groups" :key="group.title"
              :title="collapsible ? label(group.title) : undefined" :icon="collapsible ? groupIcon(group.title) : undefined"
              :class="!collapsible && 'space-y-3 border-t border-line pt-4 first:border-0 first:pt-0'">
     <h4 v-if="!collapsible" class="flex items-center gap-2 font-semibold"><span class="size-1.5 rounded-full bg-primary"/>{{ label(group.title) }}</h4>
@@ -27,7 +27,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { snapshotRowLimit, type QueryChartOptions } from '@/model/query-chart'
 import { queryChartGeometry } from '@/model/query-chart-data'
-import DashboardInspectorGroup from '@/views/pages/admin/dashboard/components/DashboardInspectorGroup.vue'
+import InspectorSection from '@/views/components/studio/InspectorSection.vue'
 
 type Key = keyof QueryChartOptions
 interface Field {

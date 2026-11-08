@@ -2,7 +2,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Check, Code2, Settings2, SlidersHorizontal } from '@lucide/vue'
-import DashboardPanelHeader from '@/views/pages/admin/dashboard/components/DashboardPanelHeader.vue'
+import StudioPanelHeader from '@/views/components/studio/StudioPanelHeader.vue'
 import type { ConfigureItem, NodeInstance } from './types'
 import { dependentFields, fieldGroup } from './utils'
 import WorkflowField from './WorkflowField.vue'
@@ -41,7 +41,7 @@ const fieldLabel = (field: ConfigureItem) => { const key = 'workflow.studio.fiel
 </script>
 <template>
   <aside class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-l border-line bg-surface shadow-mf-sm">
-    <DashboardPanelHeader :title="$t('workflow.studio.nodeConfig')"
+    <StudioPanelHeader :title="$t('workflow.studio.nodeConfig')"
                           :pinned="true" :pinnable="false" @close="emit('close')"/>
     <template v-if="selectedNode">
       <nav class="mx-3 flex shrink-0 items-center gap-1 px-1 shadow-[inset_0_-1px_0_var(--mf-color-line)]" :aria-label="$t('workflow.studio.nodeConfig')">

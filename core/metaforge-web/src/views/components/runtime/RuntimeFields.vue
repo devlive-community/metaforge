@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { CircleHelp } from '@lucide/vue'
 import { groupRuntimeFields, type RuntimeField } from '@/model/runtime-fields'
-import DashboardInspectorGroup from '@/views/pages/admin/dashboard/components/DashboardInspectorGroup.vue'
+import InspectorSection from '@/views/components/studio/InspectorSection.vue'
 /**
  * Runtime fields share the property inspector's collapsible cards. Slots stay mounted so folding
  * a group keeps its values; ungrouped fields remain available as basic settings.
@@ -23,7 +23,7 @@ const numberOf = (value?: string) => value === undefined || value === '' || Numb
 </script>
 <template>
   <div class="flex flex-col gap-4">
-    <component :is="collapsible ? DashboardInspectorGroup : 'section'" v-for="(item, index) in groups" :key="item.group ?? ''" class="min-w-0"
+    <component :is="collapsible ? InspectorSection : 'section'" v-for="(item, index) in groups" :key="item.group ?? ''" class="min-w-0"
                v-bind="collapsible ? { title: groupLabel(item.group), icon: groupIcon(item.group), defaultOpen: index === 0 || item.group === null } : {}">
       <h3 v-if="!collapsible && item.group" class="mb-2 text-sm font-semibold text-content">{{ groupLabel(item.group) }}</h3>
       <MfFormGrid>

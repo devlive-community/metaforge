@@ -66,7 +66,7 @@ test('Markdown is structured text with safe links, without executing raw HTML',(
   assert.ok(tokens.some(token=>token.kind==='text'&&token.text.includes('<img')))
 })
 test('new full-screen effects are bounded overlays with working paint functions',async()=>{
-  const {createAdditionalScreenPainters}=await sourceModule('../../metaforge-web/src/views/pages/admin/dashboard/components/screen-effect-painters.ts')
+  const {createAdditionalScreenPainters}=await sourceModule('../../metaforge-web/src/views/components/visual/effects/screen-effect-painters.ts')
   const calls=[],gradient={addColorStop(){}}
   const ctx=new Proxy({}, {get:(_target,key)=>String(key).startsWith('create')?()=>gradient:(...args)=>calls.push([key,...args]),set:()=>true})
   const env={width:800,height:450,size:12,wind:0,color:'#16A66A',customColor:''}
