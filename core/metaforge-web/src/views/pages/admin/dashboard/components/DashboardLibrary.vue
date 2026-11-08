@@ -143,6 +143,10 @@ const toolGroups = [
     { kind: 'crossTabHeatmap', icon: Grid2x2 }, { kind: 'transitionMatrix', icon: ArrowRight },
     { kind: 'cooccurrencePairs', icon: Network }, { kind: 'groupSpread', icon: ChartNoAxesCombined },
   ] },
+  { title: 'auditTools', icon: Search, items: [
+    { kind: 'duplicateKeys', icon: Copy }, { kind: 'valueFrequency', icon: ListOrdered }, { kind: 'missingPatterns', icon: Grid2x2 },
+    { kind: 'fieldComparison', icon: Columns2 }, { kind: 'invalidValues', icon: TriangleAlert }, { kind: 'dateCoverage', icon: CalendarRange },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },
