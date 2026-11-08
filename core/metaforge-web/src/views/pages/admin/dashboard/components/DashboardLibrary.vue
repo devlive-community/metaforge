@@ -152,6 +152,11 @@ const toolGroups = [
     { kind: 'yearOverYearTrend', icon: CalendarRange }, { kind: 'weekdayHourHeatmap', icon: Grid2x2 },
     { kind: 'eventIntervals', icon: Timer }, { kind: 'intervalTimeline', icon: CalendarClock },
   ] },
+  { title: 'comparativeTools', icon: Columns2, items: [
+    { kind: 'metricCorrelation', icon: Network }, { kind: 'metricQuadrants', icon: Grid2x2 },
+    { kind: 'rankMovement', icon: ListOrdered }, { kind: 'shareMovement', icon: ChartNoAxesCombined },
+    { kind: 'pairedDifference', icon: SlidersHorizontal }, { kind: 'comparisonDistribution', icon: Columns2 },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },
