@@ -22,7 +22,7 @@
       <span v-if="kind === 'escalationPaths'" class="block text-xs text-content-tertiary">{{ $t(key + 'escalationStep', { number: index + 1 }) }}</span>
       <span v-else-if="item.value" class="block text-xs text-content-tertiary">{{ item.value }}</span>
       <p class="break-words text-sm font-semibold">{{ item.title }}</p>
-      <MfTag v-if="kind === 'milestoneTracker'" size="sm" :variant="item.tone">{{ $t(key + 'milestoneStatus.' + item.tone) }}</MfTag>
+      <MfTag v-if="kind === 'milestoneTracker' || kind === 'incidentTimeline'" size="sm" :variant="item.tone">{{ $t(key + tableTone + '.' + item.tone) }}</MfTag>
       <p v-if="item.detail" class="whitespace-pre-wrap break-words text-sm text-content-secondary">{{ item.detail }}</p>
       <a v-if="kind === 'escalationPaths' && mailUrl(item.value)" :href="mailUrl(item.value)" class="break-all text-xs text-primary hover:underline">{{ item.value }}</a>
     </li>
@@ -35,6 +35,7 @@
     </div>
   </dl>
   <InformationCards v-else-if="isInformationCard(kind)" :kind="kind" :items="entries"/>
+  <InformationBoards v-else-if="isInformationBoard(kind)" :kind="kind" :items="entries"/>
   <ul v-else class="grid h-full auto-rows-min gap-2 overflow-auto"
       :class="kind !== 'serviceStatus' && 'grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))]'">
     <li v-for="item in entries" :key="item.id" class="min-w-0 rounded-mf-md border border-line bg-surface px-3 py-2">
@@ -42,8 +43,11 @@
         <strong class="break-all text-sm">{{ item.title }}</strong>
         <MfTag v-if="kind === 'serviceStatus'" size="sm" :variant="item.tone">{{ $t(key + 'status.' + item.tone) }}</MfTag>
       </div>
+      <p v-if="(kind === 'policyCards' || kind === 'environmentCards') && item.secondary" class="text-xs text-content-tertiary">
+        {{ $t(key + (kind === 'policyCards' ? 'owner' : 'deployedVersion')) }} · {{ item.secondary }}
+      </p>
       <p v-if="item.detail" class="whitespace-pre-wrap break-words text-xs text-content-secondary">{{ item.detail }}</p>
-      <a v-if="kind === 'resourceCards' && resourceUrl(item.value)" :href="resourceUrl(item.value)"
+      <a v-if="(kind === 'resourceCards' || kind === 'policyCards' || kind === 'environmentCards') && resourceUrl(item.value)" :href="resourceUrl(item.value)"
          target="_blank" rel="noopener noreferrer" class="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">
         {{ $t(key + 'openResource') }}<ArrowUpRight :size="13"/>
       </a>
@@ -61,17 +65,25 @@ import { informationFields, informationMailUrl as mailUrl, informationResourceUr
 import type { TableAppearance } from '@/model/table-appearance'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import InformationCards from './InformationCards.vue'
+import InformationBoards from './InformationBoards.vue'
 
 const props = defineProps<{ kind: InformationBlockKind; items: readonly InformationItem[]; tableAppearance?: TableAppearance }>()
 const { t } = useI18n()
 const key = 'informationBlock.'
 const entries = computed(() => props.items.filter(item => item.title.trim()))
 const tabular = computed(() => isTabularInformationBlock(props.kind))
-const tableTone = computed(() => props.kind === 'decisionLog' ? 'decisionStatus' : 'severity')
-const ordered = computed(() => ['releaseTimeline', 'milestoneTracker', 'escalationPaths'].includes(props.kind))
+const tableTone = computed(() => {
+  const fields = informationFields[props.kind]
+  return 'tone' in fields ? fields.tone : 'severity'
+})
+const ordered = computed(() => ['releaseTimeline', 'milestoneTracker', 'escalationPaths', 'incidentTimeline'].includes(props.kind))
 const columns = computed(() => Object.entries(informationFields[props.kind]).map(([dataIndex, label]) => ({ dataIndex, title: t(key + label) })))
 const cardKinds = ['linkButtonBar', 'imageBadges', 'comparisonCards', 'noticeBoard', 'capacityGrid', 'ratingCards'] as const
 function isInformationCard(kind: InformationBlockKind): kind is typeof cardKinds[number] {
   return cardKinds.some(card => card === kind)
+}
+const boardKinds = ['glossaryIndex', 'statusBoard', 'acceptanceChecklist', 'copySnippets'] as const
+function isInformationBoard(kind: InformationBlockKind): kind is typeof boardKinds[number] {
+  return boardKinds.some(board => board === kind)
 }
 </script>

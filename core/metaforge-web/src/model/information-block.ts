@@ -2,6 +2,8 @@ export const informationBlockKinds = [
   'statTiles', 'contactDirectory', 'resourceCards', 'releaseTimeline', 'faqList', 'shiftRoster', 'serviceStatus', 'riskRegister',
   'linkButtonBar', 'imageBadges', 'decisionLog', 'maintenanceSchedule', 'comparisonCards', 'milestoneTracker',
   'noticeBoard', 'capacityGrid', 'escalationPaths', 'ratingCards',
+  'glossaryIndex', 'statusBoard', 'incidentTimeline', 'teamHandoff', 'dependencyRegister',
+  'acceptanceChecklist', 'policyCards', 'assetInventory', 'environmentCards', 'copySnippets',
 ] as const
 export type InformationBlockKind = typeof informationBlockKinds[number]
 export const informationTones = ['info', 'success', 'warning', 'danger'] as const
@@ -22,6 +24,7 @@ export function isInformationBlock(kind: unknown): kind is InformationBlockKind 
 
 export function isTabularInformationBlock(kind: unknown) {
   return kind === 'riskRegister' || kind === 'shiftRoster' || kind === 'decisionLog' || kind === 'maintenanceSchedule'
+    || kind === 'teamHandoff' || kind === 'dependencyRegister' || kind === 'assetInventory'
 }
 
 export function readInformationItems(value: unknown): InformationItem[] {
@@ -59,6 +62,16 @@ export const informationFields = {
   capacityGrid: { title: 'resource', value: 'capacityUsed', secondary: 'capacityLimit', detail: 'context' },
   escalationPaths: { title: 'person', value: 'email', detail: 'role' },
   ratingCards: { title: 'ratingItem', value: 'ratingValue', detail: 'description' },
+  glossaryIndex: { title: 'term', value: 'termAlias', detail: 'definition' },
+  statusBoard: { title: 'workItem', value: 'owner', tone: 'workStatus', detail: 'description' },
+  incidentTimeline: { title: 'incident', value: 'dateLabel', tone: 'severity', detail: 'incidentUpdate' },
+  teamHandoff: { title: 'handoffItem', value: 'owner', secondary: 'recipient', tone: 'handoffStatus', detail: 'nextAction' },
+  dependencyRegister: { title: 'dependency', value: 'dependent', secondary: 'owner', tone: 'dependencyStatus', detail: 'impact' },
+  acceptanceChecklist: { title: 'criterion', value: 'reviewer', tone: 'checkResult', detail: 'evidence' },
+  policyCards: { title: 'policyName', value: 'url', secondary: 'owner', detail: 'description' },
+  assetInventory: { title: 'assetName', value: 'assetId', secondary: 'assetLocation', tone: 'assetStatus', detail: 'description' },
+  environmentCards: { title: 'environment', value: 'url', secondary: 'deployedVersion', detail: 'description' },
+  copySnippets: { title: 'snippetName', value: 'snippetLanguage', detail: 'snippetText' },
 } satisfies Record<InformationBlockKind, Partial<Record<keyof Omit<InformationItem, 'id'>, string>>>
 
 export function informationResourceUrl(value: string) {
