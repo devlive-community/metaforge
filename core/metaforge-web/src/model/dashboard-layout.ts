@@ -24,8 +24,10 @@ export const dashboardSpatialTools = ['geoPoints', 'geoGrid', 'geoTrack', 'geoBo
 export function dashboardSpatialTool(kind?: DashboardWidgetKind) { return dashboardSpatialTools.some(tool => tool === kind) }
 export const dashboardProcessTools = ['processPaths', 'processEndpoints', 'processCycle', 'processWaits', 'processRework', 'processCompliance'] as const
 export function dashboardProcessTool(kind?: DashboardWidgetKind) { return dashboardProcessTools.some(tool => tool === kind) }
+export const dashboardIntervalTools = ['intervalConcurrency', 'intervalCoverage', 'intervalOverlaps', 'intervalDurationBands', 'intervalGroupCoverage', 'intervalGaps'] as const
+export function dashboardIntervalTool(kind?: DashboardWidgetKind) { return dashboardIntervalTools.some(tool => tool === kind) }
 export const dashboardAdvancedDataTools = ['metricTicker', 'metricComparison', 'metricTrend', 'bulletMetric', 'rankList', 'distributionList', 'statusGrid', 'recordCards', ...dashboardExtendedDataTools, ...dashboardMonitoringTools] as const
-const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools, ...dashboardAuditTools, ...dashboardTemporalTools, ...dashboardComparativeTools, ...dashboardPlanningTools, ...dashboardSpatialTools, ...dashboardProcessTools] as const
+const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools, ...dashboardAuditTools, ...dashboardTemporalTools, ...dashboardComparativeTools, ...dashboardPlanningTools, ...dashboardSpatialTools, ...dashboardProcessTools, ...dashboardIntervalTools] as const
 export type DashboardDataTool = typeof dataDisplays[number]
 export const dashboardExtendedContentTools = ['markdown', 'codeBlock', 'imageCompare', 'iconLinks', 'stepGuide', 'worldClock'] as const
 export const dashboardAdvancedContentTools = ['imageCarousel', 'imageGallery', 'announcement', 'textTicker', 'tabsContent', 'accordion', 'quote', 'embed', 'actionButton', 'tagCloud', ...dashboardExtendedContentTools] as const
@@ -194,6 +196,13 @@ export interface DashboardProcessOptions {
   requiredStages: string[]
   unit: 'minutes' | 'hours' | 'days'
 }
+export interface DashboardIntervalOptions {
+  endField: string
+  groupField: string
+  unit: 'minutes' | 'hours' | 'days'
+  durationBands: string
+  minConcurrent: number
+}
 export interface DashboardDecorationOptions { count: number; rotation: number; filled: boolean; opacity: number; animate: boolean }
 export const dashboardThresholdComparators = ['above', 'atLeast', 'below', 'atMost'] as const
 export interface DashboardOperationsOptions {
@@ -255,6 +264,7 @@ export interface DashboardWidget extends DashboardRect {
   planningOptions?: DashboardPlanningOptions
   spatialOptions?: DashboardSpatialOptions
   processOptions?: DashboardProcessOptions
+  intervalOptions?: DashboardIntervalOptions
   contentOptions?: DashboardContentOptions
   layoutOptions?: DashboardLayoutOptions
   decorationOptions?: DashboardDecorationOptions
@@ -374,7 +384,7 @@ export function dashboardWidget(id: string, kind: DashboardWidgetKind, name: str
   return {
     id, kind, name, description: '', x: 0, y: 0, w: 6, h: 4,
     text: '', image: '', url: '', target: 100, shape: 'rectangle', color: '', alignment: 'left', tone: 'info', clockDate: true,
-    refresh: 'saved', action: dashboardProcessTool(kind) || dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage' ? 'filter' : 'saved',
+    refresh: 'saved', action: dashboardIntervalTool(kind) || dashboardProcessTool(kind) || dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage' ? 'filter' : 'saved',
     field: '', operation: ['metricGrid', 'metricComparison', 'comparisonTable'].includes(kind) ? 'sum' : 'count',
     padding: [10, 12, 10, 12], corners: mode === 'wall' ? [0, 0, 0, 0] : [12, 12, 12, 12], titleSize: 14, background: '',
     border: !['spacer', 'divider', 'verticalDivider', 'sectionDivider'].includes(kind),
@@ -722,6 +732,16 @@ export function dashboardProcessSettings(value?: unknown): DashboardProcessOptio
     unit: raw.unit === 'minutes' || raw.unit === 'days' ? raw.unit : 'hours',
   }
 }
+export function dashboardIntervalSettings(value?: unknown): DashboardIntervalOptions {
+  const raw = record(value) ?? {}
+  return {
+    endField: text(raw.endField).slice(0, 500),
+    groupField: text(raw.groupField).slice(0, 500),
+    unit: raw.unit === 'minutes' || raw.unit === 'days' ? raw.unit : 'hours',
+    durationBands: text(raw.durationBands, '0.5, 1, 2, 4, 8').slice(0, 400),
+    minConcurrent: integer(raw.minConcurrent, 2, 2, 20),
+  }
+}
 export function dashboardDecorationSettings(value?: unknown): DashboardDecorationOptions {
   const raw = record(value) ?? {}
   return { count: integer(raw.count, 6, 2, 24), rotation: integer(raw.rotation, 0, -180, 180), filled: raw.filled === true, animate: raw.animate !== false,
@@ -830,6 +850,7 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       planningOptions: dashboardPlanningTool(kind) ? dashboardPlanningSettings(item.planningOptions) : undefined,
       spatialOptions: dashboardSpatialTool(kind) ? dashboardSpatialSettings(item.spatialOptions) : undefined,
       processOptions: dashboardProcessTool(kind) ? dashboardProcessSettings(item.processOptions) : undefined,
+      intervalOptions: dashboardIntervalTool(kind) ? dashboardIntervalSettings(item.intervalOptions) : undefined,
       contentOptions: record(item.contentOptions) ? dashboardContentSettings(item.contentOptions) : undefined,
       layoutOptions: record(item.layoutOptions) ? dashboardLayoutSettings(item.layoutOptions) : widget.layoutOptions,
       decorationOptions: record(item.decorationOptions) ? dashboardDecorationSettings(item.decorationOptions) : undefined,

@@ -169,6 +169,10 @@ const toolGroups = [
     { kind: 'processPaths', icon: ListOrdered }, { kind: 'processEndpoints', icon: Columns2 }, { kind: 'processCycle', icon: Clock },
     { kind: 'processWaits', icon: Timer }, { kind: 'processRework', icon: ListRestart }, { kind: 'processCompliance', icon: ClipboardCheck },
   ] },
+  { title: 'intervalTools', icon: Clock, items: [
+    { kind: 'intervalConcurrency', icon: Activity }, { kind: 'intervalCoverage', icon: Gauge }, { kind: 'intervalOverlaps', icon: Layers },
+    { kind: 'intervalDurationBands', icon: SlidersHorizontal }, { kind: 'intervalGroupCoverage', icon: Columns2 }, { kind: 'intervalGaps', icon: Timer },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },
