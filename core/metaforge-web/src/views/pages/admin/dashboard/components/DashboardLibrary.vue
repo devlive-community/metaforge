@@ -165,6 +165,10 @@ const toolGroups = [
     { kind: 'geoPoints', icon: MapPin }, { kind: 'geoGrid', icon: Grid2x2 }, { kind: 'geoTrack', icon: Activity },
     { kind: 'geoBounds', icon: Frame }, { kind: 'geoHotspots', icon: ListOrdered }, { kind: 'geoDistanceBands', icon: SlidersHorizontal },
   ] },
+  { title: 'processTools', icon: Activity, items: [
+    { kind: 'processPaths', icon: ListOrdered }, { kind: 'processEndpoints', icon: Columns2 }, { kind: 'processCycle', icon: Clock },
+    { kind: 'processWaits', icon: Timer }, { kind: 'processRework', icon: ListRestart }, { kind: 'processCompliance', icon: ClipboardCheck },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },

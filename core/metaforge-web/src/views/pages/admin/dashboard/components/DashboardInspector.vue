@@ -198,6 +198,8 @@
                                       @change="emit('widget', $event)"/>
           <DashboardSpatialSettings v-if="widget && spatialData && snapshot" :widget="widget" :fields="chartFields" :dates="chartDateFields"
                                      :numbers="chartNumericFields" @change="emit('widget', $event)"/>
+          <DashboardProcessSettings v-if="widget && processData && snapshot" :widget="widget" :fields="chartFields" :dates="chartDateFields"
+                                     :rows="snapshot.columns" @change="emit('widget', $event)"/>
 
           <DashboardInspectorGroup v-if="widget && advancedData" icon="data" :title="$t('dashboard.studio.dataDisplaySettings')">
             <MfFormItem v-if="['comparisonTable','radialProgress','thresholdCards','sparklineGrid'].includes(widget.kind)" :label="$t('dashboard.studio.dataCategory')">
@@ -554,6 +556,7 @@ import DashboardTemporalSettings from './DashboardTemporalSettings.vue'
 import DashboardComparativeSettings from './DashboardComparativeSettings.vue'
 import DashboardPlanningSettings from './DashboardPlanningSettings.vue'
 import DashboardSpatialSettings from './DashboardSpatialSettings.vue'
+import DashboardProcessSettings from './DashboardProcessSettings.vue'
 import DashboardPanelHeader from './DashboardPanelHeader.vue'
 import DashboardLinkEditor from './DashboardLinkEditor.vue'
 import { MENU_ICONS } from '@/config/menu-icons'
@@ -561,7 +564,7 @@ import { apiBaseUrl } from '@/utils/http'
 import { TokenUtils } from '@/utils/token'
 import { dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardContentSettings, dashboardDataSettings,
   dashboardDecorationSettings, dashboardScreenEffectSizeLimit, type DashboardContentOptions, type DashboardDataOptions, type DashboardDecorationOptions } from '@/model/dashboard-layout'
-import { dashboardAuditSettings, dashboardAuditTool, dashboardBusinessSettings, dashboardBusinessTool, dashboardComparativeSettings, dashboardComparativeTool, dashboardFilterTool, dashboardOperationDataTool, dashboardOperationsSettings, dashboardPlanningSettings, dashboardPlanningTool, dashboardRelationSettings, dashboardRelationTool, dashboardResourceUrl, dashboardSpatialSettings, dashboardSpatialTool, dashboardTemporalSettings, dashboardTemporalTool, type DashboardMode } from '@/model/dashboard-layout'
+import { dashboardAuditSettings, dashboardAuditTool, dashboardBusinessSettings, dashboardBusinessTool, dashboardComparativeSettings, dashboardComparativeTool, dashboardFilterTool, dashboardOperationDataTool, dashboardOperationsSettings, dashboardPlanningSettings, dashboardPlanningTool, dashboardProcessSettings, dashboardProcessTool, dashboardRelationSettings, dashboardRelationTool, dashboardResourceUrl, dashboardSpatialSettings, dashboardSpatialTool, dashboardTemporalSettings, dashboardTemporalTool, type DashboardMode } from '@/model/dashboard-layout'
 import { dashboardBooleanValue, dashboardValueMissing } from '@/model/dashboard-filters'
 import { dashboardAnimationDefaults, dashboardAnimationEffects, dashboardCanContain, dashboardCanvasColor, dashboardCanvasNumber, dashboardCanvasNumbers, dashboardChartMappings, dashboardContainerTool, dashboardDataAggregationTool, dashboardDataTool, dashboardDecorationTools, dashboardLayoutSettings, dashboardMetricTool, dashboardPaddingEdges, dashboardRadiusCorners, dashboardScreenEffectPresets, dashboardScreenEffectQuantityLimit, dashboardScreenEffectSettings, dashboardScreenEffectTool, dashboardSnapshot, dashboardTools, dashboardWallPresets, dashboardWallResolution, dashboardWidgetLabelKey, dashboardWidgetUsesAsset, type DashboardAction, type DashboardAnimation, type DashboardBoard, type DashboardChartOverrides, type DashboardDeadline, type DashboardDesign, type DashboardInsets, type DashboardLayoutOptions, type DashboardRect, type DashboardRefresh, type DashboardScreenEffectOptions, type DashboardWidget } from '@/model/dashboard-layout'
 
@@ -623,6 +626,7 @@ const temporalData = computed(() => dashboardTemporalTool(props.widget?.kind))
 const comparativeData = computed(() => dashboardComparativeTool(props.widget?.kind))
 const planningData = computed(() => dashboardPlanningTool(props.widget?.kind))
 const spatialData = computed(() => dashboardSpatialTool(props.widget?.kind))
+const processData = computed(() => dashboardProcessTool(props.widget?.kind))
 const advancedContent = computed(() => dashboardAdvancedContentTools.some(kind => kind === props.widget?.kind))
 const advancedDecoration = computed(() => dashboardAdvancedDecorationTools.some(kind => kind === props.widget?.kind))
 const dataSettings = computed(() => { const value = dashboardDataSettings(props.widget?.dataOptions); return props.widget?.kind === 'radialProgress' ? { ...value, limit: Math.min(5, value.limit) } : value })
@@ -754,6 +758,7 @@ function changeAsset(value: unknown) {
     planningOptions: planningData.value ? dashboardPlanningSettings({ ...props.widget?.planningOptions,
       statusField: '', labelField: '', ownerField: '', groupField: '', completedField: '' }) : undefined,
     spatialOptions: spatialData.value ? dashboardSpatialSettings({ ...props.widget?.spatialOptions, latitudeField: '', longitudeField: '', groupField: '' }) : undefined,
+    processOptions: processData.value ? dashboardProcessSettings({ ...props.widget?.processOptions, entityField: '', stageField: '', requiredStages: [] }) : undefined,
     chartOptions: mapGeoJson === undefined ? undefined : { mapGeoJson } })
 }
 function setDataAggregation(value: unknown) {
@@ -789,7 +794,7 @@ function changeKind(value: unknown) {
   if (!kind || !props.widget || kind === props.widget.kind) return
   const effect = dashboardScreenEffectTool(kind)
   const modeDefaults = effect || effectKind.value ? { movable: !effect, resizable: !effect, showCard: !effect, showTitle: !effect } : {}
-  const linked = dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage'
+  const linked = dashboardProcessTool(kind) || dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage'
   emit('widget', { ...modeDefaults, kind, chartOptions: undefined, field: '', reportCode: dashboardWidgetUsesAsset(kind) ? props.widget.reportCode : undefined,
     operationsOptions: dashboardOperationDataTool(kind) ? dashboardOperationsSettings(kind) : undefined,
     businessOptions: dashboardBusinessTool(kind) ? dashboardBusinessSettings() : undefined,
@@ -799,7 +804,8 @@ function changeKind(value: unknown) {
     comparativeOptions: dashboardComparativeTool(kind) ? dashboardComparativeSettings() : undefined,
     planningOptions: dashboardPlanningTool(kind) ? dashboardPlanningSettings() : undefined,
     spatialOptions: dashboardSpatialTool(kind) ? dashboardSpatialSettings() : undefined,
-    action: linked ? 'filter' : relationData.value || auditData.value || temporalData.value || comparativeData.value || planningData.value || spatialData.value ? 'saved' : props.widget.action,
+    processOptions: dashboardProcessTool(kind) ? dashboardProcessSettings() : undefined,
+    action: linked ? 'filter' : relationData.value || auditData.value || temporalData.value || comparativeData.value || planningData.value || spatialData.value || processData.value ? 'saved' : props.widget.action,
     screenEffect: effect ? dashboardScreenEffectSettings(kind) : undefined })
 }
 function setRefreshMinutes(value: number | undefined) {
