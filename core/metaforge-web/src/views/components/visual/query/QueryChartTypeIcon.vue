@@ -19,5 +19,8 @@ const icons = {
   tree: Network, treemap: Boxes, sunburst: Sun, graph: Network, sankey: Workflow, map: Map, lines: Route, custom: CodeXml,
   stepLine: Activity, stackedBar: ChartColumnStacked, stackedHorizontal: ChartBarStacked, stackedArea: ChartArea,
   percentStackedBar: ChartColumnStacked, bubble: ChartScatter,
+  stackedLine: ChartSpline, percentStackedHorizontal: ChartBarStacked,
+  waterfall: ChartNoAxesColumnIncreasing, lollipop: ChartScatter, dumbbell: Route, rangeBand: ChartArea,
+  dualAxis: Activity, polarBar: Radar, polarStackedBar: ChartPie, polarLine: Circle,
 } satisfies Record<QueryChartType, typeof ChartLine>
 </script>

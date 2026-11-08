@@ -29,6 +29,14 @@ const specs: Partial<Record<QueryChartType, ChartDataSpec>> = {
   lines: { raw: true, fields: ['startX', 'startY', 'endX', 'endY'] },
   custom: { category: 'category', raw: true, fields: ['lower', 'upper'] },
   bubble: { raw: true, fields: ['bubbleX', 'bubbleY', 'bubbleSize'] },
+  waterfall: { category: 'category' },
+  lollipop: { category: 'category' },
+  dumbbell: { category: 'category', raw: true, fields: ['before', 'after'] },
+  rangeBand: { category: 'category', raw: true, fields: ['lower', 'upper'] },
+  dualAxis: { category: 'category', raw: true, fields: ['columnMeasure', 'lineMeasure'] },
+  polarBar: { category: 'category', series: 'group' },
+  polarStackedBar: { category: 'category', series: 'group' },
+  polarLine: { category: 'category', series: 'group' },
   gauge: {},
 }
 
@@ -43,6 +51,8 @@ const geometries: Partial<Record<QueryChartType, ChartGeometry>> = {
   stackedHorizontal: { series: 'bar', stacked: true, horizontal: true },
   stackedArea: { series: 'line', stacked: true, area: true },
   percentStackedBar: { series: 'bar', stacked: true, percentage: true },
+  stackedLine: { series: 'line', stacked: true },
+  percentStackedHorizontal: { series: 'bar', stacked: true, horizontal: true, percentage: true },
 }
 
 export function queryChartGeometry(type: QueryChartType) {
@@ -80,6 +90,8 @@ const fieldAliases: Record<string, string[]> = {
   startX: ['startx', 'sourcex', 'fromx'], startY: ['starty', 'sourcey', 'fromy'],
   endX: ['endx', 'targetx', 'tox'], endY: ['endy', 'targety', 'toy'],
   bubbleX: ['x', 'xvalue'], bubbleY: ['y', 'yvalue'], bubbleSize: ['size', 'bubblesize', 'weight', 'radius'],
+  before: ['before', 'previous', 'baseline'], after: ['after', 'current', 'actual'],
+  columnMeasure: ['volume', 'count', 'quantity'], lineMeasure: ['rate', 'price', 'average'],
 }
 
 export function suggestChartFields(type: QueryChartType, numericFields: string[]): Pick<ChartMappings, 'chartFields' | 'parallelFields'> {
@@ -92,7 +104,7 @@ export function suggestChartFields(type: QueryChartType, numericFields: string[]
     const field = numericFields.find(name => fieldAliases[key]?.includes(normalized(name)))
     if (field) chartFields[key] = field
   }
-  if (type === 'bubble') {
+  if (['bubble', 'dumbbell', 'rangeBand', 'dualAxis'].includes(type)) {
     const available = numericFields.filter(field => !Object.values(chartFields).includes(field))
     for (const key of spec.fields) if (!chartFields[key] && available.length) chartFields[key] = available.shift()!
   }

@@ -66,7 +66,7 @@ import { useI18n } from 'vue-i18n'
 import { ChartColumn, Download, Table2 } from '@lucide/vue'
 import { MfMessage } from 'metaforge-ui'
 import { aggregateQueryChart, type QueryChartOptions, type QueryChartRow } from '@/model/query-chart'
-import { chartDataSpec } from '@/model/query-chart-data'
+import { chartDataSpec, queryChartGeometry } from '@/model/query-chart-data'
 import { prepareQueryChart } from '@/model/query-chart-series'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import ResultTable from '@/views/components/table/ResultTable.vue'
@@ -92,7 +92,7 @@ const rawSeries = computed(() => !!chartDataSpec(props.options.type)?.raw)
 const metricLabel = computed(() => props.options.metric || t('queryChart.records'))
 const circular = computed(() => ['pie', 'donut', 'rose', 'funnel'].includes(props.options.type))
 const invalidCircular = computed(() => circular.value && result.value.points.some(point => (point.value ?? 0) < 0))
-const invalidShare = computed(() => props.options.type === 'percentStackedBar' && result.value.points.some(point => (point.value ?? 0) < 0))
+const invalidShare = computed(() => queryChartGeometry(props.options.type)?.percentage && result.value.points.some(point => (point.value ?? 0) < 0))
 const chartRows = computed(() => {
   const points = result.value.points
   if (circular.value) return points.filter(point => (point.value ?? 0) > 0)

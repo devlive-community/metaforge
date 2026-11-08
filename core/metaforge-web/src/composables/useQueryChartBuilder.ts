@@ -3,7 +3,7 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { MfMessage } from 'metaforge-ui'
 import ReportService from '@/services/report'
-import { chartDataSpec } from '@/model/query-chart-data'
+import { chartDataSpec, queryChartGeometry } from '@/model/query-chart-data'
 import { prepareQueryChart } from '@/model/query-chart-series'
 import { isCompleteFilter } from '@/model/typed-filter'
 import { aggregateQueryChart, chartFieldKind, createQueryChartSnapshot, defaultQueryChart,
@@ -102,11 +102,12 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
       error.value = t('queryChart.incompleteFilter')
       return
     }
-    if (chart.type !== 'percentStackedBar' && chart.min !== undefined && chart.max !== undefined && chart.min >= chart.max) {
+    const percentage = queryChartGeometry(chart.type)?.percentage
+    if (!percentage && chart.min !== undefined && chart.max !== undefined && chart.min >= chart.max) {
       error.value = t('queryChart.axisRange')
       return
     }
-    if (chart.type === 'percentStackedBar' && result.value.points.some(point => (point.value ?? 0) < 0)) {
+    if (percentage && result.value.points.some(point => (point.value ?? 0) < 0)) {
       error.value = t('queryChart.nonnegativeShares')
       return
     }

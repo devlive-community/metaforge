@@ -1,6 +1,6 @@
 import type { CustomSeriesRenderItem, EChartsOption } from 'echarts'
 import { chartDataSpec, geoJsonLimit, requiresChartSeries } from './query-chart-data'
-import type { aggregateQueryChart, QueryChartOptions, QueryChartPoint, QueryChartRow } from './query-chart'
+import { aggregateQueryChart, type QueryChartOptions, type QueryChartPoint, type QueryChartRow } from './query-chart'
 
 type Aggregated = ReturnType<typeof aggregateQueryChart>
 type MapInput = Parameters<typeof import('echarts').registerMap>[1]
@@ -87,6 +87,25 @@ const rangeBar: CustomSeriesRenderItem = (_params, api) => {
   }
 }
 
+function horizontalMarker(paired: boolean, radius: number): CustomSeriesRenderItem {
+  return (_params, api) => {
+    const row = api.value(0)
+    const [left, y] = api.coord([api.value(1), row])
+    const [right] = api.coord([api.value(2), row])
+    const color = api.visual('color') as string
+    const marker = (x: number, open = false) => ({
+      type: 'circle' as const, shape: { cx: x, cy: y, r: radius },
+      style: { fill: open ? 'transparent' : color, stroke: color, lineWidth: 2 },
+    })
+    return {
+      type: 'group', children: [
+        { type: 'line', shape: { x1: left, y1: y, x2: right, y2: y }, style: { stroke: color, lineWidth: 2, opacity: .65 } },
+        ...(paired ? [marker(left, left !== right)] : []), marker(right),
+      ],
+    }
+  }
+}
+
 export function prepareQueryChart(options: QueryChartOptions, result: Aggregated): PreparedQueryChart | undefined {
   const spec = chartDataSpec(options.type)
   if (!spec) return
@@ -115,9 +134,110 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
     yAxis: { type: 'value' as const, name: options.yTitle, min: options.min, max: options.max, axisLabel: { show: options.yVisible },
       splitLine: { show: options.grid } },
   })
+  const horizontalAxes = (categories: string[]) => {
+    const axis = axes(categories)
+    return { xAxis: axis.yAxis, yAxis: { ...axis.xAxis, inverse: true } }
+  }
   const bound = Math.max(1, ...points.map(point => point.value))
 
   switch (options.type) {
+    case 'waterfall': {
+      let running = 0
+      const data = points.map((point, index) => {
+        const start = running
+        running += point.value
+        return { value: [index, start, running, point.value], pointId: id(pointRows(point)),
+          itemStyle: point.value < 0 ? { color: '#d15864' } : undefined }
+      })
+      return data.length ? done({ ...axes(points.map(point => point.category)),
+        series: [{ type: 'custom', renderItem: rangeBar, clip: true, dimensions: [category, 'start', 'end', options.metric || 'value'],
+          encode: { x: 0, y: [1, 2], tooltip: [3] }, data }] }) : issue('noPoints')
+    }
+    case 'lollipop':
+    case 'dumbbell': {
+      const paired = options.type === 'dumbbell'
+      const items = paired ? raw.flatMap(row => {
+        const before = numberValue(row[fields[0]]), after = numberValue(row[fields[1]])
+        if (row[category] == null || before === undefined || after === undefined) return []
+        return [{ label: String(row[category]), before, after, rows: [row] }]
+      }) : points.map(point => ({ label: point.category, before: 0, after: point.value, rows: pointRows(point) }))
+      return items.length ? done({ ...horizontalAxes(items.map(item => item.label)),
+        series: [{ type: 'custom', renderItem: horizontalMarker(paired, Math.max(3, options.pointSize / 2)), clip: true,
+          dimensions: [category, paired ? fields[0] : 'baseline', paired ? fields[1] : options.metric || 'value'],
+          encode: { x: [1, 2], y: 0, tooltip: paired ? [1, 2] : [2] },
+          data: items.map((item, index) => ({ value: [index, item.before, item.after], pointId: id(item.rows) })) }] }) : issue('noPoints')
+    }
+    case 'dualAxis':
+    case 'rangeBand': {
+      const band = options.type === 'rangeBand'
+      const source = band ? raw.filter(row => {
+        const lower = numberValue(row[fields[0]]), upper = numberValue(row[fields[1]])
+        return lower !== undefined && upper !== undefined && lower <= upper
+      }) : raw
+      const [first, second] = fields.map((metric, index) => aggregateQueryChart(source, {
+        ...options, metric, aggregation: band ? index === 0 ? 'min' : 'max' : 'sum',
+        filtersEnabled: false, series: '', nulls: 'keep',
+      }))
+      const categories = [...new Set([...first.points, ...second.points].map(point => point.category))]
+      const byCategory = (data: Aggregated) => new Map(data.points.map(point => [point.category, point]))
+      const left = byCategory(first), right = byCategory(second)
+      const axis = axes(categories)
+      if (![...first.points, ...second.points].some(point => point.value !== null)) return issue('noPoints')
+      if (band) {
+        const ranges = categories.map(label => {
+          const lower = left.get(label), upper = right.get(label)
+          if (lower?.value == null || upper?.value == null) return null
+          return { value: [upper.value - lower.value, lower.value, upper.value], pointId: id(first.details.get(lower.pointId) ?? []) }
+        })
+        return done({ ...axis, series: [
+          { type: 'line', stack: 'range', stackStrategy: 'all', silent: true, symbol: 'none', name: fields[0],
+            tooltip: { show: false }, lineStyle: { opacity: 0 }, data: categories.map(label => left.get(label)?.value ?? null) },
+          { type: 'line', stack: 'range', stackStrategy: 'all', name: fields[1], symbolSize: options.pointSize,
+            dimensions: ['span', fields[0], fields[1]], encode: { y: 0, tooltip: [1, 2] },
+            areaStyle: { opacity: Math.max(.15, options.opacity / 100) }, data: ranges },
+        ] })
+      }
+      const seriesValues = (map: typeof left, data: Aggregated) => categories.map(label => {
+        const point = map.get(label)
+        if (point?.value == null) return null
+        return { value: point.value, pointId: id(data.details.get(point.pointId) ?? []) }
+      })
+      return done({ ...axis, grid: { top: 36, bottom: options.zoom ? 38 : 16, left: 24, right: 24, containLabel: true },
+        legend: { show: options.legend, selectedMode: options.legendInteractive, type: 'scroll', top: 0 },
+        yAxis: fields.map((name, index) => ({ ...axis.yAxis, min: undefined, max: undefined, name,
+          splitLine: { show: index === 0 && options.grid } })),
+        series: [
+          { type: 'bar', name: fields[0], yAxisIndex: 0, data: seriesValues(left, first) },
+          { type: 'line', name: fields[1], yAxisIndex: 1, data: seriesValues(right, second), symbolSize: options.pointSize },
+        ] })
+    }
+    case 'polarBar':
+    case 'polarStackedBar':
+    case 'polarLine': {
+      const categories = [...new Set(points.map(point => point.category))]
+      if (!categories.length) return issue('noPoints')
+      const groups = new Map<string, Map<string, QueryChartPoint>>()
+      for (const point of points) {
+        const name = point.series || options.seriesName || options.metric || category
+        const group = groups.get(name) ?? new Map()
+        group.set(point.category, point)
+        groups.set(name, group)
+      }
+      return done({
+        polar: { radius: ['8%', '67%'] },
+        angleAxis: { type: 'category', data: categories, show: options.xVisible, axisLabel: { hideOverlap: options.hideOverlap } },
+        radiusAxis: { min: options.min, max: options.max, axisLabel: { show: options.yVisible }, splitLine: { show: options.grid } },
+        legend: { show: options.legend && groups.size > 1, selectedMode: options.legendInteractive, bottom: 0, type: 'scroll' },
+        series: [...groups].map(([name, group]) => ({
+          type: options.type === 'polarLine' ? 'line' : 'bar', name, coordinateSystem: 'polar',
+          stack: options.type === 'polarStackedBar' ? 'radius' : undefined,
+          data: categories.map(label => {
+            const point = group.get(label)
+            return point ? { value: point.value, pointId: id(pointRows(point)) } : null
+          }),
+        })),
+      })
+    }
     case 'candlestick':
     case 'custom':
     case 'lines':

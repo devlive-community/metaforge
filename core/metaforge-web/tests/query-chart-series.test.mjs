@@ -21,7 +21,8 @@ const options = {
   ...defaultQueryChart(headers), category: 'region', series: 'group', mapGeoJson,
   parallelFields: ['open', 'close', 'high'],
   chartFields: { open: 'open', close: 'close', low: 'low', high: 'high', value: 'open', lower: 'low', upper: 'high',
-    startX: 'startX', startY: 'startY', endX: 'endX', endY: 'endY' },
+    startX: 'startX', startY: 'startY', endX: 'endX', endY: 'endY',
+    before: 'open', after: 'close', columnMeasure: 'open', lineMeasure: 'close' },
 }
 
 test('the dashboard includes every type shown in the visualizer', () => {
@@ -31,11 +32,14 @@ test('the dashboard includes every type shown in the visualizer', () => {
 
 test('specialized field mappings produce real ECharts series that can render SVG', () => {
   const types = ['heatmap', 'gauge', 'candlestick', 'boxplot', 'histogram', 'parallel', 'themeRiver', 'tree', 'treemap', 'sunburst', 'graph', 'sankey', 'map', 'lines', 'custom']
+  const compositions = { waterfall: 'custom', lollipop: 'custom', dumbbell: 'custom', rangeBand: 'line', dualAxis: 'bar',
+    polarBar: 'bar', polarStackedBar: 'bar', polarLine: 'line' }
+  types.push(...Object.keys(compositions))
   for (const type of types) {
     const chartOptions = { ...options, type, category: type === 'themeRiver' ? 'date' : options.category }
     const prepared = prepareQueryChart(chartOptions, aggregateQueryChart(rows, chartOptions))
     assert.equal(prepared.issue, undefined, type)
-    assert.equal(prepared.option.series[0].type, type === 'histogram' ? 'bar' : type)
+    assert.equal(prepared.option.series[0].type, compositions[type] ?? (type === 'histogram' ? 'bar' : type))
     assert.ok(prepared.details.size, type)
     if (prepared.map) echarts.registerMap(prepared.map.name, prepared.map.source)
     const instance = echarts.init(null, undefined, { renderer: 'svg', ssr: true, width: 540, height: 380 })
@@ -45,6 +49,14 @@ test('specialized field mappings produce real ECharts series that can render SVG
     }
     finally { instance.dispose() }
   }
+})
+
+test('waterfall accumulates signed changes across zero and drills down to the category', () => {
+  const input = [{ category: 'A', value: 5, group: 'x' }, { category: 'B', value: -8, group: 'x' }, { category: 'B', value: -1, group: 'y' }]
+  const chart = { ...defaultQueryChart(['category', 'value', 'group']), type: 'waterfall', metric: 'value', series: 'group', aggregation: 'sum' }
+  const prepared = prepareQueryChart(chart, aggregateQueryChart(input, chart))
+  assert.deepEqual(prepared.option.series[0].data.map(point => point.value), [[0, 0, 5, 5], [1, 5, -4, -9]])
+  assert.deepEqual(prepared.details.get(1), input.slice(1))
 })
 
 test('specialized data reports incomplete mappings, invalid maps, and cyclic Sankey edges', () => {

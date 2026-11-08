@@ -58,9 +58,10 @@ const set = (key: Key, value: unknown) => {
 const groups = computed(() => {
   const type = props.options.type
   const geometry = queryChartGeometry(type)
-  const cartesian = !!geometry || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom'].includes(type)
+  const cartesian = !!geometry || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom',
+    'waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'dualAxis'].includes(type)
   const line = geometry?.series === 'line'
-  const variableScale = geometry?.percentage ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
+  const variableScale = geometry?.percentage || type === 'dualAxis' ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
   if (props.panel === 'axes') return [
     { title: 'xAxis', fields: [text('xTitle'), ...(props.timeCategory ? [select('dateFormat', ['short', 'full', 'time'])] : []),
       select('sort', ['asc', 'desc', 'original']), ...(cartesian ? [toggle('xVisible'), toggle('xTitleVisible'), toggle('hideOverlap')] : [])] },
