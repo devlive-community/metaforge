@@ -1,5 +1,8 @@
 import type { DashboardWidget } from './dashboard-layout'
 import type { QueryChartRow } from './query-chart'
+import { reportDateKey as dashboardDateKey, reportNumber as dashboardNumericValue, reportTimestamp as dashboardTimestamp } from './report-values'
+
+export { dashboardDateKey, dashboardNumericValue, dashboardTimestamp }
 
 export type DashboardFilterValue =
   | { kind: 'selectFilter' | 'searchFilter'; value: string }
@@ -13,25 +16,8 @@ export type DashboardFilterValue =
 export type DashboardFilter = DashboardFilterValue & { reportCode: string; field: string }
 export const dashboardRelativeDateChoices = [7, 30, 90] as const
 
-export function dashboardDateKey(value: unknown): string {
-  const key = value instanceof Date && Number.isFinite(value.getTime())
-    ? value.toISOString().slice(0, 10)
-    : typeof value === 'string' ? /^(\d{4}-\d{2}-\d{2})(?:[T ]|$)/.exec(value)?.[1] : undefined
-  if (!key) return ''
-  const day = new Date(key + 'T00:00:00Z')
-  return Number.isFinite(day.getTime()) && day.toISOString().slice(0, 10) === key ? key : ''
-}
-
 export function dashboardDateRangeValid(start: string, end: string) {
   return (!start || dashboardDateKey(start) === start) && (!end || dashboardDateKey(end) === end) && (!start || !end || start <= end)
-}
-
-/** Parse a date-only cell in the viewer's local time, or honor the offset of a timestamp. */
-export function dashboardTimestamp(value: unknown) {
-  const day = dashboardDateKey(value)
-  if (!day) return
-  const time = value instanceof Date ? value.getTime() : Date.parse(value === day ? day + 'T00:00:00' : String(value).replace(' ', 'T'))
-  return Number.isFinite(time) ? time : undefined
 }
 
 function scalar(value: unknown) {
@@ -40,12 +26,6 @@ function scalar(value: unknown) {
 
 export function dashboardValueMissing(value: unknown) {
   return value == null || typeof value === 'string' && !value.trim()
-}
-
-export function dashboardNumericValue(value: unknown): number | undefined {
-  if (typeof value !== 'number' && (typeof value !== 'string' || !/^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/.test(value.trim()))) return
-  const number = Number(value)
-  return Number.isFinite(number) ? number : undefined
 }
 
 export function dashboardBooleanValue(value: unknown) {

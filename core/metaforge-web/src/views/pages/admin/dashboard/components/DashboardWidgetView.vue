@@ -76,6 +76,9 @@
                         @filter="emit('filter', $event)"/>
   <DashboardIntervalView v-else-if="options && dashboardIntervalTool(widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"
                          @filter="emit('filter', $event)"/>
+  <ProcessQualityView v-else-if="options && isProcessQualityView(widget.kind)" :kind="widget.kind" :options="qualityOptions" :fields="options.fields"
+                      :rows="qualityRows" :interactive="!editable && options.pointAction === 'filter'" :color="widget.color"
+                      @select="emit('filter', $event)"/>
   <DashboardOperationsView v-else-if="options && dashboardOperationDataTool(widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
   <DashboardMonitoring v-else-if="options && dashboardMonitoringTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
   <DashboardExtendedData v-else-if="options && dashboardExtendedDataTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
@@ -127,6 +130,8 @@ import DashboardAdvancedDecoration from './DashboardAdvancedDecoration.vue'
 import ChartLoading from '@/views/components/visual/ChartLoading.vue'
 import ChartError from '@/views/components/visual/ChartError.vue'
 import EChart from '@/views/components/visual/EChart.vue'
+import ProcessQualityView from '@/views/components/visual/quality/ProcessQualityView.vue'
+import { isProcessQualityView, readProcessQualityOptions } from '@/model/process-quality'
 import type { EChartsOption } from 'echarts'
 import { aggregateQueryChart, chartFieldKind, defaultQueryChart, type QueryChartConfiguration, type QueryChartRow } from '@/model/query-chart'
 import { dashboardAuditTool, dashboardBusinessTool, dashboardComparativeTool, dashboardExtendedDataTools, dashboardExtendedContentTools, dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardFilterTool, dashboardIntervalTool, dashboardMetric, dashboardMetricTool, dashboardMonitoringTools, dashboardOperationDataTool, dashboardPlanningTool, dashboardProcessTool, dashboardRelationTool, dashboardResourceUrl, dashboardRowsInPeriod, dashboardSpatialTool, dashboardTemporalTool, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
@@ -169,6 +174,8 @@ const ranking = computed(() => {
   const result = aggregateQueryChart(rows.value, options.value)
   return { ...result, points: [...result.points].sort((a, b) => (a.value ?? 0) - (b.value ?? 0)) }
 })
+const qualityOptions = computed(() => readProcessQualityOptions(props.widget.processQualityOptions))
+const qualityRows = computed(() => options.value ? aggregateQueryChart(rows.value, { ...options.value, type: 'table' }).filtered : [])
 const metric = computed(() => {
   if (!dashboardMetricTool(props.widget.kind) || !options.value) return null
   const filtered = aggregateQueryChart(rows.value, { ...options.value, type: 'table' }).filtered

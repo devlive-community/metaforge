@@ -1,6 +1,7 @@
 import { chartFieldKind, queryChartTypes, type QueryChartConfiguration, type QueryChartOptions, type QueryChartPoint, type QueryChartRow, type QueryChartType } from './query-chart'
 import { geoJsonLimit, suggestChartFields, type ChartMappings } from './query-chart-data'
 import type { ReportModel } from './report'
+import { isProcessQualityView, processQualityViews, readProcessQualityOptions, type ProcessQualityOptions } from './process-quality'
 
 export const dashboardMode = ['dashboard', 'wall'] as const
 export type DashboardMode = typeof dashboardMode[number]
@@ -27,7 +28,7 @@ export function dashboardProcessTool(kind?: DashboardWidgetKind) { return dashbo
 export const dashboardIntervalTools = ['intervalConcurrency', 'intervalCoverage', 'intervalOverlaps', 'intervalDurationBands', 'intervalGroupCoverage', 'intervalGaps'] as const
 export function dashboardIntervalTool(kind?: DashboardWidgetKind) { return dashboardIntervalTools.some(tool => tool === kind) }
 export const dashboardAdvancedDataTools = ['metricTicker', 'metricComparison', 'metricTrend', 'bulletMetric', 'rankList', 'distributionList', 'statusGrid', 'recordCards', ...dashboardExtendedDataTools, ...dashboardMonitoringTools] as const
-const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools, ...dashboardAuditTools, ...dashboardTemporalTools, ...dashboardComparativeTools, ...dashboardPlanningTools, ...dashboardSpatialTools, ...dashboardProcessTools, ...dashboardIntervalTools] as const
+const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools, ...dashboardAuditTools, ...dashboardTemporalTools, ...dashboardComparativeTools, ...dashboardPlanningTools, ...dashboardSpatialTools, ...dashboardProcessTools, ...dashboardIntervalTools, ...processQualityViews] as const
 export type DashboardDataTool = typeof dataDisplays[number]
 export const dashboardExtendedContentTools = ['markdown', 'codeBlock', 'imageCompare', 'iconLinks', 'stepGuide', 'worldClock'] as const
 export const dashboardAdvancedContentTools = ['imageCarousel', 'imageGallery', 'announcement', 'textTicker', 'tabsContent', 'accordion', 'quote', 'embed', 'actionButton', 'tagCloud', ...dashboardExtendedContentTools] as const
@@ -269,6 +270,7 @@ export interface DashboardWidget extends DashboardRect {
   spatialOptions?: DashboardSpatialOptions
   processOptions?: DashboardProcessOptions
   intervalOptions?: DashboardIntervalOptions
+  processQualityOptions?: ProcessQualityOptions
   contentOptions?: DashboardContentOptions
   layoutOptions?: DashboardLayoutOptions
   decorationOptions?: DashboardDecorationOptions
@@ -388,7 +390,7 @@ export function dashboardWidget(id: string, kind: DashboardWidgetKind, name: str
   return {
     id, kind, name, description: '', x: 0, y: 0, w: 6, h: 4,
     text: '', image: '', url: '', target: 100, shape: 'rectangle', color: '', alignment: 'left', tone: 'info', clockDate: true,
-    refresh: 'saved', action: dashboardIntervalTool(kind) || dashboardProcessTool(kind) || dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage' ? 'filter' : 'saved',
+    refresh: 'saved', action: isProcessQualityView(kind) || dashboardIntervalTool(kind) || dashboardProcessTool(kind) || dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage' ? 'filter' : 'saved',
     field: '', operation: ['metricGrid', 'metricComparison', 'comparisonTable'].includes(kind) ? 'sum' : 'count',
     padding: [10, 12, 10, 12], corners: mode === 'wall' ? [0, 0, 0, 0] : [12, 12, 12, 12], titleSize: 14, background: '',
     border: !['spacer', 'divider', 'verticalDivider', 'sectionDivider'].includes(kind),
@@ -855,6 +857,7 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       spatialOptions: dashboardSpatialTool(kind) ? dashboardSpatialSettings(item.spatialOptions) : undefined,
       processOptions: dashboardProcessTool(kind) ? dashboardProcessSettings(item.processOptions) : undefined,
       intervalOptions: dashboardIntervalTool(kind) ? dashboardIntervalSettings(item.intervalOptions) : undefined,
+      processQualityOptions: isProcessQualityView(kind) ? readProcessQualityOptions(item.processQualityOptions) : undefined,
       contentOptions: record(item.contentOptions) ? dashboardContentSettings(item.contentOptions) : undefined,
       layoutOptions: record(item.layoutOptions) ? dashboardLayoutSettings(item.layoutOptions) : widget.layoutOptions,
       decorationOptions: record(item.decorationOptions) ? dashboardDecorationSettings(item.decorationOptions) : undefined,

@@ -202,6 +202,10 @@
                                      :rows="snapshot.columns" @change="emit('widget', $event)"/>
           <DashboardIntervalSettings v-if="widget && intervalData && snapshot" :widget="widget" :fields="chartFields" :dates="chartDateFields"
                                       @change="emit('widget', $event)"/>
+          <DashboardInspectorGroup v-if="widget && isProcessQualityView(widget.kind) && snapshot" icon="data" :title="$t('processQuality.settings')">
+            <ProcessQualityFields :kind="widget.kind" :model-value="qualityOptions" :fields="chartFields" :measures="qualityMeasures"
+                                  :orders="qualityOrders" @update:model-value="value => emit('widget', { processQualityOptions: value })"/>
+          </DashboardInspectorGroup>
 
           <DashboardInspectorGroup v-if="widget && advancedData" icon="data" :title="$t('dashboard.studio.dataDisplaySettings')">
             <MfFormItem v-if="['comparisonTable','radialProgress','thresholdCards','sparklineGrid'].includes(widget.kind)" :label="$t('dashboard.studio.dataCategory')">
@@ -561,6 +565,9 @@ import DashboardPlanningSettings from './DashboardPlanningSettings.vue'
 import DashboardSpatialSettings from './DashboardSpatialSettings.vue'
 import DashboardProcessSettings from './DashboardProcessSettings.vue'
 import DashboardIntervalSettings from './DashboardIntervalSettings.vue'
+import ProcessQualityFields from '@/views/components/visual/quality/ProcessQualityFields.vue'
+import { isProcessQualityView, readProcessQualityOptions } from '@/model/process-quality'
+import { reportNumber } from '@/model/report-values'
 import DashboardPanelHeader from './DashboardPanelHeader.vue'
 import DashboardLinkEditor from './DashboardLinkEditor.vue'
 import { MENU_ICONS } from '@/config/menu-icons'
@@ -632,6 +639,8 @@ const planningData = computed(() => dashboardPlanningTool(props.widget?.kind))
 const spatialData = computed(() => dashboardSpatialTool(props.widget?.kind))
 const processData = computed(() => dashboardProcessTool(props.widget?.kind))
 const intervalData = computed(() => dashboardIntervalTool(props.widget?.kind))
+const qualityData = computed(() => isProcessQualityView(props.widget?.kind))
+const qualityOptions = computed(() => readProcessQualityOptions(props.widget?.processQualityOptions))
 const advancedContent = computed(() => dashboardAdvancedContentTools.some(kind => kind === props.widget?.kind))
 const advancedDecoration = computed(() => dashboardAdvancedDecorationTools.some(kind => kind === props.widget?.kind))
 const dataSettings = computed(() => { const value = dashboardDataSettings(props.widget?.dataOptions); return props.widget?.kind === 'radialProgress' ? { ...value, limit: Math.min(5, value.limit) } : value })
@@ -699,6 +708,14 @@ const snapshot = computed(() => dashboardSnapshot(asset.value))
 const chartFields = computed(() => (snapshot.value?.queryChart.options.fields ?? []).map(value => ({ value, label: value })))
 const chartNumericFields = computed(() => chartFields.value.filter(field => chartFieldKind(snapshot.value?.columns ?? [], field.value) === 'number'))
 const chartDateFields = computed(() => chartFields.value.filter(field => chartFieldKind(snapshot.value?.columns ?? [], field.value) === 'date'))
+const qualityMeasures = computed(() => {
+  const sample = snapshot.value?.columns.slice(0, 200) ?? []
+  return chartFields.value.filter(field => sample.some(row => reportNumber(row[field.value]) !== undefined))
+})
+const qualityOrders = computed(() => [
+  ...chartDateFields.value.map(field => ({ ...field, type: 'date' as const })),
+  ...qualityMeasures.value.map(field => ({ ...field, type: 'number' as const })),
+])
 const dateFilterWidget = computed(() => props.widget?.kind === 'dateRangeFilter' || props.widget?.kind === 'relativeDateFilter')
 const filterFields = computed(() => {
   if (dateFilterWidget.value) return chartDateFields.value
@@ -768,6 +785,7 @@ function changeAsset(value: unknown) {
     spatialOptions: spatialData.value ? dashboardSpatialSettings({ ...props.widget?.spatialOptions, latitudeField: '', longitudeField: '', groupField: '' }) : undefined,
     processOptions: processData.value ? dashboardProcessSettings({ ...props.widget?.processOptions, entityField: '', stageField: '', requiredStages: [] }) : undefined,
     intervalOptions: intervalData.value ? dashboardIntervalSettings({ ...props.widget?.intervalOptions, endField: '', groupField: '' }) : undefined,
+    processQualityOptions: qualityData.value ? { ...qualityOptions.value, measure: '', order: undefined, group: '' } : undefined,
     chartOptions: mapGeoJson === undefined ? undefined : { mapGeoJson } })
 }
 function setDataAggregation(value: unknown) {
@@ -803,7 +821,7 @@ function changeKind(value: unknown) {
   if (!kind || !props.widget || kind === props.widget.kind) return
   const effect = dashboardScreenEffectTool(kind)
   const modeDefaults = effect || effectKind.value ? { movable: !effect, resizable: !effect, showCard: !effect, showTitle: !effect } : {}
-  const linked = dashboardIntervalTool(kind) || dashboardProcessTool(kind) || dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage'
+  const linked = isProcessQualityView(kind) || dashboardIntervalTool(kind) || dashboardProcessTool(kind) || dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage'
   emit('widget', { ...modeDefaults, kind, chartOptions: undefined, field: '', reportCode: dashboardWidgetUsesAsset(kind) ? props.widget.reportCode : undefined,
     operationsOptions: dashboardOperationDataTool(kind) ? dashboardOperationsSettings(kind) : undefined,
     businessOptions: dashboardBusinessTool(kind) ? dashboardBusinessSettings() : undefined,
@@ -815,7 +833,8 @@ function changeKind(value: unknown) {
     spatialOptions: dashboardSpatialTool(kind) ? dashboardSpatialSettings() : undefined,
     processOptions: dashboardProcessTool(kind) ? dashboardProcessSettings() : undefined,
     intervalOptions: dashboardIntervalTool(kind) ? dashboardIntervalSettings() : undefined,
-    action: linked ? 'filter' : relationData.value || auditData.value || temporalData.value || comparativeData.value || planningData.value || spatialData.value || processData.value || intervalData.value ? 'saved' : props.widget.action,
+    processQualityOptions: isProcessQualityView(kind) ? qualityOptions.value : undefined,
+    action: linked ? 'filter' : relationData.value || auditData.value || temporalData.value || comparativeData.value || planningData.value || spatialData.value || processData.value || intervalData.value || qualityData.value ? 'saved' : props.widget.action,
     screenEffect: effect ? dashboardScreenEffectSettings(kind) : undefined })
 }
 function setRefreshMinutes(value: number | undefined) {

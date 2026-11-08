@@ -173,6 +173,10 @@ const toolGroups = [
     { kind: 'intervalConcurrency', icon: Activity }, { kind: 'intervalCoverage', icon: Gauge }, { kind: 'intervalOverlaps', icon: Layers },
     { kind: 'intervalDurationBands', icon: SlidersHorizontal }, { kind: 'intervalGroupCoverage', icon: Columns2 }, { kind: 'intervalGaps', icon: Timer },
   ] },
+  { title: 'qualityTools', icon: ClipboardCheck, items: [
+    { kind: 'qualityRun', icon: ChartNoAxesCombined }, { kind: 'qualityIndividuals', icon: Activity }, { kind: 'qualityMovingRange', icon: Waves },
+    { kind: 'qualitySignals', icon: TriangleAlert }, { kind: 'qualitySpecification', icon: ClipboardCheck }, { kind: 'qualityGroupYield', icon: Gauge },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },
