@@ -5,6 +5,18 @@
       <div class="h-full min-h-0" :style="{ padding: layout.padding + 'px' }"><RenderChild :child="child"/></div>
     </MfTabPane>
   </MfTabs>
+  <div v-else-if="widget.kind === 'pagedGridContainer'" class="paged-grid-container flex h-full min-h-0 min-w-0 flex-col gap-1.5">
+    <div class="paged-grid grid min-h-0 flex-1 content-start overflow-auto" :data-columns="layout.columns"
+         :style="{ '--paged-columns': layout.columns, gridAutoRows: layout.itemHeight + 'px', gap: layout.gap + 'px', padding: layout.padding + 'px' }">
+      <template v-for="(child, index) in children" :key="child.id">
+        <div v-if="visitedGrid.has(child.id)" v-show="Math.floor(index / layout.pageSize) + 1 === gridPage" class="min-h-0 min-w-0">
+          <RenderChild :child="child"/>
+        </div>
+      </template>
+    </div>
+    <MfPagination v-if="gridPages > 1" class="shrink-0 justify-center" v-model:current="gridPage" :total="children.length"
+                  :page-size="layout.pageSize" :show-size="false" simple/>
+  </div>
   <div v-else-if="widget.kind === 'accordionContainer'" class="flex h-full min-h-0 min-w-0 flex-col overflow-auto"
        :style="{ padding: layout.padding + 'px', gap: layout.gap + 'px' }">
     <section v-for="(child, index) in children" :key="child.id" class="min-w-0 shrink-0 rounded-mf-md border border-line">
@@ -64,6 +76,16 @@ const ContainerComponent = getCurrentInstance()!.type
 const children = computed(() => props.widgets.filter(widget => widget.parentId === props.widget.id))
 const layout = computed(() => dashboardLayoutSettings(props.widget.layoutOptions))
 const activeTab = ref('')
+const gridPage = ref(1)
+const gridPages = computed(() => Math.max(1, Math.ceil(children.value.length / layout.value.pageSize)))
+const visitedGrid = ref(new Set<string>())
+watch([() => props.widget.kind, children, gridPage, () => layout.value.pageSize], ([kind, items, page, size]) => {
+  if (kind !== 'pagedGridContainer') return
+  gridPage.value = Math.min(page, gridPages.value)
+  const start = (gridPage.value - 1) * size
+  for (const id of visitedGrid.value) if (!items.some(child => child.id === id)) visitedGrid.value.delete(id)
+  for (const child of items.slice(start, start + size)) visitedGrid.value.add(child.id)
+}, { immediate: true })
 const accordionId = useId()
 const activeAccordion = ref<string | null>(null)
 const visitedAccordion = ref(new Set<string>())
@@ -95,6 +117,7 @@ watch(() => props.selectedId, id => {
     activeTab.value = branch.id
     carouselIndex.value = children.value.indexOf(branch)
     if (props.widget.kind === 'accordionContainer') openAccordion(branch.id)
+    if (props.widget.kind === 'pagedGridContainer') gridPage.value = Math.floor(carouselIndex.value / layout.value.pageSize) + 1
   }
 })
 const reports = computed(() => new Map(props.reports.map(report => [report.code, report])))
@@ -139,6 +162,15 @@ const RenderChild = defineComponent({
 </script>
 
 <style scoped>
+.paged-grid-container { container-type: inline-size; }
+.paged-grid { grid-template-columns: repeat(var(--paged-columns), minmax(0, 1fr)); }
+@container (max-width: 640px) {
+  .paged-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .paged-grid[data-columns="1"] { grid-template-columns: minmax(0, 1fr); }
+}
+@container (max-width: 380px) {
+  .paged-grid { grid-template-columns: minmax(0, 1fr); }
+}
 .scroll-viewport { scrollbar-width: none; }
 .scroll-viewport::-webkit-scrollbar { display: none; }
 .spotlight-wrapper { container-type: inline-size; }

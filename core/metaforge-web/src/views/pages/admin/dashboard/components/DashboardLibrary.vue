@@ -139,6 +139,10 @@ const toolGroups = [
     { kind: 'paretoTable', icon: ListOrdered }, { kind: 'varianceDrivers', icon: Columns2 }, { kind: 'cohortRetention', icon: Grid2x2 },
     { kind: 'recencyDistribution', icon: CalendarRange }, { kind: 'valueBands', icon: SlidersHorizontal },
   ] },
+  { title: 'relationTools', icon: Network, items: [
+    { kind: 'crossTabHeatmap', icon: Grid2x2 }, { kind: 'transitionMatrix', icon: ArrowRight },
+    { kind: 'cooccurrencePairs', icon: Network }, { kind: 'groupSpread', icon: ChartNoAxesCombined },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },
@@ -155,6 +159,7 @@ const toolGroups = [
   { title: 'interactionTools', icon: MousePointer2, items: [
     { kind: 'selectFilter', icon: ListFilter }, { kind: 'searchFilter', icon: Search }, { kind: 'dateRangeFilter', icon: CalendarRange }, { kind: 'clearFilters', icon: ListRestart },
     { kind: 'multiValueFilter', icon: ListFilter }, { kind: 'numberRangeFilter', icon: SlidersHorizontal }, { kind: 'valueStateFilter', icon: SquareDashed }, { kind: 'copyText', icon: Copy },
+    { kind: 'relativeDateFilter', icon: CalendarClock }, { kind: 'booleanFilter', icon: ClipboardCheck },
     { kind: 'actionButton', icon: MousePointer2 }, { kind: 'link', icon: Link }, { kind: 'linkList', icon: List }, { kind: 'iconLinks', icon: LayoutGrid },
   ] },
   { title: 'layoutTools', icon: LayoutGrid, items: [
@@ -168,7 +173,7 @@ const toolGroups = [
     { kind: 'headerContainer', icon: PanelTop }, { kind: 'responsiveContainer', icon: LayoutGrid },
     { kind: 'footerContainer', icon: PanelTop }, { kind: 'sidebarContainer', icon: Columns2 },
     { kind: 'scrollContainer', icon: List }, { kind: 'carouselContainer', icon: Layers },
-    { kind: 'spotlightContainer', icon: LayoutGrid }, { kind: 'accordionContainer', icon: Layers },
+    { kind: 'spotlightContainer', icon: LayoutGrid }, { kind: 'accordionContainer', icon: Layers }, { kind: 'pagedGridContainer', icon: Grid2x2 },
   ] },
   { title: 'decorationTools', icon: Sparkles, items: [
     { kind: 'glowLine', icon: Minus }, { kind: 'glowRing', icon: Shapes }, { kind: 'dotMatrix', icon: Grid2x2 },

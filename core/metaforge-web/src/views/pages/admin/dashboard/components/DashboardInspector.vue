@@ -104,12 +104,13 @@
                         @update:model-value="changeAsset"/>
             </MfFormItem>
             <MfFormItem v-if="filterWidget && snapshot && widget.kind !== 'clearFilters'" :label="$t('queryChart.selectField')" required-mark>
-              <MfSelect :model-value="widget.field" :options="widget.kind === 'dateRangeFilter' ? chartDateFields : widget.kind === 'numberRangeFilter' ? chartNumericFields : chartFields" searchable
-                        :placeholder="$t(widget.kind === 'dateRangeFilter' ? 'dashboard.studio.chooseDateField' : 'queryChart.selectField')"
+              <MfSelect :model-value="widget.field" :options="filterFields" searchable
+                        :placeholder="$t(dateFilterWidget ? 'dashboard.studio.chooseDateField' : 'queryChart.selectField')"
                         @update:model-value="emit('widget', { field: String($event ?? '') })"/>
             </MfFormItem>
             <p v-if="filterWidget && snapshot" class="text-xs leading-5 text-content-tertiary">{{ $t(widget.kind === 'clearFilters'
               ? 'dashboard.studio.filterClearHint' : 'dashboard.studio.filterScopeHint') }}</p>
+            <p v-if="snapshot && widget.kind === 'booleanFilter'" class="text-xs leading-5 text-content-tertiary">{{ $t('dashboard.studio.relation.booleanHint') }}</p>
             <QueryChartDataFields v-if="specializedMappings" :options="specializedMappings"
                                   :fields="chartFields" :numeric-fields="chartNumericFields" @change="changeMappings"/>
             <template v-if="dataAggregation && snapshot">
@@ -186,6 +187,8 @@
                                        @change="emit('widget', $event)"/>
           <DashboardBusinessSettings v-if="widget && businessData && snapshot" :widget="widget" :fields="chartFields" :dates="chartDateFields" :numbers="chartNumericFields"
                                      :rows="snapshot.columns" @change="emit('widget', $event)"/>
+          <DashboardRelationSettings v-if="widget && relationData && snapshot" :widget="widget" :fields="chartFields" :dates="chartDateFields" :numbers="chartNumericFields"
+                                     @change="emit('widget', $event)"/>
 
           <DashboardInspectorGroup v-if="widget && advancedData" icon="data" :title="$t('dashboard.studio.dataDisplaySettings')">
             <MfFormItem v-if="['comparisonTable','radialProgress','thresholdCards','sparklineGrid'].includes(widget.kind)" :label="$t('dashboard.studio.dataCategory')">
@@ -536,6 +539,7 @@ import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import DashboardInspectorGroup from './DashboardInspectorGroup.vue'
 import DashboardOperationsSettings from './DashboardOperationsSettings.vue'
 import DashboardBusinessSettings from './DashboardBusinessSettings.vue'
+import DashboardRelationSettings from './DashboardRelationSettings.vue'
 import DashboardPanelHeader from './DashboardPanelHeader.vue'
 import DashboardLinkEditor from './DashboardLinkEditor.vue'
 import { MENU_ICONS } from '@/config/menu-icons'
@@ -543,7 +547,8 @@ import { apiBaseUrl } from '@/utils/http'
 import { TokenUtils } from '@/utils/token'
 import { dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardContentSettings, dashboardDataSettings,
   dashboardDecorationSettings, dashboardScreenEffectSizeLimit, type DashboardContentOptions, type DashboardDataOptions, type DashboardDecorationOptions } from '@/model/dashboard-layout'
-import { dashboardBusinessSettings, dashboardBusinessTool, dashboardFilterTool, dashboardOperationDataTool, dashboardOperationsSettings, dashboardResourceUrl, type DashboardMode } from '@/model/dashboard-layout'
+import { dashboardBusinessSettings, dashboardBusinessTool, dashboardFilterTool, dashboardOperationDataTool, dashboardOperationsSettings, dashboardRelationSettings, dashboardRelationTool, dashboardResourceUrl, type DashboardMode } from '@/model/dashboard-layout'
+import { dashboardBooleanValue, dashboardValueMissing } from '@/model/dashboard-filters'
 import { dashboardAnimationDefaults, dashboardAnimationEffects, dashboardCanContain, dashboardCanvasColor, dashboardCanvasNumber, dashboardCanvasNumbers, dashboardChartMappings, dashboardContainerTool, dashboardDataAggregationTool, dashboardDataTool, dashboardDecorationTools, dashboardLayoutSettings, dashboardMetricTool, dashboardPaddingEdges, dashboardRadiusCorners, dashboardScreenEffectPresets, dashboardScreenEffectQuantityLimit, dashboardScreenEffectSettings, dashboardScreenEffectTool, dashboardSnapshot, dashboardTools, dashboardWallPresets, dashboardWallResolution, dashboardWidgetLabelKey, dashboardWidgetUsesAsset, type DashboardAction, type DashboardAnimation, type DashboardBoard, type DashboardChartOverrides, type DashboardDeadline, type DashboardDesign, type DashboardInsets, type DashboardLayoutOptions, type DashboardRect, type DashboardRefresh, type DashboardScreenEffectOptions, type DashboardWidget } from '@/model/dashboard-layout'
 
 const props = defineProps<{ design: DashboardDesign; board: DashboardBoard; widget?: DashboardWidget; groupRect?: DashboardRect;
@@ -598,6 +603,7 @@ function setBackgroundPosition(value: unknown) { if (value === 'center' || value
 const advancedData = computed(() => dashboardAdvancedDataTools.some(kind => kind === props.widget?.kind))
 const operationData = computed(() => dashboardOperationDataTool(props.widget?.kind))
 const businessData = computed(() => dashboardBusinessTool(props.widget?.kind))
+const relationData = computed(() => dashboardRelationTool(props.widget?.kind))
 const advancedContent = computed(() => dashboardAdvancedContentTools.some(kind => kind === props.widget?.kind))
 const advancedDecoration = computed(() => dashboardAdvancedDecorationTools.some(kind => kind === props.widget?.kind))
 const dataSettings = computed(() => { const value = dashboardDataSettings(props.widget?.dataOptions); return props.widget?.kind === 'radialProgress' ? { ...value, limit: Math.min(5, value.limit) } : value })
@@ -629,6 +635,7 @@ const childKinds = computed(() => dashboardTools.filter(kind => !dashboardScreen
 const containerFields = computed(() => {
   const fields: { key: keyof DashboardLayoutOptions; min: number; max: number }[] = [{ key: 'gap', min: 0, max: 48 }, { key: 'padding', min: 0, max: 64 }]
   if (props.widget?.kind === 'gridContainer') fields.push({ key: 'columns', min: 1, max: 6 })
+  if (props.widget?.kind === 'pagedGridContainer') fields.push({ key: 'columns', min: 1, max: 6 }, { key: 'pageSize', min: 1, max: 24 }, { key: 'itemHeight', min: 48, max: 800 })
   if (props.widget?.kind === 'spotlightContainer') fields.push({ key: 'columns', min: 3, max: 4 }, { key: 'itemHeight', min: 48, max: 800 })
   if (['splitContainer','sidebarContainer'].includes(props.widget?.kind || '')) fields.push({ key: 'ratio', min: 10, max: 90 })
   if (['headerContainer','footerContainer'].includes(props.widget?.kind || '')) fields.push({ key: 'header', min: 10, max: 70 })
@@ -664,6 +671,17 @@ const snapshot = computed(() => dashboardSnapshot(asset.value))
 const chartFields = computed(() => (snapshot.value?.queryChart.options.fields ?? []).map(value => ({ value, label: value })))
 const chartNumericFields = computed(() => chartFields.value.filter(field => chartFieldKind(snapshot.value?.columns ?? [], field.value) === 'number'))
 const chartDateFields = computed(() => chartFields.value.filter(field => chartFieldKind(snapshot.value?.columns ?? [], field.value) === 'date'))
+const dateFilterWidget = computed(() => props.widget?.kind === 'dateRangeFilter' || props.widget?.kind === 'relativeDateFilter')
+const filterFields = computed(() => {
+  if (dateFilterWidget.value) return chartDateFields.value
+  if (props.widget?.kind === 'numberRangeFilter') return chartNumericFields.value
+  if (props.widget?.kind !== 'booleanFilter') return chartFields.value
+  const rows = snapshot.value?.columns.slice(0, 200) ?? []
+  return chartFields.value.filter(field => {
+    const samples = rows.map(row => row[field.value]).filter(value => !dashboardValueMissing(value))
+    return samples.length > 0 && samples.every(value => dashboardBooleanValue(value) !== undefined)
+  })
+})
 const iconOptions = Object.keys(MENU_ICONS).map(value => ({ value, label: value }))
 const cornerPositions = computed(() => dashboardRadiusCorners.map(value => ({ value, label: t('dashboard.studio.inset.' + value) })))
 function setCornerPosition(value: unknown) {
@@ -709,6 +727,7 @@ function changeAsset(value: unknown) {
     dataOptions: props.widget?.dataOptions ? { ...dataSettings.value, baselineField: '', statusField: '' } : undefined,
     operationsOptions: operationData.value ? dashboardOperationsSettings(props.widget?.kind, { ...props.widget?.operationsOptions, labelField: '', statusField: '', detailsField: '', endField: '' }) : undefined,
     businessOptions: businessData.value ? dashboardBusinessSettings({ ...props.widget?.businessOptions, groupField: '', subgroupField: '', referenceField: '', entityField: '', stageOrder: [] }) : undefined,
+    relationOptions: relationData.value ? dashboardRelationSettings({ dimensionLimit: props.widget?.relationOptions?.dimensionLimit }) : undefined,
     chartOptions: mapGeoJson === undefined ? undefined : { mapGeoJson } })
 }
 function setDataAggregation(value: unknown) {
@@ -744,9 +763,12 @@ function changeKind(value: unknown) {
   if (!kind || !props.widget || kind === props.widget.kind) return
   const effect = dashboardScreenEffectTool(kind)
   const modeDefaults = effect || effectKind.value ? { movable: !effect, resizable: !effect, showCard: !effect, showTitle: !effect } : {}
+  const linked = dashboardRelationTool(kind)
   emit('widget', { ...modeDefaults, kind, chartOptions: undefined, field: '', reportCode: dashboardWidgetUsesAsset(kind) ? props.widget.reportCode : undefined,
     operationsOptions: dashboardOperationDataTool(kind) ? dashboardOperationsSettings(kind) : undefined,
     businessOptions: dashboardBusinessTool(kind) ? dashboardBusinessSettings() : undefined,
+    relationOptions: dashboardRelationTool(kind) ? dashboardRelationSettings() : undefined,
+    action: linked ? 'filter' : relationData.value ? 'saved' : props.widget.action,
     screenEffect: effect ? dashboardScreenEffectSettings(kind) : undefined })
 }
 function setRefreshMinutes(value: number | undefined) {

@@ -10,19 +10,21 @@ export const dashboardOperationDataTools = ['incidentFeed', 'outlierQueue', 'run
 export function dashboardOperationDataTool(kind?: DashboardWidgetKind) { return dashboardOperationDataTools.some(tool => tool === kind) }
 export const dashboardBusinessTools = ['stageConversion', 'targetGap', 'segmentSummary', 'paretoTable', 'varianceDrivers', 'cohortRetention', 'recencyDistribution', 'valueBands'] as const
 export function dashboardBusinessTool(kind?: DashboardWidgetKind) { return dashboardBusinessTools.some(tool => tool === kind) }
+export const dashboardRelationTools = ['crossTabHeatmap', 'transitionMatrix', 'cooccurrencePairs', 'groupSpread'] as const
+export function dashboardRelationTool(kind?: DashboardWidgetKind) { return dashboardRelationTools.some(tool => tool === kind) }
 export const dashboardAdvancedDataTools = ['metricTicker', 'metricComparison', 'metricTrend', 'bulletMetric', 'rankList', 'distributionList', 'statusGrid', 'recordCards', ...dashboardExtendedDataTools, ...dashboardMonitoringTools] as const
-const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools] as const
+const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools] as const
 export type DashboardDataTool = typeof dataDisplays[number]
 export const dashboardExtendedContentTools = ['markdown', 'codeBlock', 'imageCompare', 'iconLinks', 'stepGuide', 'worldClock'] as const
 export const dashboardAdvancedContentTools = ['imageCarousel', 'imageGallery', 'announcement', 'textTicker', 'tabsContent', 'accordion', 'quote', 'embed', 'actionButton', 'tagCloud', ...dashboardExtendedContentTools] as const
 export const dashboardContentTools = ['text', 'heading', 'note', 'badge', 'image', 'video', 'audio', 'clock', 'link',
   'imageText', 'bulletList', 'linkList', 'countdown', 'icon', 'statusLegend', 'copyText', 'inspectionChecklist', 'definitionList', ...dashboardAdvancedContentTools] as const
-export const dashboardFilterTools = ['selectFilter', 'searchFilter', 'dateRangeFilter', 'clearFilters', 'multiValueFilter', 'numberRangeFilter', 'valueStateFilter'] as const
+export const dashboardFilterTools = ['selectFilter', 'searchFilter', 'dateRangeFilter', 'clearFilters', 'multiValueFilter', 'numberRangeFilter', 'valueStateFilter', 'relativeDateFilter', 'booleanFilter'] as const
 export type DashboardFilterTool = typeof dashboardFilterTools[number]
 export function dashboardFilterTool(kind: DashboardWidgetKind): kind is DashboardFilterTool {
   return dashboardFilterTools.some(tool => tool === kind)
 }
-export const dashboardContainerTools = ['rowContainer', 'columnContainer', 'gridContainer', 'tabsContainer', 'stackContainer', 'splitContainer', 'headerContainer', 'responsiveContainer', 'footerContainer', 'sidebarContainer', 'scrollContainer', 'carouselContainer', 'spotlightContainer', 'accordionContainer'] as const
+export const dashboardContainerTools = ['rowContainer', 'columnContainer', 'gridContainer', 'tabsContainer', 'stackContainer', 'splitContainer', 'headerContainer', 'responsiveContainer', 'footerContainer', 'sidebarContainer', 'scrollContainer', 'carouselContainer', 'spotlightContainer', 'accordionContainer', 'pagedGridContainer'] as const
 export const dashboardLayoutTools = ['shape', 'container', 'panel', 'divider', 'verticalDivider', 'sectionDivider', 'spacer',
   'borderFrame', 'gridPanel', 'gradientPanel', 'horizontalArrow', 'verticalArrow', ...dashboardContainerTools] as const
 export const dashboardAdvancedDecorationTools = ['doubleLine', 'dashedLine', 'chevrons', 'zigzag', 'waveLine', 'bracketPair', 'titlePlate', 'badgeSeal', 'hexagon', 'honeycomb', 'radarSweep', 'scanFrame', 'circuitPattern', 'orbitalRings', 'cornerFrame', 'sectionBanner', 'techRuler', 'bezierConnector'] as const
@@ -115,7 +117,13 @@ export interface DashboardLinkItem { id: string; label: string; url: string; tex
 export interface DashboardDeadline { date: string; hour: number; minute: number }
 export interface DashboardDataOptions { year: number; periodDays: number; staleHours: number; baselineField: string; statusField: string; limit: number; decimals: number; prefix: string; suffix: string; positiveValues: string }
 export interface DashboardContentOptions { comparePosition: number; language: 'text' | 'sql' | 'json'; timezone: string; activeIndex: number; direction: 'horizontal' | 'vertical'; fontSize: number; fontWeight: 'normal' | 'medium' | 'bold'; lineHeight: number; fit: 'cover' | 'contain'; interval: number; autoplay: boolean; attribution: string; pauseOnHover: boolean }
-export interface DashboardLayoutOptions { itemHeight: number; columns: number; gap: number; padding: number; ratio: number; header: number; minWidth: number }
+export interface DashboardLayoutOptions { itemHeight: number; columns: number; gap: number; padding: number; ratio: number; header: number; minWidth: number; pageSize: number }
+export interface DashboardRelationOptions {
+  rowField: string
+  columnField: string
+  entityField: string
+  dimensionLimit: number
+}
 export interface DashboardDecorationOptions { count: number; rotation: number; filled: boolean; opacity: number; animate: boolean }
 export const dashboardThresholdComparators = ['above', 'atLeast', 'below', 'atMost'] as const
 export interface DashboardOperationsOptions {
@@ -170,6 +178,7 @@ export interface DashboardWidget extends DashboardRect {
   dataOptions?: DashboardDataOptions
   operationsOptions?: DashboardOperationsOptions
   businessOptions?: DashboardBusinessOptions
+  relationOptions?: DashboardRelationOptions
   contentOptions?: DashboardContentOptions
   layoutOptions?: DashboardLayoutOptions
   decorationOptions?: DashboardDecorationOptions
@@ -289,7 +298,8 @@ export function dashboardWidget(id: string, kind: DashboardWidgetKind, name: str
   return {
     id, kind, name, description: '', x: 0, y: 0, w: 6, h: 4,
     text: '', image: '', url: '', target: 100, shape: 'rectangle', color: '', alignment: 'left', tone: 'info', clockDate: true,
-    refresh: 'saved', action: 'saved', field: '', operation: ['metricGrid', 'metricComparison', 'comparisonTable'].includes(kind) ? 'sum' : 'count',
+    refresh: 'saved', action: dashboardRelationTool(kind) ? 'filter' : 'saved',
+    field: '', operation: ['metricGrid', 'metricComparison', 'comparisonTable'].includes(kind) ? 'sum' : 'count',
     padding: [10, 12, 10, 12], corners: mode === 'wall' ? [0, 0, 0, 0] : [12, 12, 12, 12], titleSize: 14, background: '',
     border: !['spacer', 'divider', 'verticalDivider', 'sectionDivider'].includes(kind),
     showCard: kind !== 'spacer' && !decoration && !screenEffect,
@@ -298,7 +308,8 @@ export function dashboardWidget(id: string, kind: DashboardWidgetKind, name: str
     screenEffect: screenEffect ? dashboardScreenEffectSettings(kind) : undefined,
     dataOptions: ['radialProgress', 'rollingTable', 'sparklineGrid'].includes(kind) ? dashboardDataSettings({ limit: kind === 'rollingTable' ? 3 : kind === 'sparklineGrid' ? 4 : 5 }) : undefined,
     layoutOptions: kind === 'spotlightContainer' ? dashboardLayoutSettings({ columns: 3, itemHeight: 112 })
-      : kind === 'accordionContainer' ? dashboardLayoutSettings({ itemHeight: 200 }) : undefined,
+      : kind === 'accordionContainer' ? dashboardLayoutSettings({ itemHeight: 200 })
+      : kind === 'pagedGridContainer' ? dashboardLayoutSettings({ itemHeight: 112, columns: 3 }) : undefined,
     ...(kind === 'cornerFrame' ? { cornerSize: 32 } : {}),
   }
 }
@@ -541,7 +552,17 @@ export function dashboardContentSettings(value?: unknown): DashboardContentOptio
 export function dashboardLayoutSettings(value?: unknown): DashboardLayoutOptions {
   const raw = record(value) ?? {}
   return { itemHeight: integer(raw.itemHeight, 180, 48, 800), columns: integer(raw.columns, 2, 1, 6), gap: integer(raw.gap, 12, 0, 48), padding: integer(raw.padding, 8, 0, 64),
-    ratio: integer(raw.ratio, 40, 10, 90), header: integer(raw.header, 25, 10, 70), minWidth: integer(raw.minWidth, 220, 80, 600) }
+    ratio: integer(raw.ratio, 40, 10, 90), header: integer(raw.header, 25, 10, 70), minWidth: integer(raw.minWidth, 220, 80, 600),
+    pageSize: integer(raw.pageSize, 6, 1, 24) }
+}
+export function dashboardRelationSettings(value?: unknown): DashboardRelationOptions {
+  const raw = record(value) ?? {}
+  return {
+    rowField: text(raw.rowField).slice(0, 500),
+    columnField: text(raw.columnField).slice(0, 500),
+    entityField: text(raw.entityField).slice(0, 500),
+    dimensionLimit: integer(raw.dimensionLimit, 8, 2, 16),
+  }
 }
 export function dashboardDecorationSettings(value?: unknown): DashboardDecorationOptions {
   const raw = record(value) ?? {}
@@ -644,6 +665,7 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       dataOptions: record(item.dataOptions) ? dashboardDataSettings(item.dataOptions) : widget.dataOptions,
       operationsOptions: dashboardOperationDataTool(kind) ? dashboardOperationsSettings(kind, item.operationsOptions) : undefined,
       businessOptions: dashboardBusinessTool(kind) ? dashboardBusinessSettings(item.businessOptions) : undefined,
+      relationOptions: dashboardRelationTool(kind) ? dashboardRelationSettings(item.relationOptions) : undefined,
       contentOptions: record(item.contentOptions) ? dashboardContentSettings(item.contentOptions) : undefined,
       layoutOptions: record(item.layoutOptions) ? dashboardLayoutSettings(item.layoutOptions) : widget.layoutOptions,
       decorationOptions: record(item.decorationOptions) ? dashboardDecorationSettings(item.decorationOptions) : undefined,
@@ -652,7 +674,7 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       tone: item.tone === 'success' || item.tone === 'warning' || item.tone === 'danger' ? item.tone : 'info',
       refresh: readRefreshPolicy(item.refresh),
       refreshSeconds: integer(item.refreshSeconds, 300, 60, 86400),
-      action: item.action === 'details' || item.action === 'filter' || item.action === 'none' ? item.action : 'saved',
+      action: item.action === 'details' || item.action === 'filter' || item.action === 'none' || item.action === 'saved' ? item.action : widget.action,
       operation: ['distinct', 'sum', 'avg', 'min', 'max'].includes(String(item.operation)) ? item.operation as DashboardWidget['operation'] : 'count',
       padding: readInsets(item.padding, widget.padding, 96),
       corners: readInsets(item.corners, [corner, corner, corner, corner], 96),

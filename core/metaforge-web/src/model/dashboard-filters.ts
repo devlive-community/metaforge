@@ -7,8 +7,11 @@ export type DashboardFilterValue =
   | { kind: 'multiValueFilter'; values: string[] }
   | { kind: 'numberRangeFilter'; min?: number; max?: number }
   | { kind: 'valueStateFilter'; presence: 'present' | 'missing' | '' }
+  | { kind: 'relativeDateFilter'; days: number }
+  | { kind: 'booleanFilter'; checked: boolean | undefined }
 
 export type DashboardFilter = DashboardFilterValue & { reportCode: string; field: string }
+export const dashboardRelativeDateChoices = [7, 30, 90] as const
 
 export function dashboardDateKey(value: unknown): string {
   const key = value instanceof Date && Number.isFinite(value.getTime())
@@ -45,6 +48,22 @@ export function dashboardNumericValue(value: unknown): number | undefined {
   return Number.isFinite(number) ? number : undefined
 }
 
+export function dashboardBooleanValue(value: unknown) {
+  const normalized = typeof value === 'string' ? value.trim().toLowerCase() : value
+  if (normalized === true || normalized === 1 || normalized === 'true' || normalized === '1') return true
+  if (normalized === false || normalized === 0 || normalized === 'false' || normalized === '0') return false
+  return undefined
+}
+
+export function dashboardLatestReportDate(rows: readonly QueryChartRow[], field: string) {
+  let latest = ''
+  for (const row of rows) {
+    const key = dashboardDateKey(row[field])
+    if (key > latest) latest = key
+  }
+  return latest
+}
+
 export function dashboardFilterChoices(rows: readonly QueryChartRow[], field: string, locale: string) {
   if (!field) return []
   return [...new Set(rows.map(row => scalar(row[field])).filter(value => value !== ''))]
@@ -62,6 +81,8 @@ export function dashboardFilterHasValue(filter: DashboardFilterValue) {
     }
     case 'multiValueFilter': return filter.values.some(value => value !== '')
     case 'valueStateFilter': return !!filter.presence
+    case 'relativeDateFilter': return dashboardRelativeDateChoices.some(days => days === filter.days)
+    case 'booleanFilter': return typeof filter.checked === 'boolean'
     case 'searchFilter': return !!filter.value.trim()
     case 'selectFilter': return filter.value !== ''
   }
@@ -73,6 +94,11 @@ export function dashboardFilterMatchesWidget(filter: DashboardFilter, widget: Pi
 
 export function dashboardFilteredReports(filters: Iterable<DashboardFilter>, rowsFor: (code: string) => readonly QueryChartRow[]) {
   const byReport = new Map<string, ((row: QueryChartRow) => boolean)[]>()
+  const sourceRows = new Map<string, readonly QueryChartRow[]>()
+  function source(code: string) {
+    if (!sourceRows.has(code)) sourceRows.set(code, rowsFor(code))
+    return sourceRows.get(code)!
+  }
   for (const filter of filters) {
     if (!filter.reportCode || !filter.field || !dashboardFilterHasValue(filter)) continue
     const { field } = filter
@@ -83,6 +109,15 @@ export function dashboardFilteredReports(filters: Iterable<DashboardFilter>, row
         const date = dashboardDateKey(row[field])
         return !!date && (!start || date >= start) && (!end || date <= end)
       }
+    } else if (filter.kind === 'relativeDateFilter') {
+      const latest = dashboardLatestReportDate(source(filter.reportCode), field)
+      const firstDay = latest ? Date.parse(latest + 'T00:00:00Z') - (filter.days - 1) * 86_400_000 : NaN
+      match = row => {
+        const date = dashboardDateKey(row[field])
+        return !!date && Date.parse(date + 'T00:00:00Z') >= firstDay
+      }
+    } else if (filter.kind === 'booleanFilter') {
+      match = row => dashboardBooleanValue(row[field]) === filter.checked
     } else if (filter.kind === 'numberRangeFilter') {
       const { min, max } = filter
       match = row => {
@@ -102,5 +137,5 @@ export function dashboardFilteredReports(filters: Iterable<DashboardFilter>, row
     report.push(match)
     byReport.set(filter.reportCode, report)
   }
-  return new Map([...byReport].map(([code, clauses]) => [code, new Set(rowsFor(code).filter(row => clauses.every(match => match(row))))]))
+  return new Map([...byReport].map(([code, clauses]) => [code, new Set(source(code).filter(row => clauses.every(match => match(row))))]))
 }
