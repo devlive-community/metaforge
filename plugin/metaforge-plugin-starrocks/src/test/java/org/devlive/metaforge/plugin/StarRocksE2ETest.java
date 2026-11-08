@@ -60,7 +60,9 @@ public class StarRocksE2ETest
                 // The backend rejects CREATE TABLE once its data dir crosses the disk usage
                 // watermark, and the container shares the runner's nearly full disk; a tmpfs
                 // data dir keeps the capacity check hermetic.
-                .withTmpFs(Map.of("/data/deploy/be/storage", "rw"))
+                // 3.5 keeps the backend storage under /data/deploy/be, 4.0 moved it under
+                // /data/deploy/starrocks/be; mounting both keeps every version hermetic.
+                .withTmpFs(Map.of("/data/deploy/be/storage", "rw", "/data/deploy/starrocks/be/storage", "rw"))
                 .waitingFor(Wait.forListeningPorts(9030).withStartupTimeout(Duration.ofMinutes(5)))) {
             container.start();
             PluginService service = new StarRocksService();
