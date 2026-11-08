@@ -20,6 +20,10 @@ export function isInformationBlock(kind: unknown): kind is InformationBlockKind 
   return informationBlockKinds.some(value => value === kind)
 }
 
+export function isTabularInformationBlock(kind: unknown) {
+  return kind === 'riskRegister' || kind === 'shiftRoster' || kind === 'decisionLog' || kind === 'maintenanceSchedule'
+}
+
 export function readInformationItems(value: unknown): InformationItem[] {
   if (!Array.isArray(value)) return []
   const ids = new Set<string>()

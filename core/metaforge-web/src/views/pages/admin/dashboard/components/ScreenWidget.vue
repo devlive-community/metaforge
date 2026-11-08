@@ -6,9 +6,11 @@
   </template>
   <UtilityContent v-else-if="widget.kind === 'statusLegend' || widget.kind === 'copyText' || widget.kind === 'definitionList'" :widget="widget" :editable="editable"/>
   <InspectionChecklist v-else-if="widget.kind === 'inspectionChecklist'" :widget="widget" :editable="editable"/>
-  <InformationBlockView v-else-if="isInformationBlock(widget.kind)" :kind="widget.kind" :items="widget.informationItems ?? []"/>
+  <InformationBlockView v-else-if="isInformationBlock(widget.kind)" :kind="widget.kind" :items="widget.informationItems ?? []"
+                        :table-appearance="widget.tableAppearance"/>
   <div v-else-if="widget.kind === 'metric'" class="flex h-full min-h-0 flex-col justify-center px-1">
-    <strong class="truncate text-3xl font-extrabold tabular-nums" :title="metricValue">{{ metricValue }}</strong>
+    <strong class="truncate text-3xl font-extrabold tabular-nums" :title="metricValue"
+            :style="{ color: widget.color || undefined, fontSize: content.fontSize + 'px' }">{{ metricValue }}</strong>
     <span class="mt-1 truncate text-xs text-content-tertiary">{{ report?.name || $t('dashboard.studio.chooseAsset') }}</span>
   </div>
   <template v-else-if="widget.kind === 'progress' || widget.kind === 'gauge'">
@@ -35,9 +37,9 @@
     </a>
   </div>
   <video v-else-if="widget.kind === 'video' && resourceUrl" :key="resourceUrl" :src="resourceUrl" controls playsinline preload="none"
-         :aria-label="widget.name" class="size-full bg-black object-contain"/>
+         :aria-label="widget.name" class="size-full bg-black" :style="{ objectFit: content.fit }"/>
   <div v-else-if="widget.kind === 'heading'" class="flex h-full flex-col justify-center px-1" :class="textAlignment">
-    <strong class="break-words text-2xl font-semibold">{{ widget.text || widget.name }}</strong>
+    <strong class="break-words text-2xl font-semibold" :style="plainTextStyle">{{ widget.text || widget.name }}</strong>
   </div>
   <div v-else-if="widget.kind === 'note'" class="flex h-full flex-col justify-center overflow-auto">
     <MfAlert :variant="widget.tone" :title="widget.text || widget.name"/>
@@ -87,12 +89,13 @@
   <ReportDataDisplay v-else-if="options && dashboardDataTool(widget.kind)" :kind="widget.kind" :options="options" :rows="rows" :field="widget.field"
                         :display-fields="widget.displayFields" :record-index="widget.recordIndex" :time-field="widget.timeField"
                         :operation="widget.operation" :target="widget.target" :color="widget.color"/>
-  <div v-else-if="widget.kind === 'text'" class="h-full overflow-auto whitespace-pre-wrap break-words px-1 text-sm" :class="textAlignment">{{ widget.text }}</div>
-  <img v-else-if="widget.kind === 'image' && imageSource" :src="imageSource" :alt="widget.name" class="size-full object-contain"/>
+  <div v-else-if="widget.kind === 'text'" class="h-full overflow-auto whitespace-pre-wrap break-words px-1 text-sm" :class="textAlignment" :style="plainTextStyle">{{ widget.text }}</div>
+  <img v-else-if="widget.kind === 'image' && imageSource" :src="imageSource" :alt="widget.name" class="size-full" :style="{ objectFit: content.fit }"/>
   <div v-else-if="widget.kind === 'divider'" class="flex h-full items-center"><hr class="w-full border-line"/></div>
   <div v-else-if="widget.kind === 'container'" class="size-full rounded-mf-md border border-dashed border-line"/>
   <template v-else-if="snapshot && options">
-    <QueryChartPreview class="size-full" :options="options" :rows="rows" :aggregation="ranking" embedded linked @filter="emit('filter', $event)"/>
+    <QueryChartPreview class="size-full" :options="options" :rows="rows" :aggregation="ranking" :table-appearance="widget.tableAppearance"
+                       embedded linked @filter="emit('filter', $event)"/>
   </template>
   <VisualView v-else-if="legacy && widget.kind === 'report'"
               :key="report?.code" :configuration="legacy" :query="legacyQuery" :type="report?.type"
@@ -136,8 +139,9 @@ import InformationBlockView from '@/views/components/content/InformationBlockVie
 import { isInformationBlock } from '@/model/information-block'
 import { isProcessQualityView, readProcessQualityOptions } from '@/model/process-quality'
 import type { EChartsOption } from 'echarts'
-import { aggregateQueryChart, chartFieldKind, defaultQueryChart, type QueryChartConfiguration, type QueryChartRow } from '@/model/query-chart'
-import { dashboardAuditTool, dashboardBusinessTool, dashboardComparativeTool, dashboardExtendedDataTools, dashboardExtendedContentTools, dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardFilterTool, dashboardIntervalTool, dashboardMetric, dashboardMetricTool, dashboardMonitoringTools, dashboardOperationDataTool, dashboardPlanningTool, dashboardProcessTool, dashboardRelationTool, dashboardResourceUrl, dashboardRowsInPeriod, dashboardSpatialTool, dashboardTemporalTool, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
+import { aggregateQueryChart, chartFieldKind, type QueryChartConfiguration, type QueryChartRow } from '@/model/query-chart'
+import { dashboardEmbeddedChartOptions, dashboardWidgetContentSettings } from '@/model/dashboard-layout'
+import { dashboardAuditTool, dashboardBusinessTool, dashboardComparativeTool, dashboardExtendedDataTools, dashboardExtendedContentTools, dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardDataTool, dashboardFilterTool, dashboardIntervalTool, dashboardMetric, dashboardMetricTool, dashboardMonitoringTools, dashboardOperationDataTool, dashboardPlanningTool, dashboardProcessTool, dashboardRelationTool, dashboardResourceUrl, dashboardRowsInPeriod, dashboardSpatialTool, dashboardTemporalTool, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
 import type { ReportModel } from '@/model/report'
 import type { Configuration } from '@/views/components/visual/Configuration'
 
@@ -158,20 +162,15 @@ const rows = computed(() => {
   const filtered = dashboardRowsInPeriod(source.value, dateField.value, props.days)
   return props.selection ? filtered.filter(row => props.selection?.has(row)) : filtered
 })
-const options = computed(() => {
-  if (!snapshot.value) return
-  const saved = snapshot.value.queryChart.options
-  const mappings = dashboardChartMappings(props.widget, snapshot.value)
-  const action = props.widget.action === 'saved' ? saved.pointAction : props.widget.action
-  const grain = mappings.category === saved.category ? saved.grain : 'none'
-  return {
-    ...defaultQueryChart(saved.fields), ...saved, ...mappings, grain, name: '', description: '', transparent: true,
-    metric: props.widget.chartOptions?.metric ?? saved.metric,
-    aggregation: props.widget.chartOptions?.aggregation ?? saved.aggregation,
-    pointAction: action, detailsMode: 'dialog' as const,
-    colors: props.wall ? '#15e5d1,#10b8e2,#6379ff' : saved.colors
-  }
-})
+const options = computed(() => snapshot.value && dashboardEmbeddedChartOptions(props.widget, snapshot.value, !!props.wall))
+const content = computed(() => dashboardWidgetContentSettings(props.widget))
+const fontWeights = { normal: 400, medium: 500, bold: 700 }
+const plainTextStyle = computed(() => ({
+  color: props.widget.color || undefined,
+  fontSize: props.widget.contentOptions ? content.value.fontSize + 'px' : undefined,
+  fontWeight: props.widget.contentOptions ? fontWeights[content.value.fontWeight] : undefined,
+  lineHeight: props.widget.contentOptions ? content.value.lineHeight : undefined,
+}))
 const ranking = computed(() => {
   if (props.widget.kind !== 'rank' || !options.value) return
   const result = aggregateQueryChart(rows.value, options.value)
@@ -192,9 +191,9 @@ const gauge = computed<EChartsOption>(() => ({
   animation: false,
   series: [{
     type: 'gauge', radius: '95%', min: 0, max: 100,
-    progress: { show: true, roundCap: true, width: 10, itemStyle: { color: props.widget.color || (props.wall ? '#15e5d1' : '#079b70') } },
+    progress: { show: true, roundCap: true, width: props.widget.strokeWidth ?? 10, itemStyle: { color: props.widget.color || (props.wall ? '#15e5d1' : '#079b70') } },
     pointer: { show: false },
-    axisLine: { lineStyle: { width: 10, color: [[1, props.wall ? '#19556a' : '#dce7e3']] } },
+    axisLine: { lineStyle: { width: props.widget.strokeWidth ?? 10, color: [[1, props.wall ? '#19556a' : '#dce7e3']] } },
     axisTick: { show: false }, splitLine: { show: false }, axisLabel: { show: false },
     detail: { formatter: () => metricValue.value, color: props.wall ? '#e3fbff' : '#24352e', fontSize: 16, offsetCenter: [0, '18%'] },
     data: [{ value: progressPercent.value }],

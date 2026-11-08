@@ -1,6 +1,7 @@
 <template>
   <component :is="collapsible ? InspectorSection : 'section'" v-for="group in groups" :key="group.title"
              :title="collapsible ? label(group.title) : undefined" :icon="collapsible ? groupIcon(group.title) : undefined"
+             :default-open="collapsible ? defaultOpen : undefined"
              :class="!collapsible && 'space-y-3 border-t border-line pt-4 first:border-0 first:pt-0'">
     <h4 v-if="!collapsible" class="flex items-center gap-2 font-semibold"><span class="size-1.5 rounded-full bg-primary"/>{{ label(group.title) }}</h4>
     <MfFormGrid>
@@ -10,12 +11,14 @@
         <MfSwitch class="shrink-0" :model-value="Boolean(options[field.key])" :aria-label="label(field.key)" @update:model-value="set(field.key, $event)"/>
       </label>
       <MfFormItem v-else :name="field.key" :label="label(field.key)">
-        <MfSelect v-if="field.control === 'select'" :model-value="String(options[field.key] ?? '')" :options="field.choices" @update:model-value="set(field.key, $event)"/>
+        <MfSelect v-if="field.control === 'select'" :model-value="String(options[field.key] ?? '')" :options="field.choices"
+                  :aria-label="label(field.key)" @update:model-value="set(field.key, $event)"/>
         <MfInputNumber v-else-if="field.control === 'number'" class="w-full" decimal-only commit-on-change :model-value="options[field.key] as number | undefined"
-                       :min="field.min" :max="field.max" :precision="field.precision" @update:model-value="set(field.key, $event)"/>
+                       :min="field.min" :max="field.max" :precision="field.precision" :aria-label="label(field.key)" @update:model-value="set(field.key, $event)"/>
         <MfTextarea v-else-if="field.control === 'textarea'" :model-value="String(options[field.key] ?? '')" :placeholder="field.placeholder" :rows="3"
                     @update:model-value="set(field.key, $event)"/>
-        <MfInput v-else :model-value="String(options[field.key] ?? '')" :placeholder="field.placeholder" @update:model-value="set(field.key, $event)"/>
+        <MfInput v-else :model-value="String(options[field.key] ?? '')" :placeholder="field.placeholder"
+                 :aria-label="label(field.key)" @update:model-value="set(field.key, $event)"/>
       </MfFormItem>
     </div>
     </MfFormGrid>
@@ -39,7 +42,9 @@ interface Field {
   precision?: number
   placeholder?: string
 }
-const props = withDefaults(defineProps<{ options: QueryChartOptions; panel: string; timeCategory: boolean; collapsible?: boolean }>(), { collapsible: false })
+const props = withDefaults(defineProps<{
+  options: QueryChartOptions; panel: string; timeCategory: boolean; collapsible?: boolean; fields?: readonly Key[]; defaultOpen?: boolean
+}>(), { collapsible: false, defaultOpen: true })
 const emit = defineEmits<{ change: [key: Key, value: unknown] }>()
 const { t } = useI18n()
 const label = (key: string) => t('queryChart.' + key)
@@ -51,18 +56,18 @@ const toggle = (key: Key): Field => ({ key, control: 'switch' })
 const text = (key: Key, placeholder?: string): Field => ({ key, control: 'text', placeholder })
 const number = (key: Key, min?: number, max?: number, precision = 0): Field => ({ key, control: 'number', min, max, precision })
 const set = (key: Key, value: unknown) => {
-  if (value === undefined && key !== 'min' && key !== 'max') return
+  if (value === undefined && !['min', 'max', 'barMaxWidth', 'barCornerRadius', 'pieRadius', 'donutHole'].includes(key)) return
   emit('change', key, value)
 }
 
-const groups = computed(() => {
+const sections = computed(() => {
   const type = props.options.type
   const geometry = queryChartGeometry(type)
   const cartesian = !!geometry || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom',
     'waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'dualAxis', 'pareto', 'cumulativeLine', 'deviationBar',
     'mirrorBar', 'stripPlot', 'ecdf', 'scatterFit', 'frequencyPolygon', 'targetComparison', 'rankTrend'].includes(type)
-  const line = geometry?.series === 'line'
-  const fillToggle = line && !geometry.area && !geometry.stacked
+  const line = geometry?.series === 'line' || ['cumulativeLine', 'rankTrend'].includes(type)
+  const fillToggle = geometry?.series === 'line' && !geometry.area && !geometry.stacked
   const fillOpacity = fillToggle || geometry?.area || type === 'rangeBand'
   const variableScale = geometry?.percentage || ['dualAxis', 'pareto', 'ecdf', 'rankTrend', 'mirrorBar'].includes(type)
     ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
@@ -78,9 +83,14 @@ const groups = computed(() => {
   ]
   if (props.panel === 'style') return [
     { title: 'paletteSettings', fields: [select('palette', ['green', 'blue', 'purple']), text('colors', '#0a8f67, #3b82f6')] },
-    ...(line || type === 'scatter' || type === 'bubble' ? [{ title: 'marks', fields: [
+    ...(line || ['scatter', 'effectScatter', 'bubble', 'stripPlot', 'scatterFit', 'lollipop', 'dumbbell', 'dualAxis', 'frequencyPolygon', 'rangeBand', 'lines'].includes(type) ? [{ title: 'marks', fields: [
       ...(line ? [...(geometry?.step ? [] : [toggle('smooth')]), toggle('dashed'), number('lineWidth', 1, 6), toggle('points')] : []),
-      number('pointSize', 1, 18)] }] : []),
+      ...(['lines', 'scatterFit'].includes(type) ? [number('lineWidth', 1, 6)] : []),
+      ...(type === 'lines' ? [] : [number('pointSize', 1, 18)])] }] : []),
+    ...(geometry?.series === 'bar' ? [{ title: 'barAppearance', fields: [number('barMaxWidth', 1, 160), number('barCornerRadius', 0, 24)] }] : []),
+    ...(['pie', 'donut', 'rose'].includes(type) ? [{ title: 'pieAppearance', fields: [
+      number('pieRadius', 30, 90), ...(type === 'donut' ? [number('donutHole', 15, 75), ...(props.fields ? [toggle('donutTotal')] : [])] : []),
+    ] }] : []),
     { title: 'background', fields: [...(fillToggle ? [toggle('fill')] : []), ...(fillOpacity ? [number('opacity', 0, 100)] : []), toggle('transparent')] }
   ]
   if (props.panel === 'interaction') return [
@@ -90,5 +100,16 @@ const groups = computed(() => {
   ]
   return [{ title: 'processing', fields: [select('nulls', ['ignore', 'zero', 'keep']),
     select('timezone', ['Asia/Shanghai', 'UTC', 'America/Los_Angeles'], true), number('maxRows', 1, snapshotRowLimit)] }]
+})
+const groups = computed(() => {
+  const allowed = props.fields
+  return allowed ? sections.value.map(group => ({ ...group, fields: group.fields.filter(field => {
+    if (!allowed.includes(field.key)) return false
+    if (field.key === 'legendPosition' || field.key === 'legendInteractive') return props.options.legend
+    if (field.key === 'labelPosition' || field.key === 'labelOverlap') return props.options.labels
+    if (field.key === 'opacity' && allowed.includes('fill')) return props.options.fill
+    return true
+  }) }))
+    .filter(group => group.fields.length) : sections.value
 })
 </script>

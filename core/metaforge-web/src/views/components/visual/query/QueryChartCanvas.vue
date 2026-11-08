@@ -99,20 +99,24 @@ const spec = computed<EChartsOption>(() => {
   const rightLegend = options.legend && options.legendPosition === 'right'
   const donut = props.embedded && options.type === 'donut'
   const donutX = rightLegend ? '36%' : '50%'
-  const donutTotal = donut && (options.aggregation === 'sum' || options.aggregation === 'count')
+  const outerRadius = options.pieRadius ?? (donut && rightLegend ? 58 : 75)
+  const innerRadius = Math.min(outerRadius - 5, options.donutHole ?? (donut && rightLegend ? 36 : 45))
+  const donutTotal = donut && options.donutTotal !== false && (options.aggregation === 'sum' || options.aggregation === 'count')
       ? formatValue(props.points.reduce((sum, point) => sum + (point.value ?? 0), 0), true) : undefined
   const circularData = props.points.map(point => ({
     name: [formatCategory(point.category), point.series].filter(Boolean).join(' · '), value: point.value, point, pointId: point.pointId
   }))
   const series = circular ? [{
     ...marks, type: options.type === 'funnel' ? 'funnel' : 'pie',
-    radius: options.type === 'donut' ? (donut && rightLegend ? ['36%', '58%'] : ['45%', '75%']) : '75%',
+    radius: options.type === 'donut' ? [innerRadius + '%', outerRadius + '%'] : outerRadius + '%',
     center: donut ? [donutX, '51%'] : undefined,
     roseType: options.type === 'rose' ? 'radius' : undefined,
     data: circularData
   }] : Array.from(bySeries, ([name, points], index) => ({
     ...marks, name,
     type: geometry?.series ?? options.type,
+    ...(geometry?.series === 'bar' ? { barMaxWidth: options.barMaxWidth,
+      itemStyle: options.barCornerRadius === undefined ? undefined : { borderRadius: options.barCornerRadius } } : {}),
     ...(geometry?.stacked ? { stack: 'category' } : {}),
     ...(geometry?.step ? { step: 'end' } : {}),
     data: (numericX ? [...points.keys()] : categories).map(category => {

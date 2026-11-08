@@ -50,7 +50,8 @@ function seriesOverCategories(points: NumericPoint[], options: QueryChartOptions
       const datum = { value: [item.position, item.value], pointId: item.pointId }
       data.push(datum)
     })
-    return { type: 'line', name, data, showSymbol: options.points, symbolSize: options.pointSize, smooth: options.smooth }
+    return { type: 'line', name, data, showSymbol: options.points, symbolSize: options.pointSize, smooth: options.smooth,
+      lineStyle: { width: options.lineWidth, type: options.dashed ? 'dashed' : 'solid' } }
   })
   return { categories, series }
 }
@@ -79,7 +80,7 @@ function comparisonSeries(options: QueryChartOptions, rows: QueryChartRow[], fie
     return [{ value: mirror ? [point.value * direction, index, point.value] : [index, point.value],
       pointId: addRows(aggregate.details.get(point.pointId) ?? []) }]
   })
-  const legend = { show: options.legend, type: 'scroll' as const }
+  const legend = { show: options.legend, selectedMode: options.legendInteractive, type: 'scroll' as const }
   if (mirror) {
     const maximum = points.reduce((max, point) => Math.max(max, point.value ?? 0), 1)
     return {
@@ -243,7 +244,7 @@ export function analyticalChartOption(options: QueryChartOptions, result: Aggreg
       const covariance = data.reduce((sum, { value: [x, y] }) => sum + (x / scaleX - meanX) * (y / scaleY - meanY), 0)
       const fit = variance > 0 ? [min, max].map(x => [x, (meanY + (x / scaleX - meanX) * covariance / variance) * scaleY]) : []
       const trend: LineSeriesOption[] = fit.length && fit.every(([, y]) => Number.isFinite(y)) ? [
-        { type: 'line', name: text('linearFit', 'Linear fit'), data: fit, symbol: 'none', silent: true, lineStyle: { type: 'dashed' } },
+        { type: 'line', name: text('linearFit', 'Linear fit'), data: fit, symbol: 'none', silent: true, lineStyle: { type: 'dashed', width: options.lineWidth } },
       ] : []
       return { ...axis, yAxis: { ...axis.yAxis, scale: true, name: options.yTitle || fields[1] },
         series: [{ type: 'scatter', name: fields[1], data, symbolSize: options.pointSize, dimensions: fields }, ...trend] }

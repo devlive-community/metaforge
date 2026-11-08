@@ -5,11 +5,13 @@ import { sourceModule } from '../../metaforge-ui/tests/component.mjs'
 
 const {
   constrainDashboardGroup, constrainDashboardRect, dashboardAnimationEffects, dashboardChartMappings, dashboardChartType, dashboardDeadlineTime, dashboardGridTarget, dashboardGroupBounds, dashboardMetric, dashboardOverlap, dashboardPivot, dashboardPlacement, dashboardReportCodes,
-  dashboardResourceUrl, dashboardWallResolution,
+  dashboardEmbeddedChartOptions, dashboardEmbeddedChartType, dashboardResourceUrl, dashboardWallResolution,
   dashboardCanContain, dashboardContentSettings, dashboardDataSettings, dashboardDescendantIds, dashboardLayoutSettings,
   dashboardRowsInPeriod, dashboardScreenEffectSettings, dashboardTools, dashboardWidget, dashboardWidgetLabelKey, dashboardWidgetUsesAsset, emptyDashboard, groupDashboardWidgets, readDashboardDocument,
   reorderDashboardLayers, resizeDashboardGroup, switchDashboardLayout
 } = await sourceModule('../../metaforge-web/src/model/dashboard-layout.ts')
+const { defaultQueryChart } = await sourceModule('../../metaforge-web/src/model/query-chart.ts')
+const { queryChartStyleFields } = await sourceModule('../../metaforge-web/src/model/query-chart-style.ts')
 
 test('old dashboard layouts keep their linked chart and grid geometry', () => {
   const layout = [{ i: 'old-id', x: 2, y: 3, w: 5, h: 4, title: 'Trend', node: { id: 'CHART' } }]
@@ -358,4 +360,42 @@ test('map and range configuration is available before a chart asset is bound', (
   assert.equal(dashboardChartMappings(saved).type, 'map')
   assert.equal(dashboardChartMappings(saved).mapGeoJson, widget.chartOptions.mapGeoJson)
   assert.equal(dashboardChartMappings(dashboardWidget('range', 'custom', 'Range')).type, 'custom')
+})
+
+test('screen styles survive saving and override appearance without changing the linked report', () => {
+  const draft = emptyDashboard()
+  draft.boards.dashboard.widgets.push(
+    { ...dashboardWidget('line', 'line', 'Trend'), chartStyle: { palette: 'purple', smooth: false, pointSize: 100, category: 'wrong', pieRadius: 80 } },
+    { ...dashboardWidget('table', 'table', 'Rows'), tableAppearance: { density: 'default', striped: true, bordered: false } },
+  )
+  const snapshot = {
+    headers: ['day'], columns: [],
+    queryChart: { version: 1, options: { ...defaultQueryChart(['day']), smooth: true, colors: '#123456' } },
+  }
+  const [trend, table] = readDashboardDocument(JSON.stringify({ version: 3, draft })).draft.boards.dashboard.widgets
+  const styled = dashboardEmbeddedChartOptions(trend, snapshot, true)
+  assert.equal(styled.category, 'day')
+  assert.equal(styled.palette, 'purple')
+  assert.equal(styled.colors, '')
+  assert.equal(styled.smooth, false)
+  assert.equal(styled.pointSize, 18)
+  assert.equal(styled.pieRadius, undefined)
+  assert.deepEqual(table.tableAppearance, { density: 'default', striped: true, bordered: false })
+  const restored = dashboardEmbeddedChartOptions({ ...trend, chartStyle: undefined }, snapshot, false)
+  assert.equal(restored.colors, '#123456')
+  assert.equal(restored.smooth, true)
+  assert.equal(snapshot.queryChart.options.smooth, true)
+})
+
+test('chart controls follow the renderer of the selected component and report', () => {
+  assert.ok(queryChartStyleFields('line').includes('lineWidth'))
+  assert.ok(!queryChartStyleFields('line').includes('barMaxWidth'))
+  assert.ok(queryChartStyleFields('bar').includes('barMaxWidth'))
+  assert.ok(!queryChartStyleFields('bar').includes('smooth'))
+  assert.ok(queryChartStyleFields('donut').includes('donutHole'))
+  assert.ok(!queryChartStyleFields('donut').includes('xTitle'))
+  assert.deepEqual(queryChartStyleFields('table'), [])
+  assert.equal(dashboardEmbeddedChartType('gauge'), undefined)
+  const snapshot = { queryChart: { options: { type: 'donut' } } }
+  assert.equal(dashboardEmbeddedChartType('report', snapshot), 'donut')
 })

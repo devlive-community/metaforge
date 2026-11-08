@@ -1,6 +1,7 @@
 <template>
   <MfEmpty v-if="!entries.length" size="sm" class="h-full" :title="$t(key + 'empty')"/>
-  <MfTable v-else-if="tabular" fill density="compact" class="h-full" row-key="id" :columns="columns" :data-source="entries">
+  <MfTable v-else-if="tabular" fill class="h-full" row-key="id" :columns="columns" :data-source="entries"
+           :density="tableAppearance?.density ?? 'compact'" :striped="tableAppearance?.striped" :bordered="tableAppearance?.bordered ?? true">
     <template #cell-title="{ record }"><EllipsisCell :text="record.title"/></template>
     <template #cell-value="{ record }"><EllipsisCell :text="record.value"/></template>
     <template #cell-secondary="{ record }"><EllipsisCell :text="record.secondary ?? ''"/></template>
@@ -55,15 +56,17 @@
 import { ArrowUpRight } from '@lucide/vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { informationFields, informationMailUrl as mailUrl, informationResourceUrl as resourceUrl, type InformationBlockKind, type InformationItem } from '@/model/information-block'
+import { informationFields, informationMailUrl as mailUrl, informationResourceUrl as resourceUrl, isTabularInformationBlock,
+  type InformationBlockKind, type InformationItem } from '@/model/information-block'
+import type { TableAppearance } from '@/model/table-appearance'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import InformationCards from './InformationCards.vue'
 
-const props = defineProps<{ kind: InformationBlockKind; items: readonly InformationItem[] }>()
+const props = defineProps<{ kind: InformationBlockKind; items: readonly InformationItem[]; tableAppearance?: TableAppearance }>()
 const { t } = useI18n()
 const key = 'informationBlock.'
 const entries = computed(() => props.items.filter(item => item.title.trim()))
-const tabular = computed(() => ['riskRegister', 'shiftRoster', 'decisionLog', 'maintenanceSchedule'].includes(props.kind))
+const tabular = computed(() => isTabularInformationBlock(props.kind))
 const tableTone = computed(() => props.kind === 'decisionLog' ? 'decisionStatus' : 'severity')
 const ordered = computed(() => ['releaseTimeline', 'milestoneTracker', 'escalationPaths'].includes(props.kind))
 const columns = computed(() => Object.entries(informationFields[props.kind]).map(([dataIndex, label]) => ({ dataIndex, title: t(key + label) })))

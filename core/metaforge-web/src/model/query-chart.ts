@@ -59,6 +59,11 @@ export interface QueryChartOptions {
   points: boolean
   fill: boolean
   opacity: number
+  barMaxWidth?: number
+  barCornerRadius?: number
+  pieRadius?: number
+  donutHole?: number
+  donutTotal?: boolean
   transparent: boolean
   tooltip: 'dimension' | 'mark' | 'off'
   tooltipTemplate: string

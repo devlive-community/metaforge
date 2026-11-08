@@ -7,7 +7,8 @@
       <span class="text-xs tabular-nums text-content-tertiary">{{ filtered.length.toLocaleString() }} {{ $t('query.result.rowsUnit') }}</span>
     </div>
     <div class="min-h-0 overflow-hidden rounded-mf-md border border-line" :class="fill && 'flex flex-1 flex-col'">
-      <MfTable :fill="fill" resizable :columns="columns" :data-source="paged" row-key="__row" density="compact" :bordered="false"
+      <MfTable :fill="fill" resizable :columns="columns" :data-source="paged" row-key="__row" :density="appearance?.density ?? 'compact'"
+               :striped="appearance?.striped" :bordered="appearance?.bordered ?? false"
                :empty-text="$t(keyword ? 'query.result.noMatch' : 'common.noData')" @resize="onResize" @resize-end="onResize">
         <template v-for="column in columns" :key="column.key" #[`cell-${column.key}`]="{ record }">
           <slot name="cell" :header="column.title" :value="record[column.dataIndex]">
@@ -27,6 +28,7 @@
 import { computed, ref, watch } from 'vue'
 import { Search } from '@lucide/vue'
 import EllipsisCell from './EllipsisCell.vue'
+import type { TableAppearance } from '@/model/table-appearance'
 
 /**
  * Rows of a query result in MfTable, as the query page shows them: resizable columns, NULL for
@@ -41,6 +43,7 @@ const props = withDefaults(defineProps<{
   /** Fills the parent's height, the table scrolling inside. */
   fill?: boolean
   pageSize?: number
+  appearance?: TableAppearance
 }>(), { searchable: false, fill: false, pageSize: 100 })
 
 defineSlots<{

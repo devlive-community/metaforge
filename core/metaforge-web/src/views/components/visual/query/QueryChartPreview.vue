@@ -20,7 +20,8 @@
       <div class="contents" :class="{ invisible: loading }" :inert="loading" :aria-hidden="loading || undefined">
       <h3 v-if="options.name" class="shrink-0 break-words text-base font-semibold">{{ options.name }}</h3>
       <p v-if="options.description" class="mb-2 shrink-0 whitespace-pre-wrap break-words text-xs text-content-tertiary">{{ options.description }}</p>
-      <ResultTable v-if="options.type === 'table' || (showData && rawSeries)" class="flex-1" fill :headers="options.fields" :rows="result.filtered" :page-size="pageSize">
+      <ResultTable v-if="options.type === 'table' || (showData && rawSeries)" class="flex-1" fill :headers="options.fields" :rows="result.filtered"
+                   :appearance="tableAppearance" :page-size="pageSize">
         <template v-if="embedded" #cell="{ header, value }">
           <MfTag v-if="statusTag(header, value)" :variant="statusTag(header, value)" size="sm">{{ value }}</MfTag>
         </template>
@@ -68,12 +69,14 @@ import { MfMessage } from 'metaforge-ui'
 import { aggregateQueryChart, type QueryChartOptions, type QueryChartRow } from '@/model/query-chart'
 import { chartDataSpec, queryChartGeometry } from '@/model/query-chart-data'
 import { prepareQueryChart } from '@/model/query-chart-series'
+import type { TableAppearance } from '@/model/table-appearance'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
 import ResultTable from '@/views/components/table/ResultTable.vue'
 import QueryChartCanvas from './QueryChartCanvas.vue'
 import ChartLoading from '../ChartLoading.vue'
 
-const props = defineProps<{ options: QueryChartOptions; rows: QueryChartRow[]; heading?: boolean; embedded?: boolean; linked?: boolean; loading?: boolean; aggregation?: ReturnType<typeof aggregateQueryChart> }>()
+const props = defineProps<{ options: QueryChartOptions; rows: QueryChartRow[]; heading?: boolean; embedded?: boolean; linked?: boolean; loading?: boolean;
+  aggregation?: ReturnType<typeof aggregateQueryChart>; tableAppearance?: TableAppearance }>()
 const emit = defineEmits<{ filter: [rows: QueryChartRow[]] }>()
 const formats = ['png', 'svg'] as const
 const { t } = useI18n()

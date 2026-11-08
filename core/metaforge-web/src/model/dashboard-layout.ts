@@ -1,8 +1,10 @@
-import { chartFieldKind, queryChartTypes, type QueryChartConfiguration, type QueryChartOptions, type QueryChartPoint, type QueryChartRow, type QueryChartType } from './query-chart'
+import { chartFieldKind, defaultQueryChart, queryChartTypes, type QueryChartConfiguration, type QueryChartOptions, type QueryChartPoint, type QueryChartRow, type QueryChartType } from './query-chart'
 import { geoJsonLimit, suggestChartFields, type ChartMappings } from './query-chart-data'
 import type { ReportModel } from './report'
 import { informationBlockKinds, isInformationBlock, readInformationItems, type InformationItem } from './information-block'
 import { isProcessQualityView, processQualityViews, readProcessQualityOptions, type ProcessQualityOptions } from './process-quality'
+import { queryChartStyleFields, readQueryChartStyle, type QueryChartStyle } from './query-chart-style'
+import { readTableAppearance, type TableAppearance } from './table-appearance'
 
 export const dashboardMode = ['dashboard', 'wall'] as const
 export type DashboardMode = typeof dashboardMode[number]
@@ -262,6 +264,8 @@ export interface DashboardWidget extends DashboardRect {
   description: string
   reportCode?: string
   chartOptions?: DashboardChartOverrides
+  chartStyle?: QueryChartStyle
+  tableAppearance?: TableAppearance
   text: string
   image: string
   url: string
@@ -668,6 +672,19 @@ export function dashboardContentSettings(value?: unknown): DashboardContentOptio
     fit: raw.fit === 'contain' ? 'contain' : 'cover', interval: integer(raw.interval, 5, 2, 60), autoplay: raw.autoplay !== false,
     attribution: text(raw.attribution).slice(0, 200), pauseOnHover: raw.pauseOnHover !== false }
 }
+
+export function dashboardWidgetContentSettings(widget?: Pick<DashboardWidget, 'kind' | 'contentOptions'>): DashboardContentOptions {
+  const settings = dashboardContentSettings(widget?.contentOptions)
+  if (widget?.contentOptions) return settings
+  switch (widget?.kind) {
+    case 'heading': return { ...settings, fontSize: 24, fontWeight: 'bold' }
+    case 'text': return { ...settings, fontSize: 14 }
+    case 'metric': return { ...settings, fontSize: 30 }
+    case 'image':
+    case 'video': return { ...settings, fit: 'contain' }
+    default: return settings
+  }
+}
 export function dashboardLayoutSettings(value?: unknown): DashboardLayoutOptions {
   const raw = record(value) ?? {}
   return { itemHeight: integer(raw.itemHeight, 180, 48, 800), columns: integer(raw.columns, 2, 1, 6), gap: integer(raw.gap, 12, 0, 48), padding: integer(raw.padding, 8, 0, 64),
@@ -850,7 +867,9 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       groupId: mode === 'wall' && !dashboardScreenEffectTool(kind) && typeof item.groupId === 'string' ? item.groupId.slice(0, 100) || undefined : undefined,
       ...constrainDashboardRect({ x: Number(item.x), y: Number(item.y), w: Number(item.w), h: Number(item.h) }, mode, board),
       description: text(item.description).slice(0, 200),
-      reportCode: text(item.reportCode) || undefined, chartOptions: readWidgetChartOptions(item.chartOptions), text: text(item.text), image: text(item.image), field: text(item.field),
+      reportCode: text(item.reportCode) || undefined, chartOptions: readWidgetChartOptions(item.chartOptions),
+      chartStyle: readQueryChartStyle(item.chartStyle), tableAppearance: readTableAppearance(item.tableAppearance),
+      text: text(item.text), image: text(item.image), field: text(item.field),
       url: text(item.url), target: integer(item.target, 100, 1, 1000000000),
       shape: item.shape === 'circle' ? 'circle' : 'rectangle', clockDate: item.clockDate !== false,
       displayFields: Array.isArray(item.displayFields) ? [...new Set(item.displayFields.filter((field): field is string => typeof field === 'string'))].slice(0, 12) : undefined,
@@ -999,6 +1018,38 @@ export function dashboardChartMappings(widget: DashboardWidget, snapshot?: Query
     parallelFields: widget.chartOptions?.parallelFields ?? saved?.parallelFields ?? suggestions.parallelFields,
     mapGeoJson: widget.chartOptions?.mapGeoJson ?? saved?.mapGeoJson,
   }
+}
+
+export function dashboardEmbeddedChartType(kind: DashboardWidgetKind, snapshot?: QueryChartConfiguration) {
+  const type = kind === 'report' ? snapshot?.queryChart.options.type : dashboardChartType(kind)
+  // A gauge widget has its own goal and renderer. A gauge inside a saved report uses the report renderer.
+  if (kind === 'gauge' || !type || !queryChartTypes.includes(type)) return
+  return type
+}
+
+export function dashboardEmbeddedChartOptions(widget: DashboardWidget, snapshot: QueryChartConfiguration | undefined, wall: boolean): QueryChartOptions {
+  const saved = snapshot?.queryChart.options
+  const mappings = dashboardChartMappings(widget, snapshot)
+  const supported = dashboardEmbeddedChartType(widget.kind, snapshot)
+  const style = supported ? readQueryChartStyle(Object.fromEntries(queryChartStyleFields(supported)
+    .map(key => [key, widget.chartStyle?.[key]]))) : undefined
+  const options: QueryChartOptions = {
+    ...defaultQueryChart(saved?.fields ?? []), ...saved, ...mappings,
+    grain: saved && mappings.category === saved.category ? saved.grain : 'none',
+    name: '', description: '', transparent: true,
+    metric: widget.chartOptions?.metric ?? saved?.metric ?? '',
+    aggregation: widget.chartOptions?.aggregation ?? saved?.aggregation ?? 'count',
+    pointAction: widget.action === 'saved' ? saved?.pointAction ?? 'details' : widget.action,
+    detailsMode: 'dialog',
+    colors: wall ? '#15e5d1,#10b8e2,#6379ff' : saved?.colors ?? '',
+    ...style,
+  }
+  if (style?.palette && style.colors === undefined) options.colors = ''
+  if (style && options.min !== undefined && options.max !== undefined && options.min >= options.max) {
+    options.min = undefined
+    options.max = undefined
+  }
+  return options
 }
 
 export function dashboardMetricTool(kind: DashboardWidgetKind) {
