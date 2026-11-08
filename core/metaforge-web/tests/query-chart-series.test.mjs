@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import * as echarts from 'echarts'
 import { sourceModule } from '../../metaforge-ui/tests/component.mjs'
@@ -71,6 +72,21 @@ test('rank trend handles ties and cumulative lines follow the shared category or
   assert.deepEqual(trends.get('third'), [[0, 3]])
   const cumulative = render('cumulativeLine').option.series.find(series => series.name === 'second')
   assert.deepEqual(cumulative.data.map(point => point.value), [[0, 5], [1, 9]])
+})
+
+test('the calendar renders localized months and selects the latest year with data', async () => {
+  const zh = JSON.parse(await readFile(new URL('../src/i18n/locales/zh-cn.json', import.meta.url), 'utf8'))
+  const samples = [{ date: '2025-10-01' }, { date: '2026-08-12' }]
+  const chart = { ...defaultQueryChart(['date'], 'date'), type: 'calendarMatrix' }
+  const result = prepareQueryChart(chart, aggregateQueryChart(samples, chart), (key, fallback) => zh['queryChart.' + key] ?? fallback)
+  const instance = echarts.init(null, undefined, { renderer: 'svg', ssr: true, width: 840, height: 320 })
+  try {
+    instance.setOption({ animation: false, ...result.option })
+    assert.match(instance.renderToSVGString(), /8月/)
+    assert.equal(result.option.calendar.range, '2026')
+    assert.equal(result.details.get(0)[0], samples[1])
+  }
+  finally { instance.dispose() }
 })
 
 test('waterfall accumulates signed changes across zero and drills down to the category', () => {

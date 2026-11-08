@@ -3253,7 +3253,7 @@
   "queryChart.percent": "Percent",
   "queryChart.position": "Rank",
   "queryChart.linearFit": "Linear fit",
-  "queryChart.calendarLanguage": "en",
+  "queryChart.calendarLanguage": "EN",
   "queryChart.type.bubble": "Bubble chart",
   "queryChart.nonnegativeShares": "A 100% stacked chart requires nonnegative values.",
   "queryChart.type.custom": "Custom range chart",

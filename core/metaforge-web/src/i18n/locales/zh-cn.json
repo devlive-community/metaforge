@@ -3253,7 +3253,7 @@
   "queryChart.percent": "百分比",
   "queryChart.position": "名次",
   "queryChart.linearFit": "线性拟合",
-  "queryChart.calendarLanguage": "cn",
+  "queryChart.calendarLanguage": "ZH",
   "queryChart.type.bubble": "气泡图",
   "queryChart.nonnegativeShares": "百分比堆叠图要求数值为非负数。",
   "queryChart.type.custom": "自定义区间图",

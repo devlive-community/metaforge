@@ -163,14 +163,18 @@ export function analyticalChartOption(options: QueryChartOptions, result: Aggreg
         ...options, grain: 'day', series: '', filtersEnabled: false,
       })
       const samples = daily.points.filter((point): point is NumericPoint => point.value !== null && /^\d{4}-\d{2}-\d{2}$/.test(point.category))
-      const year = samples.reduce((latest, point) => Math.max(latest, Number(point.category.slice(0, 4))), 0)
+      const year = samples.reduce((latest, point) => {
+        const year = point.category.slice(0, 4)
+        return year > latest ? year : latest
+      }, '')
       if (!year) return
-      const selected = samples.filter(point => point.category.startsWith(String(year) + '-'))
+      const selected = samples.filter(point => point.category.startsWith(year + '-'))
       const minimum = selected.reduce((min, point) => Math.min(min, point.value), 0)
       const maximum = selected.reduce((max, point) => Math.max(max, point.value), 0)
+      const language = text('calendarLanguage', 'EN')
       return {
-        calendar: { range: String(year), left: 45, right: 20, top: 24, bottom: 38, cellSize: ['auto', 'auto'],
-          yearLabel: { show: false }, dayLabel: { firstDay: 1, nameMap: text('calendarLanguage', 'en') }, monthLabel: { nameMap: text('calendarLanguage', 'en') } },
+        calendar: { range: year, left: 45, right: 20, top: 24, bottom: 38, cellSize: ['auto', 'auto'],
+          yearLabel: { show: false }, dayLabel: { firstDay: 1, nameMap: language }, monthLabel: { nameMap: language } },
         visualMap: { min: minimum, max: maximum === minimum ? maximum + 1 : maximum, dimension: 1, orient: 'horizontal', left: 'center', bottom: 2 },
         series: [{ type: 'heatmap', name, coordinateSystem: 'calendar', data: selected.map(point => ({
           value: [point.category, point.value], pointId: addRows(daily.details.get(point.pointId) ?? []),
