@@ -37,6 +37,18 @@ const specs: Partial<Record<QueryChartType, ChartDataSpec>> = {
   polarBar: { category: 'category', series: 'group' },
   polarStackedBar: { category: 'category', series: 'group' },
   polarLine: { category: 'category', series: 'group' },
+  pareto: { category: 'category' },
+  cumulativeLine: { category: 'category', series: 'group' },
+  deviationBar: { category: 'category' },
+  mirrorBar: { category: 'category', raw: true, fields: ['leftMeasure', 'rightMeasure'] },
+  stripPlot: { category: 'category', raw: true, fields: ['value'] },
+  ecdf: { raw: true, fields: ['value'] },
+  scatterFit: { raw: true, fields: ['bubbleX', 'bubbleY'] },
+  calendarMatrix: { category: 'time' },
+  radialBar: { category: 'category' },
+  frequencyPolygon: { raw: true, fields: ['value'] },
+  targetComparison: { category: 'category', raw: true, fields: ['actualMeasure', 'targetMeasure'] },
+  rankTrend: { category: 'category', series: 'group' },
   gauge: {},
 }
 
@@ -79,7 +91,7 @@ export function chartDataSpec(type: QueryChartType): ChartDataSpec | undefined {
 }
 
 export function requiresChartSeries(type: QueryChartType): boolean {
-  return ['heatmap', 'graph', 'sankey', 'themeRiver'].includes(type)
+  return ['heatmap', 'graph', 'sankey', 'themeRiver', 'rankTrend'].includes(type)
 }
 
 const fieldAliases: Record<string, string[]> = {
@@ -92,6 +104,8 @@ const fieldAliases: Record<string, string[]> = {
   bubbleX: ['x', 'xvalue'], bubbleY: ['y', 'yvalue'], bubbleSize: ['size', 'bubblesize', 'weight', 'radius'],
   before: ['before', 'previous', 'baseline'], after: ['after', 'current', 'actual'],
   columnMeasure: ['volume', 'count', 'quantity'], lineMeasure: ['rate', 'price', 'average'],
+  leftMeasure: ['left', 'before', 'baseline'], rightMeasure: ['right', 'after', 'actual'],
+  actualMeasure: ['actual', 'observed'], targetMeasure: ['target', 'goal', 'plan', 'budget'],
 }
 
 export function suggestChartFields(type: QueryChartType, numericFields: string[]): Pick<ChartMappings, 'chartFields' | 'parallelFields'> {
@@ -104,10 +118,10 @@ export function suggestChartFields(type: QueryChartType, numericFields: string[]
     const field = numericFields.find(name => fieldAliases[key]?.includes(normalized(name)))
     if (field) chartFields[key] = field
   }
-  if (['bubble', 'dumbbell', 'rangeBand', 'dualAxis'].includes(type)) {
+  if (['bubble', 'dumbbell', 'rangeBand', 'dualAxis', 'mirrorBar', 'scatterFit', 'targetComparison'].includes(type)) {
     const available = numericFields.filter(field => !Object.values(chartFields).includes(field))
     for (const key of spec.fields) if (!chartFields[key] && available.length) chartFields[key] = available.shift()!
   }
-  if ((type === 'boxplot' || type === 'histogram') && !chartFields.value && numericFields[0]) chartFields.value = numericFields[0]
+  if (spec.fields.includes('value') && !chartFields.value && numericFields[0]) chartFields.value = numericFields[0]
   return { chartFields }
 }

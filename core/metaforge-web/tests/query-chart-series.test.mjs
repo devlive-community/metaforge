@@ -22,7 +22,9 @@ const options = {
   parallelFields: ['open', 'close', 'high'],
   chartFields: { open: 'open', close: 'close', low: 'low', high: 'high', value: 'open', lower: 'low', upper: 'high',
     startX: 'startX', startY: 'startY', endX: 'endX', endY: 'endY',
-    before: 'open', after: 'close', columnMeasure: 'open', lineMeasure: 'close' },
+    before: 'open', after: 'close', columnMeasure: 'open', lineMeasure: 'close',
+    leftMeasure: 'open', rightMeasure: 'close', actualMeasure: 'close', targetMeasure: 'high',
+    bubbleX: 'open', bubbleY: 'close' },
 }
 
 test('the dashboard includes every type shown in the visualizer', () => {
@@ -33,10 +35,12 @@ test('the dashboard includes every type shown in the visualizer', () => {
 test('specialized field mappings produce real ECharts series that can render SVG', () => {
   const types = ['heatmap', 'gauge', 'candlestick', 'boxplot', 'histogram', 'parallel', 'themeRiver', 'tree', 'treemap', 'sunburst', 'graph', 'sankey', 'map', 'lines', 'custom']
   const compositions = { waterfall: 'custom', lollipop: 'custom', dumbbell: 'custom', rangeBand: 'line', dualAxis: 'bar',
-    polarBar: 'bar', polarStackedBar: 'bar', polarLine: 'line' }
+    polarBar: 'bar', polarStackedBar: 'bar', polarLine: 'line', pareto: 'bar', cumulativeLine: 'line',
+    deviationBar: 'bar', mirrorBar: 'bar', stripPlot: 'scatter', ecdf: 'line', scatterFit: 'scatter',
+    calendarMatrix: 'heatmap', radialBar: 'bar', frequencyPolygon: 'line', targetComparison: 'bar', rankTrend: 'line' }
   types.push(...Object.keys(compositions))
   for (const type of types) {
-    const chartOptions = { ...options, type, category: type === 'themeRiver' ? 'date' : options.category }
+    const chartOptions = { ...options, type, category: ['themeRiver', 'calendarMatrix'].includes(type) ? 'date' : options.category }
     const prepared = prepareQueryChart(chartOptions, aggregateQueryChart(rows, chartOptions))
     assert.equal(prepared.issue, undefined, type)
     assert.equal(prepared.option.series[0].type, compositions[type] ?? (type === 'histogram' ? 'bar' : type))
@@ -49,6 +53,24 @@ test('specialized field mappings produce real ECharts series that can render SVG
     }
     finally { instance.dispose() }
   }
+})
+
+test('rank trend handles ties and cumulative lines follow the shared category order', () => {
+  const records = [
+    { period: 'A', name: 'first', amount: 5 },
+    { period: 'B', name: 'first', amount: 1 },
+    { period: 'B', name: 'second', amount: 4 },
+    { period: 'A', name: 'second', amount: 5 },
+    { period: 'A', name: 'third', amount: 2 },
+  ]
+  const chart = { ...defaultQueryChart(['period', 'name', 'amount']), category: 'period', series: 'name', metric: 'amount', aggregation: 'sum', sort: 'original' }
+  const render = type => prepareQueryChart({ ...chart, type }, aggregateQueryChart(records, { ...chart, type }))
+  const rank = render('rankTrend')
+  const trends = new Map(rank.option.series.map(series => [series.name, series.data.map(point => point.value)]))
+  assert.deepEqual(trends.get('second'), [[0, 1], [1, 1]])
+  assert.deepEqual(trends.get('third'), [[0, 3]])
+  const cumulative = render('cumulativeLine').option.series.find(series => series.name === 'second')
+  assert.deepEqual(cumulative.data.map(point => point.value), [[0, 5], [1, 9]])
 })
 
 test('waterfall accumulates signed changes across zero and drills down to the category', () => {

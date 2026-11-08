@@ -1,12 +1,13 @@
 import type { CustomSeriesRenderItem, EChartsOption } from 'echarts'
 import { chartDataSpec, geoJsonLimit, requiresChartSeries } from './query-chart-data'
+import { analyticalChartOption, type ChartText } from './query-chart-analysis'
 import { aggregateQueryChart, type QueryChartOptions, type QueryChartPoint, type QueryChartRow } from './query-chart'
 
 type Aggregated = ReturnType<typeof aggregateQueryChart>
 type MapInput = Parameters<typeof import('echarts').registerMap>[1]
 export interface PreparedQueryChart {
   option?: EChartsOption
-  issue?: 'missingFields' | 'invalidMap' | 'mapMismatch' | 'cycle' | 'noPoints'
+  issue?: 'missingFields' | 'invalidMap' | 'mapMismatch' | 'cycle' | 'noPoints' | 'nonnegative'
   details: Map<number, QueryChartRow[]>
   names?: Map<string, number>
   map?: { name: string; source: MapInput }
@@ -106,7 +107,7 @@ function horizontalMarker(paired: boolean, radius: number): CustomSeriesRenderIt
   }
 }
 
-export function prepareQueryChart(options: QueryChartOptions, result: Aggregated): PreparedQueryChart | undefined {
+export function prepareQueryChart(options: QueryChartOptions, result: Aggregated, text: ChartText = (_key, fallback) => fallback): PreparedQueryChart | undefined {
   const spec = chartDataSpec(options.type)
   if (!spec) return
   const details = new Map<number, QueryChartRow[]>()
@@ -141,6 +142,12 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
   const bound = Math.max(1, ...points.map(point => point.value))
 
   switch (options.type) {
+    case 'pareto': case 'cumulativeLine': case 'deviationBar': case 'mirrorBar': case 'stripPlot': case 'ecdf':
+    case 'scatterFit': case 'calendarMatrix': case 'radialBar': case 'targetComparison': case 'rankTrend': {
+      const option = analyticalChartOption(options, result, fields, id, text)
+      if (option === 'nonnegative') return issue('nonnegative')
+      return option ? done(option) : issue('noPoints')
+    }
     case 'waterfall': {
       let running = 0
       const data = points.map((point, index) => {
@@ -315,7 +322,8 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
       })
       return data.length ? done({ ...axes(data.map(row => row.name)), series: [{ type: 'boxplot', data }] }) : issue('noPoints')
     }
-    case 'histogram': {
+    case 'histogram':
+    case 'frequencyPolygon': {
       const samples = raw.flatMap(row => {
         const value = numberValue(row[fields[0]])
         return value === undefined ? [] : [{ row, value }]
@@ -325,12 +333,20 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
       const min = Math.min(...values)
       const max = Math.max(...values)
       const count = min === max ? 1 : Math.min(20, Math.ceil(Math.sqrt(samples.length)))
-      const width = (max - min) / count || 1
+      const width = (max / count - min / count) || 1
       const bins = Array.from({ length: count }, () => [] as QueryChartRow[])
-      for (const { row, value } of samples) bins[Math.min(count - 1, Math.floor((value - min) / width))].push(row)
+      for (const { row, value } of samples) bins[Math.max(0, Math.min(count - 1, Math.floor(value / width - min / width)))].push(row)
+      const edge = (index: number) => min * (1 - index / count) + max * (index / count)
       const label = (value: number) => Number(value.toPrecision(5)).toString()
+      if (options.type === 'frequencyPolygon') return done({
+        xAxis: { type: 'value', scale: true, name: options.xTitle || fields[0] },
+        yAxis: { type: 'value', min: 0, minInterval: 1, name: options.yTitle },
+        series: [{ type: 'line', symbolSize: options.pointSize, data: bins.map((records, index) => ({
+          value: [edge(index + .5), records.length], pointId: id(records),
+        })) }],
+      })
       return done({
-        ...axes(bins.map((_, index) => count === 1 ? label(min) : label(min + index * width) + ' – ' + label(min + (index + 1) * width))),
+        ...axes(bins.map((_, index) => count === 1 ? label(min) : label(edge(index)) + ' – ' + label(edge(index + 1)))),
         series: [{ type: 'bar', barCategoryGap: 0, data: bins.map(rows => ({ value: rows.length, pointId: id(rows) })) }],
       })
     }

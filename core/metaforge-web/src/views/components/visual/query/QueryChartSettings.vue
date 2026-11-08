@@ -59,11 +59,13 @@ const groups = computed(() => {
   const type = props.options.type
   const geometry = queryChartGeometry(type)
   const cartesian = !!geometry || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom',
-    'waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'dualAxis'].includes(type)
+    'waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'dualAxis', 'pareto', 'cumulativeLine', 'deviationBar',
+    'mirrorBar', 'stripPlot', 'ecdf', 'scatterFit', 'frequencyPolygon', 'targetComparison', 'rankTrend'].includes(type)
   const line = geometry?.series === 'line'
   const fillToggle = line && !geometry.area && !geometry.stacked
   const fillOpacity = fillToggle || geometry?.area || type === 'rangeBand'
-  const variableScale = geometry?.percentage || type === 'dualAxis' ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
+  const variableScale = geometry?.percentage || ['dualAxis', 'pareto', 'ecdf', 'rankTrend', 'mirrorBar'].includes(type)
+    ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
   if (props.panel === 'axes') return [
     { title: 'xAxis', fields: [text('xTitle'), ...(props.timeCategory ? [select('dateFormat', ['short', 'full', 'time'])] : []),
       select('sort', ['asc', 'desc', 'original']), ...(cartesian ? [toggle('xVisible'), toggle('xTitleVisible'), toggle('hideOverlap')] : [])] },

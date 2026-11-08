@@ -8,6 +8,8 @@ export const queryChartTypes = [
   'stepLine', 'stackedBar', 'stackedHorizontal', 'stackedArea', 'percentStackedBar', 'bubble',
   'stackedLine', 'percentStackedHorizontal', 'waterfall', 'lollipop', 'dumbbell', 'rangeBand',
   'dualAxis', 'polarBar', 'polarStackedBar', 'polarLine',
+  'pareto', 'cumulativeLine', 'deviationBar', 'mirrorBar', 'stripPlot', 'ecdf',
+  'scatterFit', 'calendarMatrix', 'radialBar', 'frequencyPolygon', 'targetComparison', 'rankTrend',
 ] as const
 export type QueryChartType = typeof queryChartTypes[number]
 export type QueryChartRow = Record<string, unknown>
@@ -190,7 +192,8 @@ export function aggregateQueryChart(rows: QueryChartRow[], options: QueryChartOp
   if (options.category) filtered.forEach(row => {
     if (row[options.category] == null && options.nulls === 'ignore') return
     const category = timeGroup(row[options.category], options.grain, formatter)
-    const series = options.series && !['map', 'waterfall', 'lollipop'].includes(options.type) ? asText(row[options.series]) : ''
+    const series = options.series && !['map', 'waterfall', 'lollipop', 'pareto', 'deviationBar', 'calendarMatrix', 'radialBar'].includes(options.type)
+      ? asText(row[options.series]) : ''
     const key = JSON.stringify([category, series])
     if (!buckets.has(key)) buckets.set(key, { category, series, rows: [] })
     buckets.get(key)!.rows.push(row)
