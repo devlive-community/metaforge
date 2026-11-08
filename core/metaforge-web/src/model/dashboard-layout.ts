@@ -48,7 +48,9 @@ export const dashboardAdvancedDecorationTools = ['doubleLine', 'dashedLine', 'ch
 export const dashboardDecorationTools = ['glowLine', 'glowRing', 'dotMatrix', 'cornerAccent', 'ripple', 'ribbon', ...dashboardAdvancedDecorationTools] as const
 export const dashboardScreenEffectTools = ['snow', 'rain', 'stars', 'meteors', 'fireflies', 'bubbles', 'confetti', 'petals', 'particleNetwork', 'aurora',
   'fog', 'smoke', 'clouds', 'sandstorm', 'embers', 'leaves', 'hearts', 'sparkles', 'lightning', 'fireworks', 'risingDigits', 'warpStars', 'oceanWaves', 'sunRays', 'matrixGrid', 'searchBeams', 'floatingHexagons', 'digitalScan', 'waterCaustics', 'lightTrails', 'pulseGrid', 'contourLines',
-  'rainRipples', 'pollenDrift', 'orbitalTrails', 'floatingLanterns', 'sonarSweeps', 'shimmerCurtain', 'paperKites', 'inkBloom'] as const
+  'rainRipples', 'pollenDrift', 'orbitalTrails', 'floatingLanterns', 'sonarSweeps', 'shimmerCurtain', 'paperKites', 'inkBloom',
+  'fallingFeathers', 'prismShards', 'concentricWaves', 'signalBars', 'isometricMesh', 'wovenRibbons',
+  'constellationMarks', 'spiralDust', 'horizonGlow', 'mosaicFade'] as const
 export type DashboardScreenEffectKind = typeof dashboardScreenEffectTools[number]
 export interface DashboardScreenEffectOptions {
   quantity: number
@@ -91,12 +93,24 @@ export const dashboardScreenEffectPresets: Record<DashboardScreenEffectKind, { q
   shimmerCurtain: { quantity: 14, size: 46, color: '#75A8F8', maxQuantity: 32, maxSize: 160 },
   paperKites: { quantity: 18, size: 13, color: '#E77CA9', maxQuantity: 48, maxSize: 44 },
   inkBloom: { quantity: 9, size: 90, color: '#9B7FE5', maxQuantity: 22, maxSize: 220 },
+  fallingFeathers: { quantity: 25, size: 14, color: '#C5D8ED', maxQuantity: 65, maxSize: 44 },
+  prismShards: { quantity: 24, size: 22, color: '#90C3F7', maxQuantity: 72, maxSize: 72 },
+  concentricWaves: { quantity: 10, size: 62, color: '#60C9DE', maxQuantity: 32, maxSize: 220 },
+  signalBars: { quantity: 55, size: 54, color: '#7EBBF2', maxQuantity: 160, maxSize: 180 },
+  isometricMesh: { quantity: 32, size: 26, color: '#60CFBE', maxQuantity: 120, maxSize: 80 },
+  wovenRibbons: { quantity: 10, size: 44, color: '#AB89ED', maxQuantity: 24, maxSize: 160 },
+  constellationMarks: { quantity: 14, size: 38, color: '#A7C6F8', maxQuantity: 44, maxSize: 120 },
+  spiralDust: { quantity: 26, size: 31, color: '#DEAF75', maxQuantity: 65, maxSize: 110 },
+  horizonGlow: { quantity: 10, size: 140, color: '#ECAB80', maxQuantity: 24, maxSize: 300 },
+  mosaicFade: { quantity: 52, size: 18, color: '#7CA6E7', maxQuantity: 144, maxSize: 64 },
 }
 export const dashboardAnimationEffects = [
   'none', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'zoomOut', 'dropIn', 'bounceIn', 'blurIn',
   'wipeLeft', 'wipeRight', 'wipeUp', 'wipeDown', 'circleReveal', 'stretchIn', 'rollIn', 'rotate', 'flip', 'flipX',
   'pulse', 'heartbeat', 'bounce', 'float', 'shake', 'swing', 'rubberBand', 'wobble', 'jello', 'tada', 'glow', 'highlight',
   'tiltIn', 'skewIn', 'verticalStretchIn', 'splitReveal', 'diamondReveal', 'focusPop', 'flipIn', 'pendulum', 'sway3d', 'slideDiagonal',
+  'foldDown', 'foldUp', 'rotateScaleIn', 'curtainVertical', 'ellipseReveal', 'stripeReveal',
+  'arcInLeft', 'arcInRight', 'floatTilt', 'stretchPulse', 'edgePulse', 'colorCycle',
 ] as const
 export interface DashboardAnimation {
   effect: typeof dashboardAnimationEffects[number]

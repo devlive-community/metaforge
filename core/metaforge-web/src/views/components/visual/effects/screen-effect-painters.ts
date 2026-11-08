@@ -1,4 +1,5 @@
 import { createAmbientScreenPainters } from './ambient-screen-painters'
+import { createGeometricScreenPainters } from './geometric-screen-painters'
 
 export interface ScreenParticle { x: number; y: number; depth: number; phase: number; spin: number }
 export interface ScreenEnvironment { readonly width: number; readonly height: number; readonly size: number; readonly wind: number; readonly color: string; readonly customColor: string }
@@ -14,6 +15,7 @@ export function createAdditionalScreenPainters(env: ScreenEnvironment, position:
   }
   const painters = {
     ...createAmbientScreenPainters(env, position),
+    ...createGeometricScreenPainters(env, position),
     matrixGrid(ctx, p, time) {
       const horizon=env.height*.35,vanish=env.width*(.5+env.wind/600),depth=wrap(p.y+time*.1),y=horizon+depth*depth*(env.height-horizon)
       ctx.globalAlpha=.15+p.depth*.35;ctx.lineWidth=Math.max(.5,env.size*p.depth)

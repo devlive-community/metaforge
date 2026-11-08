@@ -72,7 +72,9 @@ test('new full-screen effects are bounded overlays with working paint functions'
   const env={width:800,height:450,size:12,wind:0,color:'#16A66A',customColor:''}
   const painters=createAdditionalScreenPainters(env,particle=>({x:particle.x*800,y:particle.y*450}))
   for(const kind of ['matrixGrid','searchBeams','floatingHexagons','digitalScan',
-    'rainRipples','pollenDrift','orbitalTrails','floatingLanterns','sonarSweeps','shimmerCurtain','paperKites','inkBloom']){
+    'rainRipples','pollenDrift','orbitalTrails','floatingLanterns','sonarSweeps','shimmerCurtain','paperKites','inkBloom',
+    'fallingFeathers','prismShards','concentricWaves','signalBars','isometricMesh','wovenRibbons',
+    'constellationMarks','spiralDust','horizonGlow','mosaicFade']){
     assert.equal(dashboardScreenEffectTool(kind),true)
     const widget=dashboardWidget(kind,kind,kind,'wall');assert.equal(widget.movable,false);assert.equal(widget.showCard,false)
     assert.ok(dashboardScreenEffectSettings(kind,{quantity:99999}).quantity<=200)
