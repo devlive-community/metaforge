@@ -1,7 +1,9 @@
+import { createAmbientScreenPainters } from './ambient-screen-painters'
+
 export interface ScreenParticle { x: number; y: number; depth: number; phase: number; spin: number }
-interface ScreenEnvironment { readonly width: number; readonly height: number; readonly size: number; readonly wind: number; readonly color: string; readonly customColor: string }
-type Position = (particle: ScreenParticle, time: number, vertical: number, sway?: number) => { x: number; y: number }
-type Painter = (context: CanvasRenderingContext2D, particle: ScreenParticle, time: number, index: number) => void
+export interface ScreenEnvironment { readonly width: number; readonly height: number; readonly size: number; readonly wind: number; readonly color: string; readonly customColor: string }
+export type Position = (particle: ScreenParticle, time: number, vertical: number, sway?: number) => { x: number; y: number }
+export type Painter = (context: CanvasRenderingContext2D, particle: ScreenParticle, time: number, index: number) => void
 const wrap = (value: number) => (value % 1 + 1) % 1
 export function createAdditionalScreenPainters(env: ScreenEnvironment, position: Position) {
   function mist(ctx: CanvasRenderingContext2D, x: number, y: number, radius: number, alpha: number) {
@@ -11,6 +13,7 @@ export function createAdditionalScreenPainters(env: ScreenEnvironment, position:
     ctx.beginPath(); ctx.arc(x, y, radius, 0, Math.PI * 2); ctx.fill()
   }
   const painters = {
+    ...createAmbientScreenPainters(env, position),
     matrixGrid(ctx, p, time) {
       const horizon=env.height*.35,vanish=env.width*(.5+env.wind/600),depth=wrap(p.y+time*.1),y=horizon+depth*depth*(env.height-horizon)
       ctx.globalAlpha=.15+p.depth*.35;ctx.lineWidth=Math.max(.5,env.size*p.depth)

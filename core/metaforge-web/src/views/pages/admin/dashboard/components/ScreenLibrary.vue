@@ -235,6 +235,9 @@ const toolGroups = [
     { kind: 'matrixGrid', icon: Grid2x2 }, { kind: 'searchBeams', icon: Sparkles }, { kind: 'floatingHexagons', icon: Shapes }, { kind: 'digitalScan', icon: Type },
     { kind: 'waterCaustics', icon: Waves }, { kind: 'lightTrails', icon: Sparkles },
     { kind: 'pulseGrid', icon: Grid2x2 }, { kind: 'contourLines', icon: Waves },
+    { kind: 'rainRipples', icon: CloudRain }, { kind: 'pollenDrift', icon: Flower2 }, { kind: 'orbitalTrails', icon: Network },
+    { kind: 'floatingLanterns', icon: Sparkles }, { kind: 'sonarSweeps', icon: Activity }, { kind: 'shimmerCurtain', icon: Waves },
+    { kind: 'paperKites', icon: Shapes }, { kind: 'inkBloom', icon: Blend },
   ] },
 ] as const
 

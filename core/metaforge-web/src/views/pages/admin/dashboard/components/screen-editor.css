@@ -1,0 +1,8 @@
+.editor-workspace,
+.editor-workspace *,
+.dashboard-frame.is-editing,
+.dashboard-frame.is-editing * { scrollbar-width: none; }
+.editor-workspace::-webkit-scrollbar,
+.editor-workspace *::-webkit-scrollbar,
+.dashboard-frame.is-editing::-webkit-scrollbar,
+.dashboard-frame.is-editing *::-webkit-scrollbar { display: none; }

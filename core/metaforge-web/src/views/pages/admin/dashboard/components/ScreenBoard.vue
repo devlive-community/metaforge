@@ -161,7 +161,7 @@ import ScreenContainer from '@/views/pages/admin/dashboard/components/ScreenCont
 import CanvasBackground from '@/views/components/visual/effects/CanvasBackground.vue'
 import ParticleEffects from '@/views/components/visual/effects/ParticleEffects.vue'
 import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIcon.vue'
-import './dashboard-motion.css'
+import './screen-editor.css'
 
 const props = defineProps<{ design: DashboardDesign; reports: ReportModel[]; editable?: boolean; selectedId?: string; selectedIds?: string[]; wallFullscreen?: boolean; transparent?: boolean; thumbnail?: boolean }>()
 const emit = defineEmits<{

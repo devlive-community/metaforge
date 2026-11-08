@@ -206,7 +206,7 @@ test('saved animations keep timing and triggers and reject unknown effects', () 
 })
 
 test('every selectable animation has a keyframe sequence for canvas and presentation playback', async () => {
-  const css = await readFile(new URL('../src/views/pages/admin/dashboard/components/dashboard-motion.css', import.meta.url), 'utf8')
+  const css = await readFile(new URL('../src/views/components/visual/effects/widget-motion.css', import.meta.url), 'utf8')
   const effects = new Set([...css.matchAll(/@keyframes\s+mf-dashboard-(\w+)/g)].map(match => match[1]))
   assert.deepEqual(effects, new Set(dashboardAnimationEffects.filter(effect => effect !== 'none')))
 })

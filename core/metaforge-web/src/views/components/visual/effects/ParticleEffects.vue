@@ -11,6 +11,7 @@ import { computed, onMounted, onScopeDispose, ref, watch } from 'vue'
 import { dashboardCanvasColor, dashboardMotionStyle, dashboardScreenEffectPresets, dashboardScreenEffectSettings,
   type DashboardScreenEffectKind, type DashboardWidget } from '@/model/dashboard-layout'
 import { createAdditionalScreenPainters, type ScreenParticle as Particle } from './screen-effect-painters'
+import './widget-motion.css'
 
 const props = defineProps<{ widget: Pick<DashboardWidget, 'animation' | 'color' | 'id' | 'screenEffect'>; kind: DashboardScreenEffectKind }>()
 const root = ref<HTMLElement>()

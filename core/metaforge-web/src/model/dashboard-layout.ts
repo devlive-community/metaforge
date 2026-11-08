@@ -47,7 +47,8 @@ export const dashboardLayoutTools = ['shape', 'container', 'panel', 'divider', '
 export const dashboardAdvancedDecorationTools = ['doubleLine', 'dashedLine', 'chevrons', 'zigzag', 'waveLine', 'bracketPair', 'titlePlate', 'badgeSeal', 'hexagon', 'honeycomb', 'radarSweep', 'scanFrame', 'circuitPattern', 'orbitalRings', 'cornerFrame', 'sectionBanner', 'techRuler', 'bezierConnector'] as const
 export const dashboardDecorationTools = ['glowLine', 'glowRing', 'dotMatrix', 'cornerAccent', 'ripple', 'ribbon', ...dashboardAdvancedDecorationTools] as const
 export const dashboardScreenEffectTools = ['snow', 'rain', 'stars', 'meteors', 'fireflies', 'bubbles', 'confetti', 'petals', 'particleNetwork', 'aurora',
-  'fog', 'smoke', 'clouds', 'sandstorm', 'embers', 'leaves', 'hearts', 'sparkles', 'lightning', 'fireworks', 'risingDigits', 'warpStars', 'oceanWaves', 'sunRays', 'matrixGrid', 'searchBeams', 'floatingHexagons', 'digitalScan', 'waterCaustics', 'lightTrails', 'pulseGrid', 'contourLines'] as const
+  'fog', 'smoke', 'clouds', 'sandstorm', 'embers', 'leaves', 'hearts', 'sparkles', 'lightning', 'fireworks', 'risingDigits', 'warpStars', 'oceanWaves', 'sunRays', 'matrixGrid', 'searchBeams', 'floatingHexagons', 'digitalScan', 'waterCaustics', 'lightTrails', 'pulseGrid', 'contourLines',
+  'rainRipples', 'pollenDrift', 'orbitalTrails', 'floatingLanterns', 'sonarSweeps', 'shimmerCurtain', 'paperKites', 'inkBloom'] as const
 export type DashboardScreenEffectKind = typeof dashboardScreenEffectTools[number]
 export interface DashboardScreenEffectOptions {
   quantity: number
@@ -82,11 +83,20 @@ export const dashboardScreenEffectPresets: Record<DashboardScreenEffectKind, { q
   lightTrails: { quantity: 24, size: 40, color: '#8AA9FF', maxQuantity: 80, maxSize: 120 },
   pulseGrid: { quantity: 14, size: 26, color: '#56C8AB', maxQuantity: 26, maxSize: 60 },
   contourLines: { quantity: 10, size: 35, color: '#9BAFF6', maxQuantity: 24, maxSize: 120 },
+  rainRipples: { quantity: 32, size: 38, color: '#56B9E3', maxQuantity: 100, maxSize: 140 },
+  pollenDrift: { quantity: 65, size: 4, color: '#E7BE68', maxQuantity: 150, maxSize: 16 },
+  orbitalTrails: { quantity: 16, size: 48, color: '#50BCE2', maxQuantity: 42, maxSize: 150 },
+  floatingLanterns: { quantity: 16, size: 15, color: '#F4A255', maxQuantity: 40, maxSize: 54 },
+  sonarSweeps: { quantity: 7, size: 56, color: '#49C8AD', maxQuantity: 20, maxSize: 180 },
+  shimmerCurtain: { quantity: 14, size: 46, color: '#75A8F8', maxQuantity: 32, maxSize: 160 },
+  paperKites: { quantity: 18, size: 13, color: '#E77CA9', maxQuantity: 48, maxSize: 44 },
+  inkBloom: { quantity: 9, size: 90, color: '#9B7FE5', maxQuantity: 22, maxSize: 220 },
 }
 export const dashboardAnimationEffects = [
   'none', 'fade', 'slideUp', 'slideDown', 'slideLeft', 'slideRight', 'zoom', 'zoomOut', 'dropIn', 'bounceIn', 'blurIn',
   'wipeLeft', 'wipeRight', 'wipeUp', 'wipeDown', 'circleReveal', 'stretchIn', 'rollIn', 'rotate', 'flip', 'flipX',
   'pulse', 'heartbeat', 'bounce', 'float', 'shake', 'swing', 'rubberBand', 'wobble', 'jello', 'tada', 'glow', 'highlight',
+  'tiltIn', 'skewIn', 'verticalStretchIn', 'splitReveal', 'diamondReveal', 'focusPop', 'flipIn', 'pendulum', 'sway3d', 'slideDiagonal',
 ] as const
 export interface DashboardAnimation {
   effect: typeof dashboardAnimationEffects[number]
