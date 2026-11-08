@@ -22,6 +22,12 @@ class ChaosProxy(private val host: String, private val targetPort: Int) : AutoCl
     @Volatile
     var down: Boolean = false
 
+    /** 每个转发缓冲的延迟毫秒数；0 = 全速。测试在切断阶段对源代理临时限速 / per-forwarded-buffer
+     *  delay in milliseconds; 0 = full speed. Tests throttle the source proxy temporarily
+     *  so a connection cut lands inside a long transfer instead of after it. */
+    @Volatile
+    var throttleMs: Long = 0
+
     /** 当前正被转发的连接数 / the connections currently being forwarded */
     val openConnections: Int
         get() = sockets.size
@@ -80,6 +86,12 @@ class ChaosProxy(private val host: String, private val targetPort: Int) : AutoCl
                     if (read < 0)
                     {
                         break
+                    }
+                    if (throttleMs > 0)
+                    {
+                        // 按缓冲区限速，把传输拉长到秒级，让切断必然落在传输中段
+                        // throttle per buffer so a transfer lasts seconds and a cut lands mid-stream
+                        Thread.sleep(throttleMs)
                     }
                     output.write(buffer, 0, read)
                     output.flush()

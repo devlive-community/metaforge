@@ -16,12 +16,14 @@ import org.devlive.metaforge.spi.PluginService
 import org.devlive.metaforge.spi.model.RuntimeConfigure
 import org.devlive.metaforge.test.e2e.PluginE2E
 import org.devlive.metaforge.test.metaforge.support.ChaosProxy
+import org.junit.After
 import org.junit.AfterClass
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Assume
 import org.junit.Before
 import org.junit.BeforeClass
 import org.junit.ClassRule
@@ -97,6 +99,11 @@ class MetaForgeExecutorFaultE2ETest(private val sourceEngine: Engine, private va
         {
             if (this::proxy.isInitialized) proxy.close()
             if (this::container.isInitialized) container.stop()
+        }
+
+        fun resetThrottle()
+        {
+            if (this::proxy.isInitialized) proxy.throttleMs = 0
         }
 
         private fun url(): String = when (this)
@@ -186,6 +193,7 @@ class MetaForgeExecutorFaultE2ETest(private val sourceEngine: Engine, private va
         {
             Engine.values().forEach { it.stop() }
         }
+
     }
 
     private lateinit var taskName: String
@@ -279,6 +287,14 @@ class MetaForgeExecutorFaultE2ETest(private val sourceEngine: Engine, private va
         return result.get()
     }
 
+    @After
+    fun resetProxies()
+    {
+        // 兜底：任何变体遗留的限速不得影响下一个变体 / a safety reset so a leftover throttle
+        // from one variant cannot slow the next one down
+        Engine.values().forEach { it.resetThrottle() }
+    }
+
     @Test
     fun pausedRunsResumeExactlyEvenWithRepeatedKeysAndNulls()
     {
@@ -368,10 +384,13 @@ class MetaForgeExecutorFaultE2ETest(private val sourceEngine: Engine, private va
         // connection and let the run finish successfully.
         val request = request(split(mapOf("maxRowsPerSecond" to "15000", "writeRetries" to "0")))
 
-        // Cut the proxy the moment the source connection is being forwarded: the executor
-        // materializes the whole source read before the throttled write, so any threshold
-        // keyed on the written rows lands after the read and changes nothing — while the
-        // forwarded connection is open, the cut breaks the read itself.
+        // The sync opens and closes a connection per batch, so a one-shot cut can land in a
+        // gap between connections and change nothing. Cutting for good is deterministic:
+        // down=true rejects every reconnect while dropAll severs the live ones, so the run
+        // cannot recover and fails retryably with a checkpoint. The resume then needs the
+        // proxy back up, and it reconnects cleanly.
+        // 同步按批次开关连接，一次性切断可能落在连接间隙里而无效果；持续切断（拒绝一切新连接）
+        // 是确定性的：运行必然以可重试失败结束并留下断点，恢复阶段再把代理放开。
         val result = AtomicReference<ExecutorResponse>()
         val worker = Thread { result.set(service.start(request)) }
         worker.start()
@@ -380,6 +399,7 @@ class MetaForgeExecutorFaultE2ETest(private val sourceEngine: Engine, private va
             Thread.sleep(20)
         }
         assertTrue("the run never connected through the source proxy", worker.isAlive || result.get() != null)
+        sourceEngine.proxy.down = true
         sourceEngine.proxy.dropAll()
         worker.join(300_000)
         assertFalse("the run did not end", worker.isAlive)
@@ -387,11 +407,16 @@ class MetaForgeExecutorFaultE2ETest(private val sourceEngine: Engine, private va
 
         assertEquals(failed.message, RunState.FAILURE, failed.state)
         assertTrue("a lost connection is worth retrying: ${failed.message}", failed.retryable)
-        assertNotNull(failed.checkpoint)
+        // The cut can land before any row is written (the connection rejected at open leaves
+        // no checkpoint) or mid-run (the resume continues from one); both fail retryably and
+        // the resume must reproduce the source exactly either way.
+        // 切断可能发生在写入任何行之前（连接被拒则无断点），也可能发生在运行中途（续传从断点继续）；
+        // 两种情况都以可重试失败结束，且恢复后必须完整还原源数据。
         assertEquals(targetEngine.longs("SELECT COUNT(*) FROM target_t")[0], failed.metrics!!.rowsWritten)
 
         request.checkpoint = failed.checkpoint
         request.options = split()
+        sourceEngine.proxy.down = false
         val finished = service.start(request)
 
         assertTrue(finished.message, finished.successful)
