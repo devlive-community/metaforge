@@ -43,7 +43,15 @@ public final class PersistenceContext
             throws Exception
     {
         TestDatabase database = TestDatabase.start(spec);
-        DriverManagerDataSource dataSource = new DriverManagerDataSource(database.url(), database.username(), database.password());
+        // A pooled datasource keeps the Oracle process count flat: a fresh connection
+        // per operation against a real Oracle instance exhausts its process limit and
+        // the suite fails with ORA-12516 partway through.
+        com.zaxxer.hikari.HikariDataSource dataSource = new com.zaxxer.hikari.HikariDataSource();
+        dataSource.setJdbcUrl(database.url());
+        dataSource.setUsername(database.username());
+        dataSource.setPassword(database.password());
+        dataSource.setMaximumPoolSize(4);
+        dataSource.setMinimumIdle(1);
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMigrator.migrate(connection);
         }

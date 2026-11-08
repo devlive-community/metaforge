@@ -67,7 +67,9 @@ public final class TestDatabase
                 container = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:" + version + "-latest").acceptLicense();
                 break;
             case "oracle":
-                container = new OracleContainer("gvenzl/oracle-free:" + version + "-slim-faststart");
+                // The floating 23 tag rebuilds with every gvenzl release; pin the minor the
+                // matrix was validated against so image drift cannot change test behaviour.
+                container = new OracleContainer("gvenzl/oracle-free:23.26.3-slim-faststart");
                 break;
             default:
                 throw new IllegalArgumentException("Unknown database '" + spec + "'; use h2, mysql:<v>, postgres:<v>, sqlserver:<v> or oracle:<v>");
