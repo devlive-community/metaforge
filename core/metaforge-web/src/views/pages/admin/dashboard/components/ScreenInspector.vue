@@ -324,6 +324,10 @@
             </p>
           </InspectorSection>
 
+          <InspectorSection v-if="widget && isInformationBlock(widget.kind)" :title="$t('dashboard.studio.widgetContent')">
+            <InformationBlockFields :kind="widget.kind" :model-value="widget.informationItems ?? []"
+                                    @update:model-value="value => emit('widget', { informationItems: value })"/>
+          </InspectorSection>
           <InspectorSection v-if="widget && configurableContent" :title="$t('dashboard.studio.widgetContent')">
             <MfFormItem v-if="textContent" :label="$t(widget.kind === 'copyText' ? 'dashboard.studio.copyTextPrompt' : 'dashboard.studio.tool.text')">
               <MfTextarea :model-value="widget.text" :rows="widget.kind === 'codeBlock' || widget.kind === 'markdown' ? 7 : 4" :maxlength="widget.kind === 'codeBlock' || widget.kind === 'markdown' ? 20000 : 2000" @update:model-value="emit('widget', { text: $event })"/>
@@ -566,6 +570,8 @@ import SpatialAnalysisFields from '@/views/components/visual/analysis/SpatialAna
 import ProcessAnalysisFields from '@/views/components/visual/analysis/ProcessAnalysisFields.vue'
 import IntervalAnalysisFields from '@/views/components/visual/analysis/IntervalAnalysisFields.vue'
 import ProcessQualityFields from '@/views/components/visual/quality/ProcessQualityFields.vue'
+import InformationBlockFields from '@/views/components/content/InformationBlockFields.vue'
+import { isInformationBlock } from '@/model/information-block'
 import { isProcessQualityView, readProcessQualityOptions } from '@/model/process-quality'
 import { reportNumber } from '@/model/report-values'
 import StudioPanelHeader from '@/views/components/studio/StudioPanelHeader.vue'

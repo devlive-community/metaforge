@@ -6,6 +6,7 @@
   </template>
   <UtilityContent v-else-if="widget.kind === 'statusLegend' || widget.kind === 'copyText' || widget.kind === 'definitionList'" :widget="widget" :editable="editable"/>
   <InspectionChecklist v-else-if="widget.kind === 'inspectionChecklist'" :widget="widget" :editable="editable"/>
+  <InformationBlockView v-else-if="isInformationBlock(widget.kind)" :kind="widget.kind" :items="widget.informationItems ?? []"/>
   <div v-else-if="widget.kind === 'metric'" class="flex h-full min-h-0 flex-col justify-center px-1">
     <strong class="truncate text-3xl font-extrabold tabular-nums" :title="metricValue">{{ metricValue }}</strong>
     <span class="mt-1 truncate text-xs text-content-tertiary">{{ report?.name || $t('dashboard.studio.chooseAsset') }}</span>
@@ -131,6 +132,8 @@ import ChartLoading from '@/views/components/visual/ChartLoading.vue'
 import ChartError from '@/views/components/visual/ChartError.vue'
 import EChart from '@/views/components/visual/EChart.vue'
 import ProcessQualityView from '@/views/components/visual/quality/ProcessQualityView.vue'
+import InformationBlockView from '@/views/components/content/InformationBlockView.vue'
+import { isInformationBlock } from '@/model/information-block'
 import { isProcessQualityView, readProcessQualityOptions } from '@/model/process-quality'
 import type { EChartsOption } from 'echarts'
 import { aggregateQueryChart, chartFieldKind, defaultQueryChart, type QueryChartConfiguration, type QueryChartRow } from '@/model/query-chart'

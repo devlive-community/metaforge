@@ -1,6 +1,7 @@
 import { chartFieldKind, queryChartTypes, type QueryChartConfiguration, type QueryChartOptions, type QueryChartPoint, type QueryChartRow, type QueryChartType } from './query-chart'
 import { geoJsonLimit, suggestChartFields, type ChartMappings } from './query-chart-data'
 import type { ReportModel } from './report'
+import { informationBlockKinds, isInformationBlock, readInformationItems, type InformationItem } from './information-block'
 import { isProcessQualityView, processQualityViews, readProcessQualityOptions, type ProcessQualityOptions } from './process-quality'
 
 export const dashboardMode = ['dashboard', 'wall'] as const
@@ -33,7 +34,8 @@ export type DashboardDataTool = typeof dataDisplays[number]
 export const dashboardExtendedContentTools = ['markdown', 'codeBlock', 'imageCompare', 'iconLinks', 'stepGuide', 'worldClock'] as const
 export const dashboardAdvancedContentTools = ['imageCarousel', 'imageGallery', 'announcement', 'textTicker', 'tabsContent', 'accordion', 'quote', 'embed', 'actionButton', 'tagCloud', ...dashboardExtendedContentTools] as const
 export const dashboardContentTools = ['text', 'heading', 'note', 'badge', 'image', 'video', 'audio', 'clock', 'link',
-  'imageText', 'bulletList', 'linkList', 'countdown', 'icon', 'statusLegend', 'copyText', 'inspectionChecklist', 'definitionList', ...dashboardAdvancedContentTools] as const
+  'imageText', 'bulletList', 'linkList', 'countdown', 'icon', 'statusLegend', 'copyText', 'inspectionChecklist', 'definitionList',
+  ...dashboardAdvancedContentTools, ...informationBlockKinds] as const
 export const dashboardFilterTools = ['selectFilter', 'searchFilter', 'dateRangeFilter', 'clearFilters', 'multiValueFilter', 'numberRangeFilter', 'valueStateFilter', 'relativeDateFilter', 'booleanFilter'] as const
 export type DashboardFilterTool = typeof dashboardFilterTools[number]
 export function dashboardFilterTool(kind: DashboardWidgetKind): kind is DashboardFilterTool {
@@ -272,6 +274,7 @@ export interface DashboardWidget extends DashboardRect {
   intervalOptions?: DashboardIntervalOptions
   processQualityOptions?: ProcessQualityOptions
   contentOptions?: DashboardContentOptions
+  informationItems?: InformationItem[]
   layoutOptions?: DashboardLayoutOptions
   decorationOptions?: DashboardDecorationOptions
   refresh: DashboardRefresh
@@ -859,6 +862,7 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       intervalOptions: dashboardIntervalTool(kind) ? dashboardIntervalSettings(item.intervalOptions) : undefined,
       processQualityOptions: isProcessQualityView(kind) ? readProcessQualityOptions(item.processQualityOptions) : undefined,
       contentOptions: record(item.contentOptions) ? dashboardContentSettings(item.contentOptions) : undefined,
+      informationItems: isInformationBlock(kind) ? readInformationItems(item.informationItems) : undefined,
       layoutOptions: record(item.layoutOptions) ? dashboardLayoutSettings(item.layoutOptions) : widget.layoutOptions,
       decorationOptions: record(item.decorationOptions) ? dashboardDecorationSettings(item.decorationOptions) : undefined,
       color: /^#[0-9a-f]{6}$/i.test(text(item.color)) ? text(item.color) : '',

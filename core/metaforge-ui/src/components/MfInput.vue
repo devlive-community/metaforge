@@ -21,6 +21,7 @@ const props = withDefaults(defineProps<{
     /** The browser's autofill hint, e.g. `username`, `current-password`, `new-password`; off by default. */
     autocomplete?: string
     name?: string
+    ariaLabel?: string
 }>(), {
     modelValue: '',
     type: 'text',
@@ -89,6 +90,7 @@ defineExpose({
             :class="readonly ? 'cursor-default' : ''"
             :autocomplete="autocomplete"
             :name="name"
+            :aria-label="ariaLabel"
             @input="onInput"
             @blur="emit('blur', $event)"
             @keyup.enter="emit('enter', $event)"
