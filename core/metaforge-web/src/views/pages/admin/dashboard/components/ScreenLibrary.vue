@@ -182,6 +182,11 @@ const toolGroups = [
     { kind: 'resourceCards', icon: Link }, { kind: 'releaseTimeline', icon: CalendarClock },
     { kind: 'faqList', icon: MessageSquare }, { kind: 'shiftRoster', icon: Table2 },
     { kind: 'serviceStatus', icon: Activity }, { kind: 'riskRegister', icon: TriangleAlert },
+    { kind: 'linkButtonBar', icon: Link }, { kind: 'imageBadges', icon: Image },
+    { kind: 'decisionLog', icon: ClipboardCheck }, { kind: 'maintenanceSchedule', icon: CalendarClock },
+    { kind: 'comparisonCards', icon: Columns2 }, { kind: 'milestoneTracker', icon: ListOrdered },
+    { kind: 'noticeBoard', icon: MessageSquare }, { kind: 'capacityGrid', icon: Gauge },
+    { kind: 'escalationPaths', icon: Network }, { kind: 'ratingCards', icon: Star },
   ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },

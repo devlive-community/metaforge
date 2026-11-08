@@ -1,5 +1,7 @@
 export const informationBlockKinds = [
   'statTiles', 'contactDirectory', 'resourceCards', 'releaseTimeline', 'faqList', 'shiftRoster', 'serviceStatus', 'riskRegister',
+  'linkButtonBar', 'imageBadges', 'decisionLog', 'maintenanceSchedule', 'comparisonCards', 'milestoneTracker',
+  'noticeBoard', 'capacityGrid', 'escalationPaths', 'ratingCards',
 ] as const
 export type InformationBlockKind = typeof informationBlockKinds[number]
 export const informationTones = ['info', 'success', 'warning', 'danger'] as const
@@ -8,6 +10,7 @@ export interface InformationItem {
   id: string
   title: string
   value: string
+  secondary?: string
   detail: string
   tone: InformationTone
 }
@@ -27,7 +30,7 @@ export function readInformationItems(value: unknown): InformationItem[] {
     while (ids.has(id)) id += '-'
     ids.add(id)
     return [{
-      id, title: text(item.title, 160), value: text(item.value, 2048), detail: text(item.detail, 2000),
+      id, title: text(item.title, 160), value: text(item.value, 2048), secondary: text(item.secondary, 250) || undefined, detail: text(item.detail, 2000),
       tone: informationTones.find(tone => tone === item.tone) ?? 'info',
     }]
   })
@@ -42,4 +45,28 @@ export const informationFields = {
   shiftRoster: { title: 'person', value: 'shift', detail: 'station' },
   serviceStatus: { title: 'service', detail: 'description', tone: 'status' },
   riskRegister: { title: 'risk', value: 'owner', tone: 'severity', detail: 'mitigation' },
+  linkButtonBar: { title: 'linkLabel', value: 'url' },
+  imageBadges: { title: 'badgeName', value: 'url', detail: 'description' },
+  decisionLog: { title: 'decision', value: 'owner', tone: 'decisionStatus', detail: 'rationale' },
+  maintenanceSchedule: { title: 'service', value: 'windowStart', secondary: 'windowEnd', detail: 'description' },
+  comparisonCards: { title: 'metric', value: 'referenceValue', secondary: 'comparisonValue', detail: 'context' },
+  milestoneTracker: { title: 'milestone', value: 'dateLabel', tone: 'milestoneStatus', detail: 'description' },
+  noticeBoard: { title: 'notice', tone: 'noticeTone', detail: 'description' },
+  capacityGrid: { title: 'resource', value: 'capacityUsed', secondary: 'capacityLimit', detail: 'context' },
+  escalationPaths: { title: 'person', value: 'email', detail: 'role' },
+  ratingCards: { title: 'ratingItem', value: 'ratingValue', detail: 'description' },
 } satisfies Record<InformationBlockKind, Partial<Record<keyof Omit<InformationItem, 'id'>, string>>>
+
+export function informationResourceUrl(value: string) {
+  try {
+    const url = new URL(value)
+    if (url.protocol === 'https:' || url.protocol === 'http:') return url.href
+  } catch { /* Leave the resource inactive until the address is valid. */ }
+  return ''
+}
+
+export function informationMailUrl(value: string) {
+  const address = value.trim()
+  return /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(address)
+    ? 'mailto:' + encodeURIComponent(address).replace('%40', '@') : ''
+}

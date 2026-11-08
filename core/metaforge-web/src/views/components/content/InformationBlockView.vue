@@ -3,7 +3,8 @@
   <MfTable v-else-if="tabular" fill density="compact" class="h-full" row-key="id" :columns="columns" :data-source="entries">
     <template #cell-title="{ record }"><EllipsisCell :text="record.title"/></template>
     <template #cell-value="{ record }"><EllipsisCell :text="record.value"/></template>
-    <template #cell-tone="{ record }"><MfTag size="sm" :variant="record.tone">{{ $t(key + 'severity.' + record.tone) }}</MfTag></template>
+    <template #cell-secondary="{ record }"><EllipsisCell :text="record.secondary ?? ''"/></template>
+    <template #cell-tone="{ record }"><MfTag size="sm" :variant="record.tone">{{ $t(key + tableTone + '.' + record.tone) }}</MfTag></template>
     <template #cell-detail="{ record }"><EllipsisCell :text="record.detail"/></template>
   </MfTable>
   <div v-else-if="kind === 'faqList'" class="flex h-full flex-col gap-2 overflow-auto">
@@ -12,11 +13,17 @@
       <p class="whitespace-pre-wrap break-words px-3 pb-3 text-sm text-content-secondary">{{ item.detail }}</p>
     </details>
   </div>
-  <ol v-else-if="kind === 'releaseTimeline'" class="h-full space-y-3 overflow-auto p-1">
-    <li v-for="item in entries" :key="item.id" class="border-l-2 border-primary/45 py-0.5 pl-3">
-      <span v-if="item.value" class="block text-xs text-content-tertiary">{{ item.value }}</span>
+  <ol v-else-if="ordered" class="h-full space-y-3 overflow-auto p-1">
+    <li v-if="kind === 'milestoneTracker'" class="text-xs text-content-secondary">
+      {{ $t(key + 'milestonesComplete', { count: entries.filter(item => item.tone === 'success').length, total: entries.length }) }}
+    </li>
+    <li v-for="(item, index) in entries" :key="item.id" class="border-l-2 border-primary/45 py-0.5 pl-3">
+      <span v-if="kind === 'escalationPaths'" class="block text-xs text-content-tertiary">{{ $t(key + 'escalationStep', { number: index + 1 }) }}</span>
+      <span v-else-if="item.value" class="block text-xs text-content-tertiary">{{ item.value }}</span>
       <p class="break-words text-sm font-semibold">{{ item.title }}</p>
+      <MfTag v-if="kind === 'milestoneTracker'" size="sm" :variant="item.tone">{{ $t(key + 'milestoneStatus.' + item.tone) }}</MfTag>
       <p v-if="item.detail" class="whitespace-pre-wrap break-words text-sm text-content-secondary">{{ item.detail }}</p>
+      <a v-if="kind === 'escalationPaths' && mailUrl(item.value)" :href="mailUrl(item.value)" class="break-all text-xs text-primary hover:underline">{{ item.value }}</a>
     </li>
   </ol>
   <dl v-else-if="kind === 'statTiles'" class="grid h-full auto-rows-min grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-2 overflow-auto">
@@ -26,6 +33,7 @@
       <dd v-if="item.detail" class="whitespace-pre-wrap break-words text-xs text-content-tertiary">{{ item.detail }}</dd>
     </div>
   </dl>
+  <InformationCards v-else-if="isInformationCard(kind)" :kind="kind" :items="entries"/>
   <ul v-else class="grid h-full auto-rows-min gap-2 overflow-auto"
       :class="kind !== 'serviceStatus' && 'grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))]'">
     <li v-for="item in entries" :key="item.id" class="min-w-0 rounded-mf-md border border-line bg-surface px-3 py-2">
@@ -47,25 +55,20 @@
 import { ArrowUpRight } from '@lucide/vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { informationFields, type InformationBlockKind, type InformationItem } from '@/model/information-block'
+import { informationFields, informationMailUrl as mailUrl, informationResourceUrl as resourceUrl, type InformationBlockKind, type InformationItem } from '@/model/information-block'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
+import InformationCards from './InformationCards.vue'
 
 const props = defineProps<{ kind: InformationBlockKind; items: readonly InformationItem[] }>()
 const { t } = useI18n()
 const key = 'informationBlock.'
 const entries = computed(() => props.items.filter(item => item.title.trim()))
-const tabular = computed(() => props.kind === 'riskRegister' || props.kind === 'shiftRoster')
+const tabular = computed(() => ['riskRegister', 'shiftRoster', 'decisionLog', 'maintenanceSchedule'].includes(props.kind))
+const tableTone = computed(() => props.kind === 'decisionLog' ? 'decisionStatus' : 'severity')
+const ordered = computed(() => ['releaseTimeline', 'milestoneTracker', 'escalationPaths'].includes(props.kind))
 const columns = computed(() => Object.entries(informationFields[props.kind]).map(([dataIndex, label]) => ({ dataIndex, title: t(key + label) })))
-function resourceUrl(value: string) {
-  try {
-    const url = new URL(value)
-    if (url.protocol === 'https:' || url.protocol === 'http:') return url.href
-  } catch { /* The resource becomes a link when the address is valid. */ }
-  return ''
-}
-function mailUrl(value: string) {
-  const address = value.trim()
-  return /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/i.test(address)
-    ? 'mailto:' + encodeURIComponent(address).replace('%40', '@') : ''
+const cardKinds = ['linkButtonBar', 'imageBadges', 'comparisonCards', 'noticeBoard', 'capacityGrid', 'ratingCards'] as const
+function isInformationCard(kind: InformationBlockKind): kind is typeof cardKinds[number] {
+  return cardKinds.some(card => card === kind)
 }
 </script>

@@ -6,8 +6,18 @@
         <MfInput :model-value="item.title" :aria-label="$t(key + fields.title)" :maxlength="160" @update:model-value="value => patch(index, { title: value })"/>
       </MfFormItem>
       <MfFormItem v-if="fields.value" :label="$t(key + fields.value)">
-        <MfInput :model-value="item.value" :aria-label="$t(key + fields.value)" :maxlength="fields.value === 'url' ? 2048 : 250"
+        <MfInputNumber v-if="numeric" :model-value="reportNumber(item.value)" :aria-label="$t(key + fields.value)"
+                       :min="0" :max="kind === 'ratingCards' ? 5 : undefined" :step="kind === 'ratingCards' ? .1 : 1" decimal-only commit-on-change
+                       @update:model-value="value => patch(index, { value: value === undefined ? '' : String(value) })"/>
+        <MfInput v-else :model-value="item.value" :aria-label="$t(key + fields.value)" :maxlength="fields.value === 'url' ? 2048 : 250"
                  @update:model-value="value => patch(index, { value })"/>
+      </MfFormItem>
+      <MfFormItem v-if="fields.secondary" :label="$t(key + fields.secondary)">
+        <MfInputNumber v-if="kind === 'capacityGrid'" :model-value="reportNumber(item.secondary)" :aria-label="$t(key + fields.secondary)"
+                       :min="0" decimal-only commit-on-change
+                       @update:model-value="value => patch(index, { secondary: value === undefined ? '' : String(value) })"/>
+        <MfInput v-else :model-value="item.secondary" :aria-label="$t(key + fields.secondary)" :maxlength="250"
+                 @update:model-value="secondary => patch(index, { secondary })"/>
       </MfFormItem>
       <MfFormItem v-if="fields.tone" :label="$t(key + fields.tone)">
         <MfSelect :model-value="item.tone" :aria-label="$t(key + fields.tone)" :options="tones" @update:model-value="value => setTone(index, value)"/>
@@ -32,13 +42,15 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { v4 as uuid } from 'uuid'
 import { informationFields, informationItemLimit, informationTones, type InformationBlockKind, type InformationItem } from '@/model/information-block'
+import { reportNumber } from '@/model/report-values'
 import InspectorSection from '@/views/components/studio/InspectorSection.vue'
 
 const props = defineProps<{ kind: InformationBlockKind; modelValue: InformationItem[] }>()
 const emit = defineEmits<{ 'update:modelValue': [items: InformationItem[]] }>()
 const { t } = useI18n()
 const key = 'informationBlock.'
-const fields = computed<Partial<Record<'title' | 'value' | 'detail' | 'tone', string>>>(() => informationFields[props.kind])
+const fields = computed<Partial<Record<keyof Omit<InformationItem, 'id'>, string>>>(() => informationFields[props.kind])
+const numeric = computed(() => props.kind === 'capacityGrid' || props.kind === 'ratingCards')
 const tones = computed(() => informationTones.map(value => ({ value, label: t(key + fields.value.tone + '.' + value) })))
 function patch(index: number, update: Partial<InformationItem>) {
   emit('update:modelValue', props.modelValue.map((item, position) => position === index ? { ...item, ...update } : item))
