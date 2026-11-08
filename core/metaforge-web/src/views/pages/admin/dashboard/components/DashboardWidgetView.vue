@@ -64,6 +64,8 @@
                          @filter="emit('filter', $event)"/>
   <DashboardAuditView v-else-if="options && dashboardAuditTool(widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"
                       @filter="emit('filter', $event)"/>
+  <DashboardTemporalView v-else-if="options && dashboardTemporalTool(widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"
+                         @filter="emit('filter', $event)"/>
   <DashboardOperationsView v-else-if="options && dashboardOperationDataTool(widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
   <DashboardMonitoring v-else-if="options && dashboardMonitoringTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
   <DashboardExtendedData v-else-if="options && dashboardExtendedDataTools.some(kind => kind === widget.kind)" :widget="widget" :options="options" :rows="rows" :editable="editable"/>
@@ -104,6 +106,7 @@ import DashboardOperationsView from './DashboardOperationsView.vue'
 import DashboardBusinessView from './DashboardBusinessView.vue'
 import DashboardRelationView from './DashboardRelationView.vue'
 import DashboardAuditView from './DashboardAuditView.vue'
+import DashboardTemporalView from './DashboardTemporalView.vue'
 import DashboardInspectionChecklist from './DashboardInspectionChecklist.vue'
 import DashboardAdvancedDecoration from './DashboardAdvancedDecoration.vue'
 import ChartLoading from '@/views/components/visual/ChartLoading.vue'
@@ -111,7 +114,7 @@ import ChartError from '@/views/components/visual/ChartError.vue'
 import EChart from '@/views/components/visual/EChart.vue'
 import type { EChartsOption } from 'echarts'
 import { aggregateQueryChart, chartFieldKind, defaultQueryChart, type QueryChartConfiguration, type QueryChartRow } from '@/model/query-chart'
-import { dashboardAuditTool, dashboardBusinessTool, dashboardExtendedDataTools, dashboardExtendedContentTools, dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardFilterTool, dashboardMetric, dashboardMetricTool, dashboardMonitoringTools, dashboardOperationDataTool, dashboardRelationTool, dashboardResourceUrl, dashboardRowsInPeriod, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
+import { dashboardAuditTool, dashboardBusinessTool, dashboardExtendedDataTools, dashboardExtendedContentTools, dashboardAdvancedContentTools, dashboardAdvancedDataTools, dashboardAdvancedDecorationTools, dashboardChartMappings, dashboardDataTool, dashboardFilterTool, dashboardMetric, dashboardMetricTool, dashboardMonitoringTools, dashboardOperationDataTool, dashboardRelationTool, dashboardResourceUrl, dashboardRowsInPeriod, dashboardTemporalTool, parseDashboardJson, type DashboardWidget } from '@/model/dashboard-layout'
 import type { ReportModel } from '@/model/report'
 import type { Configuration } from '@/views/components/visual/Configuration'
 

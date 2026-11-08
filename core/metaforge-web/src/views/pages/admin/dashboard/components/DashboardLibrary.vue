@@ -147,6 +147,11 @@ const toolGroups = [
     { kind: 'duplicateKeys', icon: Copy }, { kind: 'valueFrequency', icon: ListOrdered }, { kind: 'missingPatterns', icon: Grid2x2 },
     { kind: 'fieldComparison', icon: Columns2 }, { kind: 'invalidValues', icon: TriangleAlert }, { kind: 'dateCoverage', icon: CalendarRange },
   ] },
+  { title: 'temporalTools', icon: Clock, items: [
+    { kind: 'cumulativeTrend', icon: ChartNoAxesCombined }, { kind: 'rollingAverageTrend', icon: Activity },
+    { kind: 'yearOverYearTrend', icon: CalendarRange }, { kind: 'weekdayHourHeatmap', icon: Grid2x2 },
+    { kind: 'eventIntervals', icon: Timer }, { kind: 'intervalTimeline', icon: CalendarClock },
+  ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
     { kind: 'note', icon: MessageSquare }, { kind: 'badge', icon: Tag }, { kind: 'bulletList', icon: List },
