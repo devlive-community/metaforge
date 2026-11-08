@@ -365,7 +365,11 @@ class MetaForgeExecutorFaultE2ETest(private val sourceEngine: Engine, private va
         val service = MetaForgeExecutorService()
         val request = request(split(mapOf("maxRowsPerSecond" to "15000")))
 
-        val failed = runAndAct(service, request, 5000) {
+        // Cut the proxy halfway through the rows: the pipeline's read-ahead is bounded, so at
+        // half the rows the source stream is still live and the drop lands inside the run. A
+        // fixed small threshold can be outrun on a fast runner, where the whole stream drains
+        // before the cut and the run succeeds instead of failing.
+        val failed = runAndAct(service, request, rows / 2L) {
             sourceEngine.proxy.dropAll()
         }
 
