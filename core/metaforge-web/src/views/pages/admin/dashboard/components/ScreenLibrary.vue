@@ -1,5 +1,6 @@
 <template>
-  <aside class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-line bg-surface shadow-mf-sm">
+  <aside ref="library" class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden border-r border-line bg-surface shadow-mf-sm"
+         @scroll.capture="clearExample">
     <StudioPanelHeader :title="$t('dashboard.studio.library')"
                           :pinned="pinned" :pinnable="pinnable" @pin="emit('pin')" @close="emit('close')"/>
     <nav class="mx-3 flex shrink-0 items-center gap-1 px-1 shadow-[inset_0_-1px_0_var(--mf-color-line)]" :aria-label="$t('dashboard.studio.library')">
@@ -36,7 +37,10 @@
         <div v-else class="grid grid-cols-2 gap-2">
           <button v-for="tool in visibleTools" :key="tool.kind" type="button" draggable="true"
                   class="flex min-h-16 min-w-0 flex-col items-center justify-center gap-1 rounded-mf-md border border-line px-1 py-2 text-center text-[11px] font-semibold hover:border-primary/50 hover:bg-primary/8"
-                  :title="toolLabel(tool.kind)" @click="emit('add', tool.kind)" @dragstart="startDrag($event, tool.kind)">
+                  :aria-describedby="preview?.key === tool.kind ? exampleId : undefined"
+                  @pointerenter="showExample($event, tool.kind, toolLabel(tool.kind), tool.kind)"
+                  @pointerleave="hideExample($event)" @focus="showExample($event, tool.kind, toolLabel(tool.kind), tool.kind)"
+                  @blur="hideExample($event)" @click="addTool(tool.kind)" @dragstart="startDrag($event, tool.kind)">
             <QueryChartTypeIcon v-if="isChart(tool.kind)" :type="tool.kind" :size="21" class="text-primary"/>
             <component :is="tool.icon" v-else :size="21" class="text-primary"/>
             {{ toolLabel(tool.kind) }}
@@ -58,7 +62,10 @@
         <div v-else class="mt-3 space-y-2">
           <button v-for="asset in reports" :key="asset.code" type="button" draggable="true"
                   class="flex w-full min-w-0 items-center gap-2 rounded-mf-md border border-line bg-surface-hover p-2 text-left hover:border-primary/50"
-                  @click="emit('add', 'report:' + asset.code)" @dragstart="startDrag($event, 'report:' + asset.code)">
+                  :aria-describedby="preview?.key === 'report:' + asset.code ? exampleId : undefined"
+                  @pointerenter="showReportExample($event, asset)" @pointerleave="hideExample($event)"
+                  @focus="showReportExample($event, asset)" @blur="hideExample($event)"
+                  @click="addTool('report:' + asset.code)" @dragstart="startDrag($event, 'report:' + asset.code)">
             <span class="grid size-8 shrink-0 place-items-center rounded-mf-sm bg-primary/10 text-primary"><ChartNoAxesCombined :size="16"/></span>
             <span class="min-w-0 flex-1">
               <strong class="block truncate text-xs">{{ asset.name }}</strong>
@@ -75,13 +82,18 @@
                        @select="(id, event) => emit('select', id, event)" @reorder="(from, to, above) => emit('reorder', from, to, above)"
                        @context="(event, id) => emit('context', event, id)" @group="emit('group')"/>
     </div>
+    <ComponentExamplePopover v-if="preview && library" :id="exampleId" :title="preview.title" :caption="$t('dashboard.example.sampleData')"
+                             :anchor="preview.anchor" :owner="library">
+      <ScreenComponentExample :key="preview.key" :kind="preview.kind" :title="preview.title"/>
+    </ComponentExamplePopover>
   </aside>
 </template>
 
 <script setup lang="ts">
-import { computed, onScopeDispose, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, onMounted, onScopeDispose, ref, shallowRef, useId, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import StudioPanelHeader from '@/views/components/studio/StudioPanelHeader.vue'
+import ComponentExamplePopover from '@/views/components/studio/ComponentExamplePopover.vue'
 import ScreenLayers from '@/views/pages/admin/dashboard/components/ScreenLayers.vue'
 import { Activity, ArrowDown, ArrowRight, AudioLines, Blend, CalendarClock, CalendarRange, ChartNoAxesCombined, ClipboardCheck, Clock, CloudRain, Columns2, Copy, Flower2, Frame, Gauge, Globe, Grid2x2, Heading, Image, Layers, MapPin,
   LayoutGrid, Link, List, ListOrdered, ListRestart, ListFilter, MessageSquare, Minus, MousePointer2, Network, PanelTop, PartyPopper, Plus, Search, Shapes, SlidersHorizontal, Snowflake, Sparkles, Square, SquareDashed, Star, TriangleAlert,
@@ -89,10 +101,10 @@ import { Activity, ArrowDown, ArrowRight, AudioLines, Blend, CalendarClock, Cale
 import { queryChartTypes, type QueryChartType } from '@/model/query-chart'
 import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIcon.vue'
 import type { ReportModel } from '@/model/report'
-import { dashboardWidgetLabelKey, type DashboardTool, type DashboardWidget } from '@/model/dashboard-layout'
+import { dashboardSnapshot, dashboardWidgetLabelKey, type DashboardTool, type DashboardWidget, type DashboardWidgetKind } from '@/model/dashboard-layout'
 
-defineProps<{ reports: ReportModel[]; widgets: DashboardWidget[]; selectedIds: string[]; wall: boolean; canGroup: boolean;
-  loading: boolean; failed: boolean; page: number; pageSize: number; total: number; pinned: boolean; pinnable: boolean }>()
+const props = defineProps<{ reports: ReportModel[]; widgets: DashboardWidget[]; selectedIds: string[]; wall: boolean; canGroup: boolean;
+  loading: boolean; failed: boolean; page: number; pageSize: number; total: number; pinned: boolean; pinnable: boolean; previewEnabled?: boolean }>()
 const emit = defineEmits<{ add: [value: string]; search: [keyword: string, page: number]; select: [id: string, event: MouseEvent];
   reorder: [from: string, to: string, above: boolean]; context: [event: MouseEvent, id: string]; group: []; pin: []; close: [] }>()
 const tab = defineModel<'tools' | 'assets' | 'layers'>('tab', { required: true })
@@ -100,6 +112,25 @@ const { t } = useI18n()
 const keyword = ref('')
 const toolQuery = ref('')
 const category = ref('chartTools')
+const ScreenComponentExample = defineAsyncComponent(() => import('./ScreenComponentExample.vue'))
+type Example = { kind: DashboardWidgetKind; title: string; key: string; anchor: HTMLElement }
+const library = ref<HTMLElement>()
+const exampleId = useId() + '-component-example'
+const hovered = shallowRef<Example>()
+const focused = shallowRef<Example>()
+const preview = shallowRef<Example>()
+watch(() => hovered.value ?? focused.value, (next, _previous, onCleanup) => {
+  preview.value = undefined
+  if (!next || props.previewEnabled === false) return
+  const timer = window.setTimeout(() => {
+    if (next.anchor.isConnected) preview.value = next
+  }, hovered.value ? 160 : 0)
+  onCleanup(() => window.clearTimeout(timer))
+})
+watch([tab, category, toolQuery, () => props.previewEnabled], clearExample)
+watch(() => props.reports, () => { if (tab.value === 'assets') clearExample() })
+onMounted(() => window.addEventListener('keydown', dismissExample))
+onScopeDispose(() => window.removeEventListener('keydown', dismissExample))
 const tabs = [{ key: 'tools', label: 'componentTab', icon: LayoutGrid }, { key: 'assets', label: 'assetTab', icon: ChartNoAxesCombined }, { key: 'layers', label: 'layers', icon: Layers }] as const
 let timer: number | undefined
 watch(keyword, value => {
@@ -267,7 +298,36 @@ const visibleTools = computed(() => {
 })
 function toolLabel(kind: DashboardTool) { return t(dashboardWidgetLabelKey(kind)) }
 function isChart(kind: string): kind is QueryChartType { return queryChartTypes.some(type => type === kind) }
+function showExample(event: Event, kind: DashboardWidgetKind, title: string, key: string) {
+  const anchor = event.currentTarget
+  if (!(anchor instanceof HTMLElement) || props.previewEnabled === false) return
+  const target = { kind, title, key, anchor }
+  if (event instanceof PointerEvent) {
+    if (event.pointerType !== 'touch' && !event.buttons) hovered.value = target
+  } else if (anchor.matches(':focus-visible')) {
+    focused.value = target
+  }
+}
+function showReportExample(event: Event, asset: ReportModel) {
+  const kind = dashboardSnapshot(asset)?.queryChart.options.type ?? ''
+  showExample(event, isChart(kind) ? kind : 'report', asset.name || t('dashboard.studio.tool.report'), 'report:' + asset.code)
+}
+function hideExample(event: Event) {
+  const source = event instanceof PointerEvent ? hovered : focused
+  if (source.value?.anchor === event.currentTarget) source.value = undefined
+}
+function clearExample() {
+  hovered.value = undefined
+  focused.value = undefined
+  preview.value = undefined
+}
+function dismissExample(event: KeyboardEvent) { if (event.key === 'Escape') clearExample() }
+function addTool(value: string) {
+  clearExample()
+  emit('add', value)
+}
 function startDrag(event: DragEvent, value: string) {
+  clearExample()
   event.dataTransfer?.setData('application/x-metaforge-dashboard', value)
   if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copy'
 }

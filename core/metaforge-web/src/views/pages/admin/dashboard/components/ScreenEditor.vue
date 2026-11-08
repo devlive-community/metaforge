@@ -67,6 +67,7 @@
              class="library-panel inset-y-0 left-0 z-10 shrink-0 outline-none"
              :class="wide && pinnedPanels.library ? 'side-panel-docked relative' : 'absolute'" @focusout="schedulePanelHide('library')">
           <ScreenLibrary v-model:tab="libraryTab" class="side-panel-content" :reports="assetPage" :widgets="board.widgets" :selected-ids="selectedIds"
+                            :preview-enabled="libraryVisible && !saving && !previewing && !resizingPanel"
                             :wall="wall" :can-group="groupable.length > 1"
                             :loading="assetsLoading" :failed="assetsFailed" :page="page" :page-size="pageSize" :total="total"
                             :pinned="pinnedPanels.library" :pinnable="wide" @pin="togglePin('library')" @close="togglePanel('library')"
