@@ -7,6 +7,7 @@ import type { EChartsOption } from 'echarts'
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { QueryChartOptions, QueryChartPoint } from '@/model/query-chart'
+import { queryChartCategoryShares, queryChartGeometry } from '@/model/query-chart-data'
 import type { PreparedQueryChart } from '@/model/query-chart-series'
 import EChart from '../EChart.vue'
 
@@ -42,7 +43,10 @@ const spec = computed<EChartsOption>(() => {
   }
   const circular = ['pie', 'donut', 'rose', 'funnel'].includes(options.type)
   const radar = options.type === 'radar'
-  const horizontal = options.type === 'horizontal'
+  const geometry = queryChartGeometry(options.type)
+  const horizontal = geometry?.horizontal
+  const shares = geometry?.percentage ? queryChartCategoryShares(props.points) : undefined
+  const percentageFormat = new Intl.NumberFormat(locale.value, { style: 'percent', maximumFractionDigits: Math.max(0, Math.min(6, options.decimals || 0)) })
   const numericX = (options.type === 'scatter' || options.type === 'effectScatter') && props.points.every(point => point.category.trim() && Number.isFinite(Number(point.category)))
   const formatCategory = (label: string) => {
     if (options.dateFormat === 'full' || !/^\d{4}-\d{2}-\d{2}/.test(label)) return label
@@ -74,13 +78,17 @@ const spec = computed<EChartsOption>(() => {
     axisLabel: { hideOverlap: options.hideOverlap, formatter: formatCategory, color: text }
   }
   const valueAxis = {
-    type: 'value', min: options.min, max: options.max, name: options.yTitle,
-    axisLabel: { show: options.yVisible, formatter: (value: number) => formatValue(value), color: text },
+    type: 'value', min: shares ? 0 : options.min, max: shares ? 1 : options.max, name: options.yTitle,
+    axisLabel: { show: options.yVisible, formatter: (value: number) => shares ? percentageFormat.format(value) : formatValue(value), color: text },
     splitLine: { show: options.grid, lineStyle: { color: token('line') } }
   }
   const position = options.labelPosition === 'auto' ? undefined : options.labelPosition === 'top' && circular ? 'outside' : options.labelPosition
+  const formatShare = (point?: QueryChartPoint) => {
+    const share = point ? shares?.get(point.pointId) : undefined
+    return share === undefined ? '—' : percentageFormat.format(share)
+  }
   const label = { show: options.labels, position, color: text,
-    formatter: (param: { data: { point?: QueryChartPoint } }) => formatValue(param.data?.point?.value ?? null, true) }
+    formatter: (param: { data: { point?: QueryChartPoint } }) => shares ? formatShare(param.data?.point) : formatValue(param.data?.point?.value ?? null, true) }
   const marks = {
     label, labelLayout: { hideOverlap: options.labelOverlap },
     emphasis: { focus: options.pointAction === 'highlight' ? 'self' : 'none' },
@@ -104,16 +112,19 @@ const spec = computed<EChartsOption>(() => {
     data: circularData
   }] : Array.from(bySeries, ([name, points], index) => ({
     ...marks, name,
-    type: options.type === 'area' ? 'line' : horizontal ? 'bar' : options.type,
+    type: geometry?.series ?? options.type,
+    ...(geometry?.stacked ? { stack: 'category' } : {}),
+    ...(geometry?.step ? { step: 'end' } : {}),
     data: (numericX ? [...points.keys()] : categories).map(category => {
       const point = points.get(category)
       if (!point) return null
-      return { value: numericX ? [Number(category), point.value] : point.value, point, pointId: point.pointId }
+      const value = shares ? shares.get(point.pointId) ?? null : point.value
+      return { value: numericX ? [Number(category), value] : value, point, pointId: point.pointId }
     }),
     ...(options.type === 'pictorialBar' ? { symbol: 'roundRect' } : {}),
-    smooth: options.smooth, showSymbol: options.points, symbolSize: options.pointSize,
+    smooth: !geometry?.step && options.smooth, showSymbol: options.points, symbolSize: options.pointSize,
     lineStyle: { width: options.lineWidth, type: options.dashed ? 'dashed' : 'solid' },
-    areaStyle: options.type === 'area' || (options.type === 'line' && options.fill) ? {
+    areaStyle: geometry?.area || (geometry?.series === 'line' && options.fill) ? {
       opacity: options.opacity / 100,
       color: { type: 'linear', x: 0, y: 0, x2: 0, y2: 1,
         colorStops: [{ offset: 0, color: chartColors[index % chartColors.length] }, { offset: 1, color: 'transparent' }] }
@@ -123,7 +134,8 @@ const spec = computed<EChartsOption>(() => {
   const tooltipText = (point: QueryChartPoint) => options.tooltipTemplate.trim()
       ? options.tooltipTemplate.replace(/\{(x|series|value)\}/g, (_match, field) => field === 'x' ? formatCategory(point.category)
           : field === 'series' ? seriesName(point) : formatValue(point.value, true))
-      : [formatCategory(point.category), seriesName(point) + ': ' + formatValue(point.value, true)].join(' · ')
+      : [formatCategory(point.category), seriesName(point) + ': ' + formatValue(point.value, true),
+        ...(shares ? [formatShare(point)] : [])].join(' · ')
   const tooltipFormatter = (params: unknown) => {
     const items = (Array.isArray(params) ? params : [params]) as { data?: { point?: QueryChartPoint } }[]
     return items.flatMap(item => item.data?.point ? [tooltipText(item.data.point)] : []).join('\n')

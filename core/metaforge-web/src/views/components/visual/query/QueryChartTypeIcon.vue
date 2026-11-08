@@ -4,7 +4,7 @@
 
 <script setup lang="ts">
 import {
-  Activity, Boxes, ChartArea, ChartBar, ChartCandlestick, ChartColumn, ChartLine, ChartNoAxesColumnIncreasing,
+  Activity, Boxes, ChartArea, ChartBar, ChartBarStacked, ChartCandlestick, ChartColumn, ChartColumnStacked, ChartLine, ChartNoAxesColumnIncreasing,
   ChartPie, ChartScatter, ChartSpline, Circle, CodeXml, Flower2, Funnel, Gauge, Grid2x2, Map, Network, Radar, Route,
   Sparkles, Sun, Table2, Workflow,
 } from '@lucide/vue'
@@ -17,5 +17,7 @@ const icons = {
   effectScatter: Sparkles, pictorialBar: ChartNoAxesColumnIncreasing, heatmap: Grid2x2, gauge: Gauge,
   candlestick: ChartCandlestick, boxplot: ChartNoAxesColumnIncreasing, histogram: ChartColumn, parallel: Activity, themeRiver: ChartSpline,
   tree: Network, treemap: Boxes, sunburst: Sun, graph: Network, sankey: Workflow, map: Map, lines: Route, custom: CodeXml,
+  stepLine: Activity, stackedBar: ChartColumnStacked, stackedHorizontal: ChartBarStacked, stackedArea: ChartArea,
+  percentStackedBar: ChartColumnStacked, bubble: ChartScatter,
 } satisfies Record<QueryChartType, typeof ChartLine>
 </script>

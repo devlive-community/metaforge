@@ -53,21 +53,13 @@
                         @click="selectChartType(kind)">
                   <QueryChartTypeIcon :type="kind" :size="21" class="text-primary"/>{{ $t('queryChart.type.' + kind) }}
                 </button>
-                <MfDropdown trigger="click" placement="bottomRight">
+                <QueryChartTypeSelect :model-value="options.type" :types="moreTypes" @update:model-value="selectChartType">
                   <button type="button" :aria-label="$t('queryChart.more')" class="flex h-full w-full flex-col items-center justify-center gap-2 rounded-mf-md border border-line px-1 py-4 text-xs hover:bg-surface-hover">
                     <QueryChartTypeIcon v-if="moreTypes.includes(options.type)" :type="options.type" :size="21" class="text-primary"/>
                     <Ellipsis v-else :size="21" class="text-primary"/>
                     {{ moreTypes.includes(options.type) ? $t('queryChart.type.' + options.type) : $t('queryChart.more') }}
                   </button>
-                  <template #overlay>
-                    <div class="flex max-h-[45dvh] min-w-40 flex-col gap-1 overflow-y-auto">
-                      <MfButton v-for="kind in moreTypes" :key="kind" size="sm" :variant="kind === options.type ? 'secondary' : 'ghost'"
-                                class="shrink-0 justify-start!" :aria-pressed="kind === options.type" @click="selectChartType(kind)">
-                        <QueryChartTypeIcon :type="kind" class="shrink-0 text-primary"/>{{ $t('queryChart.type.' + kind) }}
-                      </MfButton>
-                    </div>
-                  </template>
-                </MfDropdown>
+                </QueryChartTypeSelect>
               </div>
             </section>
 
@@ -195,6 +187,7 @@ import { useQueryChartBuilder, type QueryChartSource } from '@/composables/useQu
 import TypedFilterBuilder from '@/views/components/filter/TypedFilterBuilder.vue'
 import QueryChartPreview from '@/views/components/visual/query/QueryChartPreview.vue'
 import QueryChartTypeIcon from '@/views/components/visual/query/QueryChartTypeIcon.vue'
+import QueryChartTypeSelect from '@/views/components/visual/query/QueryChartTypeSelect.vue'
 import QueryChartDataFields from '@/views/components/visual/query/QueryChartDataFields.vue'
 import QueryChartSettings from '@/views/components/visual/query/QueryChartSettings.vue'
 

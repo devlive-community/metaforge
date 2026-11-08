@@ -26,6 +26,7 @@
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { snapshotRowLimit, type QueryChartOptions } from '@/model/query-chart'
+import { queryChartGeometry } from '@/model/query-chart-data'
 import DashboardInspectorGroup from '@/views/pages/admin/dashboard/components/DashboardInspectorGroup.vue'
 
 type Key = keyof QueryChartOptions
@@ -56,13 +57,15 @@ const set = (key: Key, value: unknown) => {
 
 const groups = computed(() => {
   const type = props.options.type
-  const cartesian = ['line', 'bar', 'area', 'scatter', 'effectScatter', 'horizontal', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom'].includes(type)
-  const line = type === 'line' || type === 'area'
+  const geometry = queryChartGeometry(type)
+  const cartesian = !!geometry || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom'].includes(type)
+  const line = geometry?.series === 'line'
+  const variableScale = geometry?.percentage ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
   if (props.panel === 'axes') return [
     { title: 'xAxis', fields: [text('xTitle'), ...(props.timeCategory ? [select('dateFormat', ['short', 'full', 'time'])] : []),
       select('sort', ['asc', 'desc', 'original']), ...(cartesian ? [toggle('xVisible'), toggle('xTitleVisible'), toggle('hideOverlap')] : [])] },
-    { title: 'yAxis', fields: [select('numberFormat', ['integer', 'decimal', 'percent', 'compact']),
-      ...(cartesian || type === 'gauge' ? [text('yTitle'), number('min', undefined, undefined, 3), number('max', undefined, undefined, 3), toggle('grid'), toggle('yVisible')] : [])] }
+    { title: 'yAxis', fields: [...(geometry?.percentage ? [] : [select('numberFormat', ['integer', 'decimal', 'percent', 'compact'])]),
+      ...(cartesian || type === 'gauge' ? [text('yTitle'), ...variableScale, toggle('grid'), toggle('yVisible')] : [])] }
   ]
   if (props.panel === 'legend') return [
     { title: 'legendSettings', fields: [toggle('legend'), select('legendPosition', ['top', 'bottom', 'right']), text('seriesName'), toggle('legendInteractive')] },
@@ -70,8 +73,10 @@ const groups = computed(() => {
   ]
   if (props.panel === 'style') return [
     { title: 'paletteSettings', fields: [select('palette', ['green', 'blue', 'purple']), text('colors', '#0a8f67, #3b82f6')] },
-    ...(line || type === 'scatter' ? [{ title: 'marks', fields: [...(line ? [toggle('smooth'), toggle('dashed'), number('lineWidth', 1, 6), toggle('points')] : []), number('pointSize', 1, 18)] }] : []),
-    { title: 'background', fields: [...(type === 'line' ? [toggle('fill')] : []), ...(line ? [number('opacity', 0, 100)] : []), toggle('transparent')] }
+    ...(line || type === 'scatter' || type === 'bubble' ? [{ title: 'marks', fields: [
+      ...(line ? [...(geometry?.step ? [] : [toggle('smooth')]), toggle('dashed'), number('lineWidth', 1, 6), toggle('points')] : []),
+      number('pointSize', 1, 18)] }] : []),
+    { title: 'background', fields: [...(line && !geometry?.area ? [toggle('fill')] : []), ...(line ? [number('opacity', 0, 100)] : []), toggle('transparent')] }
   ]
   if (props.panel === 'interaction') return [
     { title: 'tooltipSettings', fields: [select('tooltip', ['dimension', 'mark', 'off']), { key: 'tooltipTemplate', control: 'textarea', placeholder: '{x} · {series}: {value}' } as Field] },

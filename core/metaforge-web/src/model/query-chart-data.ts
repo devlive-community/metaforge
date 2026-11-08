@@ -1,4 +1,4 @@
-import type { QueryChartOptions, QueryChartType } from './query-chart'
+import type { QueryChartOptions, QueryChartPoint, QueryChartType } from './query-chart'
 
 export const geoJsonLimit = 1_000_000
 
@@ -28,7 +28,40 @@ const specs: Partial<Record<QueryChartType, ChartDataSpec>> = {
   parallel: { raw: true, parallel: true },
   lines: { raw: true, fields: ['startX', 'startY', 'endX', 'endY'] },
   custom: { category: 'category', raw: true, fields: ['lower', 'upper'] },
+  bubble: { raw: true, fields: ['bubbleX', 'bubbleY', 'bubbleSize'] },
   gauge: {},
+}
+
+type ChartGeometry = { series: 'line' | 'bar'; area?: boolean; stacked?: boolean; horizontal?: boolean; step?: boolean; percentage?: boolean }
+const geometries: Partial<Record<QueryChartType, ChartGeometry>> = {
+  line: { series: 'line' },
+  area: { series: 'line', area: true },
+  bar: { series: 'bar' },
+  horizontal: { series: 'bar', horizontal: true },
+  stepLine: { series: 'line', step: true },
+  stackedBar: { series: 'bar', stacked: true },
+  stackedHorizontal: { series: 'bar', stacked: true, horizontal: true },
+  stackedArea: { series: 'line', stacked: true, area: true },
+  percentStackedBar: { series: 'bar', stacked: true, percentage: true },
+}
+
+export function queryChartGeometry(type: QueryChartType) {
+  return geometries[type]
+}
+
+/** Calculate shares from the full category, even if a legend item is hidden. */
+export function queryChartCategoryShares(points: readonly QueryChartPoint[]) {
+  const totals = new Map<string, number>()
+  for (const { category, value } of points) {
+    if (value !== null) totals.set(category, (totals.get(category) ?? 0) + value)
+  }
+  const shares = new Map<number, number>()
+  for (const { pointId, category, value } of points) {
+    if (value === null) continue
+    const total = totals.get(category) ?? 0
+    shares.set(pointId, total > 0 ? value / total : 0)
+  }
+  return shares
 }
 
 export function chartDataSpec(type: QueryChartType): ChartDataSpec | undefined {
@@ -46,6 +79,7 @@ const fieldAliases: Record<string, string[]> = {
   value: ['value', 'amount', 'metric'],
   startX: ['startx', 'sourcex', 'fromx'], startY: ['starty', 'sourcey', 'fromy'],
   endX: ['endx', 'targetx', 'tox'], endY: ['endy', 'targety', 'toy'],
+  bubbleX: ['x', 'xvalue'], bubbleY: ['y', 'yvalue'], bubbleSize: ['size', 'bubblesize', 'weight', 'radius'],
 }
 
 export function suggestChartFields(type: QueryChartType, numericFields: string[]): Pick<ChartMappings, 'chartFields' | 'parallelFields'> {
@@ -57,6 +91,10 @@ export function suggestChartFields(type: QueryChartType, numericFields: string[]
   for (const key of spec.fields) {
     const field = numericFields.find(name => fieldAliases[key]?.includes(normalized(name)))
     if (field) chartFields[key] = field
+  }
+  if (type === 'bubble') {
+    const available = numericFields.filter(field => !Object.values(chartFields).includes(field))
+    for (const key of spec.fields) if (!chartFields[key] && available.length) chartFields[key] = available.shift()!
   }
   if ((type === 'boxplot' || type === 'histogram') && !chartFields.value && numericFields[0]) chartFields.value = numericFields[0]
   return { chartFields }

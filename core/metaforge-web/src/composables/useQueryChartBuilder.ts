@@ -102,8 +102,12 @@ export function useQueryChartBuilder(source: QueryChartSource, close: () => void
       error.value = t('queryChart.incompleteFilter')
       return
     }
-    if (chart.min !== undefined && chart.max !== undefined && chart.min >= chart.max) {
+    if (chart.type !== 'percentStackedBar' && chart.min !== undefined && chart.max !== undefined && chart.min >= chart.max) {
       error.value = t('queryChart.axisRange')
+      return
+    }
+    if (chart.type === 'percentStackedBar' && result.value.points.some(point => (point.value ?? 0) < 0)) {
+      error.value = t('queryChart.nonnegativeShares')
       return
     }
     const prepared = prepareQueryChart(chart, result.value)

@@ -5,6 +5,7 @@ export const queryChartTypes = [
   'radar', 'funnel', 'rose', 'table', 'effectScatter', 'pictorialBar', 'heatmap', 'gauge',
   'candlestick', 'boxplot', 'histogram', 'parallel', 'themeRiver', 'tree', 'treemap', 'sunburst',
   'graph', 'sankey', 'map', 'lines', 'custom',
+  'stepLine', 'stackedBar', 'stackedHorizontal', 'stackedArea', 'percentStackedBar', 'bubble',
 ] as const
 export type QueryChartType = typeof queryChartTypes[number]
 export type QueryChartRow = Record<string, unknown>

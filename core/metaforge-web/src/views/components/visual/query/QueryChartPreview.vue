@@ -10,7 +10,7 @@
           <Table2 :size="14"/>{{ $t('queryChart.data') }}
         </MfButton>
         <template v-if="options.download && !showData && !showInlineDetails">
-          <MfButton v-for="format in formats" :key="format" size="sm" variant="ghost" :disabled="chartLoading || !chartAvailable || invalidCircular || failed" @click="download(format)">
+          <MfButton v-for="format in formats" :key="format" size="sm" variant="ghost" :disabled="chartLoading || !chartAvailable || invalidCircular || invalidShare || failed" @click="download(format)">
             <Download :size="14"/>{{ format.toUpperCase() }}
           </MfButton>
         </template>
@@ -41,6 +41,7 @@
       </div>
       <MfAlert v-else-if="prepared?.issue" variant="info" :title="$t('queryChart.issue.' + prepared.issue)"/>
       <MfAlert v-else-if="invalidCircular" variant="warning" :title="$t('queryChart.positiveValues')"/>
+      <MfAlert v-else-if="invalidShare" variant="warning" :title="$t('queryChart.nonnegativeShares')"/>
       <MfAlert v-else-if="failed" variant="danger" :title="$t('queryChart.renderError')"/>
       <MfEmpty v-else-if="!chartAvailable" class="flex-1" :title="$t('queryChart.noPoints')"/>
       <QueryChartCanvas v-else ref="canvas" class="flex-1" :options="options" :points="chartRows" :prepared="prepared" :metric="metricLabel" :embedded="embedded" @point="selectPoint" @error="failed = true"/>
@@ -91,6 +92,7 @@ const rawSeries = computed(() => !!chartDataSpec(props.options.type)?.raw)
 const metricLabel = computed(() => props.options.metric || t('queryChart.records'))
 const circular = computed(() => ['pie', 'donut', 'rose', 'funnel'].includes(props.options.type))
 const invalidCircular = computed(() => circular.value && result.value.points.some(point => (point.value ?? 0) < 0))
+const invalidShare = computed(() => props.options.type === 'percentStackedBar' && result.value.points.some(point => (point.value ?? 0) < 0))
 const chartRows = computed(() => {
   const points = result.value.points
   if (circular.value) return points.filter(point => (point.value ?? 0) > 0)

@@ -121,6 +121,7 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
     case 'candlestick':
     case 'custom':
     case 'lines':
+    case 'bubble':
     case 'parallel': {
       const input = spec.parallel ? parallel : fields
       const rows = raw.flatMap(row => {
@@ -132,9 +133,24 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
           if (low > Math.min(open, close) || high < Math.max(open, close)) return []
         }
         if (options.type === 'custom' && values[0] > values[1]) return []
+        if (options.type === 'bubble' && values[2] < 0) return []
         return [{ category: String(row[category] ?? ''), values, row }]
       })
       if (!rows.length) return issue('noPoints')
+      if (options.type === 'bubble') {
+        const largest = rows.reduce((max, row) => Math.max(max, row.values[2]), 0)
+        const maxDiameter = Math.max(20, Math.min(56, options.pointSize * 8))
+        return done({
+          xAxis: { type: 'value', name: options.xTitleVisible ? options.xTitle || fields[0] : '', show: options.xVisible, scale: true,
+            axisLabel: { hideOverlap: options.hideOverlap } },
+          yAxis: { type: 'value', name: options.yTitle || fields[1], scale: true, min: options.min, max: options.max,
+            axisLabel: { show: options.yVisible }, splitLine: { show: options.grid } },
+          series: [{ type: 'scatter', dimensions: fields, encode: { x: 0, y: 1, tooltip: [0, 1, 2] },
+            symbolSize: value => largest ? Math.max(5, maxDiameter * Math.sqrt(value[2] / largest)) : 5,
+            itemStyle: { opacity: .75 },
+            data: rows.map(row => ({ value: row.values, pointId: id([row.row]) })) }],
+        })
+      }
       if (options.type === 'parallel') return done({
         parallel: { top: 26, bottom: 26, left: '9%', right: '9%' },
         parallelAxis: input.map((name, dim) => ({ dim, name, type: 'value' })),
