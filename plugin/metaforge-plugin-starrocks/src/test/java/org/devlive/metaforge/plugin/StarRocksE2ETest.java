@@ -54,6 +54,13 @@ public class StarRocksE2ETest
     {
         try (GenericContainer<?> container = new GenericContainer<>("starrocks/allin1-ubuntu:" + version + "-latest")
                 .withExposedPorts(9030)
+                // The images size their internals from the host RAM; a runner running the whole
+                // suite dies when a container claims several gigabytes, so cap them.
+                .withCreateContainerCmdModifier(cmd -> cmd.withMemory(4L * 1024 * 1024 * 1024).withMemorySwap(4L * 1024 * 1024 * 1024))
+                // The backend rejects CREATE TABLE once its data dir crosses the disk usage
+                // watermark, and the container shares the runner's nearly full disk; a tmpfs
+                // data dir keeps the capacity check hermetic.
+                .withTmpFs(Map.of("/data/deploy/be/storage", "rw"))
                 .waitingFor(Wait.forListeningPorts(9030).withStartupTimeout(Duration.ofMinutes(5)))) {
             container.start();
             PluginService service = new StarRocksService();
