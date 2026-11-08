@@ -48,7 +48,8 @@ export function queryChartStyleFields(type: QueryChartType): QueryChartStyleKey[
   const geometry = queryChartGeometry(type)
   const direct = !chartDataSpec(type)
   const circular = ['pie', 'donut', 'rose', 'funnel'].includes(type)
-  const seriesLegend = ['dualAxis', 'polarBar', 'polarStackedBar', 'polarLine', 'pareto', 'cumulativeLine', 'rankTrend', 'mirrorBar', 'targetComparison'].includes(type)
+  const seriesLegend = ['dualAxis', 'polarBar', 'polarStackedBar', 'polarLine', 'pareto', 'cumulativeLine', 'rankTrend',
+    'mirrorBar', 'targetComparison', 'indexTrend', 'movingAverage', 'signedShareBar'].includes(type)
   if (direct) {
     fields.push('legend', 'legendPosition', 'legendInteractive')
     if (!circular) fields.push('seriesName')
@@ -60,20 +61,30 @@ export function queryChartStyleFields(type: QueryChartType): QueryChartStyleKey[
   } else {
     if (seriesLegend) fields.push('legend', 'legendInteractive')
     if (['heatmap', 'graph', 'map', 'themeRiver'].includes(type)) fields.push('labels')
-    if (['waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'bubble', 'scatterFit', 'cumulativeLine', 'targetComparison', 'deviationBar'].includes(type)) {
+    if (['waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'bubble', 'scatterFit', 'cumulativeLine', 'targetComparison', 'deviationBar',
+      'tukeyBox', 'quantileComparison', 'percentileProfile', 'quadrantScatter', 'lagScatter', 'indexTrend', 'movingAverage'].includes(type)) {
       fields.push('yTitle', 'min', 'max', 'yVisible', 'grid')
     }
     if (['waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'bubble', 'scatterFit'].includes(type)) fields.push('xTitle', 'xVisible', 'hideOverlap')
     if (type === 'bubble' || type === 'scatterFit') fields.push('xTitleVisible')
+    if (['tukeyBox', 'violinPlot', 'ridgePlot', 'quantileComparison', 'ganttTimeline', 'quadrantScatter', 'lagScatter', 'signedShareBar'].includes(type)) {
+      fields.push('xTitle', 'xVisible')
+    }
+    if (['violinPlot', 'ridgePlot', 'ganttTimeline'].includes(type)) fields.push('yVisible')
+    if (type === 'signedShareBar') fields.push('yTitle', 'yVisible', 'grid')
   }
-  if (geometry?.series === 'line' || ['cumulativeLine', 'rankTrend'].includes(type)) {
+  if (geometry?.series === 'line' || ['cumulativeLine', 'rankTrend', 'indexTrend', 'movingAverage'].includes(type)) {
     if (!geometry?.step) fields.push('smooth')
     fields.push('dashed', 'lineWidth', 'points', 'pointSize')
   }
   if (['scatter', 'effectScatter', 'bubble', 'stripPlot', 'scatterFit', 'lollipop', 'dumbbell', 'dualAxis', 'frequencyPolygon', 'rangeBand'].includes(type)) fields.push('pointSize')
+  if (['tukeyBox', 'quantileComparison', 'percentileProfile', 'lorenzCurve', 'quadrantScatter', 'lagScatter'].includes(type)) fields.push('pointSize')
   if (type === 'lines' || type === 'scatterFit') fields.push('lineWidth')
+  if (['violinPlot', 'ridgePlot', 'quantileComparison', 'percentileProfile', 'lorenzCurve', 'quadrantScatter'].includes(type)) fields.push('lineWidth')
+  if (type === 'percentileProfile' || type === 'lorenzCurve') fields.push('dashed')
+  if (type === 'lorenzCurve') fields.push('points')
   if (geometry?.series === 'line' && !geometry.area && !geometry.stacked) fields.push('fill')
-  if (geometry?.area || fields.includes('fill') || type === 'rangeBand') fields.push('opacity')
+  if (geometry?.area || fields.includes('fill') || ['rangeBand', 'violinPlot', 'ridgePlot'].includes(type)) fields.push('opacity')
   if (geometry?.series === 'bar') fields.push('barMaxWidth', 'barCornerRadius')
   if (['pie', 'donut', 'rose'].includes(type)) fields.push('pieRadius')
   if (type === 'donut') fields.push('donutHole', 'donutTotal')

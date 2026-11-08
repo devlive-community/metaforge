@@ -10,6 +10,8 @@ export const queryChartTypes = [
   'dualAxis', 'polarBar', 'polarStackedBar', 'polarLine',
   'pareto', 'cumulativeLine', 'deviationBar', 'mirrorBar', 'stripPlot', 'ecdf',
   'scatterFit', 'calendarMatrix', 'radialBar', 'frequencyPolygon', 'targetComparison', 'rankTrend',
+  'tukeyBox', 'violinPlot', 'ridgePlot', 'quantileComparison', 'percentileProfile', 'lorenzCurve',
+  'ganttTimeline', 'signedShareBar', 'quadrantScatter', 'lagScatter', 'indexTrend', 'movingAverage',
 ] as const
 export type QueryChartType = typeof queryChartTypes[number]
 export type QueryChartRow = Record<string, unknown>

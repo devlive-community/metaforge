@@ -25,5 +25,8 @@ const icons = {
   pareto: ChartColumnStacked, cumulativeLine: ChartLine, deviationBar: ChartColumn, mirrorBar: ChartBarStacked,
   stripPlot: ChartScatter, ecdf: Activity, scatterFit: ChartScatter, calendarMatrix: Grid2x2, radialBar: Radar,
   frequencyPolygon: ChartSpline, targetComparison: ChartNoAxesColumnIncreasing, rankTrend: Route,
+  tukeyBox: ChartCandlestick, violinPlot: ChartArea, ridgePlot: ChartArea, quantileComparison: ChartScatter,
+  percentileProfile: ChartSpline, lorenzCurve: ChartLine, ganttTimeline: ChartBarStacked, signedShareBar: ChartBarStacked,
+  quadrantScatter: ChartScatter, lagScatter: ChartScatter, indexTrend: ChartLine, movingAverage: ChartSpline,
 } satisfies Record<QueryChartType, typeof ChartLine>
 </script>

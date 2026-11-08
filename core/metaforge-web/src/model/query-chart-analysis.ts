@@ -10,11 +10,13 @@ const percentAxis = { type: 'value' as const, min: 0, max: 100, axisLabel: { for
 const categoryAxis = (data: string[]) => ({ type: 'category' as const, data, axisLabel: { hideOverlap: true } })
 const valueAxis = { type: 'value' as const }
 
-function seriesOverCategories(points: NumericPoint[], options: QueryChartOptions, add: (point: NumericPoint) => number) {
+function seriesOverCategories(points: NumericPoint[], options: QueryChartOptions, add: (points: NumericPoint[]) => number) {
   const categories = [...new Set(points.map(point => point.category))]
   const index = new Map(categories.map((name, position) => [name, position]))
   const groups = new Map<string, { position: number; value: number; pointId: number }[]>()
   const running = new Map<string, number>()
+  const bases = new Map<string, number>()
+  const windows = new Map<string, { position: number; points: NumericPoint[] }>()
   const rank = new Map<number, number>()
   if (options.type === 'rankTrend') {
     const byCategory = new Map<string, NumericPoint[]>()
@@ -35,11 +37,26 @@ function seriesOverCategories(points: NumericPoint[], options: QueryChartOptions
   const ordered = [...points].sort((left, right) => index.get(left.category)! - index.get(right.category)!)
   for (const point of ordered) {
     const name = point.series || options.seriesName || options.metric || options.category
-    const value = rank.get(point.pointId) ?? ((running.get(name) ?? 0) + point.value)
+    const position = index.get(point.category)!
+    let contributing = [point]
+    let value = rank.get(point.pointId) ?? ((running.get(name) ?? 0) + point.value)
+    if (options.type === 'indexTrend') {
+      const base = bases.get(name) ?? point.value
+      if (base <= 0) continue
+      bases.set(name, base)
+      value = (point.value / base) * 100
+    }
+    if (options.type === 'movingAverage') {
+      const prior = windows.get(name)
+      contributing = prior?.position === position - 1 ? [...prior.points.slice(-2), point] : [point]
+      windows.set(name, { position, points: contributing })
+      if (contributing.length < 3) continue
+      value = contributing.reduce((sum, item) => sum + item.value / 3, 0)
+    }
     if (!Number.isFinite(value)) continue
-    running.set(name, value)
+    if (options.type === 'cumulativeLine') running.set(name, value)
     const items = groups.get(name) ?? []
-    items.push({ position: index.get(point.category)!, value, pointId: add(point) })
+    items.push({ position, value, pointId: add(contributing) })
     groups.set(name, items)
   }
   const series: LineSeriesOption[] = [...groups].map(([name, items]) => {
@@ -139,13 +156,46 @@ export function analyticalChartOption(options: QueryChartOptions, result: Aggreg
       }
     }
     case 'cumulativeLine':
-    case 'rankTrend': {
-      const { categories, series } = seriesOverCategories(points, options, add)
+    case 'rankTrend':
+    case 'indexTrend':
+    case 'movingAverage': {
+      if (options.type === 'indexTrend' && points.some(point => point.value < 0)) return 'nonnegative'
+      const { categories, series } = seriesOverCategories(points, options, group => addRows(group.flatMap(point => result.details.get(point.pointId) ?? [])))
       if (!series.length) return
       const rank = options.type === 'rankTrend'
       return { legend, xAxis: categoryAxis(categories),
         yAxis: rank ? { ...valueAxis, inverse: true, min: 1, minInterval: 1, name: text('position', 'Rank') } : axisTitles(options, '').yAxis,
         series }
+    }
+    case 'signedShareBar': {
+      if (!points.length) return
+      const categories = [...new Set(points.map(point => point.category))]
+      const indexes = new Map(categories.map((name, index) => [name, index]))
+      const scales = new Map<string, number>()
+      for (const point of points) scales.set(point.category, Math.max(scales.get(point.category) ?? 0, Math.abs(point.value)))
+      const totals = new Map<string, number>()
+      for (const { category, value } of points) {
+        const amount = Math.abs(value) / (scales.get(category) || 1)
+        totals.set(category, (totals.get(category) ?? 0) + amount)
+      }
+      const groups = new Map<string, { value: number[]; pointId: number }[]>()
+      for (const point of points) {
+        const group = groups.get(point.series) ?? []
+        const scale = scales.get(point.category) || 1
+        const total = totals.get(point.category) || 1
+        group.push({ value: [indexes.get(point.category)!, 100 * (point.value / scale) / total, point.value], pointId: add(point) })
+        groups.set(point.series, group)
+      }
+      return {
+        legend, xAxis: { ...categoryAxis(categories), show: options.xVisible, name: options.xTitle },
+        yAxis: { ...percentAxis, min: -100, name: options.yTitle, splitLine: { show: options.grid },
+          axisLabel: { formatter: '{value}%', show: options.yVisible } },
+        series: [...groups].map(([name, data]) => ({
+          type: 'bar', name, stack: 'signed-share', stackStrategy: 'samesign', data,
+          dimensions: ['category', text('signedShare', 'Signed share (%)'), name || 'value'],
+          encode: { x: 0, y: 1, tooltip: [1, 2] },
+        })),
+      }
     }
     case 'radialBar': {
       if (points.some(point => point.value < 0)) return 'nonnegative'

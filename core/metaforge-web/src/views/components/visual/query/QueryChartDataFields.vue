@@ -11,7 +11,8 @@
       <MfSelect :model-value="options.series || 0" :options="seriesOptions" :disabled="!fields.length" searchable @update:model-value="changeSeries"/>
     </MfFormItem>
     <MfFormItem v-for="key in spec.fields" :key="key" :label="$t('queryChart.mapping.' + key)" required-mark>
-      <MfSelect :model-value="options.chartFields?.[key]" :options="numericFields" :disabled="!numericFields.length" searchable :placeholder="$t('queryChart.selectField')"
+      <MfSelect :model-value="options.chartFields?.[key]" :options="spec.timeFields?.includes(key) ? fields : numericFields"
+                :disabled="!(spec.timeFields?.includes(key) ? fields : numericFields).length" searchable :placeholder="$t('queryChart.selectField')"
                 @update:model-value="changeField(key, $event)"/>
     </MfFormItem>
     <MfFormItem v-if="spec.parallel" :label="$t('queryChart.mapping.parallel')" required-mark>

@@ -25,7 +25,7 @@ const options = {
     startX: 'startX', startY: 'startY', endX: 'endX', endY: 'endY',
     before: 'open', after: 'close', columnMeasure: 'open', lineMeasure: 'close',
     leftMeasure: 'open', rightMeasure: 'close', actualMeasure: 'close', targetMeasure: 'high',
-    bubbleX: 'open', bubbleY: 'close' },
+    bubbleX: 'open', bubbleY: 'close', intervalStart: 'date', intervalEnd: 'date' },
 }
 
 test('the dashboard includes every type shown in the visualizer', () => {
@@ -38,11 +38,15 @@ test('specialized field mappings produce real ECharts series that can render SVG
   const compositions = { waterfall: 'custom', lollipop: 'custom', dumbbell: 'custom', rangeBand: 'line', dualAxis: 'bar',
     polarBar: 'bar', polarStackedBar: 'bar', polarLine: 'line', pareto: 'bar', cumulativeLine: 'line',
     deviationBar: 'bar', mirrorBar: 'bar', stripPlot: 'scatter', ecdf: 'line', scatterFit: 'scatter',
-    calendarMatrix: 'heatmap', radialBar: 'bar', frequencyPolygon: 'line', targetComparison: 'bar', rankTrend: 'line' }
+    calendarMatrix: 'heatmap', radialBar: 'bar', frequencyPolygon: 'line', targetComparison: 'bar', rankTrend: 'line',
+    tukeyBox: 'boxplot', violinPlot: 'custom', ridgePlot: 'custom', quantileComparison: 'scatter', percentileProfile: 'line',
+    lorenzCurve: 'line', ganttTimeline: 'custom', signedShareBar: 'bar', quadrantScatter: 'scatter', lagScatter: 'scatter',
+    indexTrend: 'line', movingAverage: 'line' }
   types.push(...Object.keys(compositions))
   for (const type of types) {
-    const chartOptions = { ...options, type, category: ['themeRiver', 'calendarMatrix'].includes(type) ? 'date' : options.category }
-    const prepared = prepareQueryChart(chartOptions, aggregateQueryChart(rows, chartOptions))
+    const chartOptions = { ...options, type, category: ['themeRiver', 'calendarMatrix', 'movingAverage'].includes(type) ? 'date' : options.category }
+    const records = type === 'movingAverage' ? rows.map((row, index) => ({ ...row, date: '2026-10-0' + (index + 1), group: 'C' })) : rows
+    const prepared = prepareQueryChart(chartOptions, aggregateQueryChart(records, chartOptions))
     assert.equal(prepared.issue, undefined, type)
     assert.equal(prepared.option.series[0].type, compositions[type] ?? (type === 'histogram' ? 'bar' : type))
     assert.ok(prepared.details.size, type)
@@ -54,6 +58,20 @@ test('specialized field mappings produce real ECharts series that can render SVG
     }
     finally { instance.dispose() }
   }
+})
+
+test('distribution charts retain the raw rows behind outliers and lagged pairs', () => {
+  const records = [1, 2, 3, 4, 100, null, 5].map(value => ({ group: 'A', value }))
+  const options = { ...defaultQueryChart(['group', 'value']), category: 'group', chartFields: { value: 'value' } }
+  const render = type => prepareQueryChart({ ...options, type }, aggregateQueryChart(records, { ...options, type }))
+  const box = render('tukeyBox')
+  assert.deepEqual(box.option.series[0].data[0].value, [1, 2.25, 3.5, 4.75, 5])
+  const [outlier] = box.option.series[1].data
+  assert.deepEqual(outlier.value, [0, 100])
+  assert.equal(box.details.get(outlier.pointId)[0], records[4])
+  const lag = render('lagScatter')
+  assert.deepEqual(lag.option.series[0].data.map(point => point.value), [[1, 2], [2, 3], [3, 4], [4, 100]])
+  assert.deepEqual(lag.details.get(3), records.slice(3, 5))
 })
 
 test('rank trend handles ties and cumulative lines follow the shared category order', () => {

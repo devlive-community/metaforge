@@ -30,6 +30,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { snapshotRowLimit, type QueryChartOptions } from '@/model/query-chart'
 import { queryChartGeometry } from '@/model/query-chart-data'
+import { queryChartStyleFields } from '@/model/query-chart-style'
 import InspectorSection from '@/views/components/studio/InspectorSection.vue'
 
 type Key = keyof QueryChartOptions
@@ -63,13 +64,16 @@ const set = (key: Key, value: unknown) => {
 const sections = computed(() => {
   const type = props.options.type
   const geometry = queryChartGeometry(type)
+  const appearance = queryChartStyleFields(type)
   const cartesian = !!geometry || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom',
     'waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'dualAxis', 'pareto', 'cumulativeLine', 'deviationBar',
-    'mirrorBar', 'stripPlot', 'ecdf', 'scatterFit', 'frequencyPolygon', 'targetComparison', 'rankTrend'].includes(type)
-  const line = geometry?.series === 'line' || ['cumulativeLine', 'rankTrend'].includes(type)
+    'mirrorBar', 'stripPlot', 'ecdf', 'scatterFit', 'frequencyPolygon', 'targetComparison', 'rankTrend', 'tukeyBox', 'violinPlot',
+    'ridgePlot', 'quantileComparison', 'percentileProfile', 'lorenzCurve', 'ganttTimeline', 'signedShareBar', 'quadrantScatter', 'lagScatter', 'indexTrend', 'movingAverage'].includes(type)
+  const markFields = [toggle('smooth'), toggle('dashed'), number('lineWidth', 1, 6), toggle('points'), number('pointSize', 1, 18)]
+    .filter(field => appearance.some(key => key === field.key))
   const fillToggle = geometry?.series === 'line' && !geometry.area && !geometry.stacked
-  const fillOpacity = fillToggle || geometry?.area || type === 'rangeBand'
-  const variableScale = geometry?.percentage || ['dualAxis', 'pareto', 'ecdf', 'rankTrend', 'mirrorBar'].includes(type)
+  const fillOpacity = appearance.includes('opacity')
+  const variableScale = geometry?.percentage || ['dualAxis', 'pareto', 'ecdf', 'rankTrend', 'mirrorBar', 'lorenzCurve', 'signedShareBar'].includes(type)
     ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
   if (props.panel === 'axes') return [
     { title: 'xAxis', fields: [text('xTitle'), ...(props.timeCategory ? [select('dateFormat', ['short', 'full', 'time'])] : []),
@@ -83,10 +87,7 @@ const sections = computed(() => {
   ]
   if (props.panel === 'style') return [
     { title: 'paletteSettings', fields: [select('palette', ['green', 'blue', 'purple']), text('colors', '#0a8f67, #3b82f6')] },
-    ...(line || ['scatter', 'effectScatter', 'bubble', 'stripPlot', 'scatterFit', 'lollipop', 'dumbbell', 'dualAxis', 'frequencyPolygon', 'rangeBand', 'lines'].includes(type) ? [{ title: 'marks', fields: [
-      ...(line ? [...(geometry?.step ? [] : [toggle('smooth')]), toggle('dashed'), number('lineWidth', 1, 6), toggle('points')] : []),
-      ...(['lines', 'scatterFit'].includes(type) ? [number('lineWidth', 1, 6)] : []),
-      ...(type === 'lines' ? [] : [number('pointSize', 1, 18)])] }] : []),
+    ...(markFields.length ? [{ title: 'marks', fields: markFields }] : []),
     ...(geometry?.series === 'bar' ? [{ title: 'barAppearance', fields: [number('barMaxWidth', 1, 160), number('barCornerRadius', 0, 24)] }] : []),
     ...(['pie', 'donut', 'rose'].includes(type) ? [{ title: 'pieAppearance', fields: [
       number('pieRadius', 30, 90), ...(type === 'donut' ? [number('donutHole', 15, 75), ...(props.fields ? [toggle('donutTotal')] : [])] : []),

@@ -9,6 +9,7 @@ interface ChartDataSpec {
   series?: string
   raw?: boolean
   fields?: readonly string[]
+  timeFields?: readonly string[]
   parallel?: boolean
   map?: boolean
 }
@@ -49,6 +50,18 @@ const specs: Partial<Record<QueryChartType, ChartDataSpec>> = {
   frequencyPolygon: { raw: true, fields: ['value'] },
   targetComparison: { category: 'category', raw: true, fields: ['actualMeasure', 'targetMeasure'] },
   rankTrend: { category: 'category', series: 'group' },
+  tukeyBox: { category: 'category', raw: true, fields: ['value'] },
+  violinPlot: { category: 'category', raw: true, fields: ['value'] },
+  ridgePlot: { category: 'category', raw: true, fields: ['value'] },
+  quantileComparison: { raw: true, fields: ['bubbleX', 'bubbleY'] },
+  percentileProfile: { raw: true, fields: ['value'] },
+  lorenzCurve: { raw: true, fields: ['value'] },
+  ganttTimeline: { category: 'category', raw: true, fields: ['intervalStart', 'intervalEnd'], timeFields: ['intervalStart', 'intervalEnd'] },
+  signedShareBar: { category: 'category', series: 'group' },
+  quadrantScatter: { raw: true, fields: ['bubbleX', 'bubbleY'] },
+  lagScatter: { raw: true, fields: ['value'] },
+  indexTrend: { category: 'category', series: 'group' },
+  movingAverage: { category: 'category', series: 'group' },
   gauge: {},
 }
 
@@ -91,7 +104,7 @@ export function chartDataSpec(type: QueryChartType): ChartDataSpec | undefined {
 }
 
 export function requiresChartSeries(type: QueryChartType): boolean {
-  return ['heatmap', 'graph', 'sankey', 'themeRiver', 'rankTrend'].includes(type)
+  return ['heatmap', 'graph', 'sankey', 'themeRiver', 'rankTrend', 'signedShareBar'].includes(type)
 }
 
 const fieldAliases: Record<string, string[]> = {
@@ -118,7 +131,7 @@ export function suggestChartFields(type: QueryChartType, numericFields: string[]
     const field = numericFields.find(name => fieldAliases[key]?.includes(normalized(name)))
     if (field) chartFields[key] = field
   }
-  if (['bubble', 'dumbbell', 'rangeBand', 'dualAxis', 'mirrorBar', 'scatterFit', 'targetComparison'].includes(type)) {
+  if (['bubble', 'dumbbell', 'rangeBand', 'dualAxis', 'mirrorBar', 'scatterFit', 'targetComparison', 'quantileComparison', 'quadrantScatter'].includes(type)) {
     const available = numericFields.filter(field => !Object.values(chartFields).includes(field))
     for (const key of spec.fields) if (!chartFields[key] && available.length) chartFields[key] = available.shift()!
   }

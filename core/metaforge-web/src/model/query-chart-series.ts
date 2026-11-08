@@ -1,6 +1,7 @@
 import type { CustomSeriesRenderItem, EChartsOption } from 'echarts'
 import { chartDataSpec, geoJsonLimit, requiresChartSeries } from './query-chart-data'
 import { analyticalChartOption, type ChartText } from './query-chart-analysis'
+import { distributionChartOption } from './query-chart-distributions'
 import { aggregateQueryChart, type QueryChartOptions, type QueryChartPoint, type QueryChartRow } from './query-chart'
 
 type Aggregated = ReturnType<typeof aggregateQueryChart>
@@ -142,8 +143,15 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
   const bound = Math.max(1, ...points.map(point => point.value))
 
   switch (options.type) {
+    case 'tukeyBox': case 'violinPlot': case 'ridgePlot': case 'quantileComparison': case 'percentileProfile':
+    case 'lorenzCurve': case 'ganttTimeline': case 'quadrantScatter': case 'lagScatter': {
+      const option = distributionChartOption(options, raw, fields, id, text)
+      if (option === 'nonnegative') return issue('nonnegative')
+      return option ? done(option) : issue('noPoints')
+    }
     case 'pareto': case 'cumulativeLine': case 'deviationBar': case 'mirrorBar': case 'stripPlot': case 'ecdf':
-    case 'scatterFit': case 'calendarMatrix': case 'radialBar': case 'targetComparison': case 'rankTrend': {
+    case 'scatterFit': case 'calendarMatrix': case 'radialBar': case 'targetComparison': case 'rankTrend':
+    case 'indexTrend': case 'movingAverage': case 'signedShareBar': {
       const option = analyticalChartOption(options, result, fields, id, text)
       if (option === 'nonnegative') return issue('nonnegative')
       return option ? done(option) : issue('noPoints')
