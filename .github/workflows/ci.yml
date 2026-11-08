@@ -92,11 +92,22 @@ jobs:
       # The root pom has no Surefire pin; Maven's default (2.12.4) cannot run JUnit 5 and silently
       # executes zero tests, so Surefire is invoked explicitly. The changed modules and their
       # dependents are tested; modules they only depend on were not touched.
+      # The e2e modules pull a dozen engine images across the suite; without reclaiming
+      # them the runner's disk runs out mid-run and the job dies without any error in
+      # the log. The background loop removes images no running container uses anymore.
       - name: Run the JUnit 5 suite
-        run: >
+        run: |
+          (while true; do
+             sleep 300
+             sudo docker image prune -af --filter "until=10m" >/dev/null 2>&1 || true
+           done) &
+          pruner=$!
           ./mvnw $MAVEN_FLAGS org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
           -Dcheckstyle.skip -Dspotbugs.skip -DargLine=-Xmx1g
           ${PROJECTS:+-pl "$PROJECTS" -amd}
+          status=$?
+          kill $pruner 2>/dev/null || true
+          exit $status
 
   # Runs the metadata persistence suite (changelog, entity mapping, filters, setup install) against
   # every database the setup wizard offers. Databases start in Testcontainers.
