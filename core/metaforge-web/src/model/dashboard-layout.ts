@@ -20,8 +20,10 @@ export const dashboardComparativeTools = ['metricCorrelation', 'metricQuadrants'
 export function dashboardComparativeTool(kind?: DashboardWidgetKind) { return dashboardComparativeTools.some(tool => tool === kind) }
 export const dashboardPlanningTools = ['taskBoard', 'planCalendar', 'dueAgenda', 'overdueAging', 'groupCompletion', 'onTimeCompletion'] as const
 export function dashboardPlanningTool(kind?: DashboardWidgetKind) { return dashboardPlanningTools.some(tool => tool === kind) }
+export const dashboardSpatialTools = ['geoPoints', 'geoGrid', 'geoTrack', 'geoBounds', 'geoHotspots', 'geoDistanceBands'] as const
+export function dashboardSpatialTool(kind?: DashboardWidgetKind) { return dashboardSpatialTools.some(tool => tool === kind) }
 export const dashboardAdvancedDataTools = ['metricTicker', 'metricComparison', 'metricTrend', 'bulletMetric', 'rankList', 'distributionList', 'statusGrid', 'recordCards', ...dashboardExtendedDataTools, ...dashboardMonitoringTools] as const
-const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools, ...dashboardAuditTools, ...dashboardTemporalTools, ...dashboardComparativeTools, ...dashboardPlanningTools] as const
+const dataDisplays = ['pivot', 'dataList', 'dataSummary', 'metricGrid', 'recordDetail', 'progressList', 'dataTags', 'dataTimeline', ...dashboardAdvancedDataTools, ...dashboardOperationDataTools, ...dashboardBusinessTools, ...dashboardRelationTools, ...dashboardAuditTools, ...dashboardTemporalTools, ...dashboardComparativeTools, ...dashboardPlanningTools, ...dashboardSpatialTools] as const
 export type DashboardDataTool = typeof dataDisplays[number]
 export const dashboardExtendedContentTools = ['markdown', 'codeBlock', 'imageCompare', 'iconLinks', 'stepGuide', 'worldClock'] as const
 export const dashboardAdvancedContentTools = ['imageCarousel', 'imageGallery', 'announcement', 'textTicker', 'tabsContent', 'accordion', 'quote', 'embed', 'actionButton', 'tagCloud', ...dashboardExtendedContentTools] as const
@@ -169,6 +171,21 @@ export interface DashboardPlanningOptions {
   horizonDays: number
   includeCompleted: boolean
 }
+export interface DashboardSpatialOptions {
+  latitudeField: string
+  longitudeField: string
+  groupField: string
+  gridDegrees: number
+  pointLimit: number
+  precision: number
+  west: number
+  east: number
+  south: number
+  north: number
+  referenceLat: number | null
+  referenceLon: number | null
+  distanceBands: string
+}
 export interface DashboardDecorationOptions { count: number; rotation: number; filled: boolean; opacity: number; animate: boolean }
 export const dashboardThresholdComparators = ['above', 'atLeast', 'below', 'atMost'] as const
 export interface DashboardOperationsOptions {
@@ -228,6 +245,7 @@ export interface DashboardWidget extends DashboardRect {
   temporalOptions?: DashboardTemporalOptions
   comparativeOptions?: DashboardComparativeOptions
   planningOptions?: DashboardPlanningOptions
+  spatialOptions?: DashboardSpatialOptions
   contentOptions?: DashboardContentOptions
   layoutOptions?: DashboardLayoutOptions
   decorationOptions?: DashboardDecorationOptions
@@ -347,7 +365,7 @@ export function dashboardWidget(id: string, kind: DashboardWidgetKind, name: str
   return {
     id, kind, name, description: '', x: 0, y: 0, w: 6, h: 4,
     text: '', image: '', url: '', target: 100, shape: 'rectangle', color: '', alignment: 'left', tone: 'info', clockDate: true,
-    refresh: 'saved', action: dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage' ? 'filter' : 'saved',
+    refresh: 'saved', action: dashboardSpatialTool(kind) || dashboardPlanningTool(kind) || dashboardComparativeTool(kind) || dashboardTemporalTool(kind) || dashboardRelationTool(kind) || dashboardAuditTool(kind) && kind !== 'dateCoverage' ? 'filter' : 'saved',
     field: '', operation: ['metricGrid', 'metricComparison', 'comparisonTable'].includes(kind) ? 'sum' : 'count',
     padding: [10, 12, 10, 12], corners: mode === 'wall' ? [0, 0, 0, 0] : [12, 12, 12, 12], titleSize: 14, background: '',
     border: !['spacer', 'divider', 'verticalDivider', 'sectionDivider'].includes(kind),
@@ -664,6 +682,27 @@ export function dashboardPlanningSettings(value?: unknown): DashboardPlanningOpt
     includeCompleted: raw.includeCompleted === true,
   }
 }
+export function dashboardSpatialSettings(value?: unknown): DashboardSpatialOptions {
+  const raw = record(value) ?? {}
+  function bounded(input: unknown, min: number, max: number) {
+    return typeof input === 'number' && Number.isFinite(input) ? Math.max(min, Math.min(max, input)) : null
+  }
+  return {
+    latitudeField: text(raw.latitudeField).slice(0, 500),
+    longitudeField: text(raw.longitudeField).slice(0, 500),
+    groupField: text(raw.groupField).slice(0, 500),
+    gridDegrees: bounded(raw.gridDegrees, .01, 60) ?? 1,
+    pointLimit: integer(raw.pointLimit, 500, 20, 2000),
+    precision: integer(raw.precision, 3, 0, 6),
+    west: bounded(raw.west, -180, 180) ?? -180,
+    east: bounded(raw.east, -180, 180) ?? 180,
+    south: bounded(raw.south, -90, 90) ?? -90,
+    north: bounded(raw.north, -90, 90) ?? 90,
+    referenceLat: bounded(raw.referenceLat, -90, 90),
+    referenceLon: bounded(raw.referenceLon, -180, 180),
+    distanceBands: text(raw.distanceBands, '1, 5, 10, 50, 100').slice(0, 400),
+  }
+}
 export function dashboardDecorationSettings(value?: unknown): DashboardDecorationOptions {
   const raw = record(value) ?? {}
   return { count: integer(raw.count, 6, 2, 24), rotation: integer(raw.rotation, 0, -180, 180), filled: raw.filled === true, animate: raw.animate !== false,
@@ -770,6 +809,7 @@ function parseBoard(value: unknown, mode: DashboardMode, translate?: WidgetTrans
       temporalOptions: dashboardTemporalTool(kind) ? dashboardTemporalSettings(item.temporalOptions) : undefined,
       comparativeOptions: dashboardComparativeTool(kind) ? dashboardComparativeSettings(item.comparativeOptions) : undefined,
       planningOptions: dashboardPlanningTool(kind) ? dashboardPlanningSettings(item.planningOptions) : undefined,
+      spatialOptions: dashboardSpatialTool(kind) ? dashboardSpatialSettings(item.spatialOptions) : undefined,
       contentOptions: record(item.contentOptions) ? dashboardContentSettings(item.contentOptions) : undefined,
       layoutOptions: record(item.layoutOptions) ? dashboardLayoutSettings(item.layoutOptions) : widget.layoutOptions,
       decorationOptions: record(item.decorationOptions) ? dashboardDecorationSettings(item.decorationOptions) : undefined,

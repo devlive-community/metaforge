@@ -83,7 +83,7 @@ import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import DashboardPanelHeader from './DashboardPanelHeader.vue'
 import DashboardLayers from './DashboardLayers.vue'
-import { Activity, ArrowDown, ArrowRight, AudioLines, Blend, CalendarClock, CalendarRange, ChartNoAxesCombined, ClipboardCheck, Clock, CloudRain, Columns2, Copy, Flower2, Frame, Gauge, Grid2x2, Heading, Image, Layers,
+import { Activity, ArrowDown, ArrowRight, AudioLines, Blend, CalendarClock, CalendarRange, ChartNoAxesCombined, ClipboardCheck, Clock, CloudRain, Columns2, Copy, Flower2, Frame, Gauge, Globe, Grid2x2, Heading, Image, Layers, MapPin,
   LayoutGrid, Link, List, ListOrdered, ListRestart, ListFilter, MessageSquare, Minus, MousePointer2, Network, PanelTop, PartyPopper, Plus, Search, Shapes, SlidersHorizontal, Snowflake, Sparkles, Square, SquareDashed, Star, TriangleAlert,
   Table2, Tag, Terminal, Timer, Type, Video, Waves } from '@lucide/vue'
 import { queryChartTypes, type QueryChartType } from '@/model/query-chart'
@@ -160,6 +160,10 @@ const toolGroups = [
   { title: 'planningTools', icon: CalendarRange, items: [
     { kind: 'taskBoard', icon: Columns2 }, { kind: 'planCalendar', icon: CalendarRange }, { kind: 'dueAgenda', icon: CalendarClock },
     { kind: 'overdueAging', icon: Clock }, { kind: 'groupCompletion', icon: Gauge }, { kind: 'onTimeCompletion', icon: ClipboardCheck },
+  ] },
+  { title: 'spatialTools', icon: Globe, items: [
+    { kind: 'geoPoints', icon: MapPin }, { kind: 'geoGrid', icon: Grid2x2 }, { kind: 'geoTrack', icon: Activity },
+    { kind: 'geoBounds', icon: Frame }, { kind: 'geoHotspots', icon: ListOrdered }, { kind: 'geoDistanceBands', icon: SlidersHorizontal },
   ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },
