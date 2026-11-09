@@ -12,7 +12,7 @@ config:
 - #### 服务器软件包
   利用 `.tar.gz` 包手动部署。查看 [安装 metaforge](/zh-CN/reference/get-started/install.html) 以获取完整的安装说明。
 
-  !btn[metaforge-server-2026.0.0-bin.tar.gz](https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-server/2026.0.0/metaforge-server-2026.0.0-bin.tar.gz)
+  !btn[metaforge-server-2026.0.0-bin.tar.gz](https://github.com/devlive-community/metaforge/releases/download/2026.0.0/metaforge-server-2026.0.0-bin.tar.gz)
 
 - #### 命令行客户端
   您可以使用交互式运行查询 [command line interface](/zh-CN/reference/clients/cli.html).

@@ -262,6 +262,10 @@
                         <descriptor>../../configure/assembly/server.xml</descriptor>
                     </descriptors>
                     <skipAssembly>false</skipAssembly>
+                    <!-- The bin distribution (lib, plugins and configure) ships through the
+                         GitHub release and the CDN; attaching it would upload ~100 MB again
+                         with the deploy to Maven Central. -->
+                    <attach>false</attach>
                 </configuration>
                 <executions>
                     <execution>
