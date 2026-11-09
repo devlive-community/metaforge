@@ -27,4 +27,7 @@ public class Response
     private Time processor;
     private String content;
     private Pagination pagination;
+    // 结果超过 RuntimeConfigure.maxRows 时为 true，只返回了前 maxRows 行
+    // True when the result had more rows than RuntimeConfigure.maxRows and only the first maxRows came back
+    private Boolean truncated;
 }

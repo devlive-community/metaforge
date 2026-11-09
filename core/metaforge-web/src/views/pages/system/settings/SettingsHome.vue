@@ -238,9 +238,9 @@ const siteRef = ref()
 const fs = ref(defaultFsSettings())
 
 // Runtime settings: the executors and the dataset target, each its own row of metaforge_configure.
-interface RuntimeItem { category: 'EXECUTOR' | 'DATASET'; name: string }
+interface RuntimeItem { category: 'EXECUTOR' | 'DATASET' | 'QUERY'; name: string }
 interface RuntimeEntry { item: RuntimeItem; schema: RuntimeField[]; values: Record<string, string>; saved: Record<string, string> }
-const RUNTIME_CATEGORIES = ['EXECUTOR', 'DATASET'] as const
+const RUNTIME_CATEGORIES = ['EXECUTOR', 'DATASET', 'QUERY'] as const
 const runtimeItems = ref<RuntimeItem[]>([])
 const runtimeEntries = ref<Record<string, RuntimeEntry>>({})
 const runtimeSelected = ref('')

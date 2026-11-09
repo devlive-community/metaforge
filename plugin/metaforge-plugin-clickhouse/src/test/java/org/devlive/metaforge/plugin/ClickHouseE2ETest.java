@@ -1,7 +1,9 @@
 package org.devlive.metaforge.plugin;
 
 import org.devlive.metaforge.spi.PluginService;
+import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
+import org.devlive.metaforge.spi.sql.SqlLimit;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -66,6 +68,17 @@ public class ClickHouseE2ETest
             Assert.assertTrue(column(ok("databases", service.getDatabases(configure)), "object_name").contains("e2e"));
 
             ok("create table", service.execute(configure, "CREATE TABLE e2e.items (id UInt32, name String) ENGINE = MergeTree ORDER BY id"));
+            // The query page's row cap: LIMIT in the SQL plus the driver's row limit, cut and marked as truncated
+            configure.setMaxRows(10);
+            String capped = SqlLimit.append("SELECT number FROM numbers(50)", 11).orElseThrow();
+            Response cut = ok("capped select", service.execute(configure, capped));
+            Assert.assertEquals(10, cut.getColumns().size());
+            Assert.assertEquals(Boolean.TRUE, cut.getTruncated());
+            Response driverCut = ok("driver capped select", service.execute(configure, "SELECT number FROM numbers(50)"));
+            Assert.assertEquals(10, driverCut.getColumns().size());
+            Assert.assertEquals(Boolean.TRUE, driverCut.getTruncated());
+            configure.setMaxRows(0);
+
             List<String> objects = column(ok("tables", service.getTables(configure, "e2e")), "object_name");
             Assert.assertTrue(objects.contains("items"));
             // Built-in functions are not objects of the database

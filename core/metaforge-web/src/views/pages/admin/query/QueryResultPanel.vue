@@ -78,6 +78,11 @@
 
       <template v-if="activeTab === 'results'">
         <div v-if="hasRows" class="flex h-full min-h-0 flex-col">
+          <!-- The server stopped at its row limit: only the first rows came back. -->
+          <div v-if="truncated" class="flex shrink-0 items-center gap-2 border-b border-line bg-warning/10 px-3 py-1.5 text-xs text-content-secondary">
+            <CircleAlert :size="14" class="shrink-0 text-warning"/>
+            <span>{{ $t('query.result.truncated', { count: rowCount }) }}</span>
+          </div>
           <MfTable fill resizable :columns="tableColumns" :data-source="pagedRows" row-key="__row" density="compact" :bordered="false"
                    :empty-text="$t('query.result.noMatch')" @resize="onResize" @resize-end="onResize">
             <template v-for="column in tableColumns" :key="column.key" #[`cell-${column.key}`]="{ record }">
@@ -210,6 +215,7 @@ const failureMessage = computed(() => (!isSuccess.value && props.response?.messa
 const headers = computed<string[]>(() => (isSuccess.value ? props.response?.data?.headers ?? [] : []))
 const rows = computed<any[]>(() => (isSuccess.value ? props.response?.data?.columns ?? [] : []))
 const rowCount = computed(() => rows.value.length)
+const truncated = computed(() => isSuccess.value && props.response?.data?.truncated === true)
 const hasRows = computed(() => isSuccess.value && rowCount.value > 0)
 const exportable = computed(() => hasResponse.value && isSuccess.value)
 const canAddDataset = computed(() => isSuccess.value && props.response?.data?.isSuccessful !== false

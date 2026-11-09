@@ -11,6 +11,7 @@ import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.plugin.PluginType;
+import org.devlive.metaforge.service.configure.QuerySchema;
 import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.initializer.FsConfigure;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
@@ -263,6 +264,12 @@ public class SystemSettingServiceImpl
             catch (RuntimeException e) {
                 return CommonResponse.failure("Connecting to the dataset target failed: " + e.getMessage());
             }
+        }
+        if (RuntimeConfigureService.CATEGORY_QUERY.equals(category)) {
+            String maxRows = given.getOrDefault(QuerySchema.MAX_ROWS, "");
+            return QuerySchema.parse(maxRows) == null
+                    ? CommonResponse.failure("The row limit must be a whole number from 1 to " + QuerySchema.LIMIT_MAX_ROWS)
+                    : CommonResponse.success(name);
         }
         return CommonResponse.failure("Unknown runtime settings " + category);
     }

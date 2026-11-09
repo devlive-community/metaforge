@@ -8,6 +8,7 @@ import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginType;
 import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
 import org.devlive.metaforge.service.configure.DatasetTargetSchema;
+import org.devlive.metaforge.service.configure.QuerySchema;
 import org.devlive.metaforge.service.entity.ConfigureEntity;
 import org.devlive.metaforge.service.initializer.DataSetConfigure;
 import org.devlive.metaforge.service.service.RuntimeConfigureService;
@@ -110,6 +111,9 @@ public class RuntimeConfigureController
         }
         if (RuntimeConfigureService.CATEGORY_DATASET.equals(category) && DatasetTargetSchema.NAME.equals(name)) {
             return DatasetTargetSchema.fields();
+        }
+        if (RuntimeConfigureService.CATEGORY_QUERY.equals(category) && QuerySchema.NAME.equals(name)) {
+            return QuerySchema.fields();
         }
         return Collections.emptyList();
     }

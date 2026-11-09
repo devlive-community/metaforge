@@ -20,6 +20,7 @@ public interface RuntimeConfigureService
 {
     String CATEGORY_EXECUTOR = "EXECUTOR";
     String CATEGORY_DATASET = "DATASET";
+    String CATEGORY_QUERY = "QUERY";
 
     /**
      * 合并 DB 行与 schema 默认值，返回该 (category, name) 的完整 effective 配置。

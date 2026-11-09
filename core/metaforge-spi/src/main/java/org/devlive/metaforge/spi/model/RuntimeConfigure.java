@@ -56,6 +56,10 @@ public class RuntimeConfigure
     private boolean usedConfig;
     private String id;
 
+    // 结果最多返回的行数，0 表示不限制（查询页用来防止全表结果撑爆内存）
+    // Most rows a query returns, 0 for no limit (keeps a full-table SELECT on the query page bounded)
+    private int maxRows;
+
     // 自定义 url
     // Custom url
     @Builder.Default
