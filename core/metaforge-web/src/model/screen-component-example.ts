@@ -56,7 +56,7 @@ function chartExample(kind: DashboardWidgetKind, now: number): QueryChartConfigu
     'dualAxis', 'dumbbell', 'rangeBand', 'mirrorBar', 'targetComparison'].includes(type)
   const series = noSeries ? '' : ['graph', 'sankey', 'tree', 'treemap', 'sunburst', 'heatmap', 'table'].includes(type) ? 'Category' : 'Region'
   const headers = type === 'table' ? ['Period', 'Region', 'Value', 'Status'] : fields
-  let raw = ['candlestick', 'dumbbell'].includes(type) ? rows.filter((_, index) => index % 3 === 0) : rows
+  let raw = type === 'table' ? rows.slice(0, 5) : ['candlestick', 'dumbbell'].includes(type) ? rows.filter((_, index) => index % 3 === 0) : rows
   if (kind === 'yearOverYearTrend') raw = [...raw, ...rows.map(row => {
     const date = new Date(String(row.Date))
     date.setUTCFullYear(date.getUTCFullYear() - 1)

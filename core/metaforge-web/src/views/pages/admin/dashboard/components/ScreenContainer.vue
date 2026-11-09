@@ -155,7 +155,7 @@ const RenderChild = defineComponent({
       style: { ...dashboardCardStyle(child), ...(!props.editable ? dashboardMotionStyle(child) : {}) } }, [
       heading,
       child.reportCode && props.failedCodes.has(child.reportCode) ? h('p', { class: 'mb-1 text-xs text-warning' }, t('queryChart.refreshError')) : null,
-      h('div', { class: 'min-h-0 min-w-0 flex-1', inert: props.editable && !dashboardContainerTool(child.kind) }, [content]),
+      h('div', { class: 'min-h-0 min-w-0 flex-1 overflow-auto', inert: props.editable && !dashboardContainerTool(child.kind) }, [content]),
     ])
   },
 })

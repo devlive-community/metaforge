@@ -1,21 +1,30 @@
 import { computed, onScopeDispose, ref, watch, type Ref } from 'vue'
 import type { ECharts, EChartsOption, registerMap } from 'echarts'
 import { loadECharts } from '@/utils/echarts'
+import { fitChartToCard } from '@/model/chart-card-layout'
 
 export interface EChartState {
   option: EChartsOption
   map?: { name: string; source: Parameters<typeof registerMap>[1] }
   loading?: boolean
+  fit?: boolean
 }
 
 /** Wait for the engine and the first painted frame, without flashing on ordinary option edits. */
 export function useEChart(host: Ref<HTMLElement | undefined>, state: EChartState,
-  events: { point: (data: unknown, name?: string) => void; error: () => void }) {
+  events: { point: (data: unknown, name?: string) => void; error: () => void }, shouldFit = () => !!state.fit) {
   const rendering = ref(true), failed = ref(false)
   const pending = computed(() => !!state.loading || rendering.value)
   let engine: Awaited<ReturnType<typeof loadECharts>> | undefined
   let chart: ECharts | undefined, observer: ResizeObserver | undefined, frame: number | undefined
   let version = 0, disposed = false, needsRender = true
+  let lastWidth = 0, lastHeight = 0
+
+  function chartOption(element: HTMLElement) {
+    lastWidth = element.clientWidth
+    lastHeight = element.clientHeight
+    return shouldFit() ? fitChartToCard(state.option, lastWidth, lastHeight, getComputedStyle(element).color) : state.option
+  }
 
   function cancelPaint() { if (frame !== undefined) cancelAnimationFrame(frame); frame = undefined }
   function discard() { version++; cancelPaint(); chart?.dispose(); chart = undefined }
@@ -47,7 +56,7 @@ export function useEChart(host: Ref<HTMLElement | undefined>, state: EChartState
         chart = engine.init(element)
         chart.on('click', event => events.point(event.data, event.name))
       }
-      chart.setOption(state.option, { notMerge: true })
+      chart.setOption(chartOption(element), { notMerge: true })
       needsRender = false
       if (rendering.value) painted(ticket)
     } catch {
@@ -60,13 +69,25 @@ export function useEChart(host: Ref<HTMLElement | undefined>, state: EChartState
     if (!element) return
     observer = new ResizeObserver(() => {
       if (!element.clientWidth || !element.clientHeight) return
-      if (chart) chart.resize()
-      if (!chart || needsRender) void render()
+      if (!chart || needsRender) { void render(); return }
+      if (lastWidth === element.clientWidth && lastHeight === element.clientHeight) return
+      try {
+        chart.resize()
+        if (shouldFit()) {
+          // Merge the layout without clearing legend selection or the active zoom window.
+          chart.setOption(chartOption(element))
+        } else {
+          lastWidth = element.clientWidth
+          lastHeight = element.clientHeight
+        }
+      } catch {
+        void render()
+      }
     })
     observer.observe(element)
     void render()
   }, { immediate: true, flush: 'post' })
-  watch([() => state.option, () => state.map, () => state.loading], () => { void render() }, { flush: 'post' })
+  watch([() => state.option, () => state.map, () => state.loading, () => state.fit], () => { void render() }, { flush: 'post' })
   onScopeDispose(() => { disposed = true; observer?.disconnect(); discard() })
 
   function exportImage(name: string, type: 'png' | 'svg') {

@@ -7,15 +7,17 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { inject, ref } from 'vue'
 import { useEChart, type EChartState } from '@/composables/useEChart'
+import { chartCardLayoutContext } from '@/composables/chartCardLayoutContext'
 import ChartLoading from './ChartLoading.vue'
 import ChartError from './ChartError.vue'
-const props = defineProps<EChartState>()
+const props = withDefaults(defineProps<EChartState>(), { fit: undefined })
 const emit = defineEmits<{ point: [data: unknown, name?: string]; error: [] }>()
 const host = ref<HTMLElement>()
+const inheritedFit = inject(chartCardLayoutContext, false)
 const { pending, failed, exportImage } = useEChart(host, props, {
   point: (data, name) => emit('point', data, name), error: () => emit('error'),
-})
+}, () => props.fit ?? inheritedFit)
 defineExpose({ exportImage, loading: pending })
 </script>

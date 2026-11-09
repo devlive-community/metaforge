@@ -1,5 +1,5 @@
 <template>
-  <EChart ref="canvas" class="h-full w-full" :option="spec" :map="prepared?.map" @point="selectPoint" @error="emit('error')"/>
+  <EChart ref="canvas" class="h-full w-full" :option="spec" :map="prepared?.map" fit @point="selectPoint" @error="emit('error')"/>
 </template>
 
 <script setup lang="ts">

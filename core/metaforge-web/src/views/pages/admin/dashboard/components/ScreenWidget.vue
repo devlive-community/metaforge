@@ -104,8 +104,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, defineAsyncComponent } from 'vue'
+import { computed, defineAsyncComponent, provide } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { chartCardLayoutContext } from '@/composables/chartCardLayoutContext'
 import { ExternalLink } from '@lucide/vue'
 import DigitalClock from '@/views/components/content/DigitalClock.vue'
 import ReportDataDisplay from '@/views/components/visual/analysis/ReportDataDisplay.vue'
@@ -150,6 +151,7 @@ const VisualView = defineAsyncComponent({ loader: () => import('@/views/componen
 
 const props = defineProps<{ widget: DashboardWidget; report?: ReportModel; snapshot?: QueryChartConfiguration; refreshed?: QueryChartRow[]; selection?: ReadonlySet<QueryChartRow>; days: number; wall?: boolean; editable?: boolean; loading?: boolean }>()
 const emit = defineEmits<{ filter: [rows: QueryChartRow[]] }>()
+provide(chartCardLayoutContext, true)
 const { locale } = useI18n()
 const snapshot = computed(() => props.snapshot)
 const source = computed(() => props.refreshed ?? snapshot.value?.columns ?? [])

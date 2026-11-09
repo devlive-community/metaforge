@@ -6,9 +6,13 @@ import ts from 'typescript'
 const uri = code => `data:text/javascript;base64,${Buffer.from(code).toString('base64')}`
 const loaderUri = uri('export const hooks={};export const loadECharts=()=>hooks.load()')
 const hooks = (await import(loaderUri)).hooks
+const compilerOptions = { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext }
+const layoutSource = await readFile(new URL('../src/model/chart-card-layout.ts', import.meta.url), 'utf8')
+const layoutUri = uri(ts.transpileModule(layoutSource, { compilerOptions }).outputText)
 let source = await readFile(new URL('../src/composables/useEChart.ts', import.meta.url), 'utf8')
-let { outputText } = ts.transpileModule(source, { compilerOptions: { target: ts.ScriptTarget.ES2020, module: ts.ModuleKind.ESNext } })
+let { outputText } = ts.transpileModule(source, { compilerOptions })
 outputText = outputText.replaceAll("from 'vue'", `from '${import.meta.resolve('vue')}'`).replaceAll("from '@/utils/echarts'", `from '${loaderUri}'`)
+  .replaceAll("from '@/model/chart-card-layout'", `from '${layoutUri}'`)
 const { useEChart } = await import(uri(outputText))
 const flush = async () => { for (let i = 0; i < 10; i++) await Promise.resolve() }
 function environment() {

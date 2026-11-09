@@ -28,8 +28,8 @@ function place() {
   const viewportHeight = document.documentElement.clientHeight
   const right = viewportWidth - owner.right - gap - gutter
   const beside = right >= 230
-  const width = Math.min(348, beside ? right : viewportWidth - gutter * 2)
-  const height = Math.min(258, viewportHeight - gutter * 2)
+  const width = Math.min(398, beside ? right : viewportWidth - gutter * 2)
+  const height = Math.min(322, viewportHeight - gutter * 2)
   const left = beside ? owner.right + gap : bounds.right - width
   const top = beside ? bounds.top + (bounds.height - height) / 2
     : bounds.bottom + gap + height <= viewportHeight - gutter ? bounds.bottom + gap : bounds.top - height - gap

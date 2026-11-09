@@ -54,7 +54,7 @@
           </div>
           <p v-if="widget.showTitle && widget.description" class="mb-1 truncate text-xs text-content-tertiary" :title="widget.description">{{ widget.description }}</p>
           <div v-if="widget.reportCode && data.failed.value.has(widget.reportCode)" class="mb-1 shrink-0 text-xs text-warning">{{ $t('queryChart.refreshError') }}</div>
-          <div class="min-h-0 min-w-0 flex-1">
+          <div class="min-h-0 min-w-0 flex-1 overflow-auto">
             <ScreenContainer v-if="dashboardContainerTool(widget.kind)" :widget="widget" :widgets="board.widgets" :reports="reports"
                                     :days="days" :wall="wall" :editable="editable" :selected-id="selectedId" :refreshed-for="refreshed" :selection-for="selectionFor"
                                     :failed-codes="data.failed.value" :pending-codes="data.pending.value" @filter="applyFilter" @expand="expanded = $event"/>
