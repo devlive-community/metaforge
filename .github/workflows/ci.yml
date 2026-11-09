@@ -119,9 +119,10 @@ jobs:
              sudo docker image prune -af --filter "until=10m" >/dev/null 2>&1 || true
            done) >/dev/null 2>&1 < /dev/null &
           pruner=$!
-          ./mvnw $MAVEN_FLAGS org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
-          -Dcheckstyle.skip -Dspotbugs.skip -DargLine=-Xmx1g
-          ${PROJECTS:+-pl "$PROJECTS" -amd}
+          # One line on purpose: inside a block scalar every extra line is a
+          # separate command, and a wrapped "-Dcheckstyle.skip" line makes the
+          # step fail with exit 127 even after a green Maven run.
+          ./mvnw $MAVEN_FLAGS org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test -Dcheckstyle.skip -Dspotbugs.skip -DargLine=-Xmx1g ${PROJECTS:+-pl "$PROJECTS" -amd}
           status=$?
           kill $pruner 2>/dev/null || true
           wait $pruner 2>/dev/null || true
