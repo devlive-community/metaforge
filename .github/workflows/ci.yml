@@ -92,14 +92,11 @@ jobs:
       # The root pom has no Surefire pin; Maven's default (2.12.4) cannot run JUnit 5 and silently
       # executes zero tests, so Surefire is invoked explicitly. The changed modules and their
       # dependents are tested; modules they only depend on were not touched.
-      # The e2e modules pull a dozen engine images across the suite; without reclaiming
-      # them the runner's disk runs out mid-run and the job dies without any error in
-      # the log. The background loop removes images no running container uses anymore.
       # The marathon peaks well past the 7 GB runner RAM once several engine
       # containers (mongo, cassandra, scylladb, ...) overlap with surefire:
       # the kernel OOM killer starts reaping containers (exit 137) and the
       # surefire JVM itself, which shows up as random mid-suite deaths.
-      # Swap absorbs those peaks; the runner has ~90 GB of free disk.
+      # Swap absorbs those peaks; the runner starts the suite with ~90 GB free.
       - name: Enable swap
         run: |
           sudo swapoff -a || true
@@ -114,9 +111,17 @@ jobs:
           # The pruner loop must fully detach from the step's stdout/stderr: a
           # background child still holding the pipe makes the runner finish the
           # step with exit code 127 even after a successful Maven run.
+          # Unused engine images are only reclaimed when the disk actually runs
+          # low: Testcontainers records an image as locally available and never
+          # re-checks it, so pruning one mid-suite makes the next container for
+          # it fail with "No such image" even though pulling would work.
           (while true; do
              sleep 300
-             sudo docker image prune -af --filter "until=10m" >/dev/null 2>&1 || true
+             free=$(df -BG --output=avail / | tail -1 | tr -dc 0-9)
+             if [ "$free" -lt 35 ]; then
+               sudo docker image prune -af --filter "until=10m" >/dev/null 2>&1 || true
+             fi
+             sudo docker image prune -f >/dev/null 2>&1 || true
            done) >/dev/null 2>&1 < /dev/null &
           pruner=$!
           # One line on purpose: inside a block scalar every extra line is a
