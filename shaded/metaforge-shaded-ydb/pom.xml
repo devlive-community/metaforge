@@ -18,6 +18,9 @@
     <properties>
         <ydb.version>1.45.6</ydb.version>
         <metaforge.shade.packageName>org.devlive.metaforge.ydb</metaforge.shade.packageName>
+        <!-- The shade plugin already attaches this module's sources jar, so the
+             release profile must not attach a second one with the same classifier. -->
+        <maven.source.skip>true</maven.source.skip>
     </properties>
 
     <dependencies>
