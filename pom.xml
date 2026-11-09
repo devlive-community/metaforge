@@ -740,6 +740,18 @@
                         </execution>
                     </executions>
                 </plugin>
+                <!-- The fat store archives (2.5 GB across the plugins) ship through the CDN;
+                     attaching them to the deploy blew past Maven Central's 1 GB bundle
+                     upload limit with a 413. Modules that need an attached assembly opt in
+                     explicitly (the server distribution is attached nowhere either). -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>${assembly-plugin.version}</version>
+                    <configuration>
+                        <attach>false</attach>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>

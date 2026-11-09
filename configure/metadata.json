@@ -32,10 +32,9 @@
         "export",
         "erDiagram"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mysql/2026.1.0/metaforge-plugin-mysql-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mysql-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mysql/2026.1.0/metaforge-plugin-mysql-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mysql-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mysql-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -58,10 +57,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse/2026.1.0/metaforge-plugin-clickhouse-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-clickhouse-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse/2026.1.0/metaforge-plugin-clickhouse-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-clickhouse-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-clickhouse-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -84,10 +82,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-influxdb/2026.1.0/metaforge-plugin-influxdb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-influxdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-influxdb/2026.1.0/metaforge-plugin-influxdb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-influxdb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-influxdb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -110,10 +107,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-solr/2026.1.0/metaforge-plugin-solr-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-solr-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-solr/2026.1.0/metaforge-plugin-solr-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-solr-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-solr-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -136,10 +132,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb/2026.1.0/metaforge-plugin-cratedb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-cratedb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb/2026.1.0/metaforge-plugin-cratedb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-cratedb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-cratedb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -160,10 +155,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-zookeeper/2026.1.0/metaforge-plugin-zookeeper-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-zookeeper-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-zookeeper/2026.1.0/metaforge-plugin-zookeeper-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-zookeeper-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-zookeeper-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -184,10 +178,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kafka/2026.1.0/metaforge-plugin-kafka-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kafka-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kafka/2026.1.0/metaforge-plugin-kafka-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kafka-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kafka-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -210,10 +203,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2/2026.1.0/metaforge-plugin-h2-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-h2-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2/2026.1.0/metaforge-plugin-h2-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-h2-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-h2-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -236,10 +228,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-db2/2026.1.0/metaforge-plugin-db2-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-db2-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-db2/2026.1.0/metaforge-plugin-db2-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-db2-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-db2-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -262,10 +253,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dm/2026.1.0/metaforge-plugin-dm-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dm-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dm/2026.1.0/metaforge-plugin-dm-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dm-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dm-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -286,10 +276,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hdfs/2026.1.0/metaforge-plugin-hdfs-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hdfs-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hdfs/2026.1.0/metaforge-plugin-hdfs-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hdfs-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hdfs-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -310,10 +299,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-alioss/2026.1.0/metaforge-plugin-alioss-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-alioss-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-alioss/2026.1.0/metaforge-plugin-alioss-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-alioss-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-alioss-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -336,10 +324,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dremio/2026.1.0/metaforge-plugin-dremio-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dremio-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dremio/2026.1.0/metaforge-plugin-dremio-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dremio-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dremio-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -362,10 +349,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-druid/2026.1.0/metaforge-plugin-druid-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-druid-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-druid/2026.1.0/metaforge-plugin-druid-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-druid-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-druid-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -388,10 +374,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-duckdb/2026.1.0/metaforge-plugin-duckdb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-duckdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-duckdb/2026.1.0/metaforge-plugin-duckdb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-duckdb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-duckdb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -414,10 +399,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-pinot/2026.1.0/metaforge-plugin-pinot-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-pinot-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-pinot/2026.1.0/metaforge-plugin-pinot-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-pinot-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-pinot-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -438,10 +422,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cassandra/2026.1.0/metaforge-plugin-cassandra-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-cassandra-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cassandra/2026.1.0/metaforge-plugin-cassandra-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-cassandra-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-cassandra-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -470,10 +453,9 @@
         "export",
         "erDiagram"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-matrixone/2026.1.0/metaforge-plugin-matrixone-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-matrixone-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-matrixone/2026.1.0/metaforge-plugin-matrixone-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-matrixone-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-matrixone-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -494,10 +476,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-scylladb/2026.1.0/metaforge-plugin-scylladb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-scylladb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-scylladb/2026.1.0/metaforge-plugin-scylladb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-scylladb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-scylladb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -520,10 +501,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-paradedb/2026.1.0/metaforge-plugin-paradedb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-paradedb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-paradedb/2026.1.0/metaforge-plugin-paradedb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-paradedb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-paradedb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -546,10 +526,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hive-2x/2026.1.0/metaforge-plugin-hive-2x-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hive-2x-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hive-2x/2026.1.0/metaforge-plugin-hive-2x-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hive-2x-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hive-2x-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -572,10 +551,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kyuubi/2026.1.0/metaforge-plugin-kyuubi-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kyuubi-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kyuubi/2026.1.0/metaforge-plugin-kyuubi-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kyuubi-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kyuubi-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -598,10 +576,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ignite/2026.1.0/metaforge-plugin-ignite-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ignite-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ignite/2026.1.0/metaforge-plugin-ignite-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ignite-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ignite-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -624,10 +601,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-impala/2026.1.0/metaforge-plugin-impala-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-impala-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-impala/2026.1.0/metaforge-plugin-impala-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-impala-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-impala-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -650,10 +626,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kylin/2026.1.0/metaforge-plugin-kylin-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kylin-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kylin/2026.1.0/metaforge-plugin-kylin-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kylin-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kylin-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -676,10 +651,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-timescale/2026.1.0/metaforge-plugin-timescale-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-timescale-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-timescale/2026.1.0/metaforge-plugin-timescale-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-timescale-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-timescale-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -702,10 +676,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-iotdb/2026.1.0/metaforge-plugin-iotdb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-iotdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-iotdb/2026.1.0/metaforge-plugin-iotdb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-iotdb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-iotdb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -728,10 +701,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-monetdb/2026.1.0/metaforge-plugin-monetdb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-monetdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-monetdb/2026.1.0/metaforge-plugin-monetdb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-monetdb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-monetdb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -754,10 +726,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ydb/2026.1.0/metaforge-plugin-ydb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ydb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ydb/2026.1.0/metaforge-plugin-ydb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ydb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ydb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -778,10 +749,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-neo4j/2026.1.0/metaforge-plugin-neo4j-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-neo4j-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-neo4j/2026.1.0/metaforge-plugin-neo4j-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-neo4j-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-neo4j-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -804,10 +774,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oceanbase/2026.1.0/metaforge-plugin-oceanbase-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-oceanbase-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oceanbase/2026.1.0/metaforge-plugin-oceanbase-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-oceanbase-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-oceanbase-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -830,10 +799,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oracle/2026.1.0/metaforge-plugin-oracle-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-oracle-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oracle/2026.1.0/metaforge-plugin-oracle-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-oracle-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-oracle-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -856,10 +824,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-phoenix/2026.1.0/metaforge-plugin-phoenix-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-phoenix-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-phoenix/2026.1.0/metaforge-plugin-phoenix-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-phoenix-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-phoenix-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -882,10 +849,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-postgresql/2026.1.0/metaforge-plugin-postgresql-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-postgresql-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-postgresql/2026.1.0/metaforge-plugin-postgresql-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-postgresql-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-postgresql-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -908,10 +874,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-presto/2026.1.0/metaforge-plugin-presto-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-presto-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-presto/2026.1.0/metaforge-plugin-presto-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-presto-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-presto-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -934,10 +899,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-snowflake/2026.1.0/metaforge-plugin-snowflake-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-snowflake-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-snowflake/2026.1.0/metaforge-plugin-snowflake-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-snowflake-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-snowflake-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -960,10 +924,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-sqlserver/2026.1.0/metaforge-plugin-sqlserver-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-sqlserver-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-sqlserver/2026.1.0/metaforge-plugin-sqlserver-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-sqlserver-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-sqlserver-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -986,10 +949,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-tdengine/2026.1.0/metaforge-plugin-tdengine-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-tdengine-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-tdengine/2026.1.0/metaforge-plugin-tdengine-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-tdengine-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-tdengine-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1012,10 +974,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-trino/2026.1.0/metaforge-plugin-trino-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-trino-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-trino/2026.1.0/metaforge-plugin-trino-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-trino-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-trino-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1044,10 +1005,9 @@
         "export",
         "erDiagram"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-doris/2026.1.0/metaforge-plugin-doris-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-doris-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-doris/2026.1.0/metaforge-plugin-doris-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-doris-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-doris-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1076,10 +1036,9 @@
         "export",
         "erDiagram"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-starrocks/2026.1.0/metaforge-plugin-starrocks-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-starrocks-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-starrocks/2026.1.0/metaforge-plugin-starrocks-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-starrocks-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-starrocks-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1102,10 +1061,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hologres/2026.1.0/metaforge-plugin-hologres-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hologres-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hologres/2026.1.0/metaforge-plugin-hologres-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hologres-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hologres-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1126,10 +1084,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-greptimedb/2026.1.0/metaforge-plugin-greptimedb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-greptimedb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-greptimedb/2026.1.0/metaforge-plugin-greptimedb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-greptimedb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-greptimedb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1150,10 +1107,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-questdb/2026.1.0/metaforge-plugin-questdb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-questdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-questdb/2026.1.0/metaforge-plugin-questdb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-questdb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-questdb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1176,10 +1132,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2-tcp/2026.1.0/metaforge-plugin-h2-tcp-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-h2-tcp-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2-tcp/2026.1.0/metaforge-plugin-h2-tcp-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-h2-tcp-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-h2-tcp-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1200,10 +1155,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ceresdb/2026.1.0/metaforge-plugin-ceresdb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ceresdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ceresdb/2026.1.0/metaforge-plugin-ceresdb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ceresdb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ceresdb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1224,10 +1178,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.1.0/metaforge-plugin-redis-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-redis-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.1.0/metaforge-plugin-redis-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-redis-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-redis-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1250,10 +1203,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-elasticsearch-8x/2026.1.0/metaforge-plugin-elasticsearch-8x-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-elasticsearch-8x-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-elasticsearch-8x/2026.1.0/metaforge-plugin-elasticsearch-8x-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-elasticsearch-8x-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-elasticsearch-8x-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1272,10 +1224,9 @@
       "features": [
         "query"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-atlas/2026.1.0/metaforge-plugin-mongo-atlas-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mongo-atlas-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-atlas/2026.1.0/metaforge-plugin-mongo-atlas-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mongo-atlas-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mongo-atlas-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1296,10 +1247,9 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-community/2026.1.0/metaforge-plugin-mongo-community-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mongo-community-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-community/2026.1.0/metaforge-plugin-mongo-community-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mongo-community-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mongo-community-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1322,10 +1272,9 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dolphindb/2026.1.0/metaforge-plugin-dolphindb-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dolphindb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dolphindb/2026.1.0/metaforge-plugin-dolphindb-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dolphindb-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dolphindb-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1342,10 +1291,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-csv/2026.1.0/metaforge-convert-csv-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-csv-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-csv/2026.1.0/metaforge-convert-csv-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-csv-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-csv-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1362,10 +1310,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-txt/2026.1.0/metaforge-convert-txt-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-txt-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-txt/2026.1.0/metaforge-convert-txt-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-txt-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-txt-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1382,10 +1329,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-json/2026.1.0/metaforge-convert-json-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-json-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-json/2026.1.0/metaforge-convert-json-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-json-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-json-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1402,10 +1348,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-xml/2026.1.0/metaforge-convert-xml-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-xml-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-xml/2026.1.0/metaforge-convert-xml-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-xml-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-xml-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1422,10 +1367,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-none/2026.1.0/metaforge-convert-none-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-none-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-none/2026.1.0/metaforge-convert-none-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-none-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-none-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1442,10 +1386,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-metaforge/2026.1.0/metaforge-executor-metaforge-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/executor/metaforge-executor-metaforge-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-metaforge/2026.1.0/metaforge-executor-metaforge-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/executor/metaforge-executor-metaforge-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/executor/metaforge-executor-metaforge-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1462,10 +1405,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-seatunnel/2026.1.0/metaforge-executor-seatunnel-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/executor/metaforge-executor-seatunnel-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-seatunnel/2026.1.0/metaforge-executor-seatunnel-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/executor/metaforge-executor-seatunnel-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/executor/metaforge-executor-seatunnel-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1482,10 +1424,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-scheduler-local/2026.1.0/metaforge-scheduler-local-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/scheduler/metaforge-scheduler-local-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-scheduler-local/2026.1.0/metaforge-scheduler-local-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/scheduler/metaforge-scheduler-local-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/scheduler/metaforge-scheduler-local-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1502,10 +1443,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-local/2026.1.0/metaforge-fs-local-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-local-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-local/2026.1.0/metaforge-fs-local-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-local-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-local-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1522,10 +1462,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-qiniu/2026.1.0/metaforge-fs-qiniu-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-qiniu-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-qiniu/2026.1.0/metaforge-fs-qiniu-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-qiniu-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-qiniu-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1542,10 +1481,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-alioss/2026.1.0/metaforge-fs-alioss-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-alioss-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-alioss/2026.1.0/metaforge-fs-alioss-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-alioss-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-alioss-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1562,10 +1500,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-tencent-cos/2026.1.0/metaforge-fs-tencent-cos-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-tencent-cos-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-tencent-cos/2026.1.0/metaforge-fs-tencent-cos-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-tencent-cos-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-tencent-cos-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1582,10 +1519,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-amazon-s3/2026.1.0/metaforge-fs-amazon-s3-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-amazon-s3-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-amazon-s3/2026.1.0/metaforge-fs-amazon-s3-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-amazon-s3-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-amazon-s3-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1602,10 +1538,9 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-minio/2026.1.0/metaforge-fs-minio-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-minio-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-minio/2026.1.0/metaforge-fs-minio-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-minio-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-minio-2026.1.0-bin.tar.gz"
       }
     },
     {
@@ -1618,10 +1553,9 @@
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-notify-dingtalk/2026.1.0/metaforge-notify-dingtalk-2026.1.0-bin.tar.gz",
+      "url": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-notify-dingtalk-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-notify-dingtalk/2026.1.0/metaforge-notify-dingtalk-2026.1.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-notify-dingtalk-bin.tar.gz"
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-notify-dingtalk-2026.1.0-bin.tar.gz"
       }
     }
   ]
