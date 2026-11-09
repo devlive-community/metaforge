@@ -1,0 +1,12 @@
+{
+  "label": "OceanBase",
+  "description": "OceanBase is an enterprise distributed relational database with high availability, high performance, horizontal scalability, and compatibility with SQL standards.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/oceanbase.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 30
+}

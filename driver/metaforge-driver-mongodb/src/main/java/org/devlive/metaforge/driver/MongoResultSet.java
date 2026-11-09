@@ -45,7 +45,8 @@ public class MongoResultSet
         this.cursor = result.iterator();
         this.columnNames = new ArrayList<>();
         this.current = null;
-        this.metadata = null;
+        // An empty result still answers getMetaData(), with no columns.
+        this.metadata = new MongoResultSetMetaData(columnNames, new Document());
 
         // 预处理第一个文档以获取列名
         // Preprocess the first document to get the column names

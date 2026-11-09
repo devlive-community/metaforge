@@ -1,0 +1,12 @@
+{
+  "label": "MongoDB Atlas",
+  "description": "The MongoDB Atlas SQL JDBC Driver provides SQL connectivity to MongoDB Atlas for client applications developed in Java.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mongoatlas.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 48
+}

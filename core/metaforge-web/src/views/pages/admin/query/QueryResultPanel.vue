@@ -20,12 +20,12 @@
           {{ $t('common.export') }}
         </MfButton>
 
-        <MfButton size="sm" :disabled="!exportable" @click="visualVisible = true">
+        <MfButton size="sm" :disabled="!canVisualize" @click="openVisual">
           <ChartColumn :size="14"/>
-          {{ $t('dataset.common.visual') }}
+          {{ $t(visualSuspended ? 'queryChart.returnToChart' : 'dataset.common.visual') }}
         </MfButton>
         <MfButton size="sm" variant="primary" :disabled="!canAddDataset" @click="emit('add-dataset')"><Plus :size="14"/>{{ $t('dataset.common.create') }}</MfButton>
-        <MfDropdown trigger="click" placement="bottomRight"><MfButton size="sm" :disabled="!canAddDataset" :aria-label="$t('dataset.prototype.moreCreation')">···</MfButton><template #overlay><button type="button" class="rounded-mf-md px-3 py-2 text-sm text-content hover:bg-surface-hover" @click="emit('existing-dataset')">{{ $t('dataset.prototype.applyExisting') }}</button></template></MfDropdown>
+        <MfDropdown trigger="click" placement="bottomRight" :disabled="!canAddDataset"><MfButton size="sm" :disabled="!canAddDataset" :aria-label="$t('dataset.prototype.moreCreation')">···</MfButton><template #overlay><button type="button" class="rounded-mf-md px-3 py-2 text-sm text-content hover:bg-surface-hover" @click="emit('existing-dataset')">{{ $t('dataset.prototype.applyExisting') }}</button></template></MfDropdown>
       </div>
     </div>
 
@@ -66,6 +66,11 @@
       </div>
     </div>
 
+    <div v-if="chartSelection && activeTab === 'results'" class="flex shrink-0 flex-wrap items-center gap-2 border-b border-line px-3 py-1">
+      <span class="text-sm text-content-secondary" role="status">{{ $t('queryChart.linkedRows', { count: chartSelection.size, total: rowCount }) }}</span>
+      <MfButton size="sm" variant="ghost" @click="clearChartSelection">{{ $t('queryChart.clearLinkedFilter') }}</MfButton>
+    </div>
+
     <div class="relative min-h-0 flex-1">
       <div v-if="running" class="absolute inset-0 z-10 flex items-center justify-center bg-surface/70">
         <MfSpinner size="lg" :label="$t('query.common.execute') + '...'"/>
@@ -73,6 +78,11 @@
 
       <template v-if="activeTab === 'results'">
         <div v-if="hasRows" class="flex h-full min-h-0 flex-col">
+          <!-- The server stopped at its row limit: only the first rows came back. -->
+          <div v-if="truncated" class="flex shrink-0 items-center gap-2 border-b border-line bg-warning/10 px-3 py-1.5 text-xs text-content-secondary">
+            <CircleAlert :size="14" class="shrink-0 text-warning"/>
+            <span>{{ $t('query.result.truncated', { count: rowCount }) }}</span>
+          </div>
           <MfTable fill resizable :columns="tableColumns" :data-source="pagedRows" row-key="__row" density="compact" :bordered="false"
                    :empty-text="$t('query.result.noMatch')" @resize="onResize" @resize-end="onResize">
             <template v-for="column in tableColumns" :key="column.key" #[`cell-${column.key}`]="{ record }">
@@ -138,24 +148,22 @@
                     @update:current="onPageChange"/>
     </div>
 
-    <GridVisual v-if="visualVisible"
-                :is-visible="visualVisible"
-                :configure="visualConfigure"
-                @close="visualVisible = $event"/>
+    <GridVisual v-if="visualSource" :is-visible="!visualSuspended" :source="visualSource" @close="closeVisual" @filter="applyChartSelection"/>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, defineAsyncComponent, ref, shallowRef, toRaw, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ChartColumn, CircleAlert, CircleCheck, Download, Plus, RefreshCw, Search } from '@lucide/vue'
 import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
-import { GridConfigure } from '@/views/components/grid/GridConfigure'
-import GridVisual from '@/views/components/grid/GridVisual.vue'
+import type { QueryChartSource } from '@/composables/useQueryChartBuilder'
+import type { QueryChartRow } from '@/model/query-chart'
 import { ResponseModel } from '@/model/response'
 import { queryResultState } from '@/model/query-result-state'
 
 defineOptions({ name: 'QueryResultPanel' })
+const GridVisual = defineAsyncComponent(() => import('@/views/components/grid/GridVisual.vue'))
 
 const props = withDefaults(defineProps<{
   response?: ResponseModel | null
@@ -163,6 +171,7 @@ const props = withDefaults(defineProps<{
   sourceId?: number
   sourceCode?: string
   query?: string
+  queryLabel?: string
   datasetAvailable?: boolean
 }>(), {
   response: null,
@@ -185,7 +194,9 @@ const activeTab = ref<'results' | 'messages'>('results')
 const quickFilter = ref('')
 const pageSize = ref(100)
 const currentPage = ref(1)
-const visualVisible = ref(false)
+const visualSource = shallowRef<QueryChartSource>()
+const visualSuspended = ref(false)
+const chartSelection = shallowRef<Set<QueryChartRow>>()
 // Widths the user dragged or fitted; columns without one size to their content.
 const widths = ref<Record<string, number>>({})
 
@@ -204,6 +215,7 @@ const failureMessage = computed(() => (!isSuccess.value && props.response?.messa
 const headers = computed<string[]>(() => (isSuccess.value ? props.response?.data?.headers ?? [] : []))
 const rows = computed<any[]>(() => (isSuccess.value ? props.response?.data?.columns ?? [] : []))
 const rowCount = computed(() => rows.value.length)
+const truncated = computed(() => isSuccess.value && props.response?.data?.truncated === true)
 const hasRows = computed(() => isSuccess.value && rowCount.value > 0)
 const exportable = computed(() => hasResponse.value && isSuccess.value)
 const canAddDataset = computed(() => isSuccess.value && props.response?.data?.isSuccessful !== false
@@ -220,25 +232,45 @@ const tableColumns = computed(() => headers.value.map((header, index) => {
 /** The quick search keeps rows where any cell contains the text. */
 const filteredRows = computed(() => {
   const text = quickFilter.value.trim().toLowerCase()
-  const list = text ? rows.value.filter(row => headers.value.some(header => {
+  const source = chartSelection.value ? rows.value.filter(row => chartSelection.value?.has(toRaw(row))) : rows.value
+  const list = text ? source.filter(row => headers.value.some(header => {
     const value = row[header]
     return value !== null && value !== undefined && cellText(value).toLowerCase().includes(text)
-  })) : rows.value
+  })) : source
   return list.map((row, index) => ({ ...row, __row: String(index) }))
 })
 const pagedRows = computed(() => filteredRows.value.slice((currentPage.value - 1) * pageSize.value, currentPage.value * pageSize.value))
 const onResize = (column: { key?: string }, width: number) => { if (column.key) widths.value = { ...widths.value, [column.key]: width } }
 
-const visualConfigure = computed<GridConfigure>(() => ({
-  headers: headers.value as any,
-  columns: rows.value as any,
-  height: 400,
-  width: 800,
-  showSeriesNumber: false,
-  sourceId: props.sourceId,
-  query: props.query,
-  code: props.sourceCode
-}))
+const canVisualize = computed(() => canAddDataset.value && hasRows.value && new Set(headers.value).size === headers.value.length)
+
+function openVisual() {
+  if (!canVisualize.value || !props.sourceCode) return
+  if (visualSuspended.value) {
+    visualSuspended.value = false
+    return
+  }
+  visualSource.value = { headers: [...headers.value], rows: rows.value.slice(), types: props.response?.data?.types,
+    code: props.sourceCode, query: props.query, elapsed: elapsed.value, label: props.queryLabel }
+}
+
+function closeVisual() {
+  visualSource.value = undefined
+  visualSuspended.value = false
+}
+
+function clearChartSelection() {
+  chartSelection.value = undefined
+  currentPage.value = 1
+}
+
+function applyChartSelection(selection: QueryChartRow[]) {
+  if (!visualSource.value) return
+  chartSelection.value = new Set(selection.map(row => toRaw(row)))
+  currentPage.value = 1
+  activeTab.value = 'results'
+  visualSuspended.value = true
+}
 
 const onPageChange = (page: number) => {
   currentPage.value = page
@@ -252,6 +284,8 @@ watch(quickFilter, () => { currentPage.value = 1 })
 
 watch(() => props.response, () => {
   quickFilter.value = ''
+  clearChartSelection()
+  closeVisual()
   widths.value = {}
   currentPage.value = 1
   activeTab.value = props.response && !props.response.status ? 'messages' : 'results'

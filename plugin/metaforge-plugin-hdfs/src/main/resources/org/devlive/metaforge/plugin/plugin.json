@@ -1,0 +1,12 @@
+{
+  "label": "Apache HDFS",
+  "description": "Hadoop Distributed File System (HDFS) is a distributed file system based on the Hadoop project.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hdfs.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 10
+}

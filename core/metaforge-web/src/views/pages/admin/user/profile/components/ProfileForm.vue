@@ -4,7 +4,6 @@
     <div class="dc-profile__pagehead">
       <div class="min-w-0">
         <div class="dc-profile__title">{{ $t('user.common.profile') }}</div>
-        <div class="dc-profile__desc">{{ $t('user.tip.profile') }}</div>
       </div>
       <div class="dc-profile__slogan">
         <div>{{ $t('user.tip.sloganData') }}</div>
@@ -50,7 +49,7 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-[7fr_5fr] gap-4">
+    <div class="grid min-w-0 grid-cols-1 xl:grid-cols-[minmax(0,7fr)_minmax(0,5fr)] gap-4">
       <!-- 基本信息 -->
       <div>
         <div class="dc-profile__card dc-profile__section">
@@ -60,26 +59,27 @@
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.basicInfo') }}</div>
-              <div class="dc-profile__section-sub">{{ $t('user.tip.basicInfo') }}</div>
             </div>
           </div>
 
           <MfForm v-if="formState" layout="vertical" class="dc-profile__form">
-            <MfFormItem name="" :label="$t('user.common.username')" :tip="$t('user.tip.username')">
+            <MfFormGrid>
+            <MfFormItem name="username" :label="$t('user.common.username')" :tip="$t('user.tip.username')">
               <MfInput :model-value="formState.username" disabled/>
             </MfFormItem>
 
-            <MfFormItem name="" :label="$t('common.role')">
+            <MfFormItem name="roles" :label="$t('common.role')">
               <MfInput :model-value="(formState.roles || []).map(role => role.name).join(', ')" disabled/>
             </MfFormItem>
 
-            <MfFormItem name="" :label="$t('user.common.createTime')" :tip="$t('user.tip.createTime')">
+            <MfFormItem name="createTime" :label="$t('user.common.createTime')" :tip="$t('user.tip.createTime')">
               <MfInput :model-value="formState.createTime" disabled/>
             </MfFormItem>
 
-            <MfFormItem name="" :label="$t('common.updateTime')">
+            <MfFormItem name="updateTime" :label="$t('common.updateTime')">
               <MfInput :model-value="formState.updateTime" disabled/>
             </MfFormItem>
+            </MfFormGrid>
           </MfForm>
         </div>
       </div>
@@ -93,7 +93,6 @@
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.preferences') }}</div>
-              <div class="dc-profile__section-sub">{{ $t('user.tip.preferences') }}</div>
             </div>
           </div>
 
@@ -120,7 +119,6 @@
             </div>
             <div>
               <div class="dc-profile__section-title">{{ $t('user.common.overview') }}</div>
-              <div class="dc-profile__section-sub">{{ $t('user.tip.overview') }}</div>
             </div>
           </div>
 
@@ -351,12 +349,6 @@ handlerInitialize()
     color: var(--dc-text-title);
 }
 
-.dc-profile__desc {
-    font-size: 13px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
 .dc-profile__slogan {
     text-align: right;
     font-size: 12px;
@@ -466,12 +458,6 @@ handlerInitialize()
     color: var(--dc-text-title);
 }
 
-.dc-profile__section-sub {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 2px;
-}
-
 .dc-profile__pref {
     display: flex;
     align-items: center;
@@ -578,5 +564,15 @@ handlerInitialize()
 
 .hidden {
     display: none;
+}
+
+.dc-profile__card, .dc-profile__form { min-width: 0; }
+.dc-profile__pagehead { flex-wrap: wrap; }
+@media (max-width: 639px) {
+    .dc-profile__hero { flex-wrap: wrap; }
+    .dc-profile__hero-meta { flex: 1 1 160px; }
+    .dc-profile__hero-actions { width: 100%; }
+    .dc-profile__pref-control { width: min(200px, 65%); min-width: 0; }
+    .dc-profile__tiles { grid-template-columns: 1fr; }
 }
 </style>

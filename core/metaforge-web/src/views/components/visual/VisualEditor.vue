@@ -12,17 +12,7 @@
 
         <div v-else-if="!loading">
             <VisualTable v-if="configuration?.type === Type.TABLE" :configuration="configuration" @change="handlerCommit"/>
-            <VisualLine v-else-if="configuration?.type === Type.LINE" :configuration="configuration" @change="handlerCommit"/>
-            <VisualBar v-else-if="configuration?.type === Type.BAR" :configuration="configuration" @change="handlerCommit"/>
-            <VisualArea v-else-if="configuration?.type === Type.AREA" :configuration="configuration" @change="handlerCommit"/>
-            <VisualPie v-else-if="configuration?.type === Type.PIE" :configuration="configuration" @change="handlerCommit"/>
-            <VisualHistogram v-else-if="configuration?.type === Type.HISTOGRAM" :configuration="configuration" @change="handlerCommit"/>
-            <VisualWordCloud v-else-if="configuration?.type === Type.WORDCLOUD" :configuration="configuration" @change="handlerCommit"/>
-            <VisualScatter v-else-if="configuration?.type === Type.SCATTER" :configuration="configuration" @change="handlerCommit"/>
-            <VisualRadar v-else-if="configuration?.type === Type.RADAR" :configuration="configuration" @change="handlerCommit"/>
-            <VisualFunnel v-else-if="configuration?.type === Type.FUNNEL" :configuration="configuration" @change="handlerCommit"/>
-            <VisualGauge v-else-if="configuration?.type === Type.GAUGE" :configuration="configuration" @change="handlerCommit"/>
-            <VisualRose v-else-if="configuration?.type === Type.ROSE" :configuration="configuration" @change="handlerCommit"/>
+            <VisualChart v-else-if="configuration" :configuration="configuration" @change="handlerCommit"/>
           </div>
       </div>
     </div>
@@ -236,21 +226,11 @@
 import { ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Type } from '@/views/components/visual/Type'
-import VisualWordCloud from '@/views/components/visual/components/VisualWordCloud.vue'
-import VisualHistogram from '@/views/components/visual/components/VisualHistogram.vue'
-import VisualPie from '@/views/components/visual/components/VisualPie.vue'
-import VisualArea from '@/views/components/visual/components/VisualArea.vue'
 import { ChartFieldGroup, Configuration } from './Configuration'
-import VisualBar from '@/views/components/visual/components/VisualBar.vue'
-import VisualLine from '@/views/components/visual/components/VisualLine.vue'
+import VisualChart from './components/VisualChart.vue'
 import VisualTable from '@/views/components/visual/components/VisualTable.vue'
-import VisualScatter from '@/views/components/visual/components/VisualScatter.vue'
 import VisualConfigure from '@/views/components/visual/components/VisualConfigure.vue'
-import VisualRadar from '@/views/components/visual/components/VisualRadar.vue'
-import VisualFunnel from '@/views/components/visual/components/VisualFunnel.vue'
-import VisualGauge from '@/views/components/visual/components/VisualGauge.vue'
 import { createdConfigure } from '@/views/components/visual/Utils.ts'
-import VisualRose from '@/views/components/visual/components/VisualRose.vue'
 import { Table } from '@lucide/vue'
 
 defineOptions({ name: 'VisualEditor' })

@@ -75,7 +75,7 @@ public class AdminApiSecurityTest
     public void personalEndpointsAndEditorCompletionRemainAvailable()
             throws Exception
     {
-        for (String path : new String[] {"/api/v1/user", "/api/v1/user/menus", "/api/v1/user/checkUsername", "/api/v1/function/list/MySQL", "/api/v1/source/admin/count"}) {
+        for (String path : new String[] {"/api/v1/user", "/api/v1/user/menus", "/api/v1/user/checkUsername", "/api/v1/function/list/MySQL", "/api/v1/source/admin/count", "/api/v1/dataset/count"}) {
             mvc.perform(request(HttpMethod.GET, path).servletPath(path).header("X-Test-Role", "USER")).andExpect(status().isOk());
         }
         String password = "/api/v1/user/changePassword";
@@ -97,6 +97,8 @@ public class AdminApiSecurityTest
     {
         String path = "/api/v1/role/list";
         mvc.perform(request(HttpMethod.POST, path).servletPath(path)).andExpect(status().isUnauthorized());
+        String datasetCount = "/api/v1/dataset/count";
+        mvc.perform(request(HttpMethod.GET, datasetCount).servletPath(datasetCount)).andExpect(status().isUnauthorized());
     }
 
     @Configuration

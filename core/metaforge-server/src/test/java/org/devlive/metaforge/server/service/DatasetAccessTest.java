@@ -32,7 +32,7 @@ public class DatasetAccessTest
     private final DataSetRepository datasets = mock(DataSetRepository.class);
     private final DataSetColumnRepository columns = mock(DataSetColumnRepository.class);
     private final PluginManager plugins = mock(PluginManager.class);
-    private final DataSetServiceImpl service = new DataSetServiceImpl(datasets, columns, null, plugins, null, null, null, null, null, null, null);
+    private final DataSetServiceImpl service = new DataSetServiceImpl(datasets, columns, null, plugins, null, null, null, null, null, null, null, null);
 
     @BeforeEach
     public void authenticate()

@@ -1,9 +1,14 @@
 package org.devlive.metaforge.driver;
 
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import org.devlive.metaforge.driver.sql.SqlSourceConnection;
+import org.devlive.metaforge.driver.sql.SqlSourceDatabaseMetaData;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
+import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
+import org.redisson.config.SingleServerConfig;
 
 import java.sql.Array;
 import java.sql.Blob;
@@ -15,79 +20,154 @@ import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.sql.Struct;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 @SuppressFBWarnings(value = {"CT_CONSTRUCTOR_THROW", "NP_NONNULL_RETURN_VIOLATION"})
 public class RedisConnection
         implements Connection
 {
+    static final String PREFIX = "jdbc:redis:";
+    static final String CLUSTER_PREFIX = "jdbc:redis-cluster:";
+
     private final RedissonClient client;
     private final int database;
+    private final String url;
+    private final Properties info;
+    /** Clients of the other databases a statement or the metadata asked for, opened on first use. */
+    private final Map<Integer, RedissonClient> others = new ConcurrentHashMap<>();
     private boolean isClosed = false;
 
     public RedisConnection(String url, Properties info)
             throws SQLException
     {
+        this.url = url;
+        // A copy: databases opened later use the settings the connection was made with.
+        this.info = new Properties();
+        this.info.putAll(info);
+        this.database = isCluster(url) ? 0 : database(url, this.info);
         try {
-            String redisUrl = url.substring(5);
-            if (redisUrl.startsWith("redis:")) {
-                redisUrl = redisUrl.substring(6);
-            }
-            while (redisUrl.startsWith("/")) {
-                redisUrl = redisUrl.substring(1);
-            }
-
-            String host = "localhost";
-            int port = 6379;
-            this.database = Integer.parseInt(info.getProperty("database", "0"));
-
-            if (!redisUrl.isEmpty()) {
-                String[] parts = redisUrl.split(":");
-                host = parts[0];
-                if (parts.length > 1) {
-                    port = Integer.parseInt(parts[1].split("/")[0]);
-                }
-            }
-
-            String username = info.getProperty("user");
-            String password = info.getProperty("password");
-
-            Config config = new Config();
-            String address = "redis://" + host + ":" + port;
-
-            if (username != null && password != null) {
-                config.useSingleServer()
-                        .setAddress(address)
-                        .setDatabase(database)
-                        .setUsername(username)
-                        .setPassword(password);
-            }
-            else if (password != null) {
-                config.useSingleServer()
-                        .setAddress(address)
-                        .setDatabase(database)
-                        .setPassword(password);
-            }
-            else {
-                config.useSingleServer()
-                        .setAddress(address)
-                        .setDatabase(database);
-            }
-
-            this.client = Redisson.create(config);
+            this.client = Redisson.create(config(database));
             client.getKeys().count();
         }
         catch (Exception e) {
             throw new SQLException("Failed to connect to Redis: " + e.getMessage(), e);
         }
+    }
+
+    private Config config(int number)
+    {
+        String username = info.getProperty("user");
+        String password = info.getProperty("password");
+        Config config = new Config();
+        // Values are plain strings, as redis-cli and other clients write them, not Redisson's binary encoding.
+        config.setCodec(StringCodec.INSTANCE);
+        if (isCluster(url)) {
+            // jdbc:redis-cluster://host1:port1,host2:port2 as the released cluster driver took it
+            ClusterServersConfig cluster = config.useClusterServers().addNodeAddress(addresses(url).toArray(new String[0]));
+            if (password != null) {
+                cluster.setPassword(password);
+            }
+            if (username != null && password != null) {
+                cluster.setUsername(username);
+            }
+        }
+        else {
+            SingleServerConfig single = config.useSingleServer().setAddress(addresses(url).get(0)).setDatabase(number);
+            if (password != null) {
+                single.setPassword(password);
+            }
+            if (username != null && password != null) {
+                single.setUsername(username);
+            }
+        }
+        return config;
+    }
+
+    /** The client of a database: this connection's own, or one opened for another database. */
+    public RedissonClient getClient(int number)
+            throws SQLException
+    {
+        if (number == database) {
+            return client;
+        }
+        if (isCluster(url)) {
+            throw new SQLException("A Redis cluster has only database 0");
+        }
+        try {
+            return others.computeIfAbsent(number, key -> {
+                Config config = config(key);
+                config.setThreads(2).setNettyThreads(2);
+                return Redisson.create(config);
+            });
+        }
+        catch (RuntimeException e) {
+            throw new SQLException("Failed to open Redis database " + number + ": " + e.getMessage(), e);
+        }
+    }
+
+    public boolean isCluster()
+    {
+        return isCluster(url);
+    }
+
+    static boolean isCluster(String url)
+    {
+        return url.startsWith(CLUSTER_PREFIX);
+    }
+
+    /** The node addresses of jdbc:redis://host:port[/db] or jdbc:redis-cluster://host:port,host:port. */
+    static List<String> addresses(String url)
+    {
+        String rest = location(url);
+        int path = rest.indexOf('/');
+        if (path >= 0) {
+            rest = rest.substring(0, path);
+        }
+        List<String> addresses = new ArrayList<>();
+        for (String node : rest.split(",")) {
+            String trimmed = node.trim();
+            if (trimmed.isEmpty()) {
+                continue;
+            }
+            addresses.add("redis://" + (trimmed.contains(":") ? trimmed : trimmed + ":6379"));
+        }
+        if (addresses.isEmpty()) {
+            addresses.add("redis://localhost:6379");
+        }
+        return addresses;
+    }
+
+    /** The database property, else the URL path (jdbc:redis://host:port/2), else 0. */
+    static int database(String url, Properties info)
+    {
+        String property = info.getProperty("database");
+        if (property != null && !property.trim().isEmpty()) {
+            return Integer.parseInt(property.trim());
+        }
+        String rest = location(url);
+        int path = rest.indexOf('/');
+        String value = path >= 0 ? rest.substring(path + 1).trim() : "";
+        return value.matches("\\d+") ? Integer.parseInt(value) : 0;
+    }
+
+    private static String location(String url)
+    {
+        String rest = url.substring(isCluster(url) ? CLUSTER_PREFIX.length() : PREFIX.length());
+        while (rest.startsWith("/")) {
+            rest = rest.substring(1);
+        }
+        int query = rest.indexOf('?');
+        return query >= 0 ? rest.substring(0, query) : rest;
     }
 
     public RedissonClient getClient()
@@ -142,6 +222,8 @@ public class RedisConnection
     {
         if (!isClosed) {
             client.shutdown();
+            others.values().forEach(RedissonClient::shutdown);
+            others.clear();
             isClosed = true;
         }
     }
@@ -157,7 +239,8 @@ public class RedisConnection
     public DatabaseMetaData getMetaData()
             throws SQLException
     {
-        throw new SQLFeatureNotSupportedException("Method not supported");
+        // Databases 0..n, their keys as tables and key, type and value as columns, as every MetaForge driver describes a source.
+        return new SqlSourceDatabaseMetaData(new SqlSourceConnection(new RedisSqlSource(this), url, String.valueOf(database), info.getProperty("user")));
     }
 
     @Override

@@ -2,6 +2,8 @@ package org.devlive.metaforge.convert.json
 
 import com.fasterxml.jackson.core.JsonEncoding
 import com.fasterxml.jackson.core.JsonFactory
+import com.fasterxml.jackson.core.util.DefaultIndenter
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
@@ -9,13 +11,16 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import org.devlive.metaforge.common.utils.DateUtils
 import org.devlive.metaforge.convert.ConvertService
 import org.devlive.metaforge.convert.FileConvert.formatFile
+import org.devlive.metaforge.convert.model.ConvertOption
 import org.devlive.metaforge.convert.model.ConvertRequest
+import org.devlive.metaforge.convert.model.choice
 import org.devlive.metaforge.convert.model.ConvertResponse
 import org.slf4j.LoggerFactory.getLogger
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
 import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.DateTimeParseException
 import java.util.Objects.requireNonNull
@@ -131,6 +136,20 @@ class JsonConvertService : ConvertService
         return response
     }
 
+    override fun options(): List<ConvertOption>
+    {
+        return listOf(
+            ConvertOption("root", mapOf("zh" to "JSON 根结构", "en" to "JSON root"), "array",
+                listOf(choice("array", "数组 Array", "Array"), choice("lines", "每行一个对象 JSON Lines", "One object per line (JSON Lines)"))),
+            ConvertOption("indent", mapOf("zh" to "缩进格式", "en" to "Indentation"), "2",
+                listOf(choice("0", "不缩进", "None"), choice("2", "2 个空格", "2 spaces"), choice("4", "4 个空格", "4 spaces"))),
+            ConvertOption("dateFormat", mapOf("zh" to "日期输出格式", "en" to "Date format"), "iso",
+                listOf(choice("iso", "ISO 8601", "ISO 8601"), choice("datetime", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm:ss"), choice("epoch", "时间戳（毫秒）", "Epoch milliseconds"))),
+            ConvertOption("nulls", mapOf("zh" to "NULL 值处理", "en" to "NULL values"), "keep",
+                listOf(choice("keep", "保留 null", "Keep null"), choice("omit", "省略字段", "Leave the field out")))
+        )
+    }
+
     override fun writer(request: ConvertRequest): ConvertResponse
     {
         val response = ConvertResponse()
@@ -141,9 +160,20 @@ class JsonConvertService : ConvertService
             val file = formatFile(request, name())
             log.info("${name()} writer file absolute path [ ${file.absolutePath} ]")
 
+            val lines = request.option("root", "array") == "lines"
+            val indent = request.option("indent", "2").toIntOrNull() ?: 2
+            val dateFormat = request.option("dateFormat", "iso")
+            val omitNull = request.excludeNull || request.option("nulls", "keep") == "omit"
             val factory = JsonFactory()
+            factory.setRootValueSeparator(if (lines) "\n" else " ")
             factory.createGenerator(file, JsonEncoding.UTF8).use { generator ->
                 generator.codec = ObjectMapper()
+                // JSON Lines keeps every record on its own line, so it is never indented.
+                if (indent > 0 && ! lines)
+                {
+                    val indenter = DefaultIndenter(" ".repeat(indent), DefaultIndenter.SYS_LF)
+                    generator.prettyPrinter = DefaultPrettyPrinter().withObjectIndenter(indenter).withArrayIndenter(indenter)
+                }
                 if (request.includeStructure)
                 {
                     generator.writeStartObject()
@@ -155,9 +185,19 @@ class JsonConvertService : ConvertService
                         generator.writeEndObject()
                     }
                     generator.writeEndArray()
-                    generator.writeFieldName("rows")
+                    if (lines)
+                    {
+                        generator.writeEndObject()
+                    }
+                    else
+                    {
+                        generator.writeFieldName("rows")
+                    }
                 }
-                generator.writeStartArray()
+                if (! lines)
+                {
+                    generator.writeStartArray()
+                }
                 request.columns.forEach { column ->
                     generator.writeStartObject()
                     for (headerIndex in request.headers.indices)
@@ -167,25 +207,18 @@ class JsonConvertService : ConvertService
                         {
                             is List<*> ->
                             {
-                                val value = column[headerIndex]
-                                if (value == null && request.excludeNull)
+                                val value = dateValue(column[headerIndex], dateFormat)
+                                if (value == null && omitNull)
                                 {
                                     continue
                                 }
-                                if (value is LocalDateTime)
-                                {
-                                    generator.writeStringField(header, value.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME))
-                                }
-                                else
-                                {
-                                    generator.writeObjectField(header, value)
-                                }
+                                generator.writeObjectField(header, value)
                             }
 
                             is ObjectNode ->
                             {
                                 val value = column.get(header)
-                                if ((value == null || value.isNull) && request.excludeNull)
+                                if ((value == null || value.isNull) && omitNull)
                                 {
                                     continue
                                 }
@@ -212,10 +245,13 @@ class JsonConvertService : ConvertService
                     }
                     generator.writeEndObject()
                 }
-                generator.writeEndArray()
-                if (request.includeStructure)
+                if (! lines)
                 {
-                    generator.writeEndObject()
+                    generator.writeEndArray()
+                    if (request.includeStructure)
+                    {
+                        generator.writeEndObject()
+                    }
                 }
             }
 
@@ -232,7 +268,25 @@ class JsonConvertService : ConvertService
         return response
     }
 
-    private fun isDateTime(text: String): Boolean
+    /** A date or time value in the chosen format: ISO 8601, yyyy-MM-dd HH:mm:ss or epoch milliseconds. */
+private fun dateValue(value: Any?, format: String): Any?
+{
+    val time = when (value)
+    {
+        is LocalDateTime -> value
+        is java.sql.Timestamp -> value.toLocalDateTime()
+        is java.util.Date -> LocalDateTime.ofInstant(value.toInstant(), ZoneId.systemDefault())
+        else -> return value
+    }
+    return when (format)
+    {
+        "epoch" -> time.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        "datetime" -> time.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+        else -> time.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+    }
+}
+
+private fun isDateTime(text: String): Boolean
     {
         return try
         {

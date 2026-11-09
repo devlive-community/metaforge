@@ -2,10 +2,12 @@ package org.devlive.metaforge.server.controller.user;
 
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.activity.HeatmapActivity;
+import org.devlive.metaforge.service.activity.QueryActivity;
 import org.devlive.metaforge.service.itransient.ContributionRadar;
 import org.devlive.metaforge.service.service.PluginAuditService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -25,6 +27,12 @@ public class PluginAuditAdminController
     public CommonResponse<Long> count()
     {
         return this.pluginAuditService.count();
+    }
+
+    @GetMapping(value = "activity")
+    public CommonResponse<QueryActivity> activity(@RequestParam(defaultValue = "7") int days)
+    {
+        return this.pluginAuditService.getHomeActivity(days);
     }
 
     @GetMapping(value = "contribution")

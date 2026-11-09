@@ -51,8 +51,6 @@ Hologres是兼容PostgreSQL的一站式实时数据仓库引擎，支持PB级数
 
 !!! warning
 
-    服务版本尚未测试，如果您有详细的测试并发现错误，请提交 [issues](https://github.com/EdurtIO/metaforge/issues/new/choose)
-
-    - [x] all
+    Hologres 仅以阿里云托管服务形式提供，没有容器镜像，因此插件没有容器 e2e 测试，也没有经过验证的版本。插件通过 PostgreSQL JDBC 驱动连接，这条路径由 `PostgreSQLE2ETest` 在 PostgreSQL 上验证。如果您在 Hologres 上测试过，请在 [issues](https://github.com/devlive-community/metaforge/issues/new/choose) 中反馈结果。
 
 !!!

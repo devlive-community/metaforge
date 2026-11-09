@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- System settings: users get an email for email sign-in, sign-up verification and password reset, and administrators a System settings menu. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0007-user-email" author="metaforge">
+        <addColumn tableName="metaforge_user">
+            <column name="email" type="${string}(255)"/>
+        </addColumn>
+    </changeSet>
+
+    <!-- Fresh installs get the menu from the baseline seed; existing ones get it here. -->
+    <changeSet id="core-0007-system-settings-menu" author="metaforge">
+        <preConditions onFail="MARK_RAN">
+            <and>
+                <sqlCheck expectedResult="0">SELECT COUNT(*) FROM metaforge_menu WHERE code = 'SYSTEM_SETTINGS'</sqlCheck>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM metaforge_menu WHERE code = 'SYSTEM'</sqlCheck>
+                <sqlCheck expectedResult="1">SELECT COUNT(*) FROM metaforge_role WHERE code = 'ADMIN'</sqlCheck>
+            </and>
+        </preConditions>
+        <customChange class="org.devlive.metaforge.server.migration.SeedDataChange">
+            <param name="resource" value="db/seed/system-settings.json"/>
+        </customChange>
+    </changeSet>
+</databaseChangeLog>

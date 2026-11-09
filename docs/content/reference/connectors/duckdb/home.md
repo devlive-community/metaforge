@@ -45,10 +45,22 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    DuckDB runs inside the MetaForge server, so the version is the DuckDB library the plugin bundles. The plugin's e2e test `DuckDBE2ETest` runs it in process, without a container: the version check, then a schema, table and columns created with SQL are listed as a database, table and columns, and their rows read back by later queries.
 
-    - [x] 0.7.0
+    - [x] 1.0.0
 
 !!!
+
+#### SQL and concepts
+
+---
+
+- `Host` is a directory on the MetaForge server and `Database` the database file in it, e.g. `/data` and `local` open `/data/local`.
+
+| MetaForge | DuckDB |
+|:--|:--|
+| Database | Schema |
+| Table | Table or view |
+| Column | Column |

@@ -64,12 +64,15 @@ Support Time: `2024-01-12`
 |      Pipeline       | :check: |
 | Metadata management | :x: |
 
-#### Version
+#### Version (Validation)
 
 ---
 
-!!! warning
+!!! note
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    The plugin's e2e test `MatrixOneE2ETest` verifies each version below in a container: the version check, then a database, table and columns created with SQL are listed, and their rows read back.
 
-- [x] `1.1.0`
+    - [x] 3.0
+    - [x] 4.2
+
+!!!

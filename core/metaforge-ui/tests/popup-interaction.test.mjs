@@ -31,6 +31,18 @@ test('click dropdown closes outside and unregisters on unmount', async () => {
     assert.equal(host.document.count('keydown'), 0)
 })
 
+test('a disabled dropdown does not open from its trigger', async () => {
+    const host = mountHost(h(Dropdown, { trigger: 'click', disabled: true }, {
+        default: () => h('button', 'Open'),
+        overlay: () => h('div', { 'data-panel': 'dropdown' }, 'Choices'),
+    }))
+    try {
+        await click(host.document, host.find(node => node.tag === 'button'))
+        assert.ok(!host.find(node => node.props['data-panel'] === 'dropdown'))
+    }
+    finally { host.unmount() }
+})
+
 test('an outside control that stops click propagation still dismisses the dropdown and acts once', async () => {
     let actions = 0
     const host = mountHost(h('div', [
@@ -176,6 +188,27 @@ test('horizontal submenu closes outside while inline expansion stays open', asyn
         await nextTick()
         assert.equal(children.style.display, '')
         assert.equal(host.document.count('pointerdown'), 0)
+    }
+    finally { host.unmount() }
+})
+
+test('horizontal submenu gives the pointer time to reach the choices and cancels closing on re-entry', async () => {
+    const host = mountHost(h(Menu, { mode: 'horizontal' }, {
+        default: () => h(SubMenu, { key_: 'tools', title: 'Tools' }, () => h(MenuItem, { key_: 'leaf' }, () => 'Leaf')),
+    }))
+    try {
+        const trigger = host.find(node => node.props.onMouseenter)
+        const popup = host.find(node => node.props.class?.includes('absolute'))
+        trigger.props.onMouseenter()
+        await nextTick()
+        trigger.props.onMouseleave()
+        await nextTick()
+        assert.equal(popup.style.display, '')
+        trigger.props.onMouseenter()
+        await new Promise(resolve => setTimeout(resolve, 220))
+        assert.equal(popup.style.display, '')
+        await click(host.document, host.find(node => node.props['aria-selected'] === false))
+        assert.equal(popup.style.display, 'none')
     }
     finally { host.unmount() }
 })

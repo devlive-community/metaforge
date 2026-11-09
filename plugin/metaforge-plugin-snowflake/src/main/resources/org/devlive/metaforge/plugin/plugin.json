@@ -1,0 +1,12 @@
+{
+  "label": "Snowflake",
+  "description": "Snowflake is a database for analytics.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/snowflake.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 35
+}

@@ -127,15 +127,21 @@ public class ImportTest
             {
                 executed.add(content);
                 List<Object> rows = new ArrayList<>();
-                if (content.contains("information_schema.COLUMNS")) {
-                    rows.add(Arrays.asList("datacap_dataset", "id", "bigint", "NO", null, "auto_increment"));
-                    rows.add(Arrays.asList("datacap_dataset", "name", "varchar(128)", "NO", null, ""));
-                    rows.add(Arrays.asList("datacap_dataset", "owner", "varchar(32)", "NO", null, ""));
-                }
-                else {
-                    rows.add(List.of(2));
-                }
+                rows.add(List.of(2));
                 return Response.builder().isSuccessful(true).columns(rows).build();
+            }
+
+            /** datacap_dataset has an auto-increment id and two required columns; other tables do not exist. */
+            @Override
+            public Response getColumns(RuntimeConfigure configure, String database, String table)
+            {
+                List<Object> rows = new ArrayList<>();
+                if ("datacap_dataset".equals(table)) {
+                    rows.add(Arrays.asList("column", "id", "bigint", "NO", null, "", "YES"));
+                    rows.add(Arrays.asList("column", "name", "varchar(128)", "NO", null, "", "NO"));
+                    rows.add(Arrays.asList("column", "owner", "varchar(32)", "NO", null, "", "NO"));
+                }
+                return Response.builder().isSuccessful(true).headers(List.of("type_name", "object_name", "object_data_type", "object_nullable", "object_default_value", "object_comment", "object_autoincrement")).columns(rows).build();
             }
         };
         SourceEntity entity = new SourceEntity();

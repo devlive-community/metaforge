@@ -8,19 +8,23 @@ import { currentLocation, interimLocation } from '@/composables/useRouteRedirect
 
 axios.defaults.headers.post['Access-Control-Allow-Origin'] = '*'
 
+/** The address of the server API; pages the browser opens directly, such as third-party sign-in, start here too. */
+export function apiBaseUrl(): string
+{
+    if (process.env.NODE_ENV === 'development') {
+        // 允许用 VITE_API_BASE_URL 指向独立验证实例（如 http://localhost:9097），默认仍是 9096
+        return import.meta.env.VITE_API_BASE_URL || 'http://localhost:9096'
+    }
+    return window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '')
+}
+
 export class HttpUtils
 {
     private readonly configure
 
     constructor()
     {
-        if (process.env.NODE_ENV === 'development') {
-            // 允许用 VITE_API_BASE_URL 指向独立验证实例（如 http://localhost:9097），默认仍是 9096
-            axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:9096'
-        }
-        else {
-            axios.defaults.baseURL = window.location.protocol + '//' + window.location.hostname + (window.location.port ? ':' + window.location.port : '')
-        }
+        axios.defaults.baseURL = apiBaseUrl()
         const auth: AuthResponse | undefined = TokenUtils.getAuthUser()
         if (auth) {
             this.configure = {
@@ -154,6 +158,7 @@ export class HttpUtils
                         return { status: true, blob, fileName: encoded ? decodeURIComponent(encoded) : plain || 'export' }
                     }, error => {
                         this.handlerMessage(error.message)
+                        this.handlerFailed(error)
                         return { status: false, message: String(error.message || '') }
                     })
     }

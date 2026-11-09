@@ -66,6 +66,10 @@ public class UserEntity
     @JsonView(value = {EntityView.NoneView.class})
     private String password;
 
+    @Column("email")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String email;
+
     @Column("chat_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private String chatConfigure;
@@ -77,6 +81,11 @@ public class UserEntity
     @Column("editor_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private UserEditorEntity editorConfigure;
+
+    // Code of the user's own published data screen opened as their home page; null for the default home.
+    @Column("home_page")
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private String homePage;
 
     @Column("avatar_configure")
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
@@ -108,7 +117,8 @@ public class UserEntity
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Long unreadCount;
 
-    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    // Holds channel secrets: read through /api/v1/user/notify, which masks them, never with the user.
+    @JsonIgnore
     public List<NotificationTypeEntity> getNotifyConfigure()
     {
         if (StringUtils.isEmpty(notifyConfigureValue)) {

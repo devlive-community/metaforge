@@ -13,6 +13,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.DelegatingRequestMatcherHeaderWriter;
+import org.springframework.security.web.header.writers.frameoptions.XFrameOptionsHeaderWriter;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.NegatedRequestMatcher;
 
 @Configuration
 @EnableWebSecurity
@@ -64,18 +68,28 @@ public class SecurityConfigure
     protected void configure(HttpSecurity http)
             throws Exception
     {
+        // /assets/** is the web UI's build output (scripts, styles, images); browsers fetch CSS images without a token.
         http.cors().and().csrf().disable()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .authorizeRequests()
-                .antMatchers("/", "/**/*.js", "/**/*.css", "/api/auth/**", "/fonts/**", "/static/**", "/h2-console/**", "/api/v1/captcha", "/api/v1/table/dataDownload/**", "/upload/**", "/api/v1/setup/**")
+                .antMatchers("/", "/**/*.js", "/**/*.css", "/assets/**", "/api/auth/**", "/fonts/**", "/static/**", "/h2-console/**", "/api/v1/captcha", "/api/v1/table/dataDownload/**", "/upload/**", "/api/v1/setup/**",
+                        // Shared reports: token-addressed public API and the pages that render it
+                        "/api/v1/public/**", "/share/**", "/embed/**")
+                .permitAll()
+                // Pages of the history-routed web UI; their API calls stay authenticated
+                .requestMatchers(new WebUiRequestMatcher())
                 .permitAll()
                 .requestMatchers(new AdminApiRequestMatcher())
                 .hasAuthority("ADMIN")
                 .anyRequest()
                 .authenticated();
-        // Fixed load denied by X-Frame-Options
-        http.headers().frameOptions().sameOrigin();
+        // Same-origin framing everywhere except embedded report pages, whose CSP frame-ancestors
+        // carries the sites the report owner allowed.
+        http.headers().frameOptions().disable()
+                .addHeaderWriter(new DelegatingRequestMatcherHeaderWriter(
+                        new NegatedRequestMatcher(new AntPathRequestMatcher("/embed/**")),
+                        new XFrameOptionsHeaderWriter(XFrameOptionsHeaderWriter.XFrameOptionsMode.SAMEORIGIN)));
         http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
     }
 }

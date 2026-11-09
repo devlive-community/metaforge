@@ -1,7 +1,9 @@
 package org.devlive.metaforge.convert.model
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings
 import java.io.InputStream
 
+@SuppressFBWarnings(value = ["EI_EXPOSE_REP", "EI_EXPOSE_REP2"], justification = "A request carries the caller's values")
 class ConvertRequest
 {
     private var _headers: List<Any> = listOf()
@@ -14,6 +16,15 @@ class ConvertRequest
 
     // Currently only valid for txt format
     var delimiter: String? = null
+
+    // Values of the plugin's declared options (see ConvertService.options), by option name
+    var options: Map<String, String> = mapOf()
+
+    /** An option's value, or [fallback] when it was not given. */
+    fun option(name: String, fallback: String): String
+    {
+        return options[name]?.takeIf { it.isNotEmpty() } ?: fallback
+    }
 
     // The format type of the original data
     var format: String? = null

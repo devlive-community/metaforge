@@ -1,0 +1,12 @@
+{
+  "label": "Redis",
+  "description": "Redis is an in-memory data store used by millions of developers as a cache, vector database, document database, streaming engine, and message broker. Redis has built-in replication and different levels of on-disk persistence. It supports complex data types (for example, strings, hashes, lists, sets, sorted sets, and JSON), with atomic operations defined on those data types.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/redis.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 46
+}

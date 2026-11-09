@@ -31,7 +31,7 @@
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { MfMessage } from 'metaforge-ui'
-import { Columns3, Database, Table } from '@lucide/vue'
+import { Columns3, Database, Eye, Table } from '@lucide/vue'
 import { StructureEnum } from '@/model/structure'
 import MetadataService from '@/services/metadata.ts'
 import { ObjectUtils } from '@/utils/object'
@@ -46,6 +46,8 @@ interface TreeNode
   catalog?: string
   database?: string
   table?: string
+  /** 'view' for views; tables leave it unset */
+  kind?: string
   isLeaf: boolean
   children?: TreeNode[]
 }
@@ -66,7 +68,7 @@ const errorMessage = ref<string | null>(null)
 
 const iconOf = (node: TreeNode) => node.level === StructureEnum.DATABASE
   ? Database
-  : node.level === StructureEnum.COLUMN ? Columns3 : Table
+  : node.level === StructureEnum.COLUMN ? Columns3 : node.kind === 'view' ? Eye : Table
 
 const keyword = computed(() => (props.keyword ?? '').trim().toLowerCase())
 
@@ -103,14 +105,20 @@ const updateTreeChildren = (list: TreeNode[], key: string, children: TreeNode[])
     return node
   })
 
-const buildTablesGroup = (parent: TreeNode, tables: TreeNode[]): TreeNode => ({
-  key: `${ parent.key }::tables`,
-  title: `${ t('common.table') } (${ tables.length })`,
+const buildGroup = (parent: TreeNode, kind: string, items: TreeNode[]): TreeNode => ({
+  key: `${ parent.key }::${ kind }s`,
+  title: `${ t('common.' + kind) } (${ items.length })`,
   level: StructureEnum.GROUP,
   catalog: parent.code,
   isLeaf: false,
-  children: tables
+  children: items
 })
+
+/** Tables and views only: sources also list functions and procedures here, which cannot be queried as tables. */
+const queryableKind = (value: any): string | null => {
+  const kind = String(value.type_name || 'table').toLowerCase()
+  return kind === 'table' || kind === 'view' ? kind : null
+}
 
 const loadTables = (item: TreeNode): Promise<TreeNode[]> => {
   return new Promise<TreeNode[]>((resolve) => {
@@ -118,15 +126,21 @@ const loadTables = (item: TreeNode): Promise<TreeNode[]> => {
     MetadataService.getTablesByDatabase(props.code!, item.code!)
                    .then((response) => {
                      if (response.status && response.data && response.data.isSuccessful) {
-                       response.data.columns.forEach((value: any) => children.push({
-                         key: `${ item.key }.${ value.object_name }`,
-                         title: value.object_name,
-                         code: value.object_name,
-                         database: item.code,
-                         catalog: value.object_name,
-                         level: StructureEnum.TABLE,
-                         isLeaf: false
-                       }))
+                       response.data.columns.forEach((value: any) => {
+                         const kind = queryableKind(value)
+                         if (kind) {
+                           children.push({
+                             key: `${ item.key }.${ value.object_name }`,
+                             title: value.object_name,
+                             code: value.object_name,
+                             database: item.code,
+                             catalog: value.object_name,
+                             kind,
+                             level: StructureEnum.TABLE,
+                             isLeaf: false
+                           })
+                         }
+                       })
                      }
                      else {
                        MfMessage.error(response.data.message)
@@ -171,9 +185,14 @@ const onLoadData = (treeNode: any): Promise<TreeNode[]> => {
   if (item.level === StructureEnum.DATABASE) {
     return loadTables(item)
              .then(children => {
-               const group = buildTablesGroup(item, children)
-               data.value = updateTreeChildren(data.value, item.key, [group])
-               return [group]
+               const views = children.filter(child => child.kind === 'view')
+               // The tables folder always shows, even empty; the views folder only when there are views.
+               const groups = [buildGroup(item, 'table', children.filter(child => child.kind !== 'view'))]
+               if (views.length > 0) {
+                 groups.push(buildGroup(item, 'view', views))
+               }
+               data.value = updateTreeChildren(data.value, item.key, groups)
+               return groups
              })
   }
   if (item.level === StructureEnum.TABLE) {

@@ -6,6 +6,7 @@ const props = withDefaults(defineProps<{
     open?: boolean
     title?: string
     width?: string
+    bodyClass?: string
     placement?: 'right' | 'left' | 'top' | 'bottom'
     closeOnOverlay?: boolean
     closable?: boolean
@@ -15,6 +16,7 @@ const props = withDefaults(defineProps<{
 }>(), {
     open: false,
     width: '480px',
+    bodyClass: 'px-5 py-4',
     placement: 'right',
     closeOnOverlay: true,
     closable: true,
@@ -95,7 +97,7 @@ const panelPos = computed(() => clsx(
                             </div>
                         </header>
                         <!-- relative keeps absolutely positioned descendants (sr-only inputs) inside the scroller. -->
-                        <div class="relative min-h-0 flex-1 overflow-y-auto px-5 py-4 text-sm text-content">
+                        <div class="relative min-h-0 flex-1 overflow-y-auto text-sm text-content" :class="bodyClass">
                             <slot />
                         </div>
                         <footer v-if="$slots.footer" class="flex shrink-0 justify-end gap-2 border-t border-line px-5 py-3">

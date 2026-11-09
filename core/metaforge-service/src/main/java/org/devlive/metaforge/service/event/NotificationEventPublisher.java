@@ -1,52 +1,74 @@
 package org.devlive.metaforge.service.event;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.RequiredArgsConstructor;
-import org.devlive.metaforge.service.entity.BaseEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.enums.EntityType;
-import org.devlive.metaforge.service.enums.NotificationType;
+import org.devlive.metaforge.service.enums.NotificationScene;
 import org.devlive.metaforge.service.security.UserDetailsService;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+/**
+ * Raises notifications. Delivery happens after the surrounding transaction commits, so a change
+ * that rolls back notifies nobody, and it never fails the caller.
+ */
 @Service
 @RequiredArgsConstructor
+@SuppressFBWarnings(value = "EI_EXPOSE_REP2", justification = "The event publisher is a Spring-managed singleton")
 public class NotificationEventPublisher
 {
+    /** Publishes nothing; stands in where no Spring context wires the real one, as in unit tests. */
+    public static final NotificationEventPublisher NONE = new NotificationEventPublisher(event -> {
+    });
+
     private final ApplicationEventPublisher eventPublisher;
 
-    /**
-     * 发布通知事件
-     *
-     * @param data 相关数据实体
-     * @param title 通知标题
-     * @param content 通知内容
-     * @param entityType 实体类型
-     * @param type 通知类型
-     * @param channels 通知渠道
-     */
-    public void publishNotificationEvent(
-            BaseEntity data,
-            String title,
-            String content,
-            EntityType entityType,
-            NotificationType type,
-            String[] channels
-    )
+    public void publish(NotificationEvent event)
     {
-        // 获取当前用户
-        UserEntity user = UserDetailsService.getUser();
+        if (event != null && event.getUser() != null && event.getScene() != null) {
+            eventPublisher.publishEvent(event);
+        }
+    }
 
-        // 发布事件
-        NotificationEvent event = new NotificationEvent(
-                data,
-                user,
-                title,
-                content,
-                entityType,
-                type,
-                channels
-        );
-        eventPublisher.publishEvent(event);
+    /** Notifies the signed-in user about an entity. */
+    public void publish(NotificationScene scene, String title, String content, EntityType entityType, String entityCode, String entityName)
+    {
+        publish(scene, currentUser(), title, content, entityType, entityCode, entityName);
+    }
+
+    public void publish(NotificationScene scene, UserEntity user, String title, String content, EntityType entityType, String entityCode, String entityName)
+    {
+        publish(NotificationEvent.builder()
+                .scene(scene)
+                .user(user)
+                .title(title)
+                .content(content)
+                .entityType(entityType)
+                .entityCode(entityCode)
+                .entityName(entityName)
+                .entityExists(!scene.name().endsWith("_DELETED"))
+                .build());
+    }
+
+    /** Notifies the user with the given code, for work that finishes off the request thread. */
+    public void publishTo(String userCode, NotificationScene scene, String title, String content, EntityType entityType, String entityCode, String entityName)
+    {
+        if (userCode == null) {
+            return;
+        }
+        UserEntity user = new UserEntity();
+        user.setCode(userCode);
+        publish(scene, user, title, content, entityType, entityCode, entityName);
+    }
+
+    private static UserEntity currentUser()
+    {
+        try {
+            return UserDetailsService.getUser();
+        }
+        catch (RuntimeException e) {
+            return null;
+        }
     }
 }

@@ -13,5 +13,6 @@ public enum RuntimeConfigureFieldType
     STRING,
     NUMBER,
     BOOLEAN,
-    PASSWORD
+    PASSWORD,
+    SELECT
 }

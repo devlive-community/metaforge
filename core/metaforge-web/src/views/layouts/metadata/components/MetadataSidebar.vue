@@ -21,12 +21,11 @@
     </div>
 
     <div class="relative mt-3 min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
-      <div v-if="loading" class="flex justify-center py-10"><MfSpinner/></div>
+      <div v-if="loading || databases.loading" class="flex h-full min-h-40 items-center justify-center"><MfSpinner/></div>
 
-      <MfTree v-else-if="!loading && filteredTreeArray.length > 0"
+      <MfTree v-else-if="filteredTreeArray.length > 0"
               v-model:selected-keys="selectedKeys"
               :data="filteredTreeArray"
-              default-expand-all
               :load-data="onLoadData"
               @select="onSelect">
         <template #title="{ node }">
@@ -51,7 +50,10 @@
         </template>
       </MfTree>
 
-      <MfEmpty v-if="!loading && filteredTreeArray.length === 0" class="h-full" size="sm" :title="$t('common.noData')"/>
+      <MfEmpty v-if="!loading && !databases.loading && filteredTreeArray.length === 0" class="h-full" size="sm"
+               :variant="databases.needsDatabase && !databases.empty ? 'initial' : 'data'"
+               :title="databases.needsDatabase ? $t(databases.error ? 'source.manage.databasesFailed' : databases.empty ? 'source.manage.noDatabases' : 'source.manage.chooseDatabase') : $t('common.noData')"
+               :description="databases.needsDatabase && databases.error ? databases.error : undefined"/>
 
       <div v-if="contextmenu.visible && dataInfo"
            ref="contextMenuRoot"
@@ -159,7 +161,7 @@ import { useMetadataSidebar } from '@/composables/useMetadataSidebar'
 
 defineOptions({ name: 'MetadataSidebar' })
 
-const { can, contextActions, loading, selectedKeys, originalSource, dataInfo, contextMenuRoot, tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible, columnCreateVisible, columnChangeVisible, columnDropVisible, contextmenu, tableEngine, searchKeyword, tableCount, filteredTreeArray, onSelect, onLoadData, visibleContextMenu, visibleCreateTable, visibleCreateColumn, visibleExportData, visibleTruncateTable, visibleDropTable, visibleChangeColumn, visibleDropColumn } = useMetadataSidebar()
+const { can, databases, contextActions, loading, selectedKeys, originalSource, dataInfo, contextMenuRoot, tableCreateVisible, tableExportVisible, tableTruncateVisible, tableDropVisible, columnCreateVisible, columnChangeVisible, columnDropVisible, contextmenu, tableEngine, searchKeyword, tableCount, filteredTreeArray, onSelect, onLoadData, visibleContextMenu, visibleCreateTable, visibleCreateColumn, visibleExportData, visibleTruncateTable, visibleDropTable, visibleChangeColumn, visibleDropColumn } = useMetadataSidebar()
 </script>
 
 <style scoped>

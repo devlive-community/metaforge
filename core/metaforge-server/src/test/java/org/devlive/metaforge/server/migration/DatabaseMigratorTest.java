@@ -57,8 +57,11 @@ public class DatabaseMigratorTest
 
             JdbcTemplate jdbc = jdbc(connection);
             assertEquals(20, count(jdbc, "SELECT COUNT(*) FROM metaforge_menu"));
+            // Runtime settings live in System settings, without a menu of their own.
+            assertEquals(0, count(jdbc, "SELECT COUNT(*) FROM metaforge_menu WHERE code = 'RUNTIME_CONFIGURE'"));
             assertEquals(4, count(jdbc, "SELECT COUNT(*) FROM metaforge_role"));
             assertEquals(28, count(jdbc, "SELECT COUNT(*) FROM metaforge_role_menu"));
+            assertEquals(count(jdbc, "SELECT id FROM metaforge_menu WHERE code = 'SYSTEM'"), count(jdbc, "SELECT parent FROM metaforge_menu WHERE code = 'SYSTEM_SETTINGS'"));
             assertEquals(2, count(jdbc, "SELECT COUNT(*) FROM metaforge_function"));
             assertEquals(2, count(jdbc, "SELECT COUNT(*) FROM metaforge_scheduled"));
             assertEquals("系统管理员", jdbc.queryForObject("SELECT name FROM metaforge_role WHERE code = 'ADMIN'", String.class));
@@ -71,6 +74,10 @@ public class DatabaseMigratorTest
                     "权限-ÄÖÜ", "src-1", "MySQL", "localhost", 3306, true, false);
             assertEquals("权限-ÄÖÜ", jdbc.queryForObject("SELECT name FROM metaforge_source WHERE code = 'src-1'", String.class));
             assertTrue(jdbc.queryForObject("SELECT is_public FROM metaforge_source WHERE code = 'src-1'", Boolean.class));
+
+            // new datasets default to the MetaForge executor
+            jdbc.update("INSERT INTO metaforge_dataset (name, code) VALUES ('orders', 'ds-1')");
+            assertEquals("MetaForge", jdbc.queryForObject("SELECT executor FROM metaforge_dataset WHERE code = 'ds-1'", String.class));
         }
     }
 
@@ -142,7 +149,10 @@ public class DatabaseMigratorTest
         // history-owned join table: scheduled_id = history id, history_id = schedule id
         jdbc.update("INSERT INTO metaforge_scheduled_history_relation (scheduled_id, history_id) VALUES (91, 2)");
         jdbc.update("INSERT INTO metaforge_scheduled_history_source_relation (scheduled_history_id, source_id) VALUES (91, 11)");
-        jdbc.update("INSERT INTO metaforge_workflow (id, name, j_from_id, j_to_id, j_user_id, code) VALUES (101, 'flow', 11, 11, 7, 'w101')");
+        jdbc.update("INSERT INTO metaforge_workflow (id, name, j_from_id, j_to_id, j_user_id, code, executor) VALUES (101, 'flow', 11, 11, 7, 'w101', 'LocalExecutor')");
+        // saved Local executor settings, plus a MetaForge row seeded next to them by an interim build
+        jdbc.update("INSERT INTO metaforge_configure (name, category, configure) VALUES ('Local', 'EXECUTOR', '{\"batchSize\":\"5000\"}')");
+        jdbc.update("INSERT INTO metaforge_configure (name, category, configure) VALUES ('MetaForge', 'EXECUTOR', '{}')");
         jdbc.update("INSERT INTO metaforge_source_query (id, plugin_id, user_id, content, create_time) VALUES (111, 11, 7, 'select 1', '2026-10-28 10:11:12.345')");
 
         DatabaseMigrator.migrate(legacy);
@@ -154,7 +164,9 @@ public class DatabaseMigratorTest
 
         assertEquals(1, count(jdbc, "SELECT COUNT(*) FROM metaforge_user_role WHERE user_id = 7 AND role_id = 1"));
         assertEquals(0, count(jdbc, "SELECT COUNT(*) FROM metaforge_user_role WHERE role_id = 999"));
+        // the legacy menus plus System settings (core-0007), less runtime settings (core-0009)
         assertEquals(18, count(jdbc, "SELECT COUNT(*) FROM metaforge_role_menu WHERE role_id = 1"));
+        assertEquals(1, count(jdbc, "SELECT COUNT(*) FROM metaforge_menu WHERE code = 'SYSTEM_SETTINGS'"));
         assertEquals("Redis", jdbc.queryForObject("SELECT source_type FROM metaforge_source WHERE id = 11", String.class));
         assertTrue(jdbc.queryForObject("SELECT is_public FROM metaforge_source WHERE id = 11", Boolean.class));
         assertEquals(7, count(jdbc, "SELECT user_id FROM metaforge_dataset WHERE id = 21"));
@@ -175,6 +187,11 @@ public class DatabaseMigratorTest
         assertEquals(11, count(jdbc, "SELECT from_source_id FROM metaforge_workflow WHERE id = 101"));
         assertEquals(7, count(jdbc, "SELECT user_id FROM metaforge_workflow WHERE id = 101"));
         assertEquals(11, count(jdbc, "SELECT source_id FROM metaforge_source_query WHERE id = 111"));
+        // the Local executor is renamed to MetaForge, keeping its saved settings
+        assertEquals("MetaForge", jdbc.queryForObject("SELECT executor FROM metaforge_dataset WHERE id = 21", String.class));
+        assertEquals("MetaForge", jdbc.queryForObject("SELECT executor FROM metaforge_workflow WHERE id = 101", String.class));
+        assertEquals(0, count(jdbc, "SELECT COUNT(*) FROM metaforge_configure WHERE category = 'EXECUTOR' AND name = 'Local'"));
+        assertEquals("{\"batchSize\":\"5000\"}", jdbc.queryForObject("SELECT configure FROM metaforge_configure WHERE category = 'EXECUTOR' AND name = 'MetaForge'", String.class));
         assertEquals("2026-10-28 10:11:12", jdbc.queryForObject("SELECT create_time FROM metaforge_source_query WHERE id = 111", java.sql.Timestamp.class)
                 .toLocalDateTime().toString().replace('T', ' '));
         // the navigation catalogue upgrade ran, and the seed did not duplicate the legacy catalogue

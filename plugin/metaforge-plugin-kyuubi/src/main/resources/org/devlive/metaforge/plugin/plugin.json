@@ -1,0 +1,12 @@
+{
+  "label": "Apache Kyuubi",
+  "description": "Apache Kyuubi, a distributed and multi-tenant gateway to provide serverless SQL on lakehouses.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/kyuubi.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 21
+}

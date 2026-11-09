@@ -23,6 +23,7 @@ import java.util.List;
 public class MongoStatement
         implements Statement
 {
+    private ResultSet resultSet;
     private final MongoConnection connection;
     private boolean isClosed = false;
 
@@ -280,21 +281,24 @@ public class MongoStatement
     public boolean execute(String sql)
             throws SQLException
     {
-        return false;
+        // MetaForge runs every statement through execute(); a query leaves its rows here.
+        resultSet = executeQuery(sql);
+        return true;
     }
 
     @Override
     public ResultSet getResultSet()
             throws SQLException
     {
-        return null;
+        return resultSet;
     }
 
     @Override
     public int getUpdateCount()
             throws SQLException
     {
-        return 0;
+        // execute() always leaves a result set, so there is no update count.
+        return -1;
     }
 
     @Override

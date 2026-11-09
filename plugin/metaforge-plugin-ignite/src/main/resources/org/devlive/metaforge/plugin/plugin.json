@@ -1,0 +1,12 @@
+{
+  "label": "Apache Ignite",
+  "description": "Apache Ignite is a distributed database for high-performance computing with in-memory speed.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ignite.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 22
+}

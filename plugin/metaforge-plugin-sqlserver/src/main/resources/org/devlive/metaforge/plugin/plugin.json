@@ -1,0 +1,12 @@
+{
+  "label": "Microsoft SQL Server",
+  "description": "Microsoft SQL Server is a relational database management system.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/sqlserver.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 36
+}

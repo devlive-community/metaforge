@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.devlive.metaforge.common.view.EntityView;
 
+import java.util.Map;
 import java.util.Set;
 
 @Data
@@ -25,4 +26,8 @@ public class NotificationTypeEntity
 
     @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
     private Set<String> services;
+
+    // The user's settings for this channel, by field name; secret values never leave the server.
+    @JsonView(value = {EntityView.UserView.class, EntityView.AdminView.class})
+    private Map<String, String> configure;
 }

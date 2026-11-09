@@ -12,6 +12,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
+import java.sql.SQLRecoverableException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
@@ -118,7 +120,13 @@ public final class JdbcStreamAdapter
             throw new IllegalStateException("Open jdbc connection failed: "
                     + Optional.ofNullable(jdbcConnection.getResponse().getMessage()).orElse("unknown"));
         }
-        return new JdbcBatchWriter(jdbcConnection, connection, database, table, columns, effectiveBatchSize);
+        return batchWriter(connection, jdbcConnection::destroy, database, table, columns, effectiveBatchSize);
+    }
+
+    /** A batch writer on an open connection; {@code release} runs once the writer is closed. */
+    static BatchWriter batchWriter(Connection connection, Runnable release, String database, String table, List<String> columns, int batchSize)
+    {
+        return new JdbcBatchWriter(release, connection, database, table, columns, batchSize > 0 ? batchSize : DEFAULT_BATCH_SIZE);
     }
 
     private static JdbcConnection openConnection(PluginService plugin, RuntimeConfigure configure)
@@ -157,7 +165,7 @@ public final class JdbcStreamAdapter
     private static final class JdbcBatchWriter
             implements BatchWriter
     {
-        private final JdbcConnection jdbcConnection;
+        private final Runnable release;
         private final Connection connection;
         private final PreparedStatement statement;
         private final int columnCount;
@@ -166,31 +174,43 @@ public final class JdbcStreamAdapter
         private long written;
         private boolean originalAutoCommit = true;
         private boolean restoreAutoCommit;
+        /**
+         * Whether each batch is committed in a transaction. Engines without transactions (ClickHouse
+         * and other analytical stores) write on executeBatch and reject commit(), so they run with
+         * the driver's auto-commit instead.
+         */
+        private boolean transactional;
 
         JdbcBatchWriter(
-                JdbcConnection jdbcConnection,
+                Runnable release,
                 Connection connection,
                 String database,
                 String table,
                 List<String> columns,
                 int batchSize)
         {
-            this.jdbcConnection = jdbcConnection;
+            this.release = release;
             this.connection = connection;
             this.columnCount = columns.size();
             this.batchSize = batchSize;
 
             try {
                 this.originalAutoCommit = connection.getAutoCommit();
-                if (this.originalAutoCommit) {
-                    connection.setAutoCommit(false);
-                    this.restoreAutoCommit = true;
+                if (supportsTransactions(connection)) {
+                    if (this.originalAutoCommit) {
+                        connection.setAutoCommit(false);
+                        this.restoreAutoCommit = true;
+                    }
+                    this.transactional = true;
                 }
             }
-            catch (SQLException ignore) {
+            catch (SQLException ex) {
+                // A driver that cannot switch auto-commit off keeps writing with auto-commit.
+                log.debug("Batch writer falls back to auto-commit: {}", ex.getMessage());
+                this.transactional = false;
             }
 
-            String sql = buildInsertTemplate(database, table, columns);
+            String sql = buildInsertTemplate(identifierQuote(connection), database, table, columns);
             try {
                 this.statement = connection.prepareStatement(sql);
             }
@@ -220,11 +240,48 @@ public final class JdbcStreamAdapter
                 statement.addBatch();
                 pending++;
                 if (pending >= batchSize) {
-                    flush();
+                    commitPending();
                 }
             }
             catch (SQLException ex) {
+                // Rows bound so far must not leak into the caller's next attempt.
+                discardFailedBatch();
                 throw new IllegalStateException("Add batch row failed: " + ex.getMessage(), ex);
+            }
+        }
+
+        @Override
+        public void flush()
+        {
+            if (pending == 0) {
+                return;
+            }
+            try {
+                commitPending();
+            }
+            catch (SQLException ex) {
+                throw new IllegalStateException("Flush batch failed: " + ex.getMessage(), ex);
+            }
+        }
+
+        /**
+         * Transactions roll back; a ClickHouse INSERT is parsed before it is written, so a rejected
+         * one writes nothing. Other engines without transactions may keep part of a failed batch.
+         */
+        @Override
+        public boolean failedWritesLeaveNoRows()
+        {
+            return transactional || clickHouse();
+        }
+
+        private boolean clickHouse()
+        {
+            try {
+                String product = connection.getMetaData().getDatabaseProductName();
+                return product != null && product.toLowerCase(java.util.Locale.ROOT).contains("clickhouse");
+            }
+            catch (SQLException | RuntimeException ex) {
+                return false;
             }
         }
 
@@ -239,7 +296,7 @@ public final class JdbcStreamAdapter
         {
             try {
                 if (pending > 0) {
-                    flush();
+                    commitPending();
                 }
             }
             catch (SQLException ex) {
@@ -250,14 +307,64 @@ public final class JdbcStreamAdapter
             }
         }
 
-        private void flush()
+        private void commitPending()
                 throws SQLException
         {
-            statement.executeBatch();
-            connection.commit();
+            try {
+                statement.executeBatch();
+                if (transactional) {
+                    try {
+                        connection.commit();
+                    }
+                    catch (SQLFeatureNotSupportedException ex) {
+                        // The driver advertised transactions but cannot commit: the batch is already written.
+                        log.warn("Driver does not support commit(); continuing with auto-commit: {}", ex.getMessage());
+                        transactional = false;
+                        try {
+                            connection.setAutoCommit(true);
+                            restoreAutoCommit = !originalAutoCommit;
+                        }
+                        catch (SQLException ignored) {
+                            // Nothing more to do: the driver writes on executeBatch.
+                        }
+                    }
+                }
+            }
+            catch (SQLException ex) {
+                discardFailedBatch();
+                throw ex;
+            }
+            catch (AssertionError ex) {
+                // pgjdbc reports a connection lost during executeBatch with an AssertionError.
+                discardFailedBatch();
+                throw new SQLRecoverableException(ex.getMessage(), "08003", ex);
+            }
             written += pending;
             pending = 0;
             statement.clearBatch();
+        }
+
+        /**
+         * A failed batch is rolled back and dropped, so close() neither sends it again nor counts it:
+         * committing an aborted transaction rolls it back without an error on some drivers.
+         */
+        private void discardFailedBatch()
+        {
+            pending = 0;
+            try {
+                statement.clearBatch();
+            }
+            catch (SQLException ex) {
+                log.debug("Clear failed batch: {}", ex.getMessage());
+            }
+            if (transactional) {
+                try {
+                    connection.rollback();
+                }
+                catch (SQLException ex) {
+                    log.warn("Rollback failed batch: {}", ex.getMessage());
+                }
+            }
         }
 
         private void safeClose()
@@ -277,23 +384,45 @@ public final class JdbcStreamAdapter
             }
             catch (SQLException ignore) {
             }
-            jdbcConnection.destroy();
+            release.run();
+        }
+
+        private static boolean supportsTransactions(Connection connection)
+        {
+            try {
+                return connection.getMetaData() == null || connection.getMetaData().supportsTransactions();
+            }
+            catch (SQLException | RuntimeException ex) {
+                // Unknown: keep the transactional path, which still degrades if commit() is unsupported.
+                return true;
+            }
         }
     }
 
-    private static String buildInsertTemplate(String database, String table, List<String> columns)
+    /** The target's identifier quote: a double quote on PostgreSQL and most engines, a backtick on MySQL and ClickHouse. */
+    private static String identifierQuote(Connection connection)
+    {
+        try {
+            return connection.getMetaData().getIdentifierQuoteString().trim();
+        }
+        catch (SQLException | RuntimeException ex) {
+            return "`";
+        }
+    }
+
+    private static String buildInsertTemplate(String quote, String database, String table, List<String> columns)
     {
         StringBuilder sb = new StringBuilder();
         sb.append("INSERT INTO ");
         if (database != null && !database.isEmpty()) {
-            sb.append('`').append(database).append("`.");
+            sb.append(quote).append(database).append(quote).append('.');
         }
-        sb.append('`').append(table).append("` (");
+        sb.append(quote).append(table).append(quote).append(" (");
         for (int i = 0; i < columns.size(); i++) {
             if (i > 0) {
                 sb.append(", ");
             }
-            sb.append('`').append(columns.get(i)).append('`');
+            sb.append(quote).append(columns.get(i)).append(quote);
         }
         sb.append(") VALUES (");
         for (int i = 0; i < columns.size(); i++) {

@@ -59,6 +59,6 @@ MetaForge declares the configuration fields inside the plugin class by default (
 
 !!! warning
 
-    The online service has not been tested yet, if you have detailed test results, please submit [issues](https://github.com/EdurtIO/metaforge/issues/new/choose) to us
+    Snowflake is only offered as a hosted service with no container image, so the plugin has no container e2e test and no version is verified. Checking it needs a Snowflake account; if you test it, please report the result in [issues](https://github.com/devlive-community/metaforge/issues/new/choose).
 
 !!!

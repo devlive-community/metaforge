@@ -1,5 +1,8 @@
 package org.devlive.metaforge.plugin;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.JsonNodeFactory;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +13,9 @@ import org.devlive.metaforge.spi.generator.definition.TableDefinition;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 
 @Slf4j
@@ -27,12 +33,6 @@ public class ClickHouseService
     public String driver()
     {
         return "com.clickhouse.jdbc.ClickHouseDriver";
-    }
-
-    @Override
-    public Boolean isSupportMeta()
-    {
-        return true;
     }
 
     @Override
@@ -86,12 +86,14 @@ public class ClickHouseService
                 "\n" +
                 "    UNION ALL\n" +
                 "\n" +
-                "    -- 函数\n" +
+                "    -- 函数：只列用户定义的函数，内置函数（上千个）不属于任何库\n" +
+                "    -- Functions: user-defined ones only; the thousand-plus built-ins belong to no database\n" +
                 "    SELECT\n" +
                 "        'function' as type_name,\n" +
                 "        name as object_name,\n" +
                 "        '' as object_comment\n" +
                 "    FROM system.functions\n" +
+                "    WHERE origin != 'System'\n" +
                 "\n" +
                 ") AS combined_objects\n" +
                 "ORDER BY\n" +
@@ -157,6 +159,101 @@ public class ClickHouseService
                 sql.replace("{0}", database)
                         .replace("{1}", table)
         );
+    }
+
+    /** Index page columns, in the order the generic MySQL-style implementation returns them. */
+    static final List<String> INDEX_HEADERS = List.of("index_name", "non_unique", "seq_in_index", "column_name", "collation", "cardinality",
+            "sub_part", "index_type", "index_comment", "nullable", "key_length");
+
+    /**
+     * ClickHouse has no MySQL-style STATISTICS view: the primary key (or the sorting key when no
+     * primary key is declared) comes from system.tables, data skipping indexes from
+     * system.data_skipping_indices. Older servers without that table still list the primary key.
+     * The primary key of a MergeTree table is sparse and not unique.
+     */
+    @Override
+    public Response getIndexDetails(RuntimeConfigure configure, String database, String table)
+    {
+        String where = "database = " + sqlLiteral(database);
+        String sql = "SELECT primary_key, sorting_key FROM system.tables WHERE " + where + " AND name = " + sqlLiteral(table);
+        Response response = this.execute(configure, sql);
+        if (response == null || !Boolean.TRUE.equals(response.getIsSuccessful())) {
+            return response;
+        }
+        List<Object> rows = new ArrayList<>();
+        JsonNode keys = response.getColumns() == null ? null
+                : response.getColumns().stream().filter(JsonNode.class::isInstance).map(JsonNode.class::cast).findFirst().orElse(null);
+        if (keys != null) {
+            String primary = keys.path("primary_key").asText("");
+            List<String> columns = splitKeyExpression(primary.isBlank() ? keys.path("sorting_key").asText("") : primary);
+            for (int index = 0; index < columns.size(); index++) {
+                rows.add(indexRow("PRIMARY", index + 1, columns.get(index), "PRIMARY KEY", ""));
+            }
+        }
+        Response skipping = this.execute(configure, "SELECT name, type, expr, granularity FROM system.data_skipping_indices WHERE "
+                + where + " AND table = " + sqlLiteral(table) + " ORDER BY name");
+        if (skipping != null && Boolean.TRUE.equals(skipping.getIsSuccessful()) && skipping.getColumns() != null) {
+            for (Object item : skipping.getColumns()) {
+                if (!(item instanceof JsonNode)) {
+                    continue;
+                }
+                JsonNode index = (JsonNode) item;
+                rows.add(indexRow(index.path("name").asText(), 1, index.path("expr").asText(), index.path("type").asText().toUpperCase(Locale.ROOT),
+                        "GRANULARITY " + index.path("granularity").asText()));
+            }
+        }
+        response.setHeaders(Lists.newArrayList(INDEX_HEADERS));
+        response.setTypes(INDEX_HEADERS.stream().map(header -> "String").collect(java.util.stream.Collectors.toList()));
+        response.setColumns(rows);
+        response.setContent(sql);
+        return response;
+    }
+
+    private static ObjectNode indexRow(String name, int position, String column, String type, String comment)
+    {
+        ObjectNode row = JsonNodeFactory.instance.objectNode();
+        row.put("index_name", name);
+        row.put("non_unique", 1);
+        row.put("seq_in_index", position);
+        row.put("column_name", column);
+        row.putNull("collation");
+        row.putNull("cardinality");
+        row.putNull("sub_part");
+        row.put("index_type", type);
+        row.put("index_comment", comment);
+        row.put("nullable", "");
+        row.putNull("key_length");
+        return row;
+    }
+
+    /** Splits a key expression list at top-level commas only: cityHash64(a, b) stays one key. */
+    static List<String> splitKeyExpression(String expression)
+    {
+        List<String> keys = new ArrayList<>();
+        int depth = 0;
+        boolean quoted = false;
+        StringBuilder current = new StringBuilder();
+        for (int index = 0; index < expression.length(); index++) {
+            char ch = expression.charAt(index);
+            if (ch == '\'' && (index == 0 || expression.charAt(index - 1) != '\\')) {
+                quoted = !quoted;
+            }
+            else if (!quoted && (ch == '(' || ch == '[')) {
+                depth++;
+            }
+            else if (!quoted && (ch == ')' || ch == ']')) {
+                depth--;
+            }
+            else if (!quoted && depth == 0 && ch == ',') {
+                keys.add(current.toString().trim());
+                current.setLength(0);
+                continue;
+            }
+            current.append(ch);
+        }
+        keys.add(current.toString().trim());
+        keys.removeIf(String::isEmpty);
+        return keys;
     }
 
     @Override

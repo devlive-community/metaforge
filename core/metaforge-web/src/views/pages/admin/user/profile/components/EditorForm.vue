@@ -4,15 +4,16 @@
       <MfSpinner/>
     </div>
     <MfForm v-else-if="!defaultLoading && formState" :model="formState" layout="vertical" @finish="onSubmit">
+        <MfFormGrid>
         <MfFormItem name="fontSize"
-                     class="w-[40%]"
                      :label="$t('user.common.fontSize')"
                      :tip="$t('user.tip.fontSize')"
-                     :rules="[{ pattern: /^[0-9]*$/, message: 'Please enter number!' }]">
-          <MfInput v-model="formState.fontSize"/>
+                     :rules="[{ required: true, min: 1, message: $t('user.validation.fontSize') }]">
+          <MfInputNumber v-model="formState.fontSize" class="w-full" :min="1" decimal-only commit-on-change/>
         </MfFormItem>
+        </MfFormGrid>
 
-        <MfButton variant="primary" type="submit" :loading="submitting" :disabled="submitting">
+        <MfButton class="self-start" variant="primary" type="submit" :loading="submitting" :disabled="submitting">
           {{ $t('common.save') }}
         </MfButton>
       </MfForm>
@@ -41,9 +42,8 @@ const handlerInitialize = () => {
              .then(response => {
                if (response.status) {
                  const configure = response.data.editorConfigure
-                 if (response.data && configure) {
-                   formState.value = configure as UserEditor
-                 }
+                 const saved = typeof configure === 'string' ? JSON.parse(configure) : configure
+                 formState.value = { fontSize: 12, theme: 'chrome', ...saved }
                }
              })
              .finally(() => (defaultLoading.value = false))

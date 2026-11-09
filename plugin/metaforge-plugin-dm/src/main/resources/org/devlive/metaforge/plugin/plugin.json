@@ -1,0 +1,12 @@
+{
+  "label": "Dameng",
+  "description": "A professional database software developer and service provider, we provide users with technically advanced and detailed products.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dm.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 9
+}

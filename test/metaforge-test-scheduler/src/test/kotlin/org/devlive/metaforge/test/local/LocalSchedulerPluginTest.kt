@@ -16,6 +16,8 @@ class LocalSchedulerModuleTest
         val projectRoot = PluginPathUtils.findProjectRoot()
         val config = PluginConfigure.builder()
             .pluginsDir(projectRoot.resolve("scheduler/metaforge-scheduler-local"))
+            // The plugin classes sit two levels below the module directory (target/classes).
+            .scanDepth(2)
             .build()
 
         pluginManager = PluginManager(config).apply { start() }

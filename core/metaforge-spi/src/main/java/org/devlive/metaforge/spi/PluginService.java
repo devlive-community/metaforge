@@ -125,16 +125,6 @@ public interface PluginService
         return "metaforge";
     }
 
-    /**
-     * 是否支持元数据管理
-     *
-     * @return 是否支持
-     */
-    default Boolean isSupportMeta()
-    {
-        return false;
-    }
-
     default void connect(RuntimeConfigure configure)
     {
         Response response = new Response();
@@ -693,6 +683,14 @@ public interface PluginService
                     catch (SQLException ignored) {
                         decimalDigits = 0;
                     }
+                    // JDBC 4.1 column; drivers such as MonetDB's do not return it
+                    String autoincrement;
+                    try {
+                        autoincrement = resultSet.getString("IS_AUTOINCREMENT");
+                    }
+                    catch (SQLException ignored) {
+                        autoincrement = "NO";
+                    }
                     rows.add(Lists.newArrayList(
                             "column",
                             resultSet.getString("COLUMN_NAME"),
@@ -703,24 +701,29 @@ public interface PluginService
                             resultSet.getInt("ORDINAL_POSITION"),
                             "",
                             columnSize,
-                            resultSet.getString("IS_AUTOINCREMENT"),
+                            autoincrement,
                             decimalDigits));
                 }
             }
+            // Primary keys are extra detail; servers such as Kyuubi's Spark engine do not support the lookup
+            List<String> primaryColumns = Lists.newArrayList();
             try (ResultSet resultSet = metaData.getPrimaryKeys(null, database, table)) {
-                List<String> primaryColumns = Lists.newArrayList();
                 while (resultSet.next()) {
                     primaryColumns.add(resultSet.getString("COLUMN_NAME"));
                 }
-                for (String primaryColumn : primaryColumns) {
-                    rows.add(Lists.newArrayList(
-                            "primary",
-                            primaryColumn,
-                            "", "", "", "",
-                            0,
-                            "PRIMARY KEY on (" + String.join(", ", primaryColumns) + ")",
-                            0, "NO", 0));
-                }
+            }
+            catch (SQLException ex) {
+                log.warn("Primary keys of {}.{} are not available: {}", database, table, ex.getMessage());
+                primaryColumns.clear();
+            }
+            for (String primaryColumn : primaryColumns) {
+                rows.add(Lists.newArrayList(
+                        "primary",
+                        primaryColumn,
+                        "", "", "", "",
+                        0,
+                        "PRIMARY KEY on (" + String.join(", ", primaryColumns) + ")",
+                        0, "NO", 0));
             }
             response.setColumns(formatRows(configure, response, rows));
             response.setIsConnected(true);

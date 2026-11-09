@@ -1,0 +1,10 @@
+{
+  "kind": "document",
+  "capabilities": [
+    "query:execute",
+    "database:list",
+    "table:list",
+    "column:read",
+    "tab:sql"
+  ]
+}

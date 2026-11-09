@@ -1,0 +1,12 @@
+{
+  "label": "Apache Druid",
+  "description": "A high performance, real-time analytics database that delivers sub-second queries on streaming and batch data at scale and under load.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/druid.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 13
+}

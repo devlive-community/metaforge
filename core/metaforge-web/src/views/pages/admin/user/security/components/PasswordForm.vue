@@ -4,17 +4,17 @@
     <div class="dc-password__pagehead">
       <div>
         <div class="dc-password__title">{{ $t('user.common.modifyPassword') }}</div>
-        <div class="dc-password__desc">{{ $t('user.tip.passwordPage') }}</div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="grid min-w-0 grid-cols-1 xl:grid-cols-3 gap-4">
       <!-- 表单区 -->
-      <div class="lg:col-span-2">
+      <div class="min-w-0 xl:col-span-2">
         <div class="dc-password__card">
-          <MfForm layout="vertical" class="dc-password__form">
-            <MfFormItem name="oldPassword" required-mark :label="$t('user.common.currentPassword')" :tip="$t('user.tip.currentPasswordLive')">
-              <MfInput v-model="formState.oldPassword"
+          <MfForm ref="form" :model="formState" layout="vertical" class="dc-password__form">
+            <MfFormGrid>
+            <MfFormItem name="oldPassword" class="col-span-full" :rules="[{ required: true, message: $t('user.validation.currentPassword') }]" :label="$t('user.common.currentPassword')" :tip="$t('user.tip.currentPasswordLive')">
+              <MfInput v-model="formState.oldPassword" name="current-password" autocomplete="current-password"
                        type="password"
                        show-password
                        :placeholder="$t('user.placeholder.currentPassword')">
@@ -24,8 +24,8 @@
               </MfInput>
             </MfFormItem>
 
-            <MfFormItem name="newPassword" required-mark :label="$t('user.common.newPassword')" :tip="$t('user.tip.newPasswordFormat')">
-              <MfInput v-model="formState.newPassword"
+            <MfFormItem name="newPassword" :rules="[{ required: true, min: 8, max: 32, message: $t('user.validation.passwordSize') }]" :label="$t('user.common.newPassword')" :tip="$t('user.tip.newPasswordFormat')">
+              <MfInput v-model="formState.newPassword" name="new-password" autocomplete="new-password"
                        type="password"
                        show-password
                        :placeholder="$t('user.placeholder.newPassword')">
@@ -34,6 +34,19 @@
                 </template>
               </MfInput>
 
+            </MfFormItem>
+
+            <MfFormItem name="confirmPassword" :rules="[{ required: true, message: $t('user.auth.confirmPasswordTip') }, { validator: value => value === formState.newPassword || $t('user.auth.passwordNotMatchTip') }]" :label="$t('user.common.confirmPassword')" :tip="$t('user.tip.confirmNewPassword')">
+              <MfInput v-model="formState.confirmPassword" name="confirm-password" autocomplete="new-password"
+                       type="password"
+                       show-password
+                       :placeholder="$t('user.placeholder.confirmNewPassword')">
+                <template #prefix>
+                  <Lock :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
+                </template>
+              </MfInput>
+            </MfFormItem>
+              <div class="col-span-full" aria-live="polite">
               <!-- 强度条 -->
               <div class="dc-password__meter">
                 <div class="dc-password__meter-segments">
@@ -57,18 +70,8 @@
                   <span>{{ $t(rule.nameKey) }}</span>
                 </div>
               </div>
-            </MfFormItem>
-
-            <MfFormItem name="confirmPassword" required-mark :label="$t('user.common.confirmPassword')" :tip="$t('user.tip.confirmNewPassword')">
-              <MfInput v-model="formState.confirmPassword"
-                       type="password"
-                       show-password
-                       :placeholder="$t('user.placeholder.confirmNewPassword')">
-                <template #prefix>
-                  <Lock :size="14" :style="{ color: 'var(--dc-text-secondary)' }"/>
-                </template>
-              </MfInput>
-            </MfFormItem>
+              </div>
+            </MfFormGrid>
           </MfForm>
 
           <div class="dc-password__actions">
@@ -133,6 +136,7 @@ defineOptions({ name: 'PasswordForm' })
 
 const { t } = useI18n()
 
+const form = ref<any>()
 const loading = ref(false)
 const formState = reactive({
   oldPassword: '',
@@ -187,11 +191,9 @@ const canSubmit = computed(() => {
       && newPassword.length <= 32
 })
 
-const onSubmit = () => {
-  if (formState.newPassword !== formState.confirmPassword) {
-    MfMessage.error(t('user.auth.passwordNotMatchTip') as string)
-    return
-  }
+const onSubmit = async () => {
+  if (loading.value) return
+  try { await form.value?.validate() } catch { return }
   loading.value = true
   UserService.changePassword(formState as unknown as UserPasswordModel)
              .then((response) => {
@@ -209,6 +211,7 @@ const onSubmit = () => {
 }
 
 const onReset = () => {
+  form.value?.clearValidate()
   formState.oldPassword = ''
   formState.newPassword = ''
   formState.confirmPassword = ''
@@ -230,12 +233,6 @@ const onReset = () => {
     color: var(--dc-text-title);
 }
 
-.dc-password__desc {
-    font-size: 13px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
 .dc-password__card {
     background: var(--dc-surface);
     border: 1px solid var(--dc-border-light);
@@ -244,7 +241,6 @@ const onReset = () => {
     padding: 20px;
     margin-bottom: 16px;
 }
-
 
 .dc-password__meter {
     display: flex;
@@ -394,4 +390,13 @@ const onReset = () => {
     color: var(--dc-text-secondary);
     margin-top: 2px;
 }
+</style>
+
+<style scoped>
+.dc-password__form { max-width: 42rem; min-width: 0; }
+.dc-password__card { min-width: 0; }
+.dc-password__actions, .dc-password__meter { flex-wrap: wrap; }
+.dc-password__rules { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dc-password__rule { align-items: flex-start; line-height: 1.5; min-width: 0; }
+.dc-password__rule-dot { margin-top: 3px; }
 </style>

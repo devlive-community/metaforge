@@ -256,6 +256,7 @@
 </template>
 
 <script setup lang="ts">
+import { useMetadataTreeChange } from '@/composables/useMetadataTreeChange'
 import { computed, inject, nextTick, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSourceManageRoute as useRoute } from '@/composables/useSourceManageRoute'
@@ -281,6 +282,7 @@ const emit = defineEmits<{ (e: 'close', value: boolean): void }>()
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const treeChanged = useMetadataTreeChange()
 
 const visible = computed({
   get: () => props.isVisible,
@@ -564,6 +566,7 @@ const onSubmit = () => {
                  .then(response => {
                    if (response.status && response.data && response.data.isSuccessful) {
                      MfMessage.success(t('source.tip.createTableSuccess').replace('$VALUE', String(definition.name)))
+                     treeChanged()
                      visible.value = false
                      router.push(sourceManageLocation({ source: code, database, table: definition.name,
                        tab: advanced.value.continueIndex ? 'indexes' : 'structure' }))

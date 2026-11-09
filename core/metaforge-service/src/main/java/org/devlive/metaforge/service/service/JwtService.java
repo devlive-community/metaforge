@@ -43,11 +43,18 @@ public class JwtService
 
     public String generateJwtToken(Authentication authentication)
     {
+        return generateJwtToken(authentication, 0);
+    }
+
+    /** A token lasting the given milliseconds, or metaforge.security.expiration when it is 0. */
+    public String generateJwtToken(Authentication authentication, long expirationMs)
+    {
         UserDetailsService userPrincipal = (UserDetailsService) authentication.getPrincipal();
+        long lasting = expirationMs > 0 ? expirationMs : jwtExpirationMs;
         return Jwts.builder()
                 .setSubject((userPrincipal.getUsername()))
                 .setIssuedAt(new Date())
-                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .setExpiration(new Date((new Date()).getTime() + lasting))
                 .signWith(SignatureAlgorithm.HS512, jwtSecret)
                 .compact();
     }

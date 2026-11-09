@@ -72,3 +72,15 @@ Support time: `2024-06-26`
     |---|---|
     | `database` | `default` |
 
+#### Version (Validation)
+
+---
+
+!!! note
+
+    The plugin's e2e test `InfluxdbE2ETest` verifies each version below in a container: the version check, then points written over HTTP are listed as a database, measurement and its tags and fields, and read back with InfluxQL. The plugin speaks InfluxQL, the InfluxDB 1.x query language.
+
+    - [x] 1.8
+    - [x] 1.11
+
+!!!

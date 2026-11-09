@@ -6,6 +6,7 @@ import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.plugin.PluginType;
 import org.devlive.metaforge.plugin.configure.RuntimeConfigureField;
+import org.devlive.metaforge.service.configure.QuerySchema;
 import org.devlive.metaforge.service.initializer.InstallationState;
 import org.devlive.metaforge.service.service.RuntimeConfigureService;
 import org.springframework.boot.CommandLineRunner;
@@ -73,6 +74,13 @@ public class RuntimeConfigureSeedRunner
         }
         catch (Exception ex) {
             log.error("Seed executor runtime configure failed", ex);
+        }
+        try {
+            runtimeConfigureService.seedIfAbsent(RuntimeConfigureService.CATEGORY_QUERY, QuerySchema.NAME, QuerySchema.fields(),
+                    "Limits for statements run from the query page");
+        }
+        catch (Exception ex) {
+            log.error("Seed query runtime configure failed", ex);
         }
     }
 }

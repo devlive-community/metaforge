@@ -1,4 +1,5 @@
 import { Type } from '@/views/components/visual/Type'
+import type { QueryChartConfiguration } from '@/model/query-chart'
 import { ResponseModel } from '@/model/response'
 
 export class Configuration
@@ -9,6 +10,7 @@ export class Configuration
     type: Type = Type.TABLE
     message?: null
     chartConfigure?: IChart
+    queryChart?: QueryChartConfiguration['queryChart']
 }
 
 export class ConfigurationRequest
@@ -26,6 +28,8 @@ export interface IChart
 {
     xAxis?: string
     x2Axis?: string
+    leftField?: string
+    rightField?: string
     yAxis?: string
     series?: string
     outerRadius?: number[]

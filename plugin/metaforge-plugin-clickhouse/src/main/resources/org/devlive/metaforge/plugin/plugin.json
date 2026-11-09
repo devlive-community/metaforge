@@ -1,0 +1,12 @@
+{
+  "label": "ClickHouse",
+  "description": "ClickHouse is a distributed column-oriented database. It is a distributed database with a focus on performance, scalability, and ease of use.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/clickhouse.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 1
+}

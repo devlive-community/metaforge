@@ -37,7 +37,9 @@ public final class DatasetTargetSchema
                 new RuntimeConfigureField("tableDefaultEngine", RuntimeConfigureFieldType.STRING, "MergeTree",
                         "Default table engine when materializing", false),
                 new RuntimeConfigureField("tablePrefix", RuntimeConfigureFieldType.STRING, "metaforge_",
-                        "Table name prefix", false)
+                        "Table name prefix", false),
+                new RuntimeConfigureField("maxConcurrentSyncs", RuntimeConfigureFieldType.NUMBER, "4",
+                        "Dataset syncs that run at the same time; further syncs wait in the queue", false)
         );
     }
 }

@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.devlive.metaforge.common.enums.DataSetState;
+import org.devlive.metaforge.common.enums.ServiceState;
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.common.sql.SqlBuilder;
 import org.devlive.metaforge.common.sql.configure.SqlBody;
@@ -18,6 +19,7 @@ import org.devlive.metaforge.common.sql.configure.SqlType;
 import org.devlive.metaforge.executor.ExecutorService;
 import org.devlive.metaforge.executor.common.RunProtocol;
 import org.devlive.metaforge.executor.common.RunState;
+import org.devlive.metaforge.executor.common.RunStateMachine;
 import org.devlive.metaforge.executor.configure.ExecutorConfigure;
 import org.devlive.metaforge.executor.configure.ExecutorRequest;
 import org.devlive.metaforge.executor.configure.ExecutorResponse;
@@ -29,13 +31,16 @@ import org.devlive.metaforge.plugin.configure.PluginConfigurePipelineType;
 import org.devlive.metaforge.scheduler.SchedulerRequest;
 import org.devlive.metaforge.scheduler.SchedulerService;
 import org.devlive.metaforge.service.adapter.PageRequestAdapter;
-import org.devlive.metaforge.service.annotation.SendNotification;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.PipelineFieldBody;
 import org.devlive.metaforge.service.body.adhoc.Adhoc;
 import org.devlive.metaforge.service.common.ConfigureUtils;
 import org.devlive.metaforge.service.common.FolderUtils;
 import org.devlive.metaforge.service.dataset.DatasetVirtualColumns;
+import org.devlive.metaforge.service.dataset.sync.SyncActiveView;
+import org.devlive.metaforge.service.dataset.sync.SyncJob;
+import org.devlive.metaforge.service.dataset.sync.SyncJobManager;
+import org.devlive.metaforge.service.dataset.sync.SyncMetricsView;
 import org.devlive.metaforge.service.entity.DataSetColumnEntity;
 import org.devlive.metaforge.service.entity.DataSetEntity;
 import org.devlive.metaforge.service.entity.DatasetHistoryEntity;
@@ -46,7 +51,7 @@ import org.devlive.metaforge.service.enums.ColumnMode;
 import org.devlive.metaforge.service.enums.ColumnType;
 import org.devlive.metaforge.service.enums.CreatedMode;
 import org.devlive.metaforge.service.enums.EntityType;
-import org.devlive.metaforge.service.enums.NotificationType;
+import org.devlive.metaforge.service.enums.NotificationScene;
 import org.devlive.metaforge.service.enums.QueryMode;
 import org.devlive.metaforge.service.enums.SyncMode;
 import org.devlive.metaforge.service.event.NotificationEventPublisher;
@@ -101,16 +106,11 @@ import static java.util.Objects.requireNonNull;
 public class DataSetServiceImpl
         implements DataSetService
 {
-    // 同步期间每 SIZE_REFRESH_EVERY 次进度回调才刷一次 totalSize（查 ClickHouse system.parts 较重）
+    // 同步期间每 SIZE_REFRESH_EVERY 次指标落库才刷一次 totalSize（查 ClickHouse system.parts 较重）
     private static final int SIZE_REFRESH_EVERY = 10;
 
-    // 已请求停止但还没真正停下来的 history id 集合：进度回调据此把 state 维持为 STOPPING 而不是 RUNNING
-    // Set of history ids whose sync has been asked to stop but hasn't reached its cancellation checkpoint yet.
-    private static final java.util.Set<Long> stoppingHistoryIds = java.util.concurrent.ConcurrentHashMap.newKeySet();
-
-    // 本次同步的 tunable 字段临时覆盖。由 syncData(code, overrides) 在异步线程入口写入，由内部 sync 体读取后清理。
-    // Per-invocation tunable overrides; set by the public syncData entry, read inside the async body.
-    private static final ThreadLocal<java.util.Map<String, String>> currentSyncOverrides = new ThreadLocal<>();
+    // 同步完成后刷新表元数据（行数、大小）的服务端阶段 / service-side stage that refreshes table metadata after a sync
+    private static final String SYNC_STAGE_FINALIZE = "FINALIZE";
 
     public final DataSetColumnRepository columnRepository;
     private final DataSetRepository repository;
@@ -123,8 +123,9 @@ public class DataSetServiceImpl
     private final NotificationRepository notificationRepository;
     private final NotificationEventPublisher eventPublisher;
     private final RuntimeConfigureService runtimeConfigureService;
+    private final SyncJobManager syncJobManager;
 
-    public DataSetServiceImpl(DataSetRepository repository, DataSetColumnRepository columnRepository, DatasetHistoryRepository historyRepository, PluginManager pluginManager, InitializerConfigure initializerConfigure, org.quartz.Scheduler scheduler, Environment environment, SourceRepository sourceRepository, NotificationRepository notificationRepository, NotificationEventPublisher eventPublisher, RuntimeConfigureService runtimeConfigureService)
+    public DataSetServiceImpl(DataSetRepository repository, DataSetColumnRepository columnRepository, DatasetHistoryRepository historyRepository, PluginManager pluginManager, InitializerConfigure initializerConfigure, org.quartz.Scheduler scheduler, Environment environment, SourceRepository sourceRepository, NotificationRepository notificationRepository, NotificationEventPublisher eventPublisher, RuntimeConfigureService runtimeConfigureService, SyncJobManager syncJobManager)
     {
         this.repository = repository;
         this.columnRepository = columnRepository;
@@ -137,11 +138,21 @@ public class DataSetServiceImpl
         this.notificationRepository = notificationRepository;
         this.eventPublisher = eventPublisher;
         this.runtimeConfigureService = runtimeConfigureService;
+        this.syncJobManager = syncJobManager;
+    }
+
+    @Override
+    public CommonResponse<Long> count()
+    {
+        Long userId = UserDetailsService.getUser().getId();
+        if (userId == null) {
+            return CommonResponse.failure(ServiceState.USER_UNAUTHORIZED);
+        }
+        return CommonResponse.success(repository.countByUserId(userId));
     }
 
     @Transactional
     @Override
-    @SendNotification(type = NotificationType.DYNAMIC)
     public CommonResponse<DataSetEntity> saveOrUpdate(BaseRepository<DataSetEntity, Long> repository, DataSetEntity configure)
     {
         try {
@@ -162,12 +173,18 @@ public class DataSetServiceImpl
             return CommonResponse.failure("New datasets cannot reuse persisted column identities");
         }
         UserEntity user = UserDetailsService.getUser();
+        // Decided before the build assigns an id, which made every new dataset read as an update.
+        boolean created = configure.getId() == null;
         java.util.concurrent.ExecutorService service = Executors.newSingleThreadExecutor();
         service.submit(() -> {
             configure.setUser(user);
             completeState(configure, DataSetState.METADATA_START);
             startBuild(configure, true);
         });
+        eventPublisher.publish(created ? NotificationScene.DATASET_CREATED : NotificationScene.DATASET_UPDATED, user,
+                String.format(created ? "数据集「%s」已创建" : "数据集「%s」已更新", configure.getName()),
+                String.format(created ? "数据集「%s」已创建，正在构建元数据。" : "数据集「%s」的配置已更新，正在重新构建。", configure.getName()),
+                EntityType.DATASET, configure.getCode(), configure.getName());
         return CommonResponse.success(configure);
     }
 
@@ -212,6 +229,24 @@ public class DataSetServiceImpl
                     return CommonResponse.success(columnRepository.findAllByDatasetIdOrderByPositionAsc(item.getId()));
                 })
                 .orElseGet(() -> CommonResponse.failure(String.format("DataSet [ %s ] not found", code)));
+    }
+
+    /** 默认分片列：主键优先，其次排序键，取其源列名；都没有返回空串 / primary key first, then order-by key; empty when neither exists */
+    private static String defaultSplitColumn(Iterable<DataSetColumnEntity> columns)
+    {
+        String orderBy = "";
+        for (DataSetColumnEntity column : columns) {
+            if (column.isVirtualColumn() || StringUtils.isBlank(column.getOriginal())) {
+                continue;
+            }
+            if (column.isPrimaryKey()) {
+                return column.getOriginal();
+            }
+            if (column.isOrderByKey() && orderBy.isEmpty()) {
+                orderBy = column.getOriginal();
+            }
+        }
+        return orderBy;
     }
 
     private static int parseIntOrDefault(String raw, int fallback)
@@ -429,12 +464,28 @@ public class DataSetServiceImpl
     public CommonResponse<Boolean> stopHistory(Long id)
     {
         log.info("Stop history [ {} ] requested", id);
+        Optional<SyncJob> active = syncJobManager.find(id);
+        if (active.isEmpty()) {
+            return historyRepository.findById(id)
+                    .map(history -> CommonResponse.<Boolean>failure(RunStateMachine.isTerminal(history.getState())
+                            ? String.format("Sync history [ %d ] is not running (current state: %s)", id, history.getState())
+                            : String.format("Sync history [ %d ] is not running on this node", id)))
+                    .orElseGet(() -> CommonResponse.<Boolean>failure(String.format("Sync history [ %d ] not found", id)));
+        }
+        SyncJob job = active.get();
+        if (syncJobManager.cancelQueued(job)) {
+            return CommonResponse.success(Boolean.TRUE);
+        }
+        // 正在等待重试：工作线程醒来发现已是终态就结束 / waiting to retry: the worker sees the final state and ends
+        if (job.getState() == RunState.RETRYING && job.transition(RunState.STOPPED, "Cancelled while waiting to retry")) {
+            return CommonResponse.success(Boolean.TRUE);
+        }
+        if (job.getState() != RunState.RUNNING && job.getState() != RunState.PAUSING) {
+            return CommonResponse.failure(String.format("Sync history [ %d ] cannot be cancelled (current state: %s)", id, job.getState()));
+        }
         return historyRepository.findById(id)
                 .map(history -> {
-                    log.info("Stop history [ {} ] state={} taskName={}", id, history.getState(), history.getTaskName());
-                    if (history.getState() != RunState.RUNNING && history.getState() != RunState.CREATED) {
-                        return CommonResponse.<Boolean>failure(String.format("Sync history [ %d ] is not running (current state: %s)", id, history.getState()));
-                    }
+                    log.info("Stop history [ {} ] state={} taskName={}", id, job.getState(), history.getTaskName());
                     String taskName = history.getTaskName();
                     if (StringUtils.isBlank(taskName)) {
                         return CommonResponse.<Boolean>failure("Sync history has no taskName (older record), cannot stop");
@@ -456,10 +507,8 @@ public class DataSetServiceImpl
                     ExecutorResponse stopResponse = executorService.stop(stopRequest);
                     log.info("Stop history [ {} ] executor returned successful={} message={}", id, stopResponse.getSuccessful(), stopResponse.getMessage());
                     if (Boolean.TRUE.equals(stopResponse.getSuccessful())) {
-                        // 让 UI 立刻看到 STOPPING 中间态；进度回调会继续把它保持住直到真正停下
-                        stoppingHistoryIds.add(id);
-                        history.setState(RunState.STOPPING);
-                        historyRepository.save(history);
+                        // 让 UI 立刻看到 STOPPING 中间态，直到执行器真正停下
+                        job.transition(RunState.STOPPING, null);
                         return CommonResponse.success(Boolean.TRUE);
                     }
                     return CommonResponse.<Boolean>failure(stopResponse.getMessage() == null ? "Stop failed" : stopResponse.getMessage());
@@ -468,8 +517,99 @@ public class DataSetServiceImpl
     }
 
     @Override
+    public CommonResponse<List<SyncActiveView>> getActiveSyncs()
+    {
+        List<SyncActiveView> views = Lists.newArrayList();
+        for (SyncJob job : syncJobManager.active()) {
+            repository.findById(job.getDatasetId())
+                    .filter(org.devlive.metaforge.service.service.BaseService::ownedBySelf)
+                    .ifPresent(dataset -> {
+                        org.devlive.metaforge.executor.configure.ExecutorMetrics metrics = job.getMetrics();
+                        views.add(new SyncActiveView(dataset.getCode(), job.getHistoryId(), job.getState(),
+                                metrics == null ? -1 : metrics.getProgress(),
+                                metrics == null ? 0 : metrics.getRowsWritten(),
+                                metrics == null ? 0 : metrics.getWriteRowsPerSecond()));
+                    });
+        }
+        return CommonResponse.success(views);
+    }
+
+    @Override
+    public CommonResponse<Boolean> pauseHistory(Long id)
+    {
+        Optional<SyncJob> active = syncJobManager.find(id);
+        if (active.isEmpty() || active.get().getState() != RunState.RUNNING) {
+            return CommonResponse.failure(String.format("Sync history [ %d ] is not running", id));
+        }
+        SyncJob job = active.get();
+        Optional<DataSetEntity> dataset = repository.findById(job.getDatasetId());
+        if (dataset.isEmpty()) {
+            return CommonResponse.failure(String.format("Sync history [ %d ] has no dataset", id));
+        }
+        isSelf(dataset.get());
+        String taskName = job.getTaskName();
+        if (StringUtils.isBlank(taskName)) {
+            return CommonResponse.failure("The sync is still starting, try again in a moment");
+        }
+        return pluginManager.getPlugin(dataset.get().getExecutor())
+                .map(plugin -> {
+                    ExecutorConfigure placeholder = new ExecutorConfigure(null);
+                    ExecutorResponse response = plugin.getService(ExecutorService.class).pause(new ExecutorRequest(taskName, "", placeholder, placeholder));
+                    if (!Boolean.TRUE.equals(response.getSuccessful())) {
+                        return CommonResponse.<Boolean>failure(response.getMessage() == null ? "Pause failed" : response.getMessage());
+                    }
+                    // 暂停可能已经完成，此时这次转换被拒绝，不影响结果 / the pause may already be done; the rejected move changes nothing
+                    job.transition(RunState.PAUSING, null);
+                    return CommonResponse.success(Boolean.TRUE);
+                })
+                .orElseGet(() -> CommonResponse.<Boolean>failure(String.format("Executor [ %s ] not found", dataset.get().getExecutor())));
+    }
+
+    @Override
+    public CommonResponse<Boolean> resumeHistory(Long id)
+    {
+        Optional<SyncJob> active = syncJobManager.find(id);
+        if (active.isEmpty() || active.get().getState() != RunState.PAUSED) {
+            return CommonResponse.failure(String.format("Sync history [ %d ] is not paused", id));
+        }
+        repository.findById(active.get().getDatasetId()).ifPresent(this::isSelf);
+        return syncJobManager.resume(active.get())
+                ? CommonResponse.success(Boolean.TRUE)
+                : CommonResponse.failure(String.format("Sync history [ %d ] is not paused", id));
+    }
+
+    @Override
+    public CommonResponse<Boolean> retryHistory(Long id)
+    {
+        Optional<DatasetHistoryEntity> found = historyRepository.findById(id);
+        if (found.isEmpty()) {
+            return CommonResponse.failure(String.format("Sync history [ %d ] not found", id));
+        }
+        DatasetHistoryEntity history = found.get();
+        if (!SyncJobManager.canRetry(history)) {
+            return CommonResponse.failure(String.format(
+                    "Sync history [ %d ] cannot run again: it has no checkpoint and running it again could write rows twice. Clear the data and sync again.", id));
+        }
+        Optional<DataSetEntity> dataset = repository.findById(history.getDatasetId());
+        if (dataset.isEmpty()) {
+            return CommonResponse.failure(String.format("Sync history [ %d ] has no dataset", id));
+        }
+        isSelf(dataset.get());
+        return syncJobManager.retry(history, syncBody(dataset.get(), UserDetailsService.getUser(), java.util.Collections.emptyMap()))
+                .map(job -> CommonResponse.success(Boolean.TRUE))
+                .orElseGet(() -> CommonResponse.failure(String.format("DataSet [ %s ] already has an unfinished sync", dataset.get().getName())));
+    }
+
+    @Override
+    public CommonResponse<SyncMetricsView> getHistoryMetrics(Long id)
+    {
+        return syncJobManager.view(id)
+                .map(CommonResponse::success)
+                .orElseGet(() -> CommonResponse.failure(String.format("Sync history [ %d ] not found", id)));
+    }
+
+    @Override
     @Transactional
-    @SendNotification(type = NotificationType.DELETED)
     public CommonResponse<String> deleteByCode(BaseRepository<DataSetEntity, Long> repository, String code)
     {
         return repository.findByCode(code)
@@ -493,6 +633,8 @@ public class DataSetServiceImpl
                         historyRepository.deleteAllByDatasetId(value.getId());
                         repository.delete(value);
                     });
+                    eventPublisher.publish(NotificationScene.DATASET_DELETED, String.format("数据集「%s」已删除", value.getName()),
+                            String.format("数据集「%s」及其同步数据已删除。", value.getName()), EntityType.DATASET, value.getCode(), value.getName());
                     return CommonResponse.success(code);
                 })
                 .orElseGet(() -> CommonResponse.failure(String.format("DataSet [ %s ] not found", code)));
@@ -773,6 +915,53 @@ public class DataSetServiceImpl
         }
     }
 
+    /**
+     * Records how the latest sync left the dataset's data: a successful sync completes the dataset,
+     * a failed one marks its data failed and withdraws the completion. A stop the user asked for
+     * leaves the state as it was. The dataset is re-read so fields saved during the sync survive.
+     */
+    private void recordDataState(Long datasetId, SyncJob job)
+    {
+        RunState state = job.getState();
+        if (datasetId == null || state != RunState.SUCCESS && state != RunState.FAILURE && state != RunState.TIMEOUT) {
+            return;
+        }
+        List<org.devlive.metaforge.service.dataset.sync.SyncTransition> transitions = job.getTransitions();
+        String reason = transitions.isEmpty() ? null : transitions.get(transitions.size() - 1).getMessage();
+        repository.findById(datasetId).ifPresent(dataset -> {
+            if (state == RunState.SUCCESS) {
+                completeState(dataset, DataSetState.DATA_SUCCESS);
+                completeState(dataset, DataSetState.COMPLETE_SUCCESS);
+                dataset.setMessage(null);
+            }
+            else {
+                dataset.setState(dataset.getState().stream().filter(item -> !item.name().startsWith("COMPLETE")).collect(Collectors.toList()));
+                completeState(dataset, DataSetState.DATA_FAILED);
+                // The dataset's error view shows why the latest sync failed.
+                dataset.setMessage(reason == null || reason.isBlank() ? state.name() : reason);
+            }
+            repository.save(dataset);
+        });
+    }
+
+    /** Tells the user how a sync ended; one they stopped themselves needs no notice. */
+    private void notifySynced(DataSetEntity entity, SyncJob job, UserEntity user)
+    {
+        RunState state = job.getState();
+        if (state != RunState.SUCCESS && state != RunState.FAILURE && state != RunState.TIMEOUT) {
+            return;
+        }
+        boolean succeeded = state == RunState.SUCCESS;
+        List<org.devlive.metaforge.service.dataset.sync.SyncTransition> transitions = job.getTransitions();
+        String reason = transitions.isEmpty() ? null : transitions.get(transitions.size() - 1).getMessage();
+        String content = succeeded
+                ? String.format("数据集「%s」同步完成。", entity.getName())
+                : String.format("数据集「%s」同步失败：%s", entity.getName(), reason == null || reason.isBlank() ? state.name() : reason);
+        eventPublisher.publish(succeeded ? NotificationScene.DATASET_SYNC_SUCCEEDED : NotificationScene.DATASET_SYNC_FAILED, user,
+                String.format(succeeded ? "数据集「%s」同步成功" : "数据集「%s」同步失败", entity.getName()),
+                content, EntityType.DATASET, entity.getCode(), entity.getName());
+    }
+
     private PluginService getOutputPlugin()
     {
         return pluginManager.getPlugin(initializerConfigure.getDataSetConfigure().getType())
@@ -781,42 +970,35 @@ public class DataSetServiceImpl
     }
 
     @Override
-    public CommonResponse<DataSetEntity> syncData(String code)
+    public CommonResponse<DatasetHistoryEntity> syncData(String code)
     {
         return syncData(code, null);
     }
 
     @Override
-    public CommonResponse<DataSetEntity> syncData(String code, java.util.Map<String, String> overrides)
+    public CommonResponse<DatasetHistoryEntity> syncData(String code, java.util.Map<String, String> overrides)
     {
         return repository.findByCode(code)
                 .map(entity -> {
                     UserEntity currentUser = UserDetailsService.getUser();
-                    java.util.concurrent.ExecutorService service = Executors.newSingleThreadExecutor();
                     java.util.Map<String, String> safeOverrides = overrides == null
                             ? java.util.Collections.emptyMap()
                             : new java.util.HashMap<>(overrides);
-
-                    service.submit(() -> {
-                        // 在异步线程中设置用户上下文
-                        setAuthenticationContext(currentUser);
-                        currentSyncOverrides.set(safeOverrides);
-                        try {
-                            DataSetEntity result = syncData(entity, service);
-                            eventPublisher.publishNotificationEvent(
-                                    result,
-                                    null,
-                                    "",
-                                    EntityType.DATASET,
-                                    NotificationType.SYNCDATA,
-                                    new String[] {}
-                            );
-                        }
-                        finally {
-                            currentSyncOverrides.remove();
-                        }
-                    });
-                    return CommonResponse.success(entity);
+                    AtomicReference<DatasetHistoryEntity> created = new AtomicReference<>();
+                    Optional<SyncJob> job = syncJobManager.submit(entity.getId(), () -> {
+                        DatasetHistoryEntity history = new DatasetHistoryEntity();
+                        history.setState(RunState.CREATED);
+                        history.setCreateTime(new Date());
+                        history.setQuery(entity.getQuery());
+                        history.setMode(QueryMode.SYNC);
+                        history.setAttempt(1);
+                        history.setDataset(entity);
+                        history.setDatasetId(entity.getId());
+                        created.set(historyRepository.save(history));
+                        return created.get();
+                    }, syncBody(entity, currentUser, safeOverrides));
+                    return job.map(value -> CommonResponse.success(created.get()))
+                            .orElseGet(() -> CommonResponse.failure(String.format("DataSet [ %s ] already has an unfinished sync", entity.getName())));
                 })
                 .orElseGet(() -> CommonResponse.failure(String.format("DataSet [ %s ] not found", code)));
     }
@@ -841,7 +1023,9 @@ public class DataSetServiceImpl
                                                 f.getType(),
                                                 effective.getOrDefault(f.getName(), f.getDefaultValue()),
                                                 f.getDescription(),
-                                                true
+                                                true,
+                                                f.getOptions(),
+                                                f.getGroup()
                                         ))
                                         .collect(java.util.stream.Collectors.toList());
                                 return CommonResponse.success(tunable);
@@ -851,6 +1035,26 @@ public class DataSetServiceImpl
                 })
                 .orElseGet(() -> CommonResponse.<java.util.List<org.devlive.metaforge.plugin.configure.RuntimeConfigureField>>failure(
                         String.format("DataSet [ %s ] not found", code)));
+    }
+
+    /** 同步主体：在工作线程运行；继续或重试时也用它 / the sync body, run on a worker thread; resuming and retrying reuse it */
+    private java.util.function.Consumer<SyncJob> syncBody(DataSetEntity entity, UserEntity user, java.util.Map<String, String> overrides)
+    {
+        return running -> {
+            // 在工作线程中设置用户上下文，结束后清理，线程会被复用
+            setAuthenticationContext(user);
+            try {
+                DataSetEntity result = runSync(entity, running, overrides);
+                // 暂停还没结束，继续后才记录和通知 / a paused sync has not finished, so this waits until it does
+                if (RunStateMachine.isTerminal(running.getState())) {
+                    recordDataState(result.getId(), running);
+                    notifySynced(result, running, user);
+                }
+            }
+            finally {
+                SecurityContextHolder.clearContext();
+            }
+        };
     }
 
     /**
@@ -1111,9 +1315,23 @@ public class DataSetServiceImpl
         return column;
     }
 
-    private DataSetEntity syncData(DataSetEntity entity, java.util.concurrent.ExecutorService service)
+    /** 等到重试时间或任务被取消 / wait for the retry time or a cancel */
+    private static void waitForRetry(SyncJob job, int seconds)
     {
-        DatasetHistoryEntity history = new DatasetHistoryEntity();
+        long deadline = System.currentTimeMillis() + seconds * 1000L;
+        while (job.getState() == RunState.RETRYING && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(Math.min(200, Math.max(1, deadline - System.currentTimeMillis())));
+            }
+            catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+                return;
+            }
+        }
+    }
+
+    private DataSetEntity runSync(DataSetEntity entity, SyncJob job, java.util.Map<String, String> syncOverrides)
+    {
         try {
             if (entity.getSource() == null || entity.getUser() == null) {
                 Persistence.references().load(entity);
@@ -1122,12 +1340,6 @@ public class DataSetServiceImpl
 
             pluginManager.getPlugin(source.getType())
                     .ifPresentOrElse(plugin -> {
-                                history.setState(RunState.CREATED);
-                                history.setCreateTime(new Date());
-                                history.setQuery(entity.getQuery());
-                                history.setDataset(entity);
-                                historyRepository.save(history);
-
                                 PluginService inputPlugin = plugin.getService(PluginService.class);
                                 pluginManager.getPlugin(entity.getExecutor())
                                         .ifPresentOrElse(
@@ -1238,16 +1450,14 @@ public class DataSetServiceImpl
                                                                         Sets.newHashSet()
                                                                 );
 
-                                                                String taskName = DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMddHHmmssSSS");
+                                                                // 继续或重试沿用首次运行的任务名，日志和坏行文件都在一处 / later runs keep the task name, so logs and bad rows stay together
+                                                                String taskName = job.getTaskName() != null ? job.getTaskName() : DateFormatUtils.format(System.currentTimeMillis(), "yyyyMMddHHmmssSSS");
                                                                 String executorKey = executor.getName().toLowerCase();
                                                                 String workHome = FolderUtils.getWorkHome(
                                                                         initializerConfigure.getDataHome(),
                                                                         entity.getUser().getUsername(),
                                                                         String.join(File.separator, "dataset", "executor", executorKey, taskName)
                                                                 );
-                                                                // 把 taskName / workHome 落到 history，供 UI 定位日志文件
-                                                                history.setTaskName(taskName);
-                                                                history.setWorkHome(workHome);
 
                                                                 // 从 metaforge_configure 取该 executor 的 effective 配置（DB 行覆盖 SPI schema 默认值）
                                                                 java.util.Map<String, String> executorCfg = runtimeConfigureService.getEffective(
@@ -1256,7 +1466,7 @@ public class DataSetServiceImpl
                                                                         executor.runtimeConfigures()
                                                                 );
                                                                 // 本次同步如有用户临时覆盖：只接受 tunable=true 的字段，其余忽略
-                                                                java.util.Map<String, String> overrides = currentSyncOverrides.get();
+                                                                java.util.Map<String, String> overrides = syncOverrides;
                                                                 if (overrides != null && !overrides.isEmpty()) {
                                                                     java.util.Set<String> tunableKeys = executor.runtimeConfigures().stream()
                                                                             .filter(org.devlive.metaforge.plugin.configure.RuntimeConfigureField::isTunable)
@@ -1268,15 +1478,37 @@ public class DataSetServiceImpl
                                                                         }
                                                                     });
                                                                 }
-                                                                // 把本次同步真正生效的配置 JSON 落到 history，便于事后审计 / UI 展示
+                                                                // 继续或重试沿用首次运行的配置，断点对应那次的分片 / later runs keep the first run's configuration, which the checkpoint belongs to
+                                                                if (job.getExecutorConfigure() != null) {
+                                                                    try {
+                                                                        java.util.Map<String, String> saved = new com.fasterxml.jackson.databind.ObjectMapper().readValue(job.getExecutorConfigure(),
+                                                                                new com.fasterxml.jackson.core.type.TypeReference<java.util.Map<String, String>>() {});
+                                                                        executorCfg.clear();
+                                                                        executorCfg.putAll(saved);
+                                                                    }
+                                                                    catch (Exception ex) {
+                                                                        log.warn("Read saved executor configure failed: {}", ex.getMessage());
+                                                                    }
+                                                                }
+                                                                // 未指定分片列时用数据集主键（其次排序键）对应的源列；仅声明了该配置的 executor 需要
+                                                                if (executorCfg.containsKey("splitColumn") && StringUtils.isBlank(executorCfg.get("splitColumn"))) {
+                                                                    executorCfg.put("splitColumn", defaultSplitColumn(columnRepository.findAllByDatasetId(entity.getId())));
+                                                                }
+                                                                // taskName / workHome 供 UI 定位日志文件；本次真正生效的配置 JSON 便于事后审计 / UI 展示
+                                                                String effectiveConfigure = null;
                                                                 try {
-                                                                    history.setExecutorConfigure(new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(executorCfg));
+                                                                    effectiveConfigure = new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(executorCfg);
                                                                 }
                                                                 catch (Exception ex) {
                                                                     log.warn("Serialize effective executor configure failed: {}", ex.getMessage());
                                                                 }
-                                                                historyRepository.save(history);
-                                                                // timeout 由各 executor 自己的配置决定：LocalExecutor schema 默认 0（不限时），
+                                                                final String executorConfigure = effectiveConfigure;
+                                                                job.update(history -> {
+                                                                    history.setTaskName(taskName);
+                                                                    history.setWorkHome(workHome);
+                                                                    history.setExecutorConfigure(executorConfigure);
+                                                                });
+                                                                // timeout 由各 executor 自己的配置决定：MetaForgeExecutor schema 默认 0（不限时），
                                                                 // 未声明该字段的 executor（如 Seatunnel）回退到 600 秒，保持原有行为
                                                                 int timeout = parseIntOrDefault(executorCfg.get("timeout"), 600);
                                                                 ExecutorRequest request = new ExecutorRequest(
@@ -1289,13 +1521,12 @@ public class DataSetServiceImpl
                                                                 request.setTimeout(timeout);
                                                                 request.setPluginManager(this.pluginManager);
                                                                 // 把该 executor 的 effective 配置整体作为 options，各执行器各取所需：
-                                                                // Local 读 fetchSize/batchSize/preCount；Seatunnel 读 home/startScript/way/mode/engine
+                                                                // MetaForge 读 fetchSize/batchSize/preCount；Seatunnel 读 home/startScript/way/mode/engine
                                                                 request.setOptions(executorCfg);
 
-                                                                // 进度回调：每个 batch 写完后更新 metaforge_dataset_history 以及数据集自身的 totalRows / totalSize
+                                                                // 指标回调：按时间节流更新 metaforge_dataset_history 以及数据集自身的 totalRows / totalSize
                                                                 // totalRows 直接用已写入计数；totalSize 必须查 ClickHouse system.parts，开销大且不可控，
                                                                 // 必须放到独立线程异步执行，否则会阻塞 MySQL 流式 cursor 触发 net_write_timeout
-                                                                final DatasetHistoryEntity progressHistory = history;
                                                                 final DataSetEntity progressEntity = entity;
                                                                 final java.util.concurrent.atomic.AtomicInteger progressTick = new java.util.concurrent.atomic.AtomicInteger();
                                                                 final java.util.concurrent.atomic.AtomicBoolean sizeRefreshInFlight = new java.util.concurrent.atomic.AtomicBoolean(false);
@@ -1304,36 +1535,19 @@ public class DataSetServiceImpl
                                                                     t.setDaemon(true);
                                                                     return t;
                                                                 });
-                                                                request.setProgressListener((processed, total) -> {
-                                                                    progressHistory.setProcessedCount(processed);
-                                                                    if (total >= 0) {
-                                                                        progressHistory.setTotalCount(total);
-                                                                        if (total > 0) {
-                                                                            java.math.BigDecimal percent = java.math.BigDecimal
-                                                                                    .valueOf(processed * 100.0 / total)
-                                                                                    .setScale(2, java.math.RoundingMode.HALF_UP);
-                                                                            progressHistory.setProgress(percent);
-                                                                        }
-                                                                    }
-                                                                    // 收到停止请求后，进度回调不能把 state 写回 RUNNING；保持 STOPPING 直到真正退出
-                                                                    if (stoppingHistoryIds.contains(progressHistory.getId())) {
-                                                                        progressHistory.setState(RunState.STOPPING);
-                                                                    }
-                                                                    try {
-                                                                        historyRepository.save(progressHistory);
-                                                                    }
-                                                                    catch (Exception ex) {
-                                                                        log.warn("Update sync history progress failed: {}", ex.getMessage());
+                                                                request.setMetricsListener(metrics -> {
+                                                                    if (!syncJobManager.onMetrics(job, metrics, false)) {
+                                                                        return;
                                                                     }
                                                                     // 同步期间用已写入行数滚动刷新 dataset.totalRows，方便列表实时看到进度
                                                                     try {
-                                                                        progressEntity.setTotalRows(processed);
+                                                                        progressEntity.setTotalRows(metrics.getRowsWritten());
                                                                         repository.save(progressEntity);
                                                                     }
                                                                     catch (Exception ex) {
                                                                         log.warn("Update dataset totalRows failed: {}", ex.getMessage());
                                                                     }
-                                                                    // 节流 + 异步刷新 totalSize：每 SIZE_REFRESH_EVERY 次 progress 提交一次到独立线程；
+                                                                    // 节流 + 异步刷新 totalSize：每 SIZE_REFRESH_EVERY 次落库提交一次到独立线程；
                                                                     // 上一次还没回来就跳过，绝不阻塞主流（MySQL 真流式 cursor 对客户端读速度敏感）
                                                                     if (progressTick.incrementAndGet() % SIZE_REFRESH_EVERY == 0
                                                                             && sizeRefreshInFlight.compareAndSet(false, true)) {
@@ -1357,16 +1571,36 @@ public class DataSetServiceImpl
                                                                     }
                                                                 });
 
-                                                                history.setState(RunState.RUNNING);
-                                                                historyRepository.save(history);
-
+                                                                request.setCheckpoint(job.getCheckpoint());
+                                                                int maxRetries = parseIntOrDefault(executorCfg.get("maxRetries"), 0);
+                                                                int retryInterval = parseIntOrDefault(executorCfg.get("retryIntervalSeconds"), 30);
                                                                 ExecutorResponse response;
                                                                 try {
-                                                                    response = executorService.start(request);
+                                                                    int retries = 0;
+                                                                    while (true) {
+                                                                        response = executorService.start(request);
+                                                                        final String checkpoint = response.getCheckpoint();
+                                                                        job.update(history -> history.setCheckpoint(checkpoint));
+                                                                        if (response.getState() != RunState.FAILURE || !response.getRetryable() || retries >= maxRetries) {
+                                                                            break;
+                                                                        }
+                                                                        retries++;
+                                                                        if (response.getMetrics() != null) {
+                                                                            syncJobManager.onMetrics(job, response.getMetrics(), true);
+                                                                        }
+                                                                        if (!job.transition(RunState.RETRYING, response.getMessage())) {
+                                                                            break;
+                                                                        }
+                                                                        waitForRetry(job, retryInterval);
+                                                                        // 等待期间被取消时转换会被拒绝 / a cancel during the wait makes this move illegal
+                                                                        if (!job.transition(RunState.RUNNING, null)) {
+                                                                            return;
+                                                                        }
+                                                                        job.update(history -> history.setAttempt(history.getAttempt() == null ? 2 : history.getAttempt() + 1));
+                                                                        request.setCheckpoint(checkpoint);
+                                                                    }
                                                                 }
                                                                 finally {
-                                                                    // 任务一旦真正退出，从 STOPPING 集合移除（不管是正常 / 失败 / 被停止）
-                                                                    stoppingHistoryIds.remove(progressHistory.getId());
                                                                     // 关闭异步 size 刷新线程，等正在跑的最多 30 秒
                                                                     sizeRefreshExecutor.shutdown();
                                                                     try {
@@ -1379,43 +1613,48 @@ public class DataSetServiceImpl
                                                                         Thread.currentThread().interrupt();
                                                                     }
                                                                 }
-                                                                history.setUpdateTime(new Date());
-                                                                history.setElapsed((history.getUpdateTime().getTime() - history.getCreateTime().getTime()) / 1000);
-                                                                history.setMode(QueryMode.SYNC);
-                                                                history.setCount(response.getCount());
-                                                                history.setState(response.getState());
-                                                                if (response.getMessage() != null) {
-                                                                    history.setMessage(response.getMessage());
+                                                                if (response.getMetrics() != null) {
+                                                                    syncJobManager.onMetrics(job, response.getMetrics(), true);
                                                                 }
-                                                                if (response.getSuccessful()) {
-                                                                    history.setProcessedCount((long) response.getCount());
-                                                                    if (history.getTotalCount() == null || history.getTotalCount() < 0L) {
-                                                                        history.setTotalCount((long) response.getCount());
+                                                                final ExecutorResponse finished = response;
+                                                                job.update(history -> {
+                                                                    history.setCount(finished.getCount());
+                                                                    if (finished.getSuccessful()) {
+                                                                        history.setProcessedCount((long) finished.getCount());
+                                                                        if (history.getTotalCount() == null || history.getTotalCount() < 0L) {
+                                                                            history.setTotalCount((long) finished.getCount());
+                                                                        }
+                                                                        history.setProgress(java.math.BigDecimal.valueOf(100.0).setScale(2, java.math.RoundingMode.HALF_UP));
                                                                     }
-                                                                    history.setProgress(java.math.BigDecimal.valueOf(100.0).setScale(2, java.math.RoundingMode.HALF_UP));
+                                                                });
+                                                                RunState finalState = response.getState() != null
+                                                                        ? response.getState()
+                                                                        : (response.getSuccessful() ? RunState.SUCCESS : RunState.FAILURE);
+                                                                // 只有成功才刷新表元数据，刷新完成后才算成功；STOPPED / TIMEOUT / FAILURE 直接落终态
+                                                                if (finalState == RunState.SUCCESS) {
+                                                                    long finalizeStart = System.currentTimeMillis();
+                                                                    syncJobManager.stage(job, SYNC_STAGE_FINALIZE, "RUNNING", 0);
+                                                                    try {
+                                                                        this.flushTableMetadata(
+                                                                                entity,
+                                                                                outputPlugin,
+                                                                                database,
+                                                                                requireNonNull(output.getOriginConfigure()),
+                                                                                outPlugin
+                                                                        );
+                                                                    }
+                                                                    catch (RuntimeException ex) {
+                                                                        syncJobManager.stage(job, SYNC_STAGE_FINALIZE, "FAILED", System.currentTimeMillis() - finalizeStart);
+                                                                        throw ex;
+                                                                    }
+                                                                    syncJobManager.stage(job, SYNC_STAGE_FINALIZE, "DONE", System.currentTimeMillis() - finalizeStart);
                                                                 }
-                                                                historyRepository.save(history);
-                                                                // STOPPED（用户主动停止）与 TIMEOUT（超时取消）都是终态：已把最终状态写入 history，
-                                                                // 无需当作异常抛出 / 也不刷 table metadata
-                                                                if (response.getState() == RunState.STOPPED || response.getState() == RunState.TIMEOUT) {
-                                                                    return;
-                                                                }
-                                                                Preconditions.checkArgument(response.getSuccessful(), response.getMessage());
-
-                                                                this.flushTableMetadata(
-                                                                        entity,
-                                                                        outputPlugin,
-                                                                        database,
-                                                                        requireNonNull(output.getOriginConfigure()),
-                                                                        outPlugin
-                                                                );
+                                                                job.transition(finalState, response.getMessage());
                                                             });
                                                 },
                                                 () -> {
                                                     log.error("Executor [ {} ] not found", entity.getExecutor());
-                                                    history.setMessage(String.format("Executor [ %s ] not found", entity.getExecutor()));
-                                                    history.setState(RunState.FAILURE);
-                                                    historyRepository.save(history);
+                                                    job.transition(RunState.FAILURE, String.format("Executor [ %s ] not found", entity.getExecutor()));
                                                 }
                                         );
                             },
@@ -1425,12 +1664,7 @@ public class DataSetServiceImpl
         }
         catch (Exception e) {
             log.warn("Sync data for dataset [ {} ] failed", entity.getName(), e);
-            history.setState(RunState.FAILURE);
-            history.setMessage(e.getMessage());
-        }
-        finally {
-            historyRepository.save(history);
-            service.shutdownNow();
+            job.transition(RunState.FAILURE, e.getMessage());
         }
         return entity;
     }

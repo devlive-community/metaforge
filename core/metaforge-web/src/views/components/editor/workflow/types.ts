@@ -7,7 +7,7 @@ export interface ConfigureItem
 {
   field: string
   label: string
-  type: 'input' | 'number' | 'switch' | 'textarea' | 'password' | 'select' | 'array' | 'map'
+  type: 'input' | 'number' | 'switch' | 'textarea' | 'password' | 'select' | 'array' | 'map' | 'source' | 'database' | 'table' | 'mapping' | 'sql'
   value?: any
   required?: boolean
   placeholder?: string
@@ -15,6 +15,15 @@ export interface ConfigureItem
   message?: string
   options?: Array<{ label: string; value: any }>
   disabled?: boolean
+  min?: number
+  max?: number
+  step?: number
+  /** Editor tab: basic, sql or advanced. Derived from the field when the declaration omits it. */
+  group?: 'basic' | 'sql' | 'advanced'
+  /** Fields of the same node this field reads its choices from (for example the data source and database). */
+  from?: Record<string, string>
+  /** Fields of the upstream node supplying the incoming columns (for example its data source and query). */
+  upstream?: Record<string, string>
   validated?: { valid: boolean; message?: string }
 }
 
@@ -75,11 +84,4 @@ export interface WorkflowEditorModel
     connections: WorkflowConnection[]
   }
   validation?: ValidationEntry[]
-}
-
-export interface CategoryDefinition
-{
-  label: string
-  value: string
-  supportExecutors?: string[]
 }

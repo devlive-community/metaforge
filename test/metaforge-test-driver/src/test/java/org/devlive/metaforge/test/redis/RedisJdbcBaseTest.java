@@ -12,6 +12,7 @@ import org.redisson.api.RList;
 import org.redisson.api.RMap;
 import org.redisson.api.RSet;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 import org.redisson.config.Config;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -59,6 +60,8 @@ public abstract class RedisJdbcBaseTest
     private void initializeRedisData()
     {
         Config config = new Config();
+        // Plain strings, as redis-cli and the driver read and write them.
+        config.setCodec(StringCodec.INSTANCE);
         config.useSingleServer()
                 .setAddress(String.format("redis://%s:%d",
                         REDIS_CONTAINER.getHost(),

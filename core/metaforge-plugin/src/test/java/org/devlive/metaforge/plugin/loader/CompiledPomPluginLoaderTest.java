@@ -15,6 +15,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
 public class CompiledPomPluginLoaderTest
 {
@@ -51,6 +53,43 @@ public class CompiledPomPluginLoaderTest
     }
 
     @Test
+    public void developmentModulesUseTheirDirectoryAsCatalogueKey()
+            throws Exception
+    {
+        // metaforge-fs-local registers as "LocalFs"; only the directory name matches the catalogue key.
+        Path root = module("LocalFsPlugin", "FILESYSTEM");
+        Path module = Files.move(root, root.resolveSibling("metaforge-fs-local"));
+        List<Plugin> loaded = PluginLoaderFactory.loadPlugins(module.resolve("pom.xml"), Set.of("java.", "org.devlive.metaforge.plugin."));
+        Assert.assertEquals(1, loaded.size());
+        Assert.assertEquals("metaforge-fs-local", loaded.get(0).getKey());
+        loaded.get(0).getPluginClassLoader().close();
+    }
+
+    @Test
+    public void everyPluginReadsTheStoreDescriptorShippedInItsOwnClasses()
+            throws Exception
+    {
+        Path first = module("FirstStorePlugin", "EXECUTOR");
+        Path second = module("SecondStorePlugin", "SCHEDULER");
+        Path descriptor = first.resolve("target/classes").resolve(org.devlive.metaforge.plugin.PluginDescriptor.FILE);
+        Files.createDirectories(first.resolve("target/classes/org/devlive/metaforge/plugin"));
+        Files.writeString(descriptor, "{\"label\":\"First\",\"features\":[\"cron\",7],\"order\":1,\"secret\":\"x\"}");
+        Path manifest = temporary.getRoot().toPath().resolve("store.properties");
+        Files.writeString(manifest, "first=" + first.resolve("pom.xml") + "\nsecond=" + second.resolve("pom.xml") + "\n");
+        PluginManager manager = new PluginManager(PluginConfigure.builder().pluginsDir(manifest).autoCleanup(false).build());
+        try {
+            manager.start();
+            java.util.Map<String, java.util.Map<String, Object>> stores = new java.util.HashMap<>();
+            manager.getPluginInfos().forEach(plugin -> stores.put(plugin.getName(), plugin.getStore()));
+            Assert.assertEquals(java.util.Map.of("label", "First", "features", List.of("cron")), stores.get("FirstStore"));
+            Assert.assertEquals(java.util.Map.of(), stores.get("SecondStore"));
+        }
+        finally {
+            manager.stop();
+        }
+    }
+
+    @Test
     public void aManifestRegistersAllCompiledExecutorsAndSchedulers()
             throws Exception
     {
@@ -68,5 +107,29 @@ public class CompiledPomPluginLoaderTest
         finally {
             manager.stop();
         }
+    }
+
+    @Test
+    public void dependencyJarsCopiedByThePluginBuildAreOnTheClassPath()
+            throws Exception
+    {
+        // A plugin build copies its driver to target/dependencies; the plugin must load it from there.
+        Path root = module("DriverProbePlugin", "EXECUTOR");
+        Path sources = temporary.newFolder("driver-sources").toPath();
+        Path classes = temporary.newFolder("driver-classes").toPath();
+        Path source = sources.resolve("ProbeDriver.java");
+        Files.writeString(source, "package fixtures.driver; public class ProbeDriver {}");
+        Assert.assertEquals(0, ToolProvider.getSystemJavaCompiler().run(null, null, null, "-d", classes.toString(), source.toString()));
+        Path dependencies = Files.createDirectories(root.resolve("target/dependencies"));
+        try (JarOutputStream jar = new JarOutputStream(Files.newOutputStream(dependencies.resolve("probe-driver.jar")))) {
+            jar.putNextEntry(new JarEntry("fixtures/driver/ProbeDriver.class"));
+            jar.write(Files.readAllBytes(classes.resolve("fixtures/driver/ProbeDriver.class")));
+            jar.closeEntry();
+        }
+
+        Assert.assertEquals(List.of(dependencies.resolve("probe-driver.jar")), CompiledPomPluginLoader.dependencyJars(root));
+        Plugin plugin = new CompiledPomPluginLoader().load(root, Set.of("java.", "org.devlive.metaforge.plugin.")).get(0);
+        Assert.assertNotNull(plugin.getPluginClassLoader().loadClass("fixtures.driver.ProbeDriver"));
+        plugin.getPluginClassLoader().close();
     }
 }

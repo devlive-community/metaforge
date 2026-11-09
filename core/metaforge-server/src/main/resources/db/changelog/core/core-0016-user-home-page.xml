@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A user may open one of their published data screens as their home page. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0016-user-home-page" author="metaforge">
+        <addColumn tableName="metaforge_user">
+            <column name="home_page" type="${string}(255)"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

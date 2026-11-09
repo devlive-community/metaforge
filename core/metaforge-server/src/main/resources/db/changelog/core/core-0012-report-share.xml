@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Reports can be shared through a public link and embedded in other sites through an iframe. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0012-report-share" author="metaforge">
+        <addColumn tableName="metaforge_report">
+            <column name="share_token" type="${string}(64)"/>
+            <column name="share_enabled" type="${flag}" defaultValueBoolean="false"/>
+            <column name="share_embed" type="${flag}" defaultValueBoolean="false"/>
+            <column name="share_origins" type="${text}"/>
+        </addColumn>
+        <!-- Not unique: SQL Server allows one NULL per unique index. Tokens are 192 random bits. -->
+        <createIndex tableName="metaforge_report" indexName="idx_report_share_token">
+            <column name="share_token"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

@@ -187,8 +187,12 @@ public class ConfigureUtils
         return configures.stream().filter(v -> !isEmpty(v)).collect(Collectors.toList());
     }
 
+    /** A field without a value is empty whatever its type, so it is not applied; a blank string is empty too. */
     public static boolean isEmpty(PluginConfigureField field)
     {
+        if (field.getValue() == null) {
+            return true;
+        }
         boolean flag = true;
         switch (field.getType()) {
             case String:
@@ -234,6 +238,9 @@ public class ConfigureUtils
         PluginConfigureField configureField = getConfigure(configures, key);
         if (configureField.getType().equals(PluginConfigureFieldType.Array)) {
             List<LinkedHashMap<String, Object>> list = (List<LinkedHashMap<String, Object>>) configureField.getValue();
+            if (list == null) {
+                return values;
+            }
             list.forEach(map -> values.put(String.valueOf(map.get(PluginConfigureFieldName.field.name())), map.get(PluginConfigureFieldName.value.name())));
         }
         else {
@@ -277,10 +284,9 @@ public class ConfigureUtils
         }
 
         List<PluginConfigureExecutorField> fields = Lists.newArrayList();
-        Optional<PluginConfigureExecutor> configureExecutor = yamlConfigure.getPipelines()
-                .stream()
-                .filter(v -> v.getExecutor().equals(executor) && v.getType().equals(pipelineType))
-                .findFirst();
+        // 只有依赖外部引擎的执行器才声明管道配置；MetaForge 执行器直接经插件读写，没有声明时这里什么也不用做
+        // Only executors driving an external engine declare pipelines; the MetaForge executor reads and writes through plugins.
+        Optional<PluginConfigureExecutor> configureExecutor = Optional.ofNullable(yamlConfigure == null ? null : findPipelineExecutor(yamlConfigure, executor, pipelineType));
         if (!configureExecutor.isPresent()) {
             String message = String.format("Source [ %s ] type [ %s ] is not supported pipeline type [ %s ]", entity.getId(), entity.getType(), pipelineType);
             Preconditions.checkArgument(!message.isEmpty(), message);
@@ -359,10 +365,7 @@ public class ConfigureUtils
     {
         Set<String> fromOptions = Sets.newHashSet();
         PluginConfigure yamlConfigure = resolvePluginConfigure(pluginManager, entity.getType());
-        yamlConfigure.getPipelines()
-                .stream()
-                .filter(v -> v.getExecutor().equals(executor) && v.getType().equals(pipelineType))
-                .findFirst()
+        Optional.ofNullable(yamlConfigure == null ? null : findPipelineExecutor(yamlConfigure, executor, pipelineType))
                 .ifPresent(iConfigureExecutor -> iConfigureExecutor
                         .getFields()
                         .stream()

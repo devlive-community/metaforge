@@ -7,6 +7,7 @@ import { ObjectUtils } from '@/utils/object'
 import { sourceManageLocation } from '@/model/source-manage'
 import { groupDependencies, mapDropTableInfo, type DependencyKind, type DropTableInfo, type TableDependency } from '@/model/source-table-drop'
 import { useSourceManageRoute as useRoute } from './useSourceManageRoute'
+import { useMetadataTreeChange } from './useMetadataTreeChange'
 
 /**
  * Drop table dialog: the table's facts, the objects depending on it and the statement (previewed
@@ -14,6 +15,7 @@ import { useSourceManageRoute as useRoute } from './useSourceManageRoute'
  * acknowledgement and types the table name, then the workspace moves to the database.
  */
 export function useTableDrop(onDone: () => void) {
+  const treeChanged = useMetadataTreeChange()
   const { t } = useI18n()
   const route = useRoute()
   const router = useRouter()
@@ -76,6 +78,7 @@ export function useTableDrop(onDone: () => void) {
       if (!alive) return
       if (failure(response)) { MfMessage.error(message(response)); return }
       MfMessage.success(t('source.tip.dropTableSuccess').replace('$VALUE', name))
+      treeChanged()
       onDone()
       // The table is gone, so the workspace shows its database instead.
       router.replace(sourceManageLocation({ source, database }))

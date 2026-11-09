@@ -1,0 +1,12 @@
+{
+  "label": "MonetDB",
+  "description": "MonetDB is a high performance relational database system for analytics.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/monetdb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 27
+}

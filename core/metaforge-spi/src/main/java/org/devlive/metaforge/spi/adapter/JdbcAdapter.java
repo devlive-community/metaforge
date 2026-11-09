@@ -56,6 +56,10 @@ public class JdbcAdapter
                             parts.add(part);
                         }
                     }
+                    int maxRows = configure.getMaxRows();
+                    if (maxRows > 0) {
+                        limitRows(statement, maxRows);
+                    }
                     if (parts.size() <= 1 && statement.execute(content)) {
                         try (ResultSet resultSet = statement.getResultSet()) {
                             Column jdbcColumn = new JdbcColumn(resultSet);
@@ -66,6 +70,10 @@ public class JdbcAdapter
                                 types.add(jdbcColumn.mappingColumnType(metaData.getColumnTypeName(i)));
                             }
                             while (resultSet.next()) {
+                                if (maxRows > 0 && columns.size() >= maxRows) {
+                                    response.setTruncated(Boolean.TRUE);
+                                    break;
+                                }
                                 List<Object> _columns = new ArrayList<>();
                                 for (int i = 1; i <= columnCount; i++) {
                                     _columns.add(jdbcColumn.mappingColumnData(metaData.getColumnTypeName(i), i));
@@ -100,6 +108,21 @@ public class JdbcAdapter
         // It will be destroyed after the mission is closed
         jdbcConnection.destroy();
         return response;
+    }
+
+    /**
+     * Asks the driver for one row past the cap, so a longer result is detected without reading it: drivers that
+     * support it push the limit down to the database. Rows still stream in batches for drivers that ignore it.
+     */
+    private static void limitRows(Statement statement, int maxRows)
+    {
+        try {
+            statement.setMaxRows(maxRows + 1);
+            statement.setFetchSize(Math.min(maxRows + 1, 1000));
+        }
+        catch (SQLException ex) {
+            log.debug("Driver does not limit rows, reading stops at {} rows instead: {}", maxRows, ex.getMessage());
+        }
     }
 
     /**

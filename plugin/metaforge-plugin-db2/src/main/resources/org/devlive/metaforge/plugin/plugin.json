@@ -1,0 +1,12 @@
+{
+  "label": "DB2",
+  "description": "IBM® Db2® is the cloud-native database built to power low-latency transactions, real-time analytics and AI applications at scale.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/db2.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 8
+}

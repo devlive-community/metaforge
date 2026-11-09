@@ -12,6 +12,7 @@ import org.devlive.metaforge.common.view.EntityView;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @ToString
@@ -23,7 +24,12 @@ import java.util.List;
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP", "EI_EXPOSE_REP2", "EQ_OVERRIDING_EQUALS_NOT_SYMMETRIC"})
 public class Configuration
 {
-    private List<CategoryConfiguration> categories = new ArrayList<>();
     private List<NodeConfiguration> nodes = new ArrayList<>();
     private List<ConnectionConfiguration> connections;
+    private String description;
+    private Long timeout;
+    private Long publishedAt;
+    private Integer revision;
+    /** Job settings declared by the executor, such as batch size or parallelism. */
+    private Map<String, Object> settings;
 }

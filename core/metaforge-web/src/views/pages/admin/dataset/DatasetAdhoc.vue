@@ -1,788 +1,227 @@
-<template>
-  <div class="grid grid-cols-1 lg:grid-cols-[1fr_5fr] gap-2">
-    <div>
-      <div class="dc-adhoc__side">
-        <div class="dc-adhoc__dataset">
-          <div class="dc-adhoc__dataset-icon">
-            <Database :size="18" :style="{ color: 'var(--dc-primary)' }"/>
-          </div>
-          <div class="min-w-0 flex-1">
-            <div class="dc-adhoc__dataset-name">{{ dataInfo.name || code }}</div>
-            <div class="dc-adhoc__dataset-state">数据源 · 已连接</div>
-          </div>
-        </div>
-
-        <MfInput v-model="fieldSearch" class="dc-adhoc__search" :placeholder="$t('dataset.search.fields')">
-          <template #prefix>
-            <Search :size="13" :style="{ color: 'var(--dc-text-secondary)' }"/>
-          </template>
-        </MfInput>
-
-        <div class="dc-adhoc__field-tabs">
-          <span class="dc-adhoc__field-tab"
-                :class="{ 'dc-adhoc__field-tab--active': fieldTab === 'all' }"
-                @click="fieldTab = 'all'">
-            {{ $t('dataset.adhoc.all') }} ({{ originalMetrics.length + originalDimensions.length }})
-          </span>
-          <span class="dc-adhoc__field-tab"
-                :class="{ 'dc-adhoc__field-tab--active': fieldTab === 'dimension' }"
-                @click="fieldTab = 'dimension'">
-            {{ $t('dataset.adhoc.dimensions') }} ({{ originalDimensions.length }})
-          </span>
-          <span class="dc-adhoc__field-tab"
-                :class="{ 'dc-adhoc__field-tab--active': fieldTab === 'metric' }"
-                @click="fieldTab = 'metric'">
-            {{ $t('dataset.adhoc.measures') }} ({{ originalMetrics.length }})
-          </span>
-        </div>
-
-        <div class="relative">
-          <div v-if="!initialize && showMetrics" class="dc-adhoc__group">
-            <div class="dc-adhoc__group-title">
-              <ChartColumn :size="14" class="dc-adhoc__group-icon"/>
-              <span>{{ $t('dataset.common.columnModeMetric') }}</span>
-            </div>
-            <Draggable item-key="id"
-                       :group="{ name: 'metrics', pull: 'clone', put: false }"
-                       :list="visibleMetrics"
-                       :clone="onClone"
-                       @start="visibleHighlight(true, ColumnType.METRIC)"
-                       @end="visibleHighlight(false, ColumnType.METRIC)">
-              <template #item="{ element }">
-                <div class="dc-adhoc__field">
-                  <span class="dc-adhoc__field-badge">#</span>
-                  <span class="dc-adhoc__field-name">{{ element.aliasName ? element.aliasName : element.name }}</span>
-                </div>
-              </template>
-            </Draggable>
-            <div v-if="!visibleMetrics.length" class="dc-adhoc__field-empty">{{ $t('common.noData') }}</div>
-          </div>
-
-          <div v-if="!initialize && showDimensions" class="dc-adhoc__group">
-            <div class="dc-adhoc__group-title">
-              <LayoutGrid :size="14" class="dc-adhoc__group-icon"/>
-              <span>{{ $t('dataset.common.columnModeDimension') }}</span>
-            </div>
-            <Draggable item-key="id"
-                       :group="{ name: 'dimensions', pull: 'clone', put: false }"
-                       :list="visibleDimensions"
-                       :clone="onClone"
-                       @start="visibleHighlight(true, ColumnType.DIMENSION)"
-                       @end="visibleHighlight(false, ColumnType.DIMENSION)">
-              <template #item="{ element }">
-                <div class="dc-adhoc__field">
-                  <span class="dc-adhoc__field-badge dc-adhoc__field-badge--text">Aa</span>
-                  <span class="dc-adhoc__field-name">{{ element.aliasName ? element.aliasName : element.name }}</span>
-                </div>
-              </template>
-            </Draggable>
-            <div v-if="!visibleDimensions.length" class="dc-adhoc__field-empty">{{ $t('common.noData') }}</div>
-          </div>
-
-          <div v-if="initialize" class="absolute inset-0 z-10 flex items-center justify-center">
-            <MfSpinner size="lg" label="Loading..."/>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div>
-        <div class="dc-adhoc__main">
-          <div class="dc-adhoc__head">
-            <div class="min-w-0">
-              <div class="dc-adhoc__title">{{ $t('dataset.adhoc.title') }}</div>
-              <div class="dc-adhoc__desc">{{ $t('dataset.adhoc.desc') }}</div>
-            </div>
-            <div class="dc-adhoc__head-actions">
-              <MfButton @click="onClear">
-                <Eraser :size="14"/>
-                {{ $t('dataset.adhoc.clear') }}
-              </MfButton>
-              <MfButton :disabled="!showSql.content || loading" @click="visibleShowSql(true)">
-                <Eye :size="14"/>
-                {{ $t('dataset.adhoc.preview') }}
-              </MfButton>
-              <MfButton variant="primary" :disabled="loading" :loading="loading" @click="onApplyAdhoc">
-                <CirclePlay :size="14"/>
-                {{ $t('dataset.adhoc.query') }}
-              </MfButton>
-              <MfDropdown placement="bottomRight">
-                <MfButton><Ellipsis :size="14"/></MfButton>
-                <template #overlay>
-                  <MfMenu>
-                    <MfMenuItem key_="publish" @click="publishVisible = true">{{ $t('common.publish') }}</MfMenuItem>
-                    <MfMenuItem key_="limit">
-                      <div class="flex items-center gap-2" @click.stop>
-                        <span>{{ $t('dataset.common.showPageSize') }}</span>
-                        <MfInputNumber v-model="configure.limit" :min="1" size="sm" style="width: 90px;"/>
-                      </div>
-                    </MfMenuItem>
-                  </MfMenu>
-                </template>
-              </MfDropdown>
-            </div>
-          </div>
-
-          <div class="relative">
-            <div class="dc-adhoc__zone dc-adhoc__zone--metric"
-                 :class="{ 'dc-adhoc__zone--highlight': highlight.active && highlight.type === ColumnType.METRIC }">
-              <div class="dc-adhoc__zone-head dc-adhoc__zone-head--green">
-                <ChartColumn :size="14" class="dc-adhoc__zone-icon"/>
-                <span class="dc-adhoc__zone-label">{{ $t('dataset.common.columnModeMetric') }} (Measures)</span>
-                <span class="dc-adhoc__zone-hint">{{ $t('dataset.adhoc.dropMetric') }}</span>
-              </div>
-              <div class="dc-adhoc__zone-body">
-                <Draggable group="metrics" item-key="id" :list="metrics" class="flex flex-wrap gap-2">
-                  <template #item="{ element, index }">
-                    <MfTag class="dc-adhoc__chip">
-                      <span class="flex items-center">
-                        <DatasetColumnMetric :element="element"/>
-                      </span>
-                      <span class="ml-2 flex items-center space-x-1">
-                        <MfTooltip :content="$t('common.configure')">
-                          <Settings :size="13" class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.METRIC)" />
-                        </MfTooltip>
-                        <X :size="11" class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, metrics)" />
-                      </span>
-                    </MfTag>
-                  </template>
-                </Draggable>
-              </div>
-            </div>
-
-            <div class="dc-adhoc__zone dc-adhoc__zone--dimension"
-                 :class="{ 'dc-adhoc__zone--highlight': highlight.active && highlight.type === ColumnType.DIMENSION }">
-              <div class="dc-adhoc__zone-head dc-adhoc__zone-head--blue">
-                <LayoutGrid :size="14" class="dc-adhoc__zone-icon"/>
-                <span class="dc-adhoc__zone-label">{{ $t('dataset.common.columnModeDimension') }} (Dimensions)</span>
-                <span class="dc-adhoc__zone-hint">{{ $t('dataset.adhoc.dropDimension') }}</span>
-              </div>
-              <div class="dc-adhoc__zone-body">
-                <Draggable group="dimensions" item-key="id" :list="dimensions" class="flex flex-wrap gap-2">
-                  <template #item="{ element, index }">
-                    <MfTag class="dc-adhoc__chip">
-                      <span class="flex items-center">
-                        {{ element.aliasName ? element.aliasName : element.name }}
-                      </span>
-                      <span class="ml-2 flex items-center space-x-1">
-                        <MfTooltip :content="$t('common.configure')">
-                          <Settings :size="13" class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.DIMENSION)" />
-                        </MfTooltip>
-                        <X :size="11" class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, dimensions)" />
-                      </span>
-                    </MfTag>
-                  </template>
-                </Draggable>
-              </div>
-            </div>
-
-            <div class="dc-adhoc__zone dc-adhoc__zone--filter"
-                 :class="{ 'dc-adhoc__zone--highlight': highlight.active && highlight.type === ColumnType.FILTER }">
-              <div class="dc-adhoc__zone-head dc-adhoc__zone-head--purple">
-                <Filter :size="14" class="dc-adhoc__zone-icon"/>
-                <span class="dc-adhoc__zone-label">{{ $t('dataset.common.columnModeFilter') }} (Filters)</span>
-                <span class="dc-adhoc__zone-hint">{{ $t('dataset.adhoc.dropFilter') }}</span>
-              </div>
-              <div class="dc-adhoc__zone-body">
-                <Draggable group="dimensions" item-key="id" :list="filters" class="flex flex-wrap gap-2">
-                  <template #item="{ element, index }">
-                    <MfTag class="dc-adhoc__chip">
-                      <span class="flex items-center">
-                        {{ element.aliasName ? element.aliasName : element.name }}
-                      </span>
-                      <span class="ml-2 flex items-center space-x-1">
-                        <MfTooltip :content="$t('common.configure')">
-                          <Settings :size="13" class="cursor-pointer hover:text-primary" @click="onColumnConfigure(true, element, ColumnType.FILTER)" />
-                        </MfTooltip>
-                        <X :size="11" class="cursor-pointer text-red-400 hover:text-red-500" @click="onRemove(index, filters)" />
-                      </span>
-                    </MfTag>
-                  </template>
-                </Draggable>
-              </div>
-            </div>
-
-            <div v-if="loading" class="absolute inset-0 z-10 flex items-center justify-center">
-              <MfSpinner size="lg" label="Loading..."/>
-            </div>
-          </div>
-
-          <div class="dc-adhoc__result">
-            <MfTabs v-model:active-key="resultTab" class="dc-adhoc__result-tabs">
-              <MfTabPane item-key="result" :tab="$t('dataset.adhoc.resultTab')">
-                <VisualEditor :loading="loading" :configuration="configuration as any" @commitOptions="visibleCommitOptions"/>
-              </MfTabPane>
-              <MfTabPane item-key="log" :tab="$t('dataset.adhoc.logTab')">
-                <pre class="dc-adhoc__log">{{ showSql.content || $t('common.noData') }}</pre>
-              </MfTabPane>
-            </MfTabs>
-
-            <div class="dc-adhoc__result-footer">
-              <span class="dc-adhoc__result-total">{{ $t('dataset.adhoc.totalRows', { limit: configure.limit }) }}</span>
-              <MfButton size="sm" @click="exportResults">
-                <Download :size="14"/>
-                {{ $t('dataset.adhoc.export') }}
-              </MfButton>
-            </div>
-          </div>
-        </div>
-      </div>
-  </div>
-
-    <SqlInfo v-if="showSql.visible"
-             :is-visible="showSql.visible"
-             :content="showSql.content"
-             @close="visibleShowSql(false)"/>
-
-    <DatasetColumnConfigure v-if="columnContent.visible"
-                            :is-visible="columnContent.visible"
-                            :column-type="columnContent.type"
-                            :content="columnContent.content"
-                            :configure="columnContent.configure"
-                            @close="onColumnConfigure(false, null, null)"
-                            @commit="onCommitColumnConfigure"/>
-
-    <DatasetReport v-if="publishVisible"
-                   :info="dataInfo as any"
-                   :code="reportCode"
-                   :dimension="originalDimensions[0] as any"
-                   :visible="publishVisible"
-                   :commit-options="commitOptions as any"
-                   :configure="configure as any"
-                   @close="visiblePublish(false)"/>
-</template>
-
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { MfMessage } from 'metaforge-ui'
-import Draggable from 'vuedraggable'
-import DatasetService from '@/services/dataset'
-import { Type as ColumnType } from './Type'
-import ReportService from '@/services/report'
-import { cloneDeep } from 'lodash'
-import { Configuration } from '@/views/components/visual/Configuration'
-import VisualEditor from '@/views/components/visual/VisualEditor.vue'
-import DatasetColumnMetric from '@/views/pages/admin/dataset/components/adhoc/DatasetColumnMetric.vue'
-import DatasetColumnConfigure from '@/views/pages/admin/dataset/components/adhoc/DatasetColumnConfigure.vue'
-import SqlInfo from '@/views/components/sql/SqlInfo.vue'
-import DatasetReport from '@/views/pages/admin/dataset/components/DatasetReport.vue'
-import { ChartColumn, CirclePlay, Database, Download, Ellipsis, Eraser, Eye, Filter, LayoutGrid, Search, Settings, X } from '@lucide/vue'
+import { ChartColumn, ChevronLeft, ChevronRight, CircleCheck, CircleAlert, Download, Eraser, Filter, Hash, LayoutGrid, Play, Plus, Save, Search, Settings2, Type, X } from '@lucide/vue'
+import { MfForm } from 'metaforge-ui'
+import { useDatasetAdhoc } from '@/composables/useDatasetAdhoc'
+import { useStudioPanels } from '@/composables/useStudioPanels'
+import { adhocColumnIssue, adhocCsv, fieldLabel, isAdhocNumeric, type AdhocColumn, type AdhocField, type AdhocMode } from '@/model/dataset-adhoc'
+import { createQueryChartSnapshot } from '@/model/query-chart'
+import StudioBackLink from '@/views/components/studio/StudioBackLink.vue'
+import StudioPanelHeader from '@/views/components/studio/StudioPanelHeader.vue'
+import InspectorSection from '@/views/components/studio/InspectorSection.vue'
+import ResultTable from '@/views/components/table/ResultTable.vue'
+import SqlCodeBlock from '@/views/components/sql/SqlCodeBlock.vue'
+import QueryChartPreview from '@/views/components/visual/query/QueryChartPreview.vue'
+import VisualChart from '@/views/components/visual/components/VisualChart.vue'
+import VisualConfigure from '@/views/components/visual/components/VisualConfigure.vue'
+import { createdConfigure } from '@/views/components/visual/Utils'
+import DatasetAdhocFieldSettings from './components/adhoc/DatasetAdhocFieldSettings.vue'
+import DatasetAdhocChartSettings from './components/adhoc/DatasetAdhocChartSettings.vue'
+import DatasetReport from './components/DatasetReport.vue'
 
-defineOptions({ name: 'DatasetAdhoc' })
-
-const { t } = useI18n()
-
-const route = useRoute()
-
-const loading = ref(false)
-const code = ref<string | null>(null)
-const reportCode = ref<any>(null)
-const originalMetrics = ref<any[]>([])
-const originalDimensions = ref<any[]>([])
-const originalData = ref<any[]>([])
-const metrics = ref<any[]>([])
-const dimensions = ref<any[]>([])
-const filters = ref<any[]>([])
-const fieldSearch = ref('')
-const fieldTab = ref<'all' | 'dimension' | 'metric'>('all')
-const configure = reactive({
-  columns: [] as any[],
-  limit: 1000
-})
-const configuration = ref<Configuration | null>(null)
-const showSql = reactive({
-  visible: false,
-  content: null as string | null
-})
-const columnContent = reactive({
-  visible: false,
-  type: null as ColumnType | null,
-  content: [] as never[],
-  configure: null as any | null
-})
-const commitOptions = ref<any>(null)
-const publishVisible = ref(false)
-const initialize = ref(false)
-const highlight = reactive({
-  active: false,
-  type: 'METRIC' as any
-})
-const dataInfo = reactive({ name: null as string | null, description: null as string | null })
-const resultTab = ref('result')
-
-const matchesSearch = (item: any): boolean => {
-  const keyword = fieldSearch.value?.toLowerCase() || ''
-  if (!keyword) {
-    return true
+const { t } = useI18n(), route = useRoute()
+const code = computed(() => String(route.params.code || '')), reportCode = computed(() => String(route.params.id || ''))
+const { fields, columns, dataset, report, limit, initializing, loadError, warning, running, queried, failure, sql, elapsed,
+  headers, rows, options, legacy, query, stale, selected, selectedColumn, resultTab, canPublish, load, execute, add, remove, update, clear } = useDatasetAdhoc(code, reportCode, t)
+const { wide, compact, resizing, left, right, max, leftWidth, rightWidth, leftVisible, rightVisible, show, close, toggle } = useStudioPanels('dataset-adhoc')
+const keyword = ref(''), fieldTab = ref('all'), inspectorTab = ref('query'), addingTo = ref<AdhocMode>(), dragging = ref(false)
+const publishVisible = ref(false), savedCode = ref('')
+const legacySettings = ref(false)
+const legacyPreview = computed(() => legacy.value ? { ...legacy.value, headers: headers.value, columns: rows.value } as unknown as import('@/views/components/visual/Configuration').Configuration : null)
+const legacyGroups = computed(() => legacy.value ? createdConfigure(legacy.value.type, { t } as any) : [])
+const settings = ref<InstanceType<typeof DatasetAdhocFieldSettings>>(), queryForm = ref<InstanceType<typeof MfForm>>()
+const querySettingsGroup = ref<InstanceType<typeof InspectorSection>>()
+const fieldSettingsGroup = ref<InstanceType<typeof InspectorSection>>()
+const limitModel = computed(() => ({ limit: limit.value }))
+const zones = [
+  { mode: 'METRIC' as const, label: 'dataset.adhoc.measures', hint: 'dataset.adhoc.dropMetric', icon: ChartColumn },
+  { mode: 'DIMENSION' as const, label: 'dataset.adhoc.dimensions', hint: 'dataset.adhoc.dropDimension', icon: LayoutGrid },
+  { mode: 'FILTER' as const, label: 'dataset.common.columnModeFilter', hint: 'dataset.adhoc.dropFilter', icon: Filter },
+]
+const catalog = computed(() => fields.value.filter(field => (fieldTab.value === 'all' || field.mode === fieldTab.value)
+  && (fieldLabel(field) + ' ' + field.name).toLowerCase().includes(keyword.value.trim().toLowerCase())))
+const forMode = (mode: AdhocMode) => columns.value.filter(column => column.mode === mode)
+function choose(field: AdhocField, mode = addingTo.value || field.mode) { add(field, mode); addingTo.value = undefined; inspectorTab.value = 'query'; show('right') }
+function select(column: AdhocColumn) { selected.value = column.key; inspectorTab.value = 'query'; show('right') }
+function startDrag(event: DragEvent, field: AdhocField, key?: string) {
+  event.dataTransfer?.setData('application/metaforge-field', JSON.stringify({ id: field.id, key }))
+  if (event.dataTransfer) event.dataTransfer.effectAllowed = 'copyMove'
+  dragging.value = true
+}
+function dragOver(event: DragEvent) {
+  if (!event.dataTransfer?.types.includes('application/metaforge-field')) return
+  event.preventDefault()
+  event.dataTransfer.dropEffect = 'copy'
+}
+function drop(event: DragEvent, mode: AdhocMode) {
+  dragging.value = false
+  try {
+    const data = JSON.parse(event.dataTransfer?.getData('application/metaforge-field') || '{}')
+    const field = fields.value.find(value => value.id === data.id)
+    if (!field || (mode !== 'FILTER' && field.mode !== mode)) return
+    if (data.key && data.key.startsWith(mode + ':')) {
+      const column = columns.value.find(value => value.key === data.key)
+      if (column) columns.value = [...columns.value.filter(value => value.key !== data.key), column]
+    } else choose(field, mode)
+  } catch { /* Ignore drags from outside the field library. */ }
+}
+async function run() {
+  if (running.value) return
+  const invalid = columns.value.find(column => adhocColumnIssue(column))
+  if (invalid || !Number.isInteger(limit.value) || limit.value < 1) {
+    if (invalid) selected.value = invalid.key
+    inspectorTab.value = 'query'; show('right'); await nextTick()
+    querySettingsGroup.value?.expand(); fieldSettingsGroup.value?.expand()
+    await Promise.allSettled([settings.value?.validate(), queryForm.value?.validate()]); return
   }
-  return (item.aliasName || '').toLowerCase().includes(keyword)
-      || (item.name || '').toLowerCase().includes(keyword)
+  await execute()
 }
-
-const visibleMetrics = computed(() => originalMetrics.value.filter(matchesSearch))
-const visibleDimensions = computed(() => originalDimensions.value.filter(matchesSearch))
-const showMetrics = computed(() => fieldTab.value === 'all' || fieldTab.value === 'metric')
-const showDimensions = computed(() => fieldTab.value === 'all' || fieldTab.value === 'dimension')
-
-const splitColumns = (original: any[]): any[] => {
-  const array: any[] = []
-  original.forEach((item: any) => array.push({
-    id: item.id,
-    mode: item.mode,
-    alias: item.alias,
-    expression: item.expression,
-    name: item.name,
-    function: item.function,
-    value: item.value,
-    order: item.order
-  }))
-  return array
+function onKeydown(event: KeyboardEvent) {
+  if ((event.metaKey || event.ctrlKey) && event.key === 'Enter' && !publishVisible.value) { event.preventDefault(); void run() }
+  if (event.key === 'Escape' && compact.value) close(compact.value)
 }
-
-const onAdhoc = () => {
-  loading.value = true
-  DatasetService.adhoc(code.value as string, configure)
-                .then((response) => {
-                  if (response.status) {
-                    if (configuration.value) {
-                      if (response.data.isSuccessful) {
-                        configuration.value.headers = response.data.headers
-                        configuration.value.columns = response.data.columns
-                        showSql.content = response.data.content
-                        configuration.value.message = null
-                      }
-                      else {
-                        configuration.value.headers = []
-                        configuration.value.columns = []
-                        configuration.value.message = response.data.message
-                      }
-                    }
-                  }
-                  else {
-                    MfMessage.error(response.message)
-                  }
-                })
-                .finally(() => (loading.value = false))
+function exportResults() {
+  const url = URL.createObjectURL(new Blob([adhocCsv(headers.value, rows.value)], { type: 'text/csv;charset=utf-8;' }))
+  const link = document.createElement('a'); link.href = url; link.download = `metaforge-${code.value}.csv`; link.click(); URL.revokeObjectURL(url)
 }
-
-const onApplyAdhoc = () => {
-  filters.value.forEach((item: any) => (item.mode = ColumnType.FILTER))
-  configure.columns = [...splitColumns(metrics.value), ...splitColumns(dimensions.value), ...splitColumns(filters.value)]
-  onAdhoc()
-}
-
-const mergeColumns = (originalColumns: any[], array: any[], type?: ColumnType) => {
-  originalColumns.filter((item: any) => {
-    const column = originalData.value.filter((value: any) => value.id === item.id)[0]
-    if (type) {
-      if (item.mode === type) {
-        Object.assign(column, item)
-        array.push(column)
-      }
-    }
-    else {
-      Object.assign(column, item)
-      array.push(column)
-    }
-  })
-}
-
-const handleInitialize = () => {
-  setTimeout(() => {
-    initialize.value = true
-    const routeCode = route.params.code as string
-    code.value = routeCode
-    const id = route.params.id
-    reportCode.value = id
-    DatasetService.getColumnsByCode(code.value)
-                  .then((response) => {
-                    if (response.status) {
-                      originalData.value = response.data
-                      originalMetrics.value = response.data.filter((item: any) => item.mode === 'METRIC')
-                      originalDimensions.value = response.data.filter((item: any) => item.mode === 'DIMENSION')
-                      if (id) {
-                        ReportService.getByCode(id as string)
-                                     .then((reportResponse) => {
-                                       if (reportResponse.status) {
-                                         dataInfo.name = reportResponse.data.name
-                                         dataInfo.description = reportResponse.data.description
-                                         const query = JSON.parse(reportResponse.data.query)
-                                         mergeColumns(query.columns, metrics.value, ColumnType.METRIC)
-                                         mergeColumns(query.columns, dimensions.value, ColumnType.DIMENSION)
-                                         mergeColumns(query.columns, filters.value, ColumnType.FILTER)
-                                         configure.columns = query.columns
-                                         configure.limit = query.limit
-                                         configuration.value = JSON.parse(reportResponse.data.configure)
-                                         onApplyAdhoc()
-                                       }
-                                     })
-                      }
-                    }
-                    else {
-                      MfMessage.error(response.message)
-                    }
-                  })
-                  .finally(() => (initialize.value = false))
-  }, 0)
-}
-
-const onClone = (value: any) => cloneDeep(value)
-
-const onRemove = (index: number, array: any[]) => {
-  array.splice(index, 1)
-  onApplyAdhoc()
-}
-
-const onColumnConfigure = (opened: boolean, record: any, type: ColumnType | null) => {
-  columnContent.visible = opened
-  columnContent.type = type
-  if (record) {
-    columnContent.content = originalData.value.find((item: any) => item.id === record.id) as unknown as never[]
-    const foundIndex = configure.columns.findIndex((item: any) => item.id === record.id)
-    if (foundIndex !== -1) {
-      const column = configure.columns[foundIndex]
-      column.type = record.type
-      columnContent.configure = column
-    }
-    else {
-      columnContent.configure = { id: record.id, type: record.type }
-    }
-  }
-  else {
-    columnContent.configure = null
-  }
-}
-
-const replaceColumn = (originalColumns: any[], originalValue: any) => {
-  const index = originalColumns.findIndex((item: any) => item.id === originalValue.id)
-  if (index !== -1) {
-    const cloneValue = cloneDeep(originalValue)
-    originalColumns[index] = Object.assign(originalValue, originalColumns[index], cloneValue)
-  }
-}
-
-const onCommitColumnConfigure = (value: any) => {
-  const clonedValue = cloneDeep(value)
-  if (clonedValue.mode === ColumnType.METRIC) {
-    replaceColumn(metrics.value, clonedValue)
-  }
-  else if (clonedValue.mode === ColumnType.DIMENSION) {
-    replaceColumn(dimensions.value, clonedValue)
-  }
-  else if (clonedValue.mode === ColumnType.FILTER) {
-    replaceColumn(filters.value, clonedValue)
-  }
-  onApplyAdhoc()
-}
-
-const visibleShowSql = (opened: boolean) => {
-  showSql.visible = opened
-}
-
-const visibleCommitOptions = (value: any) => {
-  commitOptions.value = value
-}
-
-const visibleHighlight = (opened: boolean, type: any) => {
-  highlight.active = opened
-  highlight.type = type
-}
-
-const visiblePublish = (opened: boolean) => {
-  publishVisible.value = opened
-}
-
-const onClear = () => {
-  metrics.value = []
-  dimensions.value = []
-  filters.value = []
-}
-
-const exportResults = () => {
-  if (!configuration.value || !configuration.value.headers.length) {
-    MfMessage.error(t('common.noData') as string)
-    return
-  }
-  const headers = configuration.value.headers
-  const columns = configuration.value.columns
-  const escape = (v: any) => {
-    const s = v === null || v === undefined ? '' : String(v)
-    return /[",\n]/.test(s) ? `"${ s.replace(/"/g, '""') }"` : s
-  }
-  const csv = [headers.map((h: any) => escape(h)).join(','), ...columns.map((row: any) => headers.map((_header: any, index: number) => escape(row[index])).join(','))].join('\n')
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
-  const url = URL.createObjectURL(blob)
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `adhoc-${ Date.now() }.csv`
-  link.click()
-  URL.revokeObjectURL(url)
-}
-
-configuration.value = new Configuration()
-handleInitialize()
+function configureChart() { resultTab.value = 'chart'; inspectorTab.value = 'chart'; show('right') }
+watch([code, reportCode], () => { savedCode.value = ''; publishVisible.value = false })
 </script>
 
+<template>
+  <div class="flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden" @keydown="onKeydown">
+    <header class="relative z-20 flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line bg-surface px-3 py-2 shadow-mf-sm sm:px-4">
+      <div class="flex min-w-0 items-center gap-2.5">
+        <StudioBackLink to="/dataset" :label="$t('dataset.editor.backToList')"/>
+        <div class="min-w-0"><h1 class="truncate text-sm font-semibold sm:text-base" :title="report.name || dataset.name">{{ report.name || dataset.name || $t('dataset.adhoc.title') }}</h1></div>
+        <MfTag v-if="stale" size="sm">{{ $t('dataset.adhoc.pending') }}</MfTag>
+      </div>
+      <div class="flex shrink-0 flex-wrap items-center gap-2">
+        <MfButton size="sm" :disabled="initializing || !columns.length || running" @click="clear"><Eraser :size="14"/>{{ $t('common.clear') }}</MfButton>
+        <MfButton size="sm" :disabled="!canPublish" @click="publishVisible = true"><Save :size="14"/>{{ $t('dataset.adhoc.saveReport') }}</MfButton>
+        <MfButton size="sm" variant="primary" :loading="running" :disabled="initializing || !!loadError || !columns.some(column => column.mode !== 'FILTER') || running" @click="run"><Play :size="14"/>{{ $t('dataset.adhoc.query') }}</MfButton>
+      </div>
+    </header>
+    <div v-if="initializing" class="flex min-h-0 flex-1 items-center justify-center"><MfSpinner size="lg"/></div>
+    <MfEmpty v-else-if="loadError" class="flex-1" :title="$t('dataset.adhoc.loadFailed')" :description="loadError"><MfButton @click="load">{{ $t('common.refresh') }}</MfButton></MfEmpty>
+    <div v-else class="adhoc-workspace relative flex min-h-0 min-w-0 flex-1 overflow-hidden" :class="resizing && 'adhoc-resizing'" :style="{ '--adhoc-left': leftWidth + 'px', '--adhoc-right': rightWidth + 'px' }">
+      <button v-if="!wide && compact" class="absolute inset-0 z-20 bg-overlay" :aria-label="$t('dashboard.studio.closePanel')" @click="close(compact)"/>
+      <Transition name="adhoc-panel">
+        <aside v-show="leftVisible" id="adhoc-field-library" :inert="!leftVisible" class="adhoc-side adhoc-left inset-y-0 left-0 z-30 border-r border-line bg-surface" :class="wide ? 'adhoc-docked relative' : 'absolute shadow-mf-lg'">
+          <div class="adhoc-panel-content flex h-full min-h-0 flex-col">
+            <StudioPanelHeader :title="$t('dataset.adhoc.fieldLibrary')" :pinnable="false" :pinned="true" @close="close('left')"/>
+            <div class="shrink-0 p-3"><MfInput v-model="keyword" size="sm" :placeholder="$t('dataset.search.fields')" clearable><template #prefix><Search :size="14"/></template></MfInput></div>
+            <MfTabs v-model:active-key="fieldTab" class="shrink-0 px-3"><MfTabPane item-key="all" :tab="$t('dataset.adhoc.all')"/><MfTabPane item-key="DIMENSION" :tab="$t('dataset.adhoc.dimensions')"/><MfTabPane item-key="METRIC" :tab="$t('dataset.adhoc.measures')"/></MfTabs>
+            <div v-if="addingTo" class="flex shrink-0 items-center justify-between gap-2 bg-primary/5 px-3 py-2 text-xs text-primary"><span>{{ $t('dataset.adhoc.chooseField', { mode: $t(zones.find(zone => zone.mode === addingTo)!.label) }) }}</span><MfButton variant="ghost" size="sm" :aria-label="$t('common.cancel')" @click="addingTo = undefined"><X :size="13"/></MfButton></div>
+            <div class="min-h-0 flex-1 overflow-y-auto px-3 py-2">
+              <div v-if="catalog.length" class="flex flex-col gap-1">
+                <div v-for="field in catalog" :key="field.id" class="group flex min-w-0 items-center gap-1 rounded-mf-md hover:bg-surface-hover">
+                  <button type="button" draggable="true" class="flex min-w-0 flex-1 cursor-grab items-center gap-2 rounded-mf-md px-2 py-2 text-left text-sm outline-none focus-visible:ring-2 focus-visible:ring-primary/40 active:cursor-grabbing" :title="field.comment || fieldLabel(field)" :aria-label="$t('dataset.adhoc.addField', { name: fieldLabel(field) })" @click="choose(field)" @dragstart="startDrag($event, field)" @dragend="dragging = false">
+                    <Hash v-if="isAdhocNumeric(field.type)" :size="15" class="shrink-0 text-primary"/><Type v-else :size="15" class="shrink-0 text-content-tertiary"/>
+                    <span class="min-w-0 flex-1 truncate">{{ fieldLabel(field) }}</span><span class="shrink-0 text-[10px] text-content-tertiary">{{ field.type }}</span>
+                  </button>
+                  <MfButton size="sm" variant="ghost" class="size-7! shrink-0 p-0!" :aria-label="$t('dataset.adhoc.filterField', { name: fieldLabel(field) })" @click="choose(field, 'FILTER')"><Filter :size="13"/></MfButton>
+                </div>
+              </div>
+              <MfEmpty v-else class="h-full" size="sm" :title="$t('common.noData')"/>
+            </div>
+            <p class="shrink-0 border-t border-line px-3 py-2.5 text-[11px] text-content-tertiary">{{ $t('dataset.adhoc.libraryHint') }}</p>
+          </div>
+          <MfResizeHandle v-if="wide" v-model="left.width.value" class="absolute inset-y-0 -right-1 z-10 mx-0!" :min="240" :max="max" :label="$t('dataset.adhoc.resizeFields')" @pointerdown.capture="resizing = true" @change="left.save"/>
+        </aside>
+      </Transition>
+      <main class="flex min-h-0 min-w-0 flex-1 flex-col bg-surface/60">
+        <div class="max-h-[42%] shrink-0 overflow-y-auto border-b border-line bg-surface px-3 py-2 sm:px-4">
+          <MfAlert v-if="warning" variant="warning" class="mb-2" :title="warning"/>
+          <section v-for="zone in zones" :key="zone.mode" class="my-1 flex min-h-12 items-start gap-2 rounded-mf-md border border-dashed p-2 transition-colors" :class="dragging ? 'border-primary/60 bg-primary/5' : 'border-line'" :aria-label="$t(zone.label)" @dragover="dragOver" @drop.prevent="drop($event, zone.mode)">
+            <h2 class="flex w-16 shrink-0 items-center gap-1.5 pt-1 text-xs font-medium text-content-secondary"><component :is="zone.icon" :size="14"/>{{ $t(zone.label) }}</h2>
+            <div class="flex min-w-0 flex-1 flex-wrap items-center gap-1.5">
+              <div v-for="column in forMode(zone.mode)" :key="column.key" draggable="true" class="flex max-w-full items-center rounded-mf-md border text-xs" :class="selected === column.key ? 'border-primary bg-primary/8 text-primary' : 'border-line bg-surface-hover text-content-secondary'" @dragstart="startDrag($event, column, column.key)" @dragend="dragging = false">
+                <button type="button" class="flex min-w-0 items-center gap-1.5 px-2 py-1.5 text-left" :title="fieldLabel(column)" @click="select(column)"><Settings2 :size="12" class="shrink-0"/><span class="max-w-40 truncate">{{ column.alias || fieldLabel(column) }}</span><span v-if="column.expression" class="text-[10px] opacity-70">{{ $t('dataset.adhoc.operator.' + column.expression) }}</span></button>
+                <button type="button" class="mr-1 grid size-5 shrink-0 place-items-center rounded-mf-sm hover:bg-danger/10 hover:text-danger" :aria-label="$t('dataset.adhoc.removeField', { name: fieldLabel(column) })" @click="remove(column.key)"><X :size="12"/></button>
+              </div>
+              <span v-if="!forMode(zone.mode).length" class="py-1.5 text-xs text-content-tertiary">{{ $t(zone.hint) }}</span>
+            </div>
+            <MfButton size="sm" variant="ghost" class="size-7! shrink-0 p-0!" :aria-label="$t('dataset.adhoc.addTo', { mode: $t(zone.label) })" @click="addingTo = zone.mode; fieldTab = zone.mode === 'FILTER' ? 'all' : zone.mode; show('left')"><Plus :size="14"/></MfButton>
+          </section>
+        </div>
+        <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div class="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-line px-3 py-1.5 text-xs sm:px-4">
+            <span v-if="queried" class="flex flex-wrap items-center gap-2" role="status"><component :is="failure ? CircleAlert : CircleCheck" :size="14" :class="failure ? 'text-danger' : 'text-success'"/><span :class="failure ? 'text-danger' : 'text-success'">{{ $t(failure ? 'query.message.failed' : 'query.message.success') }}</span><span class="text-content-tertiary">{{ elapsed }} ms · {{ $t('query.message.returnedRows', [rows.length]) }}</span><span v-if="stale" class="text-warning">{{ $t('dataset.adhoc.staleHint') }}</span></span>
+            <span v-else class="text-content-tertiary">{{ $t('dataset.adhoc.resultTab') }}</span>
+            <div class="ml-auto flex gap-1"><MfButton size="sm" variant="ghost" :disabled="!headers.length || running" @click="configureChart"><ChartColumn :size="14"/>{{ $t('dataset.common.visual') }}</MfButton><MfButton size="sm" variant="ghost" :disabled="!headers.length || running" @click="exportResults"><Download :size="14"/>{{ $t('common.export') }}</MfButton></div>
+          </div>
+          <div class="relative flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-3 sm:px-4">
+            <div v-if="running" class="absolute inset-0 z-10 flex items-center justify-center bg-surface/75"><MfSpinner size="lg" :label="$t('dataset.adhoc.query')"/></div>
+            <MfTabs v-model:active-key="resultTab" fill class="min-h-0 flex-1">
+              <MfTabPane item-key="data" :tab="$t('dataset.adhoc.resultTab')"><ResultTable v-if="headers.length" fill searchable :headers="headers" :rows="rows"/><MfEmpty v-else class="h-full" :variant="queried ? 'data' : 'initial'" :title="$t(queried ? 'query.result.empty' : 'dataset.adhoc.initial')" :description="$t(queried ? 'query.result.emptyTip' : 'dataset.adhoc.initialHint')"/></MfTabPane>
+              <MfTabPane item-key="chart" :tab="$t('queryChart.chart')"><VisualChart v-if="legacyPreview && legacyPreview.type !== 'TABLE'" :configuration="legacyPreview" :submitted="false" height="100%"/><QueryChartPreview v-else-if="headers.length" :options="options" :rows="rows" :heading="false"/><MfEmpty v-else class="h-full" variant="initial" :title="$t('dataset.adhoc.queryFirst')"/></MfTabPane>
+              <MfTabPane item-key="sql" tab="SQL"><SqlCodeBlock fill :code="sql" :placeholder="$t('dataset.adhoc.sqlHint')"/></MfTabPane>
+              <MfTabPane item-key="message" :tab="$t('dataset.adhoc.messages')"><MfAlert v-if="queried" class="mt-3" :variant="failure ? 'danger' : 'success'" :title="$t(failure ? 'query.message.failed' : 'query.message.success')">{{ failure || $t('query.message.returnedRows', [rows.length]) }}</MfAlert><MfEmpty v-else class="h-full" size="sm" :title="$t('dataset.adhoc.noMessages')"/></MfTabPane>
+            </MfTabs>
+          </div>
+        </div>
+      </main>
+      <Transition name="adhoc-panel">
+        <aside v-show="rightVisible" id="adhoc-properties" :inert="!rightVisible" class="adhoc-side adhoc-right inset-y-0 right-0 z-30 border-l border-line bg-surface" :class="wide ? 'adhoc-docked relative' : 'absolute shadow-mf-lg'">
+          <div class="adhoc-panel-content flex h-full min-h-0 flex-col">
+            <StudioPanelHeader :title="$t('dataset.adhoc.properties')" :pinnable="false" :pinned="true" @close="close('right')"/>
+            <MfTabs v-model:active-key="inspectorTab" fill class="adhoc-inspector-tabs min-h-0 flex-1">
+              <MfTabPane item-key="query" :tab="$t('dataset.adhoc.querySettings')">
+                <div class="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-3 p-3">
+                  <InspectorSection ref="querySettingsGroup" icon="actions" :title="$t('dataset.adhoc.querySettings')">
+                    <MfForm ref="queryForm" :model="limitModel" :disabled="running">
+                      <MfFormItem name="limit" :label="$t('dataset.adhoc.rowLimit')" :rules="[{ required: true, type: 'number', min: 1, validator: value => Number.isInteger(value), message: $t('dataset.adhoc.invalidLimit') }]">
+                        <MfInputNumber v-model="limit" class="w-full" decimal-only commit-on-change :min="1" :precision="0" :aria-label="$t('dataset.adhoc.rowLimit')"/>
+                      </MfFormItem>
+                    </MfForm>
+                  </InspectorSection>
+                  <InspectorSection ref="fieldSettingsGroup" icon="data" :title="$t('dataset.adhoc.fieldSettings')">
+                    <DatasetAdhocFieldSettings v-if="selectedColumn" ref="settings" :key="selectedColumn.key" :column="selectedColumn" :disabled="running" @change="update"/>
+                    <MfEmpty v-else size="sm" :title="$t('dataset.adhoc.selectField')"/>
+                  </InspectorSection>
+                </div>
+              </MfTabPane>
+              <MfTabPane item-key="chart" :tab="$t('queryChart.chart')">
+                <div v-if="legacy" class="p-3">
+                  <InspectorSection icon="appearance" :title="$t('dataset.adhoc.chartSettings')">
+                    <MfAlert variant="info" :title="$t('dataset.adhoc.legacyChart')"/>
+                    <MfButton v-if="legacy.type !== 'TABLE'" @click="legacySettings = true">{{ $t('common.configure') }}</MfButton>
+                    <MfButton @click="legacy = null">{{ $t('dataset.adhoc.upgradeChart') }}</MfButton>
+                  </InspectorSection>
+                </div>
+                <DatasetAdhocChartSettings v-else-if="headers.length" class="p-3" :options="options" :headers="headers" :rows="rows" @change="options = $event; resultTab = 'chart'"/>
+                <MfEmpty v-else class="h-full" size="sm" variant="initial" :title="$t('dataset.adhoc.queryFirst')"/>
+              </MfTabPane>
+            </MfTabs>
+          </div>
+          <MfResizeHandle v-if="wide" v-model="right.width.value" reverse class="absolute inset-y-0 -left-1 z-10 mx-0!" :min="280" :max="max" :label="$t('dataset.adhoc.resizeProperties')" @pointerdown.capture="resizing = true" @change="right.save"/>
+        </aside>
+      </Transition>
+      <MfButton id="dataset-adhoc-left-toggle" size="sm" class="adhoc-toggle rounded-l-none! rounded-r-mf-md!" :style="{ left: leftVisible ? leftWidth + 'px' : '0px' }" :aria-expanded="leftVisible" aria-controls="adhoc-field-library" :aria-label="$t('dataset.adhoc.fieldLibrary')" @click="toggle('left')"><ChevronLeft v-if="leftVisible" :size="16"/><ChevronRight v-else :size="16"/></MfButton>
+      <MfButton id="dataset-adhoc-right-toggle" size="sm" class="adhoc-toggle rounded-r-none! rounded-l-mf-md!" :style="{ right: rightVisible ? rightWidth + 'px' : '0px' }" :aria-expanded="rightVisible" aria-controls="adhoc-properties" :aria-label="$t('dataset.adhoc.properties')" @click="toggle('right')"><ChevronRight v-if="rightVisible" :size="16"/><ChevronLeft v-else :size="16"/></MfButton>
+    </div>
+    <VisualConfigure v-if="legacySettings && legacy" :is-visible="legacySettings" :configuration="legacyPreview!" :field-group="legacyGroups" @close="legacySettings = false" @change="legacy.chartConfigure = $event || undefined"/>
+    <DatasetReport v-if="publishVisible" :visible="publishVisible" :info="{ ...report, name: report.name || dataset.name }" :code="savedCode || reportCode || undefined" :dataset-code="code" :commit-options="legacy || createQueryChartSnapshot(options, rows)" :configure="query" @saved="savedCode = $event.code; report = { name: $event.name, description: $event.description }" @close="publishVisible = false"/>
+  </div>
+</template>
+
 <style scoped>
-.dc-adhoc__side {
-    background: var(--dc-surface);
-    border: 1px solid var(--dc-border-light);
-    border-radius: var(--dc-radius-lg);
-    padding: 14px;
-    min-height: calc(100vh - 200px);
-}
-
-.dc-adhoc__dataset {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px;
-    border-radius: var(--dc-radius-md);
-    background: var(--dc-primary-surface);
-    border: 1px solid var(--dc-border-light);
-    margin-bottom: 10px;
-}
-
-.dc-adhoc__dataset-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 34px;
-    height: 34px;
-    border-radius: var(--dc-radius-md);
-    background: var(--dc-surface);
-    flex-shrink: 0;
-}
-
-.dc-adhoc__dataset-name {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--dc-text-title);
-}
-
-.dc-adhoc__dataset-state {
-    font-size: 11px;
-    color: var(--dc-success);
-}
-
-.dc-adhoc__search {
-    margin-bottom: 10px;
-    border-radius: var(--dc-radius-sm);
-}
-
-.dc-adhoc__field-tabs {
-    display: flex;
-    gap: 12px;
-    border-bottom: 1px solid var(--dc-border-light);
-    padding-bottom: 6px;
-    margin-bottom: 8px;
-}
-
-.dc-adhoc__field-tab {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.dc-adhoc__field-tab--active {
-    color: var(--dc-primary);
-    font-weight: 600;
-}
-
-.dc-adhoc__group {
-    margin-bottom: 10px;
-}
-
-.dc-adhoc__group-title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--dc-text-title);
-    padding: 4px 0;
-}
-
-.dc-adhoc__group-icon {
-    color: var(--dc-text-secondary);
-}
-
-.dc-adhoc__field {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 6px;
-    border-radius: var(--dc-radius-sm);
-    cursor: grab;
-    font-size: 12px;
-    color: var(--dc-text-primary);
-}
-
-.dc-adhoc__field:hover {
-    background: var(--dc-menu-hover);
-}
-
-.dc-adhoc__field-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 20px;
-    height: 16px;
-    border-radius: 3px;
-    background: var(--dc-info-bg);
-    color: var(--dc-info);
-    font-size: 10px;
-    font-weight: 600;
-    flex-shrink: 0;
-}
-
-.dc-adhoc__field-badge--text {
-    font-size: 9px;
-}
-
-.dc-adhoc__field-name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-.dc-adhoc__field-empty {
-    font-size: 11px;
-    color: var(--dc-text-placeholder);
-    padding: 4px 6px;
-}
-
-.dc-adhoc__main {
-    background: var(--dc-surface);
-    border: 1px solid var(--dc-border-light);
-    border-radius: var(--dc-radius-lg);
-    box-shadow: var(--dc-shadow-card);
-    padding: 20px;
-}
-
-.dc-adhoc__head {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
-    margin-bottom: 16px;
-}
-
-.dc-adhoc__title {
-    font-size: 20px;
-    font-weight: 600;
-    color: var(--dc-text-title);
-}
-
-.dc-adhoc__desc {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-    margin-top: 4px;
-}
-
-.dc-adhoc__head-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-shrink: 0;
-}
-
-.dc-adhoc__zone {
-    border: 1px solid var(--dc-border-light);
-    border-left: 3px solid var(--dc-border);
-    border-radius: var(--dc-radius-md);
-    background: var(--dc-bg);
-    padding: 10px 14px;
-    margin-bottom: 10px;
-}
-
-.dc-adhoc__zone--metric {
-    border-left-color: var(--dc-success);
-}
-
-.dc-adhoc__zone--dimension {
-    border-left-color: var(--dc-info);
-}
-
-.dc-adhoc__zone--filter {
-    border-left-color: var(--dc-primary);
-}
-
-.dc-adhoc__zone--highlight {
-    box-shadow: var(--dc-shadow-focus);
-}
-
-.dc-adhoc__zone-head {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-}
-
-.dc-adhoc__zone-icon {
-    color: var(--dc-text-secondary);
-    font-size: 14px;
-}
-
-.dc-adhoc__zone-label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--dc-text-title);
-}
-
-.dc-adhoc__zone-hint {
-    font-size: 11px;
-    color: var(--dc-text-placeholder);
-}
-
-.dc-adhoc__zone-body {
-    min-height: 36px;
-    display: flex;
-    align-items: center;
-}
-
-.dc-adhoc__chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 2px 8px;
-    border-radius: var(--dc-radius-sm);
-    background: var(--dc-surface);
-    border: 1px solid var(--dc-border);
-    font-size: 12px;
-    color: var(--dc-text-primary);
-    margin-inline-end: 0;
-}
-
-.dc-adhoc__result-tabs {
-    margin-bottom: 8px;
-}
-
-.dc-adhoc__result-footer {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 12px;
-    padding-top: 10px;
-}
-
-.dc-adhoc__result-total {
-    font-size: 12px;
-    color: var(--dc-text-secondary);
-}
-
-.dc-adhoc__log {
-    background: var(--dc-bg);
-    border: 1px solid var(--dc-border-light);
-    border-radius: var(--dc-radius-md);
-    padding: 12px;
-    font-size: 12px;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 400px;
-    overflow: auto;
+.adhoc-side { flex: none; min-height: 0; }
+.adhoc-left, .adhoc-left > .adhoc-panel-content { width: var(--adhoc-left); }
+.adhoc-right, .adhoc-right > .adhoc-panel-content { width: var(--adhoc-right); }
+.adhoc-inspector-tabs :deep([role="tablist"]) { margin: 0 12px; }
+.adhoc-inspector-tabs :deep([role="tab"]) { flex: 1; min-width: 0; padding-inline: 6px; }
+.adhoc-toggle { position: absolute; top: 50%; z-index: 40; width: 25px; height: 46px; padding: 0; transform: translateY(-50%); }
+@media (prefers-reduced-motion: no-preference) {
+  .adhoc-panel-enter-active, .adhoc-panel-leave-active { transition: transform var(--mf-duration-base) var(--mf-easing); }
+  .adhoc-docked.adhoc-panel-enter-active, .adhoc-docked.adhoc-panel-leave-active { overflow: clip; transition: width var(--mf-duration-base) var(--mf-easing); }
+  .adhoc-docked.adhoc-panel-enter-from, .adhoc-docked.adhoc-panel-leave-to { width: 0; }
+  .adhoc-left:not(.adhoc-docked).adhoc-panel-enter-from, .adhoc-left:not(.adhoc-docked).adhoc-panel-leave-to { transform: translateX(-100%); }
+  .adhoc-right:not(.adhoc-docked).adhoc-panel-enter-from, .adhoc-right:not(.adhoc-docked).adhoc-panel-leave-to { transform: translateX(100%); }
+  .adhoc-toggle { transition: left var(--mf-duration-base) var(--mf-easing), right var(--mf-duration-base) var(--mf-easing); }
+  .adhoc-resizing .adhoc-toggle { transition: none; }
 }
 </style>

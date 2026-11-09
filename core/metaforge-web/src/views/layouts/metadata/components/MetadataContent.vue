@@ -3,7 +3,9 @@
     <div class="isolate flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-3 py-2">
       <div v-if="capabilityLoading" class="flex flex-1 items-center justify-center"><MfSpinner/></div>
       <div v-else-if="capabilityError"><MfAlert variant="danger" :title="capabilityError"/><MfButton size="sm" class="mt-2" @click="onRefresh"><RefreshCw :size="14"/>{{ $t('common.refresh') }}</MfButton></div>
-      <MfEmpty v-else-if="!originalDatabase && profile?.kind === 'relational' && selectTab !== 'sql'" class="flex-1" variant="initial" :title="$t('source.tip.notSelectedNode')"/>
+      <div v-else-if="!originalDatabase && databases.loading" class="flex flex-1 items-center justify-center"><MfSpinner/></div>
+      <MfEmpty v-else-if="!originalDatabase && profile?.kind === 'relational' && selectTab !== 'sql'" class="flex-1" variant="initial"
+               :title="$t(databases.needsDatabase && databases.empty ? 'source.manage.noDatabases' : 'source.tip.notSelectedNode')"/>
       <template v-else>
         <div class="mb-2 flex min-h-8 shrink-0 flex-wrap items-center justify-between gap-2">
           <nav v-if="profile?.kind === 'relational'" class="flex min-w-0 items-center gap-2 text-xs text-content-tertiary" :aria-label="$t('source.common.database')">
@@ -71,9 +73,11 @@ import TableCreate from '@/views/pages/admin/source/components/TableCreate.vue'
 import TableExport from '@/views/pages/admin/source/components/TableExport.vue'
 import TableTruncate from '@/views/pages/admin/source/components/TableTruncate.vue'
 import TableDrop from '@/views/pages/admin/source/components/TableDrop.vue'
+import { computed, inject } from 'vue'
 import { useMetadataContent } from '@/composables/useMetadataContent'
 
 defineOptions({ name: 'MetadataContent' })
+const databases = inject('metadataDatabases', computed(() => ({ needsDatabase: false, loading: false, empty: false, error: '' })))
 const tabIcons: Record<string, unknown> = { keys: KeyRound, objects: FolderOpen, structure: LayoutGrid, data: Table2, sql: SquarePlay, indexes: Layers, foreignkeys: GitBranch, triggers: Zap, info: Settings, statement: Code, erDiagram: Waypoints }
 const { can, canCompare, profile, capabilityLoading, capabilityError, paneComponent, paneKey, databaseLocation, tableInfo, tableName, selectTab, tabs, metadataError,
   originalDatabase, originalTable, onChange, onRefresh, refreshing, onStructureCompare, onCopyName, onEditProperties, onEditDatabase,

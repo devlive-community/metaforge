@@ -109,46 +109,163 @@ jobs:
   maven:
     name: Publish to Maven Central
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150
     needs: build
+    permissions:
+      # Attaches the server distribution to the GitHub release.
+      contents: write
+    env:
+      # Publishing to Maven Central is permanent, so it runs last and only when
+      # its secrets exist; a half-configured repository still releases the rest.
+      CENTRAL_CONFIGURED: ${{ secrets.CENTRAL_USERNAME != '' && secrets.GPG_PRIVATE_KEY != '' }}
+      # Packages and the catalogue go to the Tencent COS bucket behind cdn.north.devlive.org, which the
+      # server's plugin.store.metadata-url and the catalogue's CDN sources read from.
+      COS_CONFIGURED: ${{ secrets.COS_SECRET_ID != '' && secrets.COS_SECRET_KEY != '' }}
+      COS_BUCKET: toolforge-1258585472
+      COS_REGION: ${{ vars.COS_REGION || 'ap-singapore' }}
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
-      # Imports the GPG key and injects the metaforge-ossrh server
-      # credentials into the Maven settings. The gpg-passphrase input is the
-      # NAME of the env variable holding the passphrase, provided below.
-      - name: Set up JDK 21 with signing and repository credentials
+      # The distribution and the store archives (dist/plugins) are built once
+      # here; the publishing steps below reuse them, so a deploy that fails
+      # half-way leaves nothing behind and re-running finishes the release.
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: maven
-          gpg-private-key: ${{ secrets.GPG_SECRET }}
-          gpg-passphrase: GPG_PASSPHRASE
-          server-id: metaforge-ossrh
-          server-username: OSSRH_USERNAME
-          server-password: OSSRH_TOKEN
-
-      # Fails fast with a clear message when the key or passphrase is wrong,
-      # instead of stalling or failing halfway through the deploy.
-      - name: Verify the GPG signing key
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSWORD }}
-        run: |
-          gpg --list-secret-keys --keyid-format long
-          echo 'metaforge signing check' | gpg --batch --yes --pinentry-mode loopback --passphrase "$GPG_PASSPHRASE" --local-user "$(gpg --list-secret-keys --keyid-format long --with-colons | awk -F: '/^sec/{print $5; exit}')" -o /tmp/signing-check.sig --sign
-          rm -f /tmp/signing-check.sig
-
-      - name: Deploy to Maven Central
-        env:
-          OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-          OSSRH_TOKEN: ${{ secrets.OSSRH_TOKEN }}
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSWORD }}
+      - name: Build the distribution and the store archives
         run: >
-          ./mvnw -B clean deploy -Pdeploy
-          -DskipTests -Dcheckstyle.skip -Dspotbugs.skip
+          ./mvnw -B clean install
+          -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
           -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
-          -Dgpg.passphrase="$GPG_PASSPHRASE"
-          -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+
+      - uses: actions/setup-java@v4
+        if: env.CENTRAL_CONFIGURED == 'true'
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+          # Publishing goes to Maven Central through the Central Portal with the
+          # server id "central"; the gpg-passphrase input is the NAME of the env
+          # variable holding the passphrase, provided below.
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: MAVEN_GPG_PASSPHRASE
+      - name: Publish the Maven artifacts to Maven Central
+        if: env.CENTRAL_CONFIGURED == 'true'
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          version="$(./mvnw -B -Dexec.executable=echo -Dexec.args='${project.version}' --non-recursive \
+            -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN exec:exec | tail -1)"
+          if curl --silent --fail --head --output /dev/null \
+              "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge/${version}/metaforge-${version}.pom"; then
+            echo "::notice::${version} is on Maven Central already"
+            exit 0
+          fi
+          ./mvnw --batch-mode --no-transfer-progress -Prelease,central -Dcentral.skip=false \
+            -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip \
+            -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm deploy \
+            -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+      - name: Skip Maven Central
+        if: env.CENTRAL_CONFIGURED != 'true'
+        run: echo "::notice::Maven Central skipped; set CENTRAL_USERNAME, CENTRAL_PASSWORD, GPG_PRIVATE_KEY and GPG_PASSPHRASE to publish there"
+
+      # The store catalogue and the statistics catalog are built from the very
+      # archives just deployed to Maven Central (dist/plugins holds copies), so
+      # one SHA-256 and size are valid for the Maven and CDN sources alike.
+      - name: Build the store catalogue and the statistics catalog
+        run: >
+          node configure/publish/build-metadata.mjs --dist dist/plugins --strict
+          --out dist/metadata.json --catalog dist/release-catalog.json
+          --commit "$GITHUB_SHA" --generation "$GITHUB_RUN_NUMBER" --released now
+
+      - name: Upload the catalogues
+        uses: actions/upload-artifact@v4
+        with:
+          name: store-catalogue
+          if-no-files-found: error
+          path: |
+            dist/metadata.json
+            dist/release-catalog.json
+
+      # Order: packages to the CDN -> catalog into ForgeStats -> public metadata.json.
+      # A failed step keeps the previous public catalogue, and re-running is safe.
+      # The server distribution of the build job: this job builds without the web UI (-Dskip.pnpm).
+      - name: Download the server distribution
+        uses: actions/download-artifact@v4
+        with:
+          name: distribution
+          path: release-dist
+
+      - name: Install COSCLI and write its temporary credentials configuration
+        if: env.COS_CONFIGURED == 'true'
+        env:
+          COS_SECRET_ID: ${{ secrets.COS_SECRET_ID }}
+          COS_SECRET_KEY: ${{ secrets.COS_SECRET_KEY }}
+          COS_SESSION_TOKEN: ${{ secrets.COS_SESSION_TOKEN }}
+        run: bash configure/publish/cos-setup.sh
+      - name: Skip the CDN
+        if: env.COS_CONFIGURED != 'true'
+        run: echo '::warning::COS_SECRET_ID and COS_SECRET_KEY are not set; nothing goes to the CDN (the store falls back to Maven Central, and dist/metadata.json must be published from the store-catalogue artifact by hand)'
+
+      # Versioned packages never change, so they are cached for a year.
+      - name: Publish the packages and the server distribution to the CDN
+        if: env.COS_CONFIGURED == 'true'
+        run: |
+          set -euo pipefail
+          cos() {
+            "$COSCLI_BIN" cp "$1" "cos://$COS_BUCKET/$2" -c "$COS_CONFIG_PATH" --disable-log --fail-output=false \
+              --process-log=false --meta 'Content-Type:application/gzip#Cache-Control:public,max-age=31536000,immutable'
+          }
+          jq -r '.plugins[] | .sources.cdn' dist/release-catalog.json | while read -r path; do
+            cos "dist/plugins/$(basename "$path")" "applications/metaforge/plugins/$path"
+          done
+          for file in release-dist/dist/metaforge-server-*-bin.tar.gz; do
+            version="${file#release-dist/dist/metaforge-server-}"; version="${version%-bin.tar.gz}"
+            cos "$file" "applications/metaforge/versions/$version/$(basename "$file")"
+          done
+
+      - name: Import the statistics catalog into ForgeStats
+        env:
+          STATS_SSH_KEY: ${{ secrets.STATS_SSH_KEY }}
+          STATS_SSH_TARGET: ${{ secrets.STATS_SSH_TARGET }}
+        run: |
+          if [ -z "$STATS_SSH_KEY" ] || [ -z "$STATS_SSH_TARGET" ]; then
+            echo '::warning::ForgeStats secrets are not set; downloads of this release are not counted'
+            exit 0
+          fi
+          umask 077
+          printf '%s\n' "$STATS_SSH_KEY" > "$RUNNER_TEMP/stats-key"
+          digest=$(sha256sum dist/release-catalog.json | cut -d ' ' -f 1)
+          ssh -T -i "$RUNNER_TEMP/stats-key" -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new \
+            "$STATS_SSH_TARGET" "sudo -n /usr/local/sbin/forgestats-admin catalog metaforge $digest" < dist/release-catalog.json
+          rm -f "$RUNNER_TEMP/stats-key"
+
+      # Short cache: servers pick up a new release within a minute.
+      - name: Publish the store catalogue
+        if: env.COS_CONFIGURED == 'true'
+        run: >
+          "$COSCLI_BIN" cp dist/metadata.json "cos://$COS_BUCKET/applications/metaforge/metadata/metadata.json"
+          -c "$COS_CONFIG_PATH" --disable-log --fail-output=false --process-log=false
+          --meta 'Content-Type:application/json#Cache-Control:public,max-age=60,must-revalidate'
+
+      # Last: the release page offers the same server distribution as the CDN.
+      - name: Attach the server distribution to the GitHub release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ github.event_name == 'release' && github.event.release.tag_name || inputs.tag }}
+        run: |
+          if [ -z "$TAG" ]; then
+            echo '::notice::No release tag; the server distribution stays in the distribution artifact'
+            exit 0
+          fi
+          gh release upload "$TAG" --clobber --repo "$GITHUB_REPOSITORY" release-dist/dist/metaforge-server-*-bin.tar.gz

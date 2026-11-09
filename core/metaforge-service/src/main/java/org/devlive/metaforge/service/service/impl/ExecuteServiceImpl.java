@@ -12,14 +12,18 @@ import org.devlive.metaforge.plugin.Plugin;
 import org.devlive.metaforge.plugin.PluginManager;
 import org.devlive.metaforge.service.audit.AuditPlugin;
 import org.devlive.metaforge.service.body.ExecuteDslBody;
+import org.devlive.metaforge.service.configure.QuerySchema;
 import org.devlive.metaforge.service.entity.ExecuteEntity;
 import org.devlive.metaforge.service.entity.SourceEntity;
+import org.devlive.metaforge.service.enums.QueryMode;
 import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.service.ExecuteService;
+import org.devlive.metaforge.service.service.RuntimeConfigureService;
 import org.devlive.metaforge.spi.PluginService;
 import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
+import org.devlive.metaforge.spi.sql.SqlLimit;
 import org.devlive.metaforge.spi.sql.TableScopedSql;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -45,18 +49,27 @@ public class ExecuteServiceImpl
             "duckdb", "kylin", "kyuubi", "greptimedb", "ceresdb", "matrixone",
             "hologres", "ignite", "dremio");
 
+    /** Engines whose dialect ends a query with {@code LIMIT n}, so the row cap can be written into the SQL. */
+    private static final Set<String> LIMIT_ENGINES = Set.of(
+            "mysql", "mariadb", "doris", "starrocks", "oceanbase", "tidb", "postgresql", "timescaledb",
+            "paradedb", "greenplum", "trino", "presto", "clickhouse", "hive", "hive2x", "impala", "kyuubi",
+            "duckdb", "sqlite", "h2", "h2tcp", "greptimedb", "ceresdb", "matrixone", "hologres", "questdb",
+            "cratedb", "databend", "snowflake");
+
     /** Engines requiring the {@code EXPLAIN PLAN FOR} statement instead. */
     private static final Set<String> PLAN_FOR_ENGINES = Set.of("h2", "h2tcp");
 
     private final SourceRepository sourceRepository;
     private final Environment environment;
     private final PluginManager pluginManager;
+    private final RuntimeConfigureService runtimeConfigureService;
 
-    public ExecuteServiceImpl(SourceRepository sourceRepository, Environment environment, PluginManager pluginManager)
+    public ExecuteServiceImpl(SourceRepository sourceRepository, Environment environment, PluginManager pluginManager, RuntimeConfigureService runtimeConfigureService)
     {
         this.sourceRepository = sourceRepository;
         this.environment = environment;
         this.pluginManager = pluginManager;
+        this.runtimeConfigureService = runtimeConfigureService;
     }
 
     @AuditPlugin
@@ -72,8 +85,9 @@ public class ExecuteServiceImpl
             database = StringUtils.trimToNull(configure.getDatabase());
         }
         String scopedDatabase = database;
+        int maxRows = maxRows(configure.getMode());
         return sourceRepository.findByCode(configure.getName())
-                .map(entity -> handleSourceEntity(entity, configure.getContent(), scopedDatabase))
+                .map(entity -> handleSourceEntity(entity, configure.getContent(), scopedDatabase, maxRows))
                 .orElse(CommonResponse.failure(ServiceState.SOURCE_NOT_FOUND));
     }
 
@@ -84,6 +98,27 @@ public class ExecuteServiceImpl
         return sourceRepository.findByCode(configure.getName())
                 .map(entity -> handlePlanSourceEntity(entity, configure.getContent()))
                 .orElse(CommonResponse.failure(ServiceState.SOURCE_NOT_FOUND));
+    }
+
+    /** The source type as an engine key: lower case, letters and digits only. */
+    private static String engine(SourceEntity entity)
+    {
+        return StringUtils.defaultString(entity.getType()).toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+    }
+
+    /**
+     * 查询页（即席查询、历史、片段）的结果行数上限，其他调用方（报表、数据集、同步）不限制
+     * Row cap for statements run from the query page (ad hoc, history, snippet); reports, datasets
+     * and syncs read their results in full
+     */
+    private int maxRows(QueryMode mode)
+    {
+        if (mode != null && mode != QueryMode.ADHOC && mode != QueryMode.HISTORY && mode != QueryMode.SNIPPET) {
+            return 0;
+        }
+        return QuerySchema.maxRows(runtimeConfigureService
+                .getEffective(RuntimeConfigureService.CATEGORY_QUERY, QuerySchema.NAME, QuerySchema.fields())
+                .get(QuerySchema.MAX_ROWS));
     }
 
     /**
@@ -97,7 +132,7 @@ public class ExecuteServiceImpl
      */
     private CommonResponse<Object> handlePlanSourceEntity(SourceEntity entity, String content)
     {
-        String type = StringUtils.defaultString(entity.getType()).toLowerCase(Locale.ROOT).replaceAll("[^a-z0-9]", "");
+        String type = engine(entity);
         String prefix;
         if (PLAN_DIRECT_ENGINES.contains(type)) {
             prefix = "EXPLAIN ";
@@ -112,7 +147,7 @@ public class ExecuteServiceImpl
         if (StringUtils.isEmpty(statement)) {
             return CommonResponse.failure(ServiceState.PLUGIN_EXECUTE_FAILED, "Query plan requires a SQL statement");
         }
-        return handleSourceEntity(entity, prefix + statement, null);
+        return handleSourceEntity(entity, prefix + statement, null, 0);
     }
 
     /**
@@ -123,10 +158,10 @@ public class ExecuteServiceImpl
      * @param content SQL语句 / SQL statement
      * @return 插件执行结果 / Plugin execution result
      */
-    private CommonResponse<Object> handleSourceEntity(SourceEntity entity, String content, String database)
+    private CommonResponse<Object> handleSourceEntity(SourceEntity entity, String content, String database, int maxRows)
     {
         return pluginManager.getPlugin(entity.getType())
-                .map(plugin -> executeWithPlugin(entity, plugin, content, database))
+                .map(plugin -> executeWithPlugin(entity, plugin, content, database, maxRows))
                 .orElse(CommonResponse.failure(ServiceState.PLUGIN_NOT_FOUND));
     }
 
@@ -139,7 +174,7 @@ public class ExecuteServiceImpl
      * @param content SQL语句 / SQL statement
      * @return 插件执行结果 / Plugin execution result
      */
-    private CommonResponse<Object> executeWithPlugin(SourceEntity entity, Plugin plugin, String content, String database)
+    private CommonResponse<Object> executeWithPlugin(SourceEntity entity, Plugin plugin, String content, String database, int maxRows)
     {
         try {
             PluginService service = plugin.getService(PluginService.class);
@@ -147,7 +182,7 @@ public class ExecuteServiceImpl
 
             // 执行插件并获取响应
             // Execute the plugin and get the response
-            Response response = executePlugin(service, entity, plugin, content, database);
+            Response response = executePlugin(service, entity, plugin, content, database, maxRows);
 
             if (response.getIsSuccessful()) {
                 return CommonResponse.success(response);
@@ -203,14 +238,21 @@ public class ExecuteServiceImpl
      * @param content {@link String} 执行内容 / Execution content
      * @return {@link Response} 插件执行结果 / Plugin execution result
      */
-    private Response executePlugin(PluginService service, SourceEntity entity, Plugin plugin, String content, String database)
+    private Response executePlugin(PluginService service, SourceEntity entity, Plugin plugin, String content, String database, int maxRows)
     {
         RuntimeConfigure runtime = entity.toConfigure(pluginManager, plugin);
+        runtime.setMaxRows(maxRows);
+        String statement = content;
+        if (maxRows > 0 && LIMIT_ENGINES.contains(engine(entity))) {
+            // One row past the cap tells the adapter the result was longer; the database reads no further.
+            statement = SqlLimit.append(content, maxRows + 1).orElse(content);
+        }
         if (database != null) {
             // A table-scoped statement runs in the table's database so unqualified names resolve to it.
             runtime.setDatabase(Optional.of(database));
         }
-        Response response = service.execute(runtime, content);
+        Response response = service.execute(runtime, statement);
+        // History and the editor keep the statement as the user wrote it.
         response.setContent(content);
         return response;
     }

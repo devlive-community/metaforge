@@ -103,7 +103,8 @@ public class InitializerConfigure
             cacheExpiration = 2L;
         }
         log.info("Metaforge cache expiration: {}", this.cacheExpiration);
-        if (ObjectUtils.isEmpty(cache) && captchaEnable) {
+        // The captcha can be turned on in system settings at any time, so its cache always exists.
+        if (ObjectUtils.isEmpty(cache)) {
             cache = CacheBuilder.newBuilder()
                     .expireAfterWrite(cacheExpiration, TimeUnit.MINUTES)
                     .maximumSize(cacheMaximum)

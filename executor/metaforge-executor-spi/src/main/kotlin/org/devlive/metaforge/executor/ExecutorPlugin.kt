@@ -7,7 +7,7 @@ import org.devlive.metaforge.plugin.PluginType
  * 所有 Executor 插件的统一基类。
  * - 类型固定为 EXECUTOR
  * - 名称自动从子类类名末尾剥掉 "Executor" 后缀。
- *   例如 SeatunnelExecutor -> "Seatunnel"，LocalExecutor -> "Local"。
+ *   例如 SeatunnelExecutor -> "Seatunnel"，MetaForgeExecutor -> "MetaForge"。
  * - 可配置字段通过 Plugin.runtimeConfigures() 声明（继承自 metaforge-plugin 通用机制）。
  *
  * Common base for all executor plugins.

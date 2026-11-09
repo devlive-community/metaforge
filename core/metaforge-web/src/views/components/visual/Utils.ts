@@ -7,16 +7,6 @@ import { ChartField, ChartFieldGroup } from '@/views/components/visual/Configura
  * @param {never[]} data - the input data array
  * @return {object[]} an array of objects representing the table header
  */
-const createdTableHeader = (data: never[]): object[] => {
-    return data.map(item => {
-        return {
-            'field': item,
-            'title': item,
-            'width': 'auto'
-        }
-    })
-}
-
 const createdConfigure = (type: Type, i18n: any): Array<ChartFieldGroup> => {
     const fieldGroups: Array<ChartFieldGroup> = new Array<ChartFieldGroup>()
     const categoryField: ChartField = { label: i18n.t('dataset.common.visualConfigureCategoryField'), field: 'xAxis' }
@@ -131,6 +121,5 @@ const createdConfigure = (type: Type, i18n: any): Array<ChartFieldGroup> => {
 }
 
 export {
-    createdTableHeader,
     createdConfigure
 }

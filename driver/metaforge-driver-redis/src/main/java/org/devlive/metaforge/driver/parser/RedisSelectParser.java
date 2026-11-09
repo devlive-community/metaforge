@@ -45,7 +45,15 @@ public class RedisSelectParser
                     }
                     fields.add(fieldName);
                 }
+                else if (element.getColumn() != null) {
+                    // A plain column (key, type or value) comes as the column name, not an expression.
+                    fields.add(element.getColumn());
+                }
             }
+        }
+
+        if (select.getLimitClause() != null && select.getLimitClause().getLimit() > 0) {
+            this.limit = select.getLimitClause().getLimit();
         }
 
         if (select.getWhereClause() != null) {

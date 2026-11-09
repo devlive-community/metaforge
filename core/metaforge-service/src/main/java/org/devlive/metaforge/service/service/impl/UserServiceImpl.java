@@ -27,6 +27,9 @@ import org.devlive.metaforge.service.entity.SourceEntity;
 import org.devlive.metaforge.service.entity.UserEntity;
 import org.devlive.metaforge.service.entity.convert.AvatarEntity;
 import org.devlive.metaforge.service.entity.itransient.user.UserEditorEntity;
+import org.devlive.metaforge.service.enums.EntityType;
+import org.devlive.metaforge.service.enums.NotificationScene;
+import org.devlive.metaforge.service.event.NotificationEventPublisher;
 import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.model.AiModel;
 import org.devlive.metaforge.service.persistence.Persistence;
@@ -41,8 +44,11 @@ import org.devlive.metaforge.service.repository.UserRepository;
 import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.repository.jdbc.MenuAccessRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
+import org.devlive.metaforge.service.security.UserDetailsServiceImpl;
 import org.devlive.metaforge.service.service.JwtService;
+import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.service.service.UserService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Page;
@@ -57,6 +63,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -81,6 +88,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl
         implements UserService
 {
+    private final SystemSettingService systemSettings;
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final SourceRepository sourceRepository;
@@ -97,9 +105,11 @@ public class UserServiceImpl
     private final InitializerConfigure initializer;
     private final PluginManager pluginManager;
     private final HttpServletRequest request;
+    private final UserDetailsServiceImpl userDetailsService;
 
-    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, LinkRepository linkRepository, NotificationRepository notificationRepository, PluginAuditRepository pluginAuditRepository, ScheduledHistoryRepository scheduledHistoryRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request)
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, SourceRepository sourceRepository, MenuAccessRepository menuRepository, LinkRepository linkRepository, NotificationRepository notificationRepository, PluginAuditRepository pluginAuditRepository, ScheduledHistoryRepository scheduledHistoryRepository, PasswordEncoder encoder, AuthenticationManager authenticationManager, JwtService jwtService, RedisTemplate redisTemplate, Environment environment, InitializerConfigure initializer, PluginManager pluginManager, HttpServletRequest request, UserDetailsServiceImpl userDetailsService, SystemSettingService systemSettings)
     {
+        this.systemSettings = systemSettings;
         this.userRepository = userRepository;
         this.linkRepository = linkRepository;
         this.notificationRepository = notificationRepository;
@@ -116,6 +126,15 @@ public class UserServiceImpl
         this.initializer = initializer;
         this.pluginManager = pluginManager;
         this.request = request;
+        this.userDetailsService = userDetailsService;
+    }
+
+    private NotificationEventPublisher notifications = NotificationEventPublisher.NONE;
+
+    @Autowired
+    public void setNotifications(NotificationEventPublisher notifications)
+    {
+        this.notifications = notifications;
     }
 
     @Override
@@ -208,13 +227,24 @@ public class UserServiceImpl
 
     @AuditUserLog
     @Override
-    public CommonResponse<Object> authenticate(UserEntity configure)
+    public CommonResponse<Object> authenticate(UserEntity configure, long expiration)
     {
         UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(configure.getUsername(), configure.getPassword());
-        Authentication authentication = authenticationManager.authenticate(authenticationToken);
+        return token(authenticationManager.authenticate(authenticationToken), expiration);
+    }
 
+    @AuditUserLog
+    @Override
+    public CommonResponse<Object> issue(String username, long expiration)
+    {
+        UserDetails details = userDetailsService.loadUserByUsername(username);
+        return token(new UsernamePasswordAuthenticationToken(details, null, details.getAuthorities()), expiration);
+    }
+
+    private CommonResponse<Object> token(Authentication authentication, long expiration)
+    {
         SecurityContextHolder.getContext().setAuthentication(authentication);
-        String jwt = jwtService.generateJwtToken(authentication);
+        String jwt = jwtService.generateJwtToken(authentication, expiration);
 
         UserDetailsService userDetails = (UserDetailsService) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
@@ -258,6 +288,8 @@ public class UserServiceImpl
                 .map(user -> {
                     user.setPassword(encoder.encode(configure.getPassword()));
                     userRepository.save(user);
+                    notifications.publishTo(user.getCode(), NotificationScene.PASSWORD_CHANGED, "登录密码已被重置",
+                            "管理员重置了你的登录密码；如非预期，请联系管理员。", EntityType.USER, user.getCode(), user.getUsername());
                     return CommonResponse.success(user.getId());
                 })
                 .orElseGet(() -> CommonResponse.failure(ServiceState.USER_NOT_FOUND));
@@ -291,6 +323,8 @@ public class UserServiceImpl
         }
         user.setPassword(encoder.encode(configure.getNewPassword()));
         this.userRepository.save(user);
+        notifications.publish(NotificationScene.PASSWORD_CHANGED, "登录密码已修改", "你的登录密码已修改；如非本人操作，请立即重置密码。",
+                EntityType.USER, user.getCode(), user.getUsername());
         return CommonResponse.success(user.getId());
     }
 
@@ -431,17 +465,17 @@ public class UserServiceImpl
     public CommonResponse<AvatarEntity> uploadAvatar(UploadBody configure)
     {
         AvatarEntity entity = AvatarEntity.builder()
-                .type(initializer.getFsConfigure().getType())
+                .type(systemSettings.fs().getType())
                 .build();
         try {
             FsRequest fsRequest = getFsRequest(configure.getFile(), configure);
-            pluginManager.getPlugin(initializer.getFsConfigure().getType())
+            pluginManager.getPlugin(systemSettings.fs().getType())
                     .ifPresent(plugin -> {
                         FsService fsService = plugin.getService(FsService.class);
                         FsResponse response = fsService.writer(fsRequest);
                         entity.setPath(response.getRemote());
                         entity.setLocal(response.getRemote());
-                        if (initializer.getFsConfigure().getType().startsWith("Local")) {
+                        if (systemSettings.fs().getType().startsWith("Local")) {
                             entity.setPath(getAccess(entity));
                         }
 
@@ -469,25 +503,14 @@ public class UserServiceImpl
         }
     }
 
-    @Override
-    public CommonResponse<UserEntity> changeNotify(UserEntity configure)
-    {
-        return userRepository.findByCode(UserDetailsService.getUser().getCode())
-                .map(value -> {
-                    value.setNotifyConfigure(configure.getNotifyConfigure());
-                    return CommonResponse.success(userRepository.save(value));
-                })
-                .orElseGet(() -> CommonResponse.failure(ServiceState.USER_NOT_FOUND));
-    }
-
     private FsRequest getFsRequest(MultipartFile file, UploadBody configure)
             throws IOException
     {
         return FsRequest.builder()
-                .access(initializer.getFsConfigure().getAccess())
-                .secret(initializer.getFsConfigure().getSecret())
+                .access(systemSettings.fs().getAccess())
+                .secret(systemSettings.fs().getSecret())
                 .endpoint(getHome(configure))
-                .bucket(initializer.getFsConfigure().getBucket())
+                .bucket(systemSettings.fs().getBucket())
                 .stream(file.getInputStream())
                 .fileName("avatar.png")
                 .build();
@@ -495,8 +518,8 @@ public class UserServiceImpl
 
     private String getHome(UploadBody configure)
     {
-        if (!initializer.getFsConfigure().getType().startsWith("Local")) {
-            return initializer.getFsConfigure().getEndpoint();
+        if (!systemSettings.fs().getType().startsWith("Local")) {
+            return systemSettings.fs().getEndpoint();
         }
         return String.join(
                 "/",

@@ -1,18 +1,9 @@
 <template>
-  <MfModal v-model:open="visible" :title="title">
-    <div class="relative max-h-[80%]" :class="configuration ? '' : 'h-24'">
-      <div v-if="loading" class="flex items-center justify-center py-8">
-        <MfSpinner size="lg"/>
-      </div>
-      <VisualTable v-else-if="configuration" :configuration="configuration as any" :submitted="false"/>
-    </div>
-
-    <template #footer>
-      <MfButton variant="danger" @click="handlerCancel">
-        {{ $t('common.cancel') }}
-      </MfButton>
-    </template>
-  </MfModal>
+  <MfDrawer v-model:open="visible" :title="title || ''" width="min(1280px, 92vw)">
+    <div v-if="loading" class="flex h-full items-center justify-center py-16"><MfSpinner size="lg"/></div>
+    <ResultTable v-else-if="configuration" class="h-full" fill searchable :headers="configuration.headers || []" :rows="configuration.columns || []"/>
+    <MfEmpty v-else class="h-full" :title="$t('common.noData')"/>
+  </MfDrawer>
 </template>
 
 <script setup lang="ts">
@@ -22,7 +13,7 @@ import { MfMessage } from 'metaforge-ui'
 import { HistoryModel } from '@/model/history'
 import AuditService from '@/services/audit'
 import { Configuration, ConfigurationRequest } from '@/views/components/visual/Configuration'
-import VisualTable from '@/views/components/visual/components/VisualTable.vue'
+import ResultTable from '@/views/components/table/ResultTable.vue'
 
 defineOptions({ name: 'HistoryData' })
 
@@ -43,6 +34,7 @@ const title = ref<string | null>(null)
 const loading = ref(false)
 const configuration = ref<Configuration | null>(null)
 
+// A query's saved result opens in a wide drawer, so its rows have room.
 const handlerInitialize = () => {
   if (props.info) {
     title.value = `${ t('query.common.historyDataInfo').replace('$VALUE', props.info.id as unknown as string) }`
@@ -58,10 +50,6 @@ const handlerInitialize = () => {
                 })
                 .finally(() => (loading.value = false))
   }
-}
-
-const handlerCancel = () => {
-  visible.value = false
 }
 
 handlerInitialize()

@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sharing of data screens, kept apart from metaforge_dashboard so saving a screen never touches it.
+  metaforge_dashboard_share: what is shared (selected widgets), everyone's access and the public link.
+  metaforge_dashboard_member: users and roles a screen is shared with, each with a permission.
+-->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0018-dashboard-share" author="metaforge">
+        <createTable tableName="metaforge_dashboard_share">
+            <column name="dashboard_id" type="BIGINT">
+                <constraints primaryKey="true" primaryKeyName="pk_dashboard_share"/>
+            </column>
+            <!-- VIEW, EDIT or PUBLISH for every signed-in user; NULL shares with nobody beyond the members. -->
+            <column name="everyone_permission" type="${string}(16)"/>
+            <!-- JSON array of the widget ids viewers see; NULL shows the whole screen. -->
+            <column name="widgets" type="${text}"/>
+            <column name="public_enabled" type="${flag}" defaultValueBoolean="false"/>
+            <column name="public_token" type="${string}(64)"/>
+            <column name="public_embed" type="${flag}" defaultValueBoolean="false"/>
+            <column name="public_origins" type="${text}"/>
+            <column name="public_expires_at" type="${instant}"/>
+            <column name="update_time" type="${instant}"/>
+        </createTable>
+        <!-- Not unique: SQL Server allows one NULL per unique index. Tokens are 192 random bits. -->
+        <createIndex tableName="metaforge_dashboard_share" indexName="idx_dashboard_share_token">
+            <column name="public_token"/>
+        </createIndex>
+        <createTable tableName="metaforge_dashboard_member">
+            <column name="dashboard_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- USER or ROLE -->
+            <column name="member_type" type="${string}(16)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="member_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permission" type="${string}(16)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addPrimaryKey tableName="metaforge_dashboard_member" columnNames="dashboard_id, member_type, member_id" constraintName="pk_dashboard_member"/>
+        <createIndex tableName="metaforge_dashboard_member" indexName="idx_dashboard_member">
+            <column name="member_type"/>
+            <column name="member_id"/>
+        </createIndex>
+    </changeSet>
+</databaseChangeLog>

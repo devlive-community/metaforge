@@ -1,6 +1,7 @@
 package org.devlive.metaforge.test.e2e;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.github.dockerjava.api.DockerClient;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import org.devlive.metaforge.convert.ConvertService;
 import org.devlive.metaforge.convert.json.JsonConvertService;
@@ -14,14 +15,18 @@ import org.devlive.metaforge.spi.model.RuntimeConfigure;
 import org.junit.Assert;
 import org.junit.Assume;
 import org.testcontainers.DockerClientFactory;
+import org.testcontainers.images.RemoteDockerImage;
+import org.testcontainers.utility.DockerImageName;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.file.Files;
+import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -52,6 +57,46 @@ public final class PluginE2E
         Assume.assumeTrue("Docker is not available, skipping container tests", available);
     }
 
+    /**
+     * Skips the calling test when the image does not exist for the host CPU architecture. Emulated
+     * databases (arm64-only images on amd64 runners, and the reverse) start orders of magnitude
+     * slower or crash outright, which would otherwise fail the suite after a long wait.
+     */
+    public static void assumeImageSupportsHost(String image)
+    {
+        assumeDocker();
+        DockerClient client = DockerClientFactory.instance().client();
+        String host = hostArchitecture();
+        String imageArch;
+        try {
+            String reference = new RemoteDockerImage(DockerImageName.parse(image)).get();
+            imageArch = normalizeArchitecture(client.inspectImageCmd(reference).exec().getArch());
+        }
+        catch (Throwable error) {
+            Assume.assumeNoException("Image " + image + " could not be pulled, skipping", error);
+            return;
+        }
+        Assume.assumeTrue("Image " + image + " is " + imageArch + " while the Docker host is " + host
+                + ", skipping the emulated start", host.equals(imageArch));
+    }
+
+    /** The Docker host CPU architecture, normalized to amd64 / arm64 naming. */
+    public static String hostArchitecture()
+    {
+        return normalizeArchitecture(DockerClientFactory.instance().client().infoCmd().exec().getArchitecture());
+    }
+
+    private static String normalizeArchitecture(String architecture)
+    {
+        if ("x86_64".equals(architecture)) {
+            return "amd64";
+        }
+        if ("aarch64".equals(architecture)) {
+            return "arm64";
+        }
+        return architecture;
+    }
+
     /** A connection to a container's mapped port, formatting rows as JSON objects keyed by column. */
     public static RuntimeConfigure configure(String host, int port, String username, String password, String database)
     {
@@ -72,6 +117,34 @@ public final class PluginE2E
         Assert.assertNotNull(what, response);
         Assert.assertTrue(what + " failed: " + response.getMessage(), Boolean.TRUE.equals(response.getIsSuccessful()));
         return response;
+    }
+
+    /**
+     * Runs the statement and asserts it succeeded, retrying while the server reports a
+     * transient not-ready state: single-node Presto/Trino containers drop and re-register
+     * their only node under CI load ("No nodes available to run query"), and DolphinDB
+     * answers logins with "Public key is not initialized yet" until its security module
+     * has finished starting. Neither failure means the statement was rejected, so
+     * retrying it cannot repeat any work.
+     */
+    public static Response ok(String what, Supplier<Response> call)
+    {
+        long deadline = System.currentTimeMillis() + Duration.ofSeconds(60).toMillis();
+        Response response = call.get();
+        while (!Boolean.TRUE.equals(response.getIsSuccessful())
+                && (String.valueOf(response.getMessage()).contains("No nodes available")
+                    || String.valueOf(response.getMessage()).contains("Public key is not initialized yet"))
+                && System.currentTimeMillis() < deadline) {
+            try {
+                Thread.sleep(2000);
+            }
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+            response = call.get();
+        }
+        return ok(what, response);
     }
 
     /** Values of one column of a successful response, as text. */

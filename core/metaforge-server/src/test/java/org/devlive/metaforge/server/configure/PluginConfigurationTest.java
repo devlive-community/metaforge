@@ -24,7 +24,7 @@ public class PluginConfigurationTest
         Objects.requireNonNull(root, "TempDir root should be injected");
         Path path = root.resolve(location);
         Files.createDirectories(path.getParent());
-        Files.writeString(path, "metaforge-executor-local=executor/metaforge-executor-local/pom.xml\n");
+        Files.writeString(path, "metaforge-executor-metaforge=executor/metaforge-executor-metaforge/pom.xml\n");
         return path;
     }
 

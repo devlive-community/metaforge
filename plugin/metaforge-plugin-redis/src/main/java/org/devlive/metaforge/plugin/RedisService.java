@@ -1,36 +1,16 @@
 package org.devlive.metaforge.plugin;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import lombok.extern.slf4j.Slf4j;
 import org.devlive.metaforge.spi.PluginService;
-import org.devlive.metaforge.spi.model.ManagementDetail;
-import org.devlive.metaforge.spi.model.ManagementPage;
-import org.devlive.metaforge.spi.model.ManagementRequest;
+import org.devlive.metaforge.spi.model.Response;
 import org.devlive.metaforge.spi.model.RuntimeConfigure;
 
-@Slf4j
-@SuppressFBWarnings(value = {"EI_EXPOSE_REP"})
+/**
+ * Redis is browsed like any other source: the numbered databases, their keys as tables, and key,
+ * type and value as columns, all from the Redis JDBC driver's metadata.
+ */
 public class RedisService
         implements PluginService
 {
-    @Override
-    public ManagementPage managementNamespaces(RuntimeConfigure configure, ManagementRequest request)
-    {
-        return new RedisManagement().namespaces(configure);
-    }
-
-    @Override
-    public ManagementPage managementList(RuntimeConfigure configure, ManagementRequest request)
-    {
-        return new RedisManagement().list(configure, request);
-    }
-
-    @Override
-    public ManagementDetail managementDetail(RuntimeConfigure configure, ManagementRequest request)
-    {
-        return new RedisManagement().detail(configure, request);
-    }
-
     @Override
     public String connectType()
     {
@@ -41,5 +21,23 @@ public class RedisService
     public String driver()
     {
         return "org.devlive.metaforge.RedisDriver";
+    }
+
+    @Override
+    public Response getDatabases(RuntimeConfigure configure)
+    {
+        return metadataDatabases(configure);
+    }
+
+    @Override
+    public Response getTables(RuntimeConfigure configure, String database)
+    {
+        return metadataTables(configure, database);
+    }
+
+    @Override
+    public Response getColumns(RuntimeConfigure configure, String database, String table)
+    {
+        return metadataColumns(configure, database, table);
     }
 }

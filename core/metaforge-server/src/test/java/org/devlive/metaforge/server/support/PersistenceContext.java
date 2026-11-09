@@ -5,6 +5,7 @@ import org.devlive.metaforge.service.DataJdbcConfigure;
 import org.devlive.metaforge.service.persistence.FilterQuery;
 import org.devlive.metaforge.service.persistence.Persistence;
 import org.devlive.metaforge.service.persistence.References;
+import org.devlive.metaforge.service.repository.jdbc.DashboardShareRepository;
 import org.devlive.metaforge.service.repository.jdbc.LinkRepository;
 import org.devlive.metaforge.service.repository.jdbc.MenuAccessRepository;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
@@ -42,7 +43,15 @@ public final class PersistenceContext
             throws Exception
     {
         TestDatabase database = TestDatabase.start(spec);
-        DriverManagerDataSource dataSource = new DriverManagerDataSource(database.url(), database.username(), database.password());
+        // A pooled datasource keeps the Oracle process count flat: a fresh connection
+        // per operation against a real Oracle instance exhausts its process limit and
+        // the suite fails with ORA-12516 partway through.
+        com.zaxxer.hikari.HikariDataSource dataSource = new com.zaxxer.hikari.HikariDataSource();
+        dataSource.setJdbcUrl(database.url());
+        dataSource.setUsername(database.username());
+        dataSource.setPassword(database.password());
+        dataSource.setMaximumPoolSize(4);
+        dataSource.setMinimumIdle(1);
         try (Connection connection = dataSource.getConnection()) {
             DatabaseMigrator.migrate(connection);
         }
@@ -76,7 +85,8 @@ public final class PersistenceContext
     }
 
     @Configuration
-    @Import({DataJdbcConfigure.class, FilterQuery.class, References.class, Persistence.class, LinkRepository.class, MenuAccessRepository.class})
+    @Import({DataJdbcConfigure.class, FilterQuery.class, References.class, Persistence.class, LinkRepository.class, MenuAccessRepository.class,
+            DashboardShareRepository.class})
     static class Beans
     {
         @Bean

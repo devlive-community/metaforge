@@ -14,7 +14,7 @@
       </MfTooltip>
     </div>
 
-    <div class="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-3">
+    <div class="flex min-h-0 flex-1 flex-col gap-2.5 overflow-y-auto p-3 [&>*]:shrink-0">
       <template v-if="activeTab === 'datasets'">
         <MfButton variant="primary" size="sm" block :disabled="!sourceCode" @click="emit('add-dataset')">
           <Plus :size="14"/>

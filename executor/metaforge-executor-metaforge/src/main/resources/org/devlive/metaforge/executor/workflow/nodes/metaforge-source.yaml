@@ -1,0 +1,11 @@
+id: metaforge-source
+tid: metaforge-source
+label: Saved data source
+key: Source
+category: source
+description: Query a saved MetaForge data source. Credentials remain on the server.
+configure:
+  - {field: source, label: Data source, type: source, required: true, group: basic}
+  - {field: query, label: Query SQL, type: sql, required: true, group: sql, from: {source: source}}
+ports:
+  - {id: output, label: Output, type: output, required: true}

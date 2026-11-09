@@ -1,26 +1,200 @@
 name: CI
 
+# One workflow for every check. The `changes` job decides from the diff which components were
+# touched (rules in .ci/components.conf); every other job is skipped unless its component changed.
+# Require only `ci-ok` in the branch protection rules.
 on:
-  push:
-    branches: [ dev, main, master, 2026.0.0 ]
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
   pull_request:
     branches: [ dev, main, master, 2026.0.0 ]
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
+  # Long-lived branches only: a branch with an open pull request is checked by that pull request.
+  push:
+    branches: [ dev, main, master ]
+  # A manual run checks everything.
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  # Each push run diffs against its own "before" commit, so only pull request runs may be cancelled.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
-  frontend:
-    name: Frontend build
+  changes:
+    name: Detect changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      java: ${{ steps.detect.outputs.java }}
+      persistence: ${{ steps.detect.outputs.persistence }}
+      web: ${{ steps.detect.outputs.web }}
+      docs: ${{ steps.detect.outputs.docs }}
+      maven-projects: ${{ steps.maven.outputs.projects }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect the changed components
+        id: detect
+        run: bash .ci/changed-components.sh --github-output -v
+
+      # Empty means the whole reactor (a root pom, .mvn or configure/ change, or a full run).
+      - name: Pick the Maven modules to build
+        id: maven
+        if: steps.detect.outputs.java == 'true'
+        run: bash .ci/changed-components.sh --files-of java | bash .ci/maven-projects.sh --github-output
+
+  java:
+    name: Backend build, style, bugs and tests
+    needs: changes
+    if: needs.changes.outputs.java == 'true'
+    runs-on: ubuntu-latest
+    # A full run includes the plugin e2e modules, which alone need well over half an hour: every
+    # scheduler-based engine (presto, trino) starts its own container per documented version.
+    timeout-minutes: 120
+    env:
+      PROJECTS: ${{ needs.changes.outputs.maven-projects }}
+      MAVEN_FLAGS: -B -Dgpg.skip -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      # The changed modules, what they need (-am) and what depends on them (-amd). Installing lets
+      # the test step resolve packaged artifacts: the shaded drivers only exist after the package
+      # phase. Checkstyle is bound to validate (failOnViolation=true), so style violations fail here.
+      - name: Build and check code style (Checkstyle)
+        run: |
+          echo "modules: ${PROJECTS:-whole reactor}"
+          ./mvnw $MAVEN_FLAGS clean install -DskipTests -Dspotbugs.skip ${PROJECTS:+-pl "$PROJECTS" -am -amd}
+
+      # Only the changed modules: the code of their dependents did not change.
+      - name: Detect bugs with SpotBugs
+        env:
+          MAVEN_OPTS: -Xmx2048m
+        run: ./mvnw $MAVEN_FLAGS spotbugs:check -Dcheckstyle.skip ${PROJECTS:+-pl "$PROJECTS"}
+
+      # The e2e modules pull ten-plus engine images; without reclaiming the preinstalled SDKs the
+      # runner's disk runs out mid-suite and the job dies without any error in the log.
+      - name: Free the runner disk for the e2e images
+        run: |
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc /usr/local/.ghc /opt/hostedtoolcache/CodeQL
+          sudo docker image prune --force || true
+          df -h /
+
+      # The root pom has no Surefire pin; Maven's default (2.12.4) cannot run JUnit 5 and silently
+      # executes zero tests, so Surefire is invoked explicitly. The changed modules and their
+      # dependents are tested; modules they only depend on were not touched.
+      # The marathon peaks well past the 7 GB runner RAM once several engine
+      # containers (mongo, cassandra, scylladb, ...) overlap with surefire:
+      # the kernel OOM killer starts reaping containers (exit 137) and the
+      # surefire JVM itself, which shows up as random mid-suite deaths.
+      # Swap absorbs those peaks; the runner starts the suite with ~90 GB free.
+      - name: Enable swap
+        run: |
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
+      - name: Run the JUnit 5 suite
+        run: |
+          # The pruner loop must fully detach from the step's stdout/stderr: a
+          # background child still holding the pipe makes the runner finish the
+          # step with exit code 127 even after a successful Maven run.
+          # Unused engine images are only reclaimed when the disk actually runs
+          # low: Testcontainers records an image as locally available and never
+          # re-checks it, so pruning one mid-suite makes the next container for
+          # it fail with "No such image" even though pulling would work.
+          (while true; do
+             sleep 300
+             free=$(df -BG --output=avail / | tail -1 | tr -dc 0-9)
+             if [ "$free" -lt 35 ]; then
+               sudo docker image prune -af --filter "until=10m" >/dev/null 2>&1 || true
+             fi
+             sudo docker image prune -f >/dev/null 2>&1 || true
+           done) >/dev/null 2>&1 < /dev/null &
+          pruner=$!
+          # One line on purpose: inside a block scalar every extra line is a
+          # separate command, and a wrapped "-Dcheckstyle.skip" line makes the
+          # step fail with exit 127 even after a green Maven run.
+          ./mvnw $MAVEN_FLAGS org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test -Dcheckstyle.skip -Dspotbugs.skip -DargLine=-Xmx1g ${PROJECTS:+-pl "$PROJECTS" -amd}
+          status=$?
+          kill $pruner 2>/dev/null || true
+          wait $pruner 2>/dev/null || true
+          exit $status
+
+      # The suite log is too large for the log stream (it gets cut around 30-100 MB),
+      # so the per-module surefire reports are the reliable failure evidence.
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-java
+          path: '**/target/surefire-reports/*'
+          retention-days: 7
+
+  # Runs the metadata persistence suite (changelog, entity mapping, filters, setup install) against
+  # every database the setup wizard offers. Databases start in Testcontainers.
+  persistence:
+    name: Persistence on ${{ matrix.database }}
+    needs: changes
+    if: needs.changes.outputs.persistence == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        database: [ 'h2', 'mysql:8.0', 'postgres:16', 'sqlserver:2022', 'oracle:23' ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: maven
+
+      - name: Build the server and its modules
+        run: >
+          ./mvnw -B -q install -pl core/metaforge-server -am
+          -DskipTests -Dcheckstyle.skip -Dspotbugs.skip -Dmaven.javadoc.skip=true -Dgpg.skip
+          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+
+      - name: Run the persistence suite on ${{ matrix.database }}
+        run: >
+          ./mvnw -B -pl core/metaforge-server
+          org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
+          -Dtest='DatabaseMigratorTest,EntityMappingTest,TableFilterTest,SetupInstallTest'
+          -Dsurefire.failIfNoSpecifiedTests=true
+          -Dmetaforge.it.database=${{ matrix.database }}
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-${{ strategy.job-index }}
+          path: core/metaforge-server/target/surefire-reports
+
+  web:
+    name: Frontend tests and build
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: core
     steps:
       - uses: actions/checkout@v4
 
@@ -32,73 +206,61 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # The web tests are written and validated on the local node 22; node 20's
+          # test runner fails files on unhandled rejections they do not produce.
+          node-version: 22
           cache: pnpm
           cache-dependency-path: core/pnpm-lock.yaml
 
       - name: Install dependencies
-        working-directory: core
         run: pnpm install --frozen-lockfile
 
+      - name: Run the unit tests
+        run: pnpm -r run test
+
+      # metaforge-ui's build is its type check; metaforge-web's build runs vue-tsc before vite.
       - name: Type-check the component library
-        working-directory: core
         run: pnpm --filter metaforge-ui run build
 
       - name: Build the application
-        working-directory: core
         run: pnpm --filter metaforge-web run build
 
-  backend:
-    name: Backend build, style and bug analysis
+  # Builds the site to catch broken pages before merge.
+  docs:
+    name: Docs build
+    needs: changes
+    # A push deploys the site through publish-docs.yml, which builds it anyway.
+    if: needs.changes.outputs.docs == 'true' && github.event_name != 'push'
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          distribution: temurin
-          java-version: 21
-          cache: maven
+          node-version: 20
 
-      # Checkstyle is bound to the validate phase of every module
-      # (failOnViolation=true), so the build fails on style violations.
-      - name: Build and check code style (Checkstyle)
-        run: >
-          ./mvnw -B clean install
-          -DskipTests -Dspotbugs.skip -Dgpg.skip
-          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+      - name: Install pageforge
+        run: npm install -g pageforge
 
-      # Analyzes the compiled classes of the whole reactor and fails the
-      # build on medium+ threshold bug patterns.
-      - name: Detect bugs with SpotBugs
-        env:
-          MAVEN_OPTS: -Xmx2048m
-        run: >
-          ./mvnw -B spotbugs:check
-          -Dcheckstyle.skip -Dgpg.skip
-          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+      - name: Build the docs site
+        working-directory: docs
+        run: pageforge build
 
-  tests:
-    name: Backend tests
+  # The only required status check: fails when a job failed or was cancelled, passes when the jobs
+  # a change does not touch were skipped.
+  ci-ok:
+    name: ci-ok
+    if: always()
+    needs: [ changes, java, persistence, web, docs ]
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 2
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: 21
-          cache: maven
-
-      # The root pom has no Surefire pin; Maven's default (2.12.4) cannot run
-      # JUnit 5 and silently executes zero tests. Invoke Surefire explicitly
-      # until the root pom pins the plugin version.
-      - name: Run the JUnit 5 suite
-        run: >
-          ./mvnw -B test-compile org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
-          -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
-          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "job results: $RESULTS"
+          case " $RESULTS " in
+            *" failure "*|*" cancelled "*) exit 1 ;;
+          esac

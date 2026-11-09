@@ -1,0 +1,12 @@
+{
+  "label": "None Convert",
+  "description": "A multidimensional arrays file conversion plugin for MetaForge.",
+  "i18nFormat": true,
+  "type": "Converter",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/none.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 55
+}

@@ -304,7 +304,7 @@ async function loadPluginOptions(failOnError = false) {
     executors.value = plugins.filter((item: any) => item.type === 'EXECUTOR' && typeof item.name === 'string' && item.name.trim())
     schedulers.value = plugins.filter((item: any) => item.type === 'SCHEDULER' && typeof item.name === 'string' && item.name.trim())
     if (!code.value) {
-      if (!form.executor) form.executor = executors.value.find(item => item.name === 'Local')?.name || (executors.value.length === 1 ? executors.value[0].name : '')
+      if (!form.executor) form.executor = executors.value.find(item => item.name === 'MetaForge')?.name || (executors.value.length === 1 ? executors.value[0].name : '')
       if (!form.scheduler) form.scheduler = schedulers.value.length === 1 ? schedulers.value[0].name : ''
     }
   }

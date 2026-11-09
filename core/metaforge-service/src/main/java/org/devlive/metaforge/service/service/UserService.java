@@ -20,7 +20,18 @@ public interface UserService
 {
     CommonResponse<UserEntity> saveOrUpdate(UserEntity configure);
 
-    CommonResponse<Object> authenticate(UserEntity configure);
+    /**
+     * Signs in and returns the token.
+     *
+     * @param expiration how long the token lasts in milliseconds; 0 for the configured default
+     */
+    CommonResponse<Object> authenticate(UserEntity configure, long expiration);
+
+    /**
+     * Signs in a user whose identity was checked some other way, such as by a third-party sign-in
+     * provider, and returns the same token as {@link #authenticate(UserEntity, long)}.
+     */
+    CommonResponse<Object> issue(String username, long expiration);
 
     CommonResponse<UserEntity> info(String code);
 
@@ -57,6 +68,4 @@ public interface UserService
     CommonResponse<UserEntity> changeEditorConfigure(UserEditorEntity configure);
 
     CommonResponse<AvatarEntity> uploadAvatar(UploadBody configure);
-
-    CommonResponse<UserEntity> changeNotify(UserEntity configure);
 }

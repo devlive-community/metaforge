@@ -1,0 +1,12 @@
+{
+  "label": "DolphinDB",
+  "description": "DolphinDB is a real-time platform for analytics and stream processing, powered by a high-performance time series database. It offers capabilities related to efficient writes, fast queries, complex analysis, distributed parallel computing, and low-latency stream computing. It also supports high availability.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dolphindb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 50
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- A shared report can offer its data as a table and as a CSV download; both are off by default. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0014-report-share-data" author="metaforge">
+        <addColumn tableName="metaforge_report">
+            <column name="share_allow_data" type="${flag}" defaultValueBoolean="false"/>
+            <column name="share_allow_download" type="${flag}" defaultValueBoolean="false"/>
+        </addColumn>
+    </changeSet>
+</databaseChangeLog>

@@ -1,0 +1,105 @@
+<template>
+  <MfEmpty v-if="!entries.length" size="sm" class="h-full" :title="$t(key + 'empty')"/>
+  <div v-else-if="tabular" class="flex h-full min-h-0 flex-col gap-2">
+    <MfInput v-if="kind === 'dataDictionary'" v-model="search" class="shrink-0"
+             :aria-label="$t(key + 'searchDictionary')" :placeholder="$t(key + 'searchDictionary')" clearable/>
+    <MfTable fill class="min-h-0 flex-1" row-key="id" :columns="columns" :data-source="tableEntries"
+             :density="tableAppearance?.density ?? 'compact'" :striped="tableAppearance?.striped" :bordered="tableAppearance?.bordered ?? true">
+      <template #cell-title="{ record }"><EllipsisCell :text="record.title"/></template>
+      <template #cell-value="{ record }"><EllipsisCell :text="record.value"/></template>
+      <template #cell-secondary="{ record }">
+        <MfTag v-if="kind === 'apiEndpointList' && record.secondary" size="sm">{{ record.secondary }}</MfTag>
+        <EllipsisCell v-else :text="record.secondary ?? ''"/>
+      </template>
+      <template #cell-tone="{ record }"><MfTag size="sm" :variant="record.tone">{{ $t(key + tableTone + '.' + record.tone) }}</MfTag></template>
+      <template #cell-detail="{ record }"><EllipsisCell :text="record.detail"/></template>
+    </MfTable>
+  </div>
+  <div v-else-if="kind === 'faqList' || kind === 'reviewQuestions'" class="flex h-full flex-col gap-2 overflow-auto">
+    <details v-for="(item, index) in entries" :key="item.id" :open="kind === 'reviewQuestions' && index === 0" class="rounded-mf-md border border-line bg-surface">
+      <summary class="cursor-pointer break-words px-3 py-2 text-sm font-semibold">
+        {{ item.title }} <MfTag v-if="kind === 'reviewQuestions'" :variant="item.tone" size="sm">{{ $t(key + 'decisionStatus.' + item.tone) }}</MfTag>
+      </summary>
+      <p class="whitespace-pre-wrap break-words px-3 pb-3 text-sm text-content-secondary">{{ item.detail }}</p>
+    </details>
+  </div>
+  <ol v-else-if="ordered" class="h-full space-y-3 overflow-auto p-1">
+    <li v-if="kind === 'milestoneTracker'" class="text-xs text-content-secondary">
+      {{ $t(key + 'milestonesComplete', { count: entries.filter(item => item.tone === 'success').length, total: entries.length }) }}
+    </li>
+    <li v-for="(item, index) in entries" :key="item.id" class="border-l-2 border-primary/45 py-0.5 pl-3">
+      <span v-if="kind === 'escalationPaths'" class="block text-xs text-content-tertiary">{{ $t(key + 'escalationStep', { number: index + 1 }) }}</span>
+      <span v-else-if="kind === 'approvalTrail'" class="block break-words text-xs text-content-tertiary">{{ [item.secondary, item.value].filter(Boolean).join(' · ') }}</span>
+      <span v-else-if="item.value" class="block text-xs text-content-tertiary">{{ item.value }}</span>
+      <p class="break-words text-sm font-semibold">{{ item.title }}</p>
+      <MfTag v-if="kind === 'milestoneTracker' || kind === 'incidentTimeline' || kind === 'approvalTrail'" size="sm" :variant="item.tone">{{ $t(key + tableTone + '.' + item.tone) }}</MfTag>
+      <p v-if="item.detail" class="whitespace-pre-wrap break-words text-sm text-content-secondary">{{ item.detail }}</p>
+      <a v-if="kind === 'escalationPaths' && mailUrl(item.value)" :href="mailUrl(item.value)" class="break-all text-xs text-primary hover:underline">{{ item.value }}</a>
+    </li>
+  </ol>
+  <dl v-else-if="kind === 'statTiles'" class="grid h-full auto-rows-min grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-2 overflow-auto">
+    <div v-for="item in entries" :key="item.id" class="min-w-0 rounded-mf-md border border-line bg-surface-hover px-3 py-2">
+      <dt class="break-words text-xs text-content-secondary">{{ item.title }}</dt>
+      <dd class="break-words text-xl font-bold tabular-nums">{{ item.value || '—' }}</dd>
+      <dd v-if="item.detail" class="whitespace-pre-wrap break-words text-xs text-content-tertiary">{{ item.detail }}</dd>
+    </div>
+  </dl>
+  <InformationCards v-else-if="isInformationCard(kind)" :kind="kind" :items="entries"/>
+  <InformationBoards v-else-if="isInformationBoard(kind)" :kind="kind" :items="entries"/>
+  <ul v-else class="grid h-full auto-rows-min gap-2 overflow-auto"
+      :class="kind !== 'serviceStatus' && 'grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))]'">
+    <li v-for="item in entries" :key="item.id" class="min-w-0 rounded-mf-md border border-line bg-surface px-3 py-2">
+      <div class="flex flex-wrap items-center justify-between gap-1">
+        <strong class="break-all text-sm">{{ item.title }}</strong>
+        <MfTag v-if="kind === 'serviceStatus'" size="sm" :variant="item.tone">{{ $t(key + 'status.' + item.tone) }}</MfTag>
+      </div>
+      <p v-if="(kind === 'policyCards' || kind === 'environmentCards' || kind === 'communicationChannels') && item.secondary" class="text-xs text-content-tertiary">
+        {{ $t(key + (kind === 'environmentCards' ? 'deployedVersion' : 'owner')) }} · {{ item.secondary }}
+      </p>
+      <p v-if="item.detail" class="whitespace-pre-wrap break-words text-xs text-content-secondary">{{ item.detail }}</p>
+      <a v-if="(kind === 'resourceCards' || kind === 'policyCards' || kind === 'environmentCards' || kind === 'communicationChannels') && resourceUrl(item.value)" :href="resourceUrl(item.value)"
+         target="_blank" rel="noopener noreferrer" class="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">
+        {{ $t(key + 'openResource') }}<ArrowUpRight :size="13"/>
+      </a>
+      <a v-else-if="kind === 'contactDirectory' && mailUrl(item.value)" :href="mailUrl(item.value)" class="block break-all text-xs text-primary hover:underline">{{ item.value }}</a>
+    </li>
+  </ul>
+</template>
+
+<script setup lang="ts">
+import { ArrowUpRight } from '@lucide/vue'
+import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { informationFields, informationMailUrl as mailUrl, informationResourceUrl as resourceUrl, isTabularInformationBlock,
+  type InformationBlockKind, type InformationItem } from '@/model/information-block'
+import type { TableAppearance } from '@/model/table-appearance'
+import EllipsisCell from '@/views/components/table/EllipsisCell.vue'
+import InformationCards from './InformationCards.vue'
+import InformationBoards from './InformationBoards.vue'
+
+const props = defineProps<{ kind: InformationBlockKind; items: readonly InformationItem[]; tableAppearance?: TableAppearance }>()
+const { t } = useI18n()
+const key = 'informationBlock.'
+const entries = computed(() => props.items.filter(item => item.title.trim()))
+const search = ref('')
+const tableEntries = computed(() => {
+  const term = props.kind === 'dataDictionary' ? search.value.trim().toLocaleLowerCase() : ''
+  return term ? entries.value.filter(item => [item.title, item.value, item.secondary, item.detail]
+    .some(value => value?.toLocaleLowerCase().includes(term))) : entries.value
+})
+const tabular = computed(() => isTabularInformationBlock(props.kind))
+const tableTone = computed(() => {
+  const fields = informationFields[props.kind]
+  return 'tone' in fields ? fields.tone : 'severity'
+})
+const ordered = computed(() => ['releaseTimeline', 'milestoneTracker', 'escalationPaths', 'incidentTimeline', 'approvalTrail'].includes(props.kind))
+const columns = computed(() => Object.entries(informationFields[props.kind]).map(([dataIndex, label]) => ({ dataIndex, title: t(key + label) })))
+const cardKinds = ['linkButtonBar', 'imageBadges', 'comparisonCards', 'noticeBoard', 'capacityGrid', 'ratingCards', 'evidenceGallery', 'experimentNotes'] as const
+function isInformationCard(kind: InformationBlockKind): kind is typeof cardKinds[number] {
+  return cardKinds.some(card => card === kind)
+}
+const boardKinds = ['glossaryIndex', 'statusBoard', 'acceptanceChecklist', 'copySnippets', 'deliveryQueue', 'releaseReadiness', 'configDiffCards'] as const
+function isInformationBoard(kind: InformationBlockKind): kind is typeof boardKinds[number] {
+  return boardKinds.some(board => board === kind)
+}
+</script>

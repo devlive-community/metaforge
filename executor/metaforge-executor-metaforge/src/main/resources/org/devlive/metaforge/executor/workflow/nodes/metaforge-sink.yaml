@@ -1,0 +1,20 @@
+id: metaforge-sink
+tid: metaforge-sink
+label: Batch write
+key: Sink
+category: sink
+description: Write query columns to a streaming-capable saved data source.
+configure:
+  - {field: source, label: Data source, type: source, required: true, group: basic}
+  - {field: database, label: Target database, type: database, required: true, group: basic, from: {source: source}}
+  - {field: table, label: Target table, type: table, required: true, group: basic, from: {source: source, database: database}}
+  - field: columns
+    label: Column mapping
+    type: mapping
+    required: true
+    group: basic
+    from: {source: source, database: database, table: table}
+    upstream: {source: source, query: query}
+    description: 'Choose the incoming column written to each target column. Unmapped target columns are skipped.'
+ports:
+  - {id: input, label: Input, type: input, required: true}

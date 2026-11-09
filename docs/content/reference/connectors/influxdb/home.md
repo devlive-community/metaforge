@@ -70,3 +70,16 @@ MetaForge 整合 InfluxDB 模块，用于实现对 InfluxDB 数据源的数据�
         |---|---|
         | `database` | `default` |
 :::
+
+#### 版本（验证）
+
+---
+
+!!! note
+
+    插件的 e2e 测试 `InfluxdbE2ETest` 在容器中逐一验证以下版本：版本检查后，通过 HTTP 写入的数据点作为数据库、measurement 和字段（tag 与 field）被列出，并用 InfluxQL 读回。插件使用 InfluxQL，支持 InfluxDB 1.x。
+
+    - [x] 1.8
+    - [x] 1.11
+
+!!!

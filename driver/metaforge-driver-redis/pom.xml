@@ -15,6 +15,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>org.devlive.metaforge</groupId>
+            <artifactId>metaforge-driver-sql</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson</artifactId>
         </dependency>

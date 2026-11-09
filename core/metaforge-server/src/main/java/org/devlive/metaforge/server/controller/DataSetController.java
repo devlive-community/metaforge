@@ -6,6 +6,8 @@ import org.devlive.metaforge.plugin.PluginMetadata;
 import org.devlive.metaforge.service.body.FilterBody;
 import org.devlive.metaforge.service.body.adhoc.Adhoc;
 import org.devlive.metaforge.service.dataset.DatasetVirtualColumns;
+import org.devlive.metaforge.service.dataset.sync.SyncActiveView;
+import org.devlive.metaforge.service.dataset.sync.SyncMetricsView;
 import org.devlive.metaforge.service.entity.DataSetColumnEntity;
 import org.devlive.metaforge.service.entity.DataSetEntity;
 import org.devlive.metaforge.service.entity.DatasetHistoryEntity;
@@ -48,6 +50,12 @@ public class DataSetController
         this.service = service;
         this.functions = functions;
         this.initializer = initializer;
+    }
+
+    @GetMapping(value = "count")
+    public CommonResponse<Long> count()
+    {
+        return service.count();
     }
 
     @PostMapping(value = "validateColumns")
@@ -102,7 +110,7 @@ public class DataSetController
     }
 
     @PutMapping(value = "syncData/{code}")
-    public CommonResponse<DataSetEntity> syncData(@PathVariable String code,
+    public CommonResponse<DatasetHistoryEntity> syncData(@PathVariable String code,
             @RequestBody(required = false) java.util.Map<String, String> overrides)
     {
         return service.syncData(code, overrides);
@@ -144,6 +152,36 @@ public class DataSetController
     public CommonResponse<Boolean> historyStop(@PathVariable Long id)
     {
         return this.service.stopHistory(id);
+    }
+
+    @GetMapping(value = "sync/active")
+    public CommonResponse<List<SyncActiveView>> activeSyncs()
+    {
+        return this.service.getActiveSyncs();
+    }
+
+    @PutMapping(value = "history/pause/{id}")
+    public CommonResponse<Boolean> historyPause(@PathVariable Long id)
+    {
+        return this.service.pauseHistory(id);
+    }
+
+    @PutMapping(value = "history/resume/{id}")
+    public CommonResponse<Boolean> historyResume(@PathVariable Long id)
+    {
+        return this.service.resumeHistory(id);
+    }
+
+    @PutMapping(value = "history/retry/{id}")
+    public CommonResponse<Boolean> historyRetry(@PathVariable Long id)
+    {
+        return this.service.retryHistory(id);
+    }
+
+    @GetMapping(value = "history/metrics/{id}")
+    public CommonResponse<SyncMetricsView> historyMetrics(@PathVariable Long id)
+    {
+        return this.service.getHistoryMetrics(id);
     }
 
     @GetMapping(value = "getActuators")

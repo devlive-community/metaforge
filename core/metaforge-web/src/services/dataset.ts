@@ -13,6 +13,11 @@ export class DatasetService
         super(DEFAULT_PATH)
     }
 
+    getCount(): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${DEFAULT_PATH}/count`)
+    }
+
     preview(code: string): Promise<ResponseModel>
     {
         return new HttpUtils().get(`${DEFAULT_PATH}/preview/${encodeURIComponent(code)}`)
@@ -86,14 +91,49 @@ export class DatasetService
     }
 
     /**
-     * Stop a running sync task identified by the given history record id.
+     * Cancel a sync: a queued one is cancelled at once, a running one is asked to stop.
      *
-     * @param {number} id - the dataset history id (must be RUNNING)
-     * @return {Promise<ResponseModel>} success when the cancel flag has been set
+     * @param {number} id - the dataset history id (queued or running)
+     * @return {Promise<ResponseModel>} success when the sync was cancelled or asked to stop
      */
     stopHistory(id: number): Promise<ResponseModel>
     {
         return new HttpUtils().put(`${ DEFAULT_PATH }/history/stop/${ id }`)
+    }
+
+    /** The signed-in user's unfinished syncs, for the progress on the list page. */
+    getActiveSyncs(): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH }/sync/active`)
+    }
+
+    /** Pause a running sync; only a sync split by a key column can pause. */
+    pauseHistory(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ DEFAULT_PATH }/history/pause/${ id }`)
+    }
+
+    /** Resume a paused sync from its checkpoint. */
+    resumeHistory(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ DEFAULT_PATH }/history/resume/${ id }`)
+    }
+
+    /** Run a finished sync again from its checkpoint, when that writes nothing twice. */
+    retryHistory(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().put(`${ DEFAULT_PATH }/history/retry/${ id }`)
+    }
+
+    /**
+     * Live metrics, state and transitions of one sync; the final result once it has finished.
+     *
+     * @param {number} id - the dataset history id
+     * @return {Promise<ResponseModel>} the metrics view
+     */
+    getHistoryMetrics(id: number): Promise<ResponseModel>
+    {
+        return new HttpUtils().get(`${ DEFAULT_PATH }/history/metrics/${ id }`)
     }
 
     /**

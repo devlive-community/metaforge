@@ -1,6 +1,6 @@
 <template>
 
-    <DataTable filterable :filter-fields="tableFilters" :title="$t('common.history')"
+    <DataTable filterable :filter-fields="tableFilters"
                :columns="headers"
                :data-source="data"
                :loading="loading"
@@ -150,7 +150,7 @@ const {
     onSearch,
     onPageChange,
     onSizeChange
-  } = usePagedList<any>(filter => AuditService.getAll(filter))
+  } = usePagedList<any>(filter => AuditService.getAll(filter), { orders: [{ column: 'createTime', order: 'DESC' }] })
 
 const handlerShowContent = (opened: boolean, value: string | null) => {
   contentVisible.value = opened

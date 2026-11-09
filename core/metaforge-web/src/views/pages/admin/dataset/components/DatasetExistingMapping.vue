@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
-import { ArrowRight, Database, RefreshCw } from '@lucide/vue'
+import { ArrowRight, Check, Database, RefreshCw } from '@lucide/vue'
 import { useI18n } from 'vue-i18n'
 import DatasetService from '@/services/dataset'
 import { FilterModel } from '@/model/filter'
@@ -80,7 +80,7 @@ onBeforeUnmount(()=>{active=false;request++})
 </script>
 <template>
   <MfModal :open="true" :title="t('dataset.prototype.applyExisting')" :subtitle="t('dataset.prototype.mappingHint')" width="1180px" panel-class="md:w-[80vw]!" height="min(850px, calc(100dvh - 96px))" body-class="px-6 py-6" :close-on-overlay="false" :close-on-esc="!saving" :close-disabled="saving" trap-focus @close="!saving && emit('close')">
-    <template #after-header><ol class="flex shrink-0 flex-wrap items-center justify-center gap-3 border-b border-line px-5 py-5 text-xs sm:gap-7"><li v-for="(label,index) in [t('dataset.editor.basic'),t('dataset.editor.source'),t('dataset.editor.columns'),t('dataset.editor.preview')]" :key="label" class="flex items-center gap-2" :class="index<=2?'font-semibold text-primary':'text-content-tertiary'"><span class="flex size-6 items-center justify-center rounded-mf-full border" :class="index===2?'border-primary bg-primary text-on-primary':index<2?'border-primary/20 bg-primary/10':'border-line'">{{ index<2?'✓':index+1 }}</span>{{ label }}</li></ol></template>
+    <template #after-header><ol class="flex shrink-0 flex-wrap items-center justify-center gap-3 border-b border-line px-5 py-5 text-xs sm:gap-7"><li v-for="(label,index) in [t('dataset.editor.basic'),t('dataset.editor.source'),t('dataset.editor.columns'),t('dataset.editor.preview')]" :key="label" class="flex items-center gap-2" :class="index<=2?'font-semibold text-primary':'text-content-tertiary'"><span class="flex size-6 items-center justify-center rounded-mf-full border" :class="index===2?'border-primary bg-primary text-on-primary':index<2?'border-primary/20 bg-primary/10':'border-line'"><Check v-if="index<2" :size="12" aria-hidden="true"/><template v-else>{{ index+1 }}</template></span>{{ label }}</li></ol></template>
     <MfAlert v-if="error" variant="danger" :title="error" class="mb-4"/>
     <div class="mb-5 flex flex-wrap items-center justify-between gap-3"><h2 class="text-base font-semibold">{{ t('dataset.prototype.applyExisting') }}</h2><MfTag variant="primary">{{ t('dataset.prototype.resultSize',[entry.rowCount || 0,entry.headers?.length || 0]) }}</MfTag></div>
     <div class="grid items-start gap-6 lg:grid-cols-[minmax(260px,0.8fr)_minmax(0,1.2fr)]">

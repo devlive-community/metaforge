@@ -26,6 +26,7 @@ import org.devlive.metaforge.service.initializer.InitializerConfigure;
 import org.devlive.metaforge.service.repository.PluginAuditRepository;
 import org.devlive.metaforge.service.repository.SourceRepository;
 import org.devlive.metaforge.service.security.UserDetailsService;
+import org.devlive.metaforge.service.service.SystemSettingService;
 import org.devlive.metaforge.spi.model.Response;
 import org.springframework.stereotype.Component;
 
@@ -46,6 +47,7 @@ import static java.util.Objects.requireNonNull;
 @SuppressFBWarnings(value = {"EI_EXPOSE_REP2"})
 public class AuditPluginHandler
 {
+    private final SystemSettingService systemSettings;
     private final ThreadLocal<PluginAuditEntity> threadLocalPluginAudit = new ThreadLocal<>();
 
     private final PluginAuditRepository pluginAuditRepository;
@@ -53,8 +55,9 @@ public class AuditPluginHandler
     private final InitializerConfigure initializer;
     private final PluginManager pluginManager;
 
-    public AuditPluginHandler(PluginAuditRepository pluginAuditRepository, SourceRepository sourceRepository, InitializerConfigure initializer, PluginManager pluginManager)
+    public AuditPluginHandler(PluginAuditRepository pluginAuditRepository, SourceRepository sourceRepository, InitializerConfigure initializer, PluginManager pluginManager, SystemSettingService systemSettings)
     {
+        this.systemSettings = systemSettings;
         this.pluginAuditRepository = pluginAuditRepository;
         this.sourceRepository = sourceRepository;
         this.initializer = initializer;
@@ -130,20 +133,20 @@ public class AuditPluginHandler
                                         File tempFile = new File(requireNonNull(response.getPath()));
                                         try (InputStream inputStream = Files.newInputStream(tempFile.toPath())) {
                                             FsRequest fsRequest = FsRequest.builder()
-                                                    .access(initializer.getFsConfigure().getAccess())
-                                                    .secret(initializer.getFsConfigure().getSecret())
+                                                    .access(systemSettings.fs().getAccess())
+                                                    .secret(systemSettings.fs().getSecret())
                                                     .endpoint(workHome)
-                                                    .bucket(initializer.getFsConfigure().getBucket())
+                                                    .bucket(systemSettings.fs().getBucket())
                                                     .stream(inputStream)
                                                     .fileName("result")
                                                     .build();
                                             // If it is OSS third-party storage, rebuild the default directory
-                                            if (!initializer.getFsConfigure().getType().equals("LocalFs")) {
-                                                fsRequest.setEndpoint(initializer.getFsConfigure().getEndpoint());
+                                            if (!systemSettings.fs().getType().equals("LocalFs")) {
+                                                fsRequest.setEndpoint(systemSettings.fs().getEndpoint());
                                                 fsRequest.setFileName(String.join(File.separator, user.getCode(), DateUtils.formatYMD(), String.join(File.separator, "adhoc", uniqueId), "result"));
                                             }
 
-                                            pluginManager.getPlugin(initializer.getFsConfigure().getType())
+                                            pluginManager.getPlugin(systemSettings.fs().getType())
                                                     .map(v -> {
                                                         FsService fsService = v.getService(FsService.class);
                                                         return fsService.writer(fsRequest);

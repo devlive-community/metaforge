@@ -2,6 +2,7 @@ package org.devlive.metaforge.service.service;
 
 import org.devlive.metaforge.common.response.CommonResponse;
 import org.devlive.metaforge.service.activity.HeatmapActivity;
+import org.devlive.metaforge.service.activity.QueryActivity;
 import org.devlive.metaforge.service.entity.PluginAuditEntity;
 import org.devlive.metaforge.service.itransient.ContributionRadar;
 import org.devlive.metaforge.spi.model.Response;
@@ -16,6 +17,8 @@ public interface PluginAuditService
     CommonResponse<List<HeatmapActivity>> getAllContribution();
 
     CommonResponse<List<ContributionRadar>> getContributionRadar();
+
+    CommonResponse<QueryActivity> getHomeActivity(int days);
 
     CommonResponse<PluginAuditEntity> getById(Long id);
 

@@ -8,6 +8,8 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import lombok.Getter;
+import org.devlive.metaforge.driver.sql.SqlSourceConnection;
+import org.devlive.metaforge.driver.sql.SqlSourceDatabaseMetaData;
 
 import java.sql.Array;
 import java.sql.Blob;
@@ -19,7 +21,6 @@ import java.sql.NClob;
 import java.sql.PreparedStatement;
 import java.sql.SQLClientInfoException;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.SQLXML;
 import java.sql.Savepoint;
@@ -45,7 +46,7 @@ public class MongoConnection
             throws SQLException
     {
         try {
-            String databaseName = info.getProperty("database", "admin");
+            String databaseName = databaseOf(url, info);
 
             // 如果URL中包含认证信息，直接使用URL创建客户端
             // If the URL contains authentication information, create a client directly using the URL
@@ -69,7 +70,7 @@ public class MongoConnection
 
                     // 解析主机和端口
                     // Parse host and port
-                    String[] hostPort = url.split("://")[1].split(":");
+                    String[] hostPort = url.split("://")[1].split("[/?]")[0].split(":");
                     String host = hostPort[0];
                     int port = hostPort.length > 1 ? Integer.parseInt(hostPort[1]) : 27017;
 
@@ -100,6 +101,24 @@ public class MongoConnection
         catch (Exception e) {
             throw new SQLException("Failed to connect to MongoDB: " + e.getMessage(), e);
         }
+    }
+
+    /** The database property, else the URL path (jdbc:mongodb://host:port/shop), else admin. */
+    static String databaseOf(String url, Properties info)
+    {
+        String property = info.getProperty("database");
+        if (property != null && !property.trim().isEmpty()) {
+            return property.trim();
+        }
+        String rest = url.contains("://") ? url.substring(url.indexOf("://") + 3) : "";
+        int path = rest.indexOf('/');
+        if (path >= 0) {
+            String name = rest.substring(path + 1).split("\\?")[0].trim();
+            if (!name.isEmpty()) {
+                return name;
+            }
+        }
+        return "admin";
     }
 
     // Create statement for executing queries
@@ -167,7 +186,8 @@ public class MongoConnection
     public DatabaseMetaData getMetaData()
             throws SQLException
     {
-        throw new SQLFeatureNotSupportedException("Method not supported");
+        // Databases, collections and the fields found in their documents, as every MetaForge driver describes a source.
+        return new SqlSourceDatabaseMetaData(new SqlSourceConnection(new MongoSqlSource(mongoClient), "jdbc:mongodb:", database.getName(), null));
     }
 
     @Override

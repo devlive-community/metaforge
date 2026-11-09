@@ -1,0 +1,12 @@
+{
+  "label": "Influxdb",
+  "description": "InfluxDB is a time series database that stores and retrieves data points. It is a distributed database with a focus on performance, scalability, and ease of use.",
+  "i18nFormat": true,
+  "type": "Connector",
+  "author": "metaforge-community",
+  "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/influxdb.svg",
+  "supportVersion": [
+    "ALL"
+  ],
+  "order": 2
+}

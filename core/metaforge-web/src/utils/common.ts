@@ -37,6 +37,13 @@ const getColor = (origin: string): string => {
             return 'hsl(280 60% 50%)'
         case 'TIMEOUT':
             return 'hsl(47.9 95.8% 53.1%)'
+        case 'QUEUE':
+            return 'hsl(215 16% 47%)'
+        case 'PAUSING':
+        case 'PAUSED':
+            return 'hsl(199 89% 48%)'
+        case 'RETRYING':
+            return 'hsl(262 83% 58%)'
         default:
             return 'hsl(24.6 95% 53.1%)'
     }
@@ -93,6 +100,12 @@ export function useUtil()
                 return t('state.common.timeout')
             case 'QUEUE':
                 return t('state.common.queue')
+            case 'PAUSING':
+                return t('state.common.pausing')
+            case 'PAUSED':
+                return t('state.common.paused')
+            case 'RETRYING':
+                return t('state.common.retrying')
             default:
                 return origin
         }

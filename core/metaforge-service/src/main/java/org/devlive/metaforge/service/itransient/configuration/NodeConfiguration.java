@@ -12,6 +12,7 @@ import org.devlive.metaforge.common.view.EntityView;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Data
 @ToString
@@ -33,4 +34,5 @@ public class NodeConfiguration
     private String description;
     private List<PortConfiguration> ports;
     private Map<String, Object> data;
+    private Set<String> supportExecutors;
 }

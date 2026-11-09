@@ -1,5 +1,6 @@
 import { ref, type Ref } from 'vue'
 import { FilterModel, emptyTableFilters, type TableFilters } from '@/model/filter'
+import type { OrderModel } from '@/model/order'
 import type { ResponseModel } from '@/model/response'
 import { MfMessage } from 'metaforge-ui'
 
@@ -14,6 +15,7 @@ import { MfMessage } from 'metaforge-ui'
  * @param fetcher 传入内部 filter 的请求函数，如 `filter => UserService.getAll(filter)`。
  * @param options.onData 每次数据返回后的回调（行后处理/联动刷新）。
  * @param options.onFailure 请求失败回调（默认 MfMessage.error）。
+ * @param options.orders 排序（如按创建时间倒序），不传则用服务端默认顺序。
  */
 export function usePagedList<T = any>(
     fetcher: (filter: FilterModel) => Promise<ResponseModel>,
@@ -21,12 +23,16 @@ export function usePagedList<T = any>(
       defaultPageSize?: number
       onData?: (content: T[]) => void
       onFailure?: (message: string) => void
+      orders?: OrderModel[]
     } = {},
 )
 {
   const filter = new FilterModel()
   if (options.defaultPageSize) {
     filter.size = options.defaultPageSize
+  }
+  if (options.orders) {
+    filter.orders = options.orders
   }
 
   const loading = ref(false)
