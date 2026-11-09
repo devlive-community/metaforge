@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,24 +19,14 @@ public class PluginPathUtils
 {
     private PluginPathUtils() {}
 
-    // 项目根目录标志文件/目录
-    // Project root markers
-    private static final List<String> PROJECT_ROOT_MARKERS = Arrays.asList(
-            "pom.xml",                // Maven项目标志
-            "build.gradle",           // Gradle项目标志
-            ".git",                   // Git仓库标志
-            ".gitignore",             // Git配置标志
-            ".idea",                  // IDEA项目标志
-            "mvnw",                   // Maven包装器标志
-            "gradlew"                 // Gradle包装器标志
-    );
-
     // 模块目录标志
     // Module directory markers
     private static final List<String> MODULE_MARKERS = Arrays.asList(
             "src/main/java",
             "src/main/resources",
+            "src/main/kotlin",
             "src/test/java",
+            "src/test/kotlin",
             "target/classes",
             "build/classes"
     );
@@ -65,7 +56,13 @@ public class PluginPathUtils
                     classPath = classPath.substring(0, classPath.indexOf(".jar!") + 4);
                 }
 
-                Path path = Paths.get(new File(classPath).toURI());
+                // classPath 带 file: 前缀时必须按 URI 解析成绝对路径；当作 File 相对路径会把
+                // "file:/..." 拼到工作目录后面，向上搜索便停在测试模块目录上
+                // A file: prefixed path must be parsed as a URI; treating it as a relative File
+                // anchors the search at the working directory (the test module) instead of the root.
+                Path path = classPath.startsWith("file:")
+                        ? Paths.get(URI.create(classPath))
+                        : Paths.get(classPath);
                 log.debug("Starting search from class path: {}", path);
                 rootPath = findRootFromPath(path);
 
@@ -176,28 +173,15 @@ public class PluginPathUtils
     /**
      * 检查给定路径是否为项目根目录
      * Check if given path is project root directory
+     *
+     * <p>只认可多模块仓库根才有的强标志（mvnw、.git）。任何模块目录都有自己的 pom.xml，
+     * 用它判定会把每个模块目录都当成项目根。
+     * <p>Only trust markers that exist at a multi-module repository root (mvnw, .git). Every
+     * module directory carries its own pom.xml, which would match every module otherwise.
      */
     private static boolean isProjectRoot(Path path)
     {
-        try {
-            // 检查是否存在任何根目录标志
-            // Check if any root marker exists
-            boolean hasRootMarker = PROJECT_ROOT_MARKERS.stream()
-                    .anyMatch(marker -> Files.exists(path.resolve(marker)));
-
-            if (!hasRootMarker) {
-                return false;
-            }
-
-            // 额外检查是否有src目录或其他项目结构
-            // Additional check for src directory or other project structure
-            return Files.exists(path.resolve("src")) ||
-                    Files.exists(path.resolve("pom.xml")) ||
-                    Files.exists(path.resolve("build.gradle"));
-        }
-        catch (Exception e) {
-            return false;
-        }
+        return Files.exists(path.resolve("mvnw")) || Files.exists(path.resolve(".git"));
     }
 
     /**
