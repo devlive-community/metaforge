@@ -97,16 +97,20 @@ jobs:
       # the log. The background loop removes images no running container uses anymore.
       - name: Run the JUnit 5 suite
         run: |
+          # The pruner loop must fully detach from the step's stdout/stderr: a
+          # background child still holding the pipe makes the runner finish the
+          # step with exit code 127 even after a successful Maven run.
           (while true; do
              sleep 300
              sudo docker image prune -af --filter "until=10m" >/dev/null 2>&1 || true
-           done) &
+           done) >/dev/null 2>&1 < /dev/null &
           pruner=$!
           ./mvnw $MAVEN_FLAGS org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test
           -Dcheckstyle.skip -Dspotbugs.skip -DargLine=-Xmx1g
           ${PROJECTS:+-pl "$PROJECTS" -amd}
           status=$?
           kill $pruner 2>/dev/null || true
+          wait $pruner 2>/dev/null || true
           exit $status
 
       # The suite log is too large for the log stream (it gets cut around 30-100 MB),
