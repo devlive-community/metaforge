@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Databases that ran core-0019 before the T-SQL reserved word was fixed still carry
+     the column as checkpoint; rename it so every installation matches the entity. -->
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <changeSet id="core-0020-dataset-history-checkpoint-rename" author="metaforge">
+        <preConditions onFail="MARK_RAN">
+            <columnExists tableName="metaforge_dataset_history" columnName="checkpoint"/>
+        </preConditions>
+        <renameColumn tableName="metaforge_dataset_history"
+                      oldColumnName="checkpoint" newColumnName="checkpoint_payload" columnDataType="${text}"/>
+    </changeSet>
+</databaseChangeLog>

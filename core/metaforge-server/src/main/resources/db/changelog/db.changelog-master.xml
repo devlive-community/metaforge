@@ -45,4 +45,5 @@
     <include file="core/core-0017-screen-paths.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0018-dashboard-share.xml" relativeToChangelogFile="true"/>
     <include file="core/core-0019-dataset-history-checkpoint.xml" relativeToChangelogFile="true"/>
+    <include file="core/core-0020-dataset-history-checkpoint-rename.xml" relativeToChangelogFile="true"/>
 </databaseChangeLog>
