@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.devlive.metaforge</groupId>
         <artifactId>metaforge</artifactId>
-        <version>2026.0.0</version>
+        <version>2026.1.0</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>

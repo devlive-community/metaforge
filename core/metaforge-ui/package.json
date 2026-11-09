@@ -1,7 +1,7 @@
 {
   "name": "metaforge-ui",
   "description": "MetaForge UI component library (pure Tailwind CSS, token based)",
-  "version": "2026.0.0",
+  "version": "2026.1.0",
   "private": true,
   "type": "module",
   "main": "src/index.ts",

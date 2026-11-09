@@ -3,7 +3,7 @@
   "label": "common.plugin.list.name",
   "description": "common.plugin.list.description",
   "i18nFormat": true,
-  "version": "2026.0.0",
+  "version": "2026.1.0",
   "children": [
     {
       "key": "metaforge-plugin-mysql",
@@ -11,7 +11,7 @@
       "description": "A powerful MySQL integration plugin that provides comprehensive database connectivity. Features include table/view management, data import/export, SQL query execution, stored procedure support, and real-time data synchronization. Optimized for high-performance data operations with connection pooling and batch processing capabilities.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mysql.svg",
@@ -32,10 +32,10 @@
         "export",
         "erDiagram"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mysql/2026.0.0/metaforge-plugin-mysql-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mysql/2026.1.0/metaforge-plugin-mysql-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mysql/2026.0.0/metaforge-plugin-mysql-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-mysql-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mysql/2026.1.0/metaforge-plugin-mysql-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mysql-bin.tar.gz"
       }
     },
     {
@@ -44,7 +44,7 @@
       "description": "ClickHouse is a distributed column-oriented database. It is a distributed database with a focus on performance, scalability, and ease of use.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/clickhouse.svg",
@@ -58,10 +58,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse/2026.0.0/metaforge-plugin-clickhouse-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse/2026.1.0/metaforge-plugin-clickhouse-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse/2026.0.0/metaforge-plugin-clickhouse-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-clickhouse-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-clickhouse/2026.1.0/metaforge-plugin-clickhouse-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-clickhouse-bin.tar.gz"
       }
     },
     {
@@ -70,7 +70,7 @@
       "description": "InfluxDB is a time series database that stores and retrieves data points. It is a distributed database with a focus on performance, scalability, and ease of use.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/influxdb.svg",
@@ -84,10 +84,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-influxdb/2026.0.0/metaforge-plugin-influxdb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-influxdb/2026.1.0/metaforge-plugin-influxdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-influxdb/2026.0.0/metaforge-plugin-influxdb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-influxdb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-influxdb/2026.1.0/metaforge-plugin-influxdb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-influxdb-bin.tar.gz"
       }
     },
     {
@@ -96,7 +96,7 @@
       "description": "Solr is highly reliable, scalable and fault tolerant, providing distributed indexing, replication and load-balanced querying, automated failover and recovery, centralized configuration and more. Solr powers the search and navigation features of many of the world's largest internet sites.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/solr.svg",
@@ -110,10 +110,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-solr/2026.0.0/metaforge-plugin-solr-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-solr/2026.1.0/metaforge-plugin-solr-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-solr/2026.0.0/metaforge-plugin-solr-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-solr-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-solr/2026.1.0/metaforge-plugin-solr-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-solr-bin.tar.gz"
       }
     },
     {
@@ -122,7 +122,7 @@
       "description": "CrateDB is a hyper-fast database for real-time analytics and hybrid search. It handles multiple types of data and combines the simplicity of SQL with the scalability of a distributed architecture.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/cratedb.svg",
@@ -136,10 +136,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb/2026.0.0/metaforge-plugin-cratedb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb/2026.1.0/metaforge-plugin-cratedb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb/2026.0.0/metaforge-plugin-cratedb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-cratedb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cratedb/2026.1.0/metaforge-plugin-cratedb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-cratedb-bin.tar.gz"
       }
     },
     {
@@ -148,7 +148,7 @@
       "description": "Zookeeper is a distributed, distributed configuration service. It is a distributed database with a focus on performance, scalability, and ease of use.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/zookeeper.svg",
@@ -160,10 +160,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-zookeeper/2026.0.0/metaforge-plugin-zookeeper-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-zookeeper/2026.1.0/metaforge-plugin-zookeeper-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-zookeeper/2026.0.0/metaforge-plugin-zookeeper-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-zookeeper-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-zookeeper/2026.1.0/metaforge-plugin-zookeeper-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-zookeeper-bin.tar.gz"
       }
     },
     {
@@ -172,7 +172,7 @@
       "description": "Apache Kafka is an open-source distributed event streaming platform used by thousands of companies for high-performance data pipelines, streaming analytics, data integration, and mission-critical applications.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/kafka.svg",
@@ -184,10 +184,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kafka/2026.0.0/metaforge-plugin-kafka-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kafka/2026.1.0/metaforge-plugin-kafka-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kafka/2026.0.0/metaforge-plugin-kafka-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-kafka-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kafka/2026.1.0/metaforge-plugin-kafka-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kafka-bin.tar.gz"
       }
     },
     {
@@ -196,7 +196,7 @@
       "description": "H2 is a small, fast, and easy-to-use in-memory database.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/h2.svg",
@@ -210,10 +210,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2/2026.0.0/metaforge-plugin-h2-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2/2026.1.0/metaforge-plugin-h2-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2/2026.0.0/metaforge-plugin-h2-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-h2-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2/2026.1.0/metaforge-plugin-h2-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-h2-bin.tar.gz"
       }
     },
     {
@@ -222,7 +222,7 @@
       "description": "IBM® Db2® is the cloud-native database built to power low-latency transactions, real-time analytics and AI applications at scale.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/db2.svg",
@@ -236,10 +236,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-db2/2026.0.0/metaforge-plugin-db2-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-db2/2026.1.0/metaforge-plugin-db2-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-db2/2026.0.0/metaforge-plugin-db2-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-db2-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-db2/2026.1.0/metaforge-plugin-db2-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-db2-bin.tar.gz"
       }
     },
     {
@@ -248,7 +248,7 @@
       "description": "A professional database software developer and service provider, we provide users with technically advanced and detailed products.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dm.svg",
@@ -262,10 +262,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dm/2026.0.0/metaforge-plugin-dm-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dm/2026.1.0/metaforge-plugin-dm-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dm/2026.0.0/metaforge-plugin-dm-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-dm-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dm/2026.1.0/metaforge-plugin-dm-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dm-bin.tar.gz"
       }
     },
     {
@@ -274,7 +274,7 @@
       "description": "Hadoop Distributed File System (HDFS) is a distributed file system based on the Hadoop project.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hdfs.svg",
@@ -286,10 +286,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hdfs/2026.0.0/metaforge-plugin-hdfs-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hdfs/2026.1.0/metaforge-plugin-hdfs-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hdfs/2026.0.0/metaforge-plugin-hdfs-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-hdfs-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hdfs/2026.1.0/metaforge-plugin-hdfs-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hdfs-bin.tar.gz"
       }
     },
     {
@@ -298,7 +298,7 @@
       "description": "Ali OSS is a cloud storage service that provides a simple, secure and efficient way to store and manage data.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/alioss.svg",
@@ -310,10 +310,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-alioss/2026.0.0/metaforge-plugin-alioss-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-alioss/2026.1.0/metaforge-plugin-alioss-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-alioss/2026.0.0/metaforge-plugin-alioss-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-alioss-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-alioss/2026.1.0/metaforge-plugin-alioss-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-alioss-bin.tar.gz"
       }
     },
     {
@@ -322,7 +322,7 @@
       "description": "Dremio is a free, open source, distributed data platform.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dremio.svg",
@@ -336,10 +336,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dremio/2026.0.0/metaforge-plugin-dremio-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dremio/2026.1.0/metaforge-plugin-dremio-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dremio/2026.0.0/metaforge-plugin-dremio-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-dremio-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dremio/2026.1.0/metaforge-plugin-dremio-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dremio-bin.tar.gz"
       }
     },
     {
@@ -348,7 +348,7 @@
       "description": "A high performance, real-time analytics database that delivers sub-second queries on streaming and batch data at scale and under load.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/druid.svg",
@@ -362,10 +362,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-druid/2026.0.0/metaforge-plugin-druid-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-druid/2026.1.0/metaforge-plugin-druid-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-druid/2026.0.0/metaforge-plugin-druid-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-druid-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-druid/2026.1.0/metaforge-plugin-druid-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-druid-bin.tar.gz"
       }
     },
     {
@@ -374,7 +374,7 @@
       "description": "To use DuckDB, you must first create a connection to a database. The exact syntax varies between the client APIs but it typically involves passing an argument to configure persistence.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/duckdb.svg",
@@ -388,10 +388,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-duckdb/2026.0.0/metaforge-plugin-duckdb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-duckdb/2026.1.0/metaforge-plugin-duckdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-duckdb/2026.0.0/metaforge-plugin-duckdb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-duckdb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-duckdb/2026.1.0/metaforge-plugin-duckdb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-duckdb-bin.tar.gz"
       }
     },
     {
@@ -400,7 +400,7 @@
       "description": "Apache Pinot is a real-time distributed OLAP datastore, built to deliver scalable real-time analytics with low latency. It can ingest from batch data sources (such as Hadoop HDFS, Amazon S3, Azure ADLS, Google Cloud Storage) as well as stream data sources (such as Apache Kafka).",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/pinot.svg",
@@ -414,10 +414,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-pinot/2026.0.0/metaforge-plugin-pinot-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-pinot/2026.1.0/metaforge-plugin-pinot-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-pinot/2026.0.0/metaforge-plugin-pinot-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-pinot-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-pinot/2026.1.0/metaforge-plugin-pinot-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-pinot-bin.tar.gz"
       }
     },
     {
@@ -426,7 +426,7 @@
       "description": "Cassandra is a distributed key-value store for the cloud.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/cassandra.svg",
@@ -438,10 +438,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cassandra/2026.0.0/metaforge-plugin-cassandra-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cassandra/2026.1.0/metaforge-plugin-cassandra-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cassandra/2026.0.0/metaforge-plugin-cassandra-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-cassandra-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-cassandra/2026.1.0/metaforge-plugin-cassandra-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-cassandra-bin.tar.gz"
       }
     },
     {
@@ -450,7 +450,7 @@
       "description": "MatrixOne is a hyper-converged cloud & edge native distributed database with a structure that separates storage, computation, and transactions to form a consolidated HSTAP data engine. This engine enables a single database system to accommodate diverse business loads such as OLTP, OLAP, and stream computing. It also supports deployment and utilization across public, private, and edge clouds, ensuring compatibility with diverse infrastructures.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/matrixone.svg",
@@ -470,10 +470,10 @@
         "export",
         "erDiagram"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-matrixone/2026.0.0/metaforge-plugin-matrixone-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-matrixone/2026.1.0/metaforge-plugin-matrixone-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-matrixone/2026.0.0/metaforge-plugin-matrixone-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-matrixone-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-matrixone/2026.1.0/metaforge-plugin-matrixone-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-matrixone-bin.tar.gz"
       }
     },
     {
@@ -482,7 +482,7 @@
       "description": "ScyllaDB is a distributed database written in C++ and designed to fully exploit modern cloud infrastructure. It utilizes a shard-per-core architecture, meaning each CPU core has dedicated resources that independently handle data for maximum efficiency. ",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/scylladb.svg",
@@ -494,10 +494,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-scylladb/2026.0.0/metaforge-plugin-scylladb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-scylladb/2026.1.0/metaforge-plugin-scylladb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-scylladb/2026.0.0/metaforge-plugin-scylladb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-scylladb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-scylladb/2026.1.0/metaforge-plugin-scylladb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-scylladb-bin.tar.gz"
       }
     },
     {
@@ -506,7 +506,7 @@
       "description": "ParadeDB is a modern Elasticsearch alternative built on Postgres. Built for real-time, update-heavy workloads.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/paradedb.svg",
@@ -520,10 +520,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-paradedb/2026.0.0/metaforge-plugin-paradedb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-paradedb/2026.1.0/metaforge-plugin-paradedb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-paradedb/2026.0.0/metaforge-plugin-paradedb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-paradedb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-paradedb/2026.1.0/metaforge-plugin-paradedb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-paradedb-bin.tar.gz"
       }
     },
     {
@@ -532,7 +532,7 @@
       "description": "The Apache Hive ™ is a distributed, fault-tolerant data warehouse system that enables analytics at a massive scale and facilitates reading, writing, and managing petabytes of data residing in distributed storage using SQL.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hive2x.svg",
@@ -546,10 +546,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hive-2x/2026.0.0/metaforge-plugin-hive-2x-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hive-2x/2026.1.0/metaforge-plugin-hive-2x-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hive-2x/2026.0.0/metaforge-plugin-hive-2x-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-hive-2x-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hive-2x/2026.1.0/metaforge-plugin-hive-2x-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hive-2x-bin.tar.gz"
       }
     },
     {
@@ -558,7 +558,7 @@
       "description": "Apache Kyuubi, a distributed and multi-tenant gateway to provide serverless SQL on lakehouses.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/kyuubi.svg",
@@ -572,10 +572,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kyuubi/2026.0.0/metaforge-plugin-kyuubi-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kyuubi/2026.1.0/metaforge-plugin-kyuubi-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kyuubi/2026.0.0/metaforge-plugin-kyuubi-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-kyuubi-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kyuubi/2026.1.0/metaforge-plugin-kyuubi-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kyuubi-bin.tar.gz"
       }
     },
     {
@@ -584,7 +584,7 @@
       "description": "Apache Ignite is a distributed database for high-performance computing with in-memory speed.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ignite.svg",
@@ -598,10 +598,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ignite/2026.0.0/metaforge-plugin-ignite-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ignite/2026.1.0/metaforge-plugin-ignite-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ignite/2026.0.0/metaforge-plugin-ignite-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-ignite-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ignite/2026.1.0/metaforge-plugin-ignite-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ignite-bin.tar.gz"
       }
     },
     {
@@ -610,7 +610,7 @@
       "description": "Apache Impala is the open source, native analytic database for open data and table formats.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/impala.svg",
@@ -624,10 +624,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-impala/2026.0.0/metaforge-plugin-impala-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-impala/2026.1.0/metaforge-plugin-impala-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-impala/2026.0.0/metaforge-plugin-impala-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-impala-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-impala/2026.1.0/metaforge-plugin-impala-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-impala-bin.tar.gz"
       }
     },
     {
@@ -636,7 +636,7 @@
       "description": "Apache Kylin is a leading open source OLAP engine for Big Data capable for sub-second query latency on trillions of records. Since being created and open sourced by eBay in 2014, and graduated to Top Level Project of Apache Software Foundation in 2015. Kylin has quickly been adopted by thousands of organizations world widely as their critical analytics application for Big Data.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/kylin.svg",
@@ -650,10 +650,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kylin/2026.0.0/metaforge-plugin-kylin-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kylin/2026.1.0/metaforge-plugin-kylin-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kylin/2026.0.0/metaforge-plugin-kylin-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-kylin-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-kylin/2026.1.0/metaforge-plugin-kylin-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-kylin-bin.tar.gz"
       }
     },
     {
@@ -662,7 +662,7 @@
       "description": "TimescaleDB is an open-source database designed to make SQL scalable for time-series data. It is engineered up from PostgreSQL and packaged as a PostgreSQL extension, providing automatic partitioning across time and space (partitioning key), as well as full SQL support.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/timescale.svg",
@@ -676,10 +676,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-timescale/2026.0.0/metaforge-plugin-timescale-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-timescale/2026.1.0/metaforge-plugin-timescale-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-timescale/2026.0.0/metaforge-plugin-timescale-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-timescale-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-timescale/2026.1.0/metaforge-plugin-timescale-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-timescale-bin.tar.gz"
       }
     },
     {
@@ -688,7 +688,7 @@
       "description": "Apache IoTDB (Database for Internet of Things) is an IoT native database with high performance for data management and analysis, deployable on the edge and the cloud. ",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/iotdb.svg",
@@ -702,10 +702,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-iotdb/2026.0.0/metaforge-plugin-iotdb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-iotdb/2026.1.0/metaforge-plugin-iotdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-iotdb/2026.0.0/metaforge-plugin-iotdb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-iotdb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-iotdb/2026.1.0/metaforge-plugin-iotdb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-iotdb-bin.tar.gz"
       }
     },
     {
@@ -714,7 +714,7 @@
       "description": "MonetDB is a high performance relational database system for analytics.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/monetdb.svg",
@@ -728,10 +728,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-monetdb/2026.0.0/metaforge-plugin-monetdb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-monetdb/2026.1.0/metaforge-plugin-monetdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-monetdb/2026.0.0/metaforge-plugin-monetdb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-monetdb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-monetdb/2026.1.0/metaforge-plugin-monetdb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-monetdb-bin.tar.gz"
       }
     },
     {
@@ -740,7 +740,7 @@
       "description": "YDB is a versatile open source Distributed SQL Database that combines high availability and scalability with strong consistency and ACID transactions. It accommodates transactional (OLTP), analytical (OLAP), and streaming workloads simultaneously.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ydb.svg",
@@ -754,10 +754,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ydb/2026.0.0/metaforge-plugin-ydb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ydb/2026.1.0/metaforge-plugin-ydb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ydb/2026.0.0/metaforge-plugin-ydb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-ydb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ydb/2026.1.0/metaforge-plugin-ydb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ydb-bin.tar.gz"
       }
     },
     {
@@ -766,7 +766,7 @@
       "description": "Neo4j is a graph database for knowledge management and analysis.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/neo4j.svg",
@@ -778,10 +778,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-neo4j/2026.0.0/metaforge-plugin-neo4j-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-neo4j/2026.1.0/metaforge-plugin-neo4j-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-neo4j/2026.0.0/metaforge-plugin-neo4j-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-neo4j-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-neo4j/2026.1.0/metaforge-plugin-neo4j-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-neo4j-bin.tar.gz"
       }
     },
     {
@@ -790,7 +790,7 @@
       "description": "OceanBase is an enterprise distributed relational database with high availability, high performance, horizontal scalability, and compatibility with SQL standards.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/oceanbase.svg",
@@ -804,10 +804,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oceanbase/2026.0.0/metaforge-plugin-oceanbase-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oceanbase/2026.1.0/metaforge-plugin-oceanbase-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oceanbase/2026.0.0/metaforge-plugin-oceanbase-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-oceanbase-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oceanbase/2026.1.0/metaforge-plugin-oceanbase-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-oceanbase-bin.tar.gz"
       }
     },
     {
@@ -816,7 +816,7 @@
       "description": "Oracle is an advanced, enterprise-class relational database management system.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/oracle.svg",
@@ -830,10 +830,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oracle/2026.0.0/metaforge-plugin-oracle-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oracle/2026.1.0/metaforge-plugin-oracle-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oracle/2026.0.0/metaforge-plugin-oracle-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-oracle-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-oracle/2026.1.0/metaforge-plugin-oracle-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-oracle-bin.tar.gz"
       }
     },
     {
@@ -842,7 +842,7 @@
       "description": "Apache Phoenix is a SQL skin over HBase delivered as a client-embedded JDBC driver targeting low latency queries over HBase data. ",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/phoenix.svg",
@@ -856,10 +856,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-phoenix/2026.0.0/metaforge-plugin-phoenix-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-phoenix/2026.1.0/metaforge-plugin-phoenix-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-phoenix/2026.0.0/metaforge-plugin-phoenix-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-phoenix-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-phoenix/2026.1.0/metaforge-plugin-phoenix-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-phoenix-bin.tar.gz"
       }
     },
     {
@@ -868,7 +868,7 @@
       "description": "PostgreSQL is a powerful, open source object-relational database system.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/postgresql.svg",
@@ -882,10 +882,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-postgresql/2026.0.0/metaforge-plugin-postgresql-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-postgresql/2026.1.0/metaforge-plugin-postgresql-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-postgresql/2026.0.0/metaforge-plugin-postgresql-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-postgresql-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-postgresql/2026.1.0/metaforge-plugin-postgresql-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-postgresql-bin.tar.gz"
       }
     },
     {
@@ -894,7 +894,7 @@
       "description": "Presto is a distributed SQL query engine for big data.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/presto.svg",
@@ -908,10 +908,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-presto/2026.0.0/metaforge-plugin-presto-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-presto/2026.1.0/metaforge-plugin-presto-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-presto/2026.0.0/metaforge-plugin-presto-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-presto-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-presto/2026.1.0/metaforge-plugin-presto-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-presto-bin.tar.gz"
       }
     },
     {
@@ -920,7 +920,7 @@
       "description": "Snowflake is a database for analytics.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/snowflake.svg",
@@ -934,10 +934,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-snowflake/2026.0.0/metaforge-plugin-snowflake-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-snowflake/2026.1.0/metaforge-plugin-snowflake-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-snowflake/2026.0.0/metaforge-plugin-snowflake-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-snowflake-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-snowflake/2026.1.0/metaforge-plugin-snowflake-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-snowflake-bin.tar.gz"
       }
     },
     {
@@ -946,7 +946,7 @@
       "description": "Microsoft SQL Server is a relational database management system.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/sqlserver.svg",
@@ -960,10 +960,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-sqlserver/2026.0.0/metaforge-plugin-sqlserver-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-sqlserver/2026.1.0/metaforge-plugin-sqlserver-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-sqlserver/2026.0.0/metaforge-plugin-sqlserver-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-sqlserver-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-sqlserver/2026.1.0/metaforge-plugin-sqlserver-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-sqlserver-bin.tar.gz"
       }
     },
     {
@@ -972,7 +972,7 @@
       "description": "TDengine is an open source, high-performance, cloud native time-series database optimized for Internet of Things (IoT), Connected Cars, and Industrial IoT.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/tdengine.svg",
@@ -986,10 +986,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-tdengine/2026.0.0/metaforge-plugin-tdengine-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-tdengine/2026.1.0/metaforge-plugin-tdengine-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-tdengine/2026.0.0/metaforge-plugin-tdengine-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-tdengine-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-tdengine/2026.1.0/metaforge-plugin-tdengine-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-tdengine-bin.tar.gz"
       }
     },
     {
@@ -998,7 +998,7 @@
       "description": "Trino is a distributed SQL query engine for big data.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/trino.svg",
@@ -1012,10 +1012,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-trino/2026.0.0/metaforge-plugin-trino-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-trino/2026.1.0/metaforge-plugin-trino-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-trino/2026.0.0/metaforge-plugin-trino-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-trino-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-trino/2026.1.0/metaforge-plugin-trino-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-trino-bin.tar.gz"
       }
     },
     {
@@ -1024,7 +1024,7 @@
       "description": "Apache Doris is a distributed OLAP database.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/doris.svg",
@@ -1044,10 +1044,10 @@
         "export",
         "erDiagram"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-doris/2026.0.0/metaforge-plugin-doris-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-doris/2026.1.0/metaforge-plugin-doris-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-doris/2026.0.0/metaforge-plugin-doris-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-doris-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-doris/2026.1.0/metaforge-plugin-doris-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-doris-bin.tar.gz"
       }
     },
     {
@@ -1056,7 +1056,7 @@
       "description": "StarRocks is a distributed OLAP database.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/starrocks.svg",
@@ -1076,10 +1076,10 @@
         "export",
         "erDiagram"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-starrocks/2026.0.0/metaforge-plugin-starrocks-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-starrocks/2026.1.0/metaforge-plugin-starrocks-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-starrocks/2026.0.0/metaforge-plugin-starrocks-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-starrocks-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-starrocks/2026.1.0/metaforge-plugin-starrocks-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-starrocks-bin.tar.gz"
       }
     },
     {
@@ -1088,7 +1088,7 @@
       "description": "Hologres is a unified real-time data warehousing service developed by Alibaba Cloud. You can use Hologres to write, update, process, and analyze large amounts of data in real time.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/hologres.svg",
@@ -1102,10 +1102,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hologres/2026.0.0/metaforge-plugin-hologres-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hologres/2026.1.0/metaforge-plugin-hologres-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hologres/2026.0.0/metaforge-plugin-hologres-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-hologres-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-hologres/2026.1.0/metaforge-plugin-hologres-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-hologres-bin.tar.gz"
       }
     },
     {
@@ -1114,7 +1114,7 @@
       "description": "GreptimeDB is an open-source unified & cost-effective time-series database for Metrics, Logs, and Events (also Traces in plan). You can gain real-time insights from Edge to Cloud at Any Scale.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/greptimedb.svg",
@@ -1126,10 +1126,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-greptimedb/2026.0.0/metaforge-plugin-greptimedb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-greptimedb/2026.1.0/metaforge-plugin-greptimedb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-greptimedb/2026.0.0/metaforge-plugin-greptimedb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-greptimedb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-greptimedb/2026.1.0/metaforge-plugin-greptimedb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-greptimedb-bin.tar.gz"
       }
     },
     {
@@ -1138,7 +1138,7 @@
       "description": "QuestDB is the world's fastest growing open-source time-series database. It offers massive ingestion throughput, millisecond queries, powerful time-series SQL extensions, and scales well with minimal and maximal hardware. Save costs with better performance and efficiency.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/questdb.svg",
@@ -1150,10 +1150,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-questdb/2026.0.0/metaforge-plugin-questdb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-questdb/2026.1.0/metaforge-plugin-questdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-questdb/2026.0.0/metaforge-plugin-questdb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-questdb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-questdb/2026.1.0/metaforge-plugin-questdb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-questdb-bin.tar.gz"
       }
     },
     {
@@ -1162,7 +1162,7 @@
       "description": "Use TCP to access the remote H2 database",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/h2tcp.svg",
@@ -1176,10 +1176,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2-tcp/2026.0.0/metaforge-plugin-h2-tcp-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2-tcp/2026.1.0/metaforge-plugin-h2-tcp-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2-tcp/2026.0.0/metaforge-plugin-h2-tcp-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-h2-tcp-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-h2-tcp/2026.1.0/metaforge-plugin-h2-tcp-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-h2-tcp-bin.tar.gz"
       }
     },
     {
@@ -1188,7 +1188,7 @@
       "description": "CeresDB is a database system designed to allow for the storage and retrieval of semi-structured data, i.e. data that conforms to a “top-level schema” where columns types are known, but those columns can in-turn contain dictionaries or lists.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/ceresdb.svg",
@@ -1200,10 +1200,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ceresdb/2026.0.0/metaforge-plugin-ceresdb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ceresdb/2026.1.0/metaforge-plugin-ceresdb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ceresdb/2026.0.0/metaforge-plugin-ceresdb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-ceresdb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-ceresdb/2026.1.0/metaforge-plugin-ceresdb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-ceresdb-bin.tar.gz"
       }
     },
     {
@@ -1212,7 +1212,7 @@
       "description": "Redis is an in-memory data store used by millions of developers as a cache, vector database, document database, streaming engine, and message broker. Redis has built-in replication and different levels of on-disk persistence. It supports complex data types (for example, strings, hashes, lists, sets, sorted sets, and JSON), with atomic operations defined on those data types.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/redis.svg",
@@ -1224,10 +1224,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.0.0/metaforge-plugin-redis-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.1.0/metaforge-plugin-redis-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.0.0/metaforge-plugin-redis-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-redis-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-redis/2026.1.0/metaforge-plugin-redis-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-redis-bin.tar.gz"
       }
     },
     {
@@ -1236,7 +1236,7 @@
       "description": "Use Elasticsearch 8.x",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/elasticsearch8x.svg",
@@ -1250,10 +1250,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-elasticsearch-8x/2026.0.0/metaforge-plugin-elasticsearch-8x-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-elasticsearch-8x/2026.1.0/metaforge-plugin-elasticsearch-8x-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-elasticsearch-8x/2026.0.0/metaforge-plugin-elasticsearch-8x-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-elasticsearch-8x-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-elasticsearch-8x/2026.1.0/metaforge-plugin-elasticsearch-8x-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-elasticsearch-8x-bin.tar.gz"
       }
     },
     {
@@ -1262,7 +1262,7 @@
       "description": "The MongoDB Atlas SQL JDBC Driver provides SQL connectivity to MongoDB Atlas for client applications developed in Java.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mongoatlas.svg",
@@ -1272,10 +1272,10 @@
       "features": [
         "query"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-atlas/2026.0.0/metaforge-plugin-mongo-atlas-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-atlas/2026.1.0/metaforge-plugin-mongo-atlas-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-atlas/2026.0.0/metaforge-plugin-mongo-atlas-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-mongo-atlas-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-atlas/2026.1.0/metaforge-plugin-mongo-atlas-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mongo-atlas-bin.tar.gz"
       }
     },
     {
@@ -1284,7 +1284,7 @@
       "description": "The MongoDB Community SQL JDBC Driver provides SQL connectivity to MongoDB Community for client applications developed in Java.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/mongocommunity.svg",
@@ -1296,10 +1296,10 @@
         "database",
         "browse"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-community/2026.0.0/metaforge-plugin-mongo-community-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-community/2026.1.0/metaforge-plugin-mongo-community-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-community/2026.0.0/metaforge-plugin-mongo-community-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-mongo-community-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-mongo-community/2026.1.0/metaforge-plugin-mongo-community-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-mongo-community-bin.tar.gz"
       }
     },
     {
@@ -1308,7 +1308,7 @@
       "description": "DolphinDB is a real-time platform for analytics and stream processing, powered by a high-performance time series database. It offers capabilities related to efficient writes, fast queries, complex analysis, distributed parallel computing, and low-latency stream computing. It also supports high availability.",
       "i18nFormat": true,
       "type": "Connector",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/plugin/dolphindb.svg",
@@ -1322,10 +1322,10 @@
         "index",
         "foreignKey"
       ],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dolphindb/2026.0.0/metaforge-plugin-dolphindb-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dolphindb/2026.1.0/metaforge-plugin-dolphindb-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dolphindb/2026.0.0/metaforge-plugin-dolphindb-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-plugin-dolphindb-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-plugin-dolphindb/2026.1.0/metaforge-plugin-dolphindb-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-plugin-dolphindb-bin.tar.gz"
       }
     },
     {
@@ -1334,7 +1334,7 @@
       "description": "A CSV file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/csv.svg",
@@ -1342,10 +1342,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-csv/2026.0.0/metaforge-convert-csv-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-csv/2026.1.0/metaforge-convert-csv-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-csv/2026.0.0/metaforge-convert-csv-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/convert/metaforge-convert-csv-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-csv/2026.1.0/metaforge-convert-csv-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-csv-bin.tar.gz"
       }
     },
     {
@@ -1354,7 +1354,7 @@
       "description": "A TXT file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/txt.svg",
@@ -1362,10 +1362,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-txt/2026.0.0/metaforge-convert-txt-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-txt/2026.1.0/metaforge-convert-txt-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-txt/2026.0.0/metaforge-convert-txt-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/convert/metaforge-convert-txt-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-txt/2026.1.0/metaforge-convert-txt-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-txt-bin.tar.gz"
       }
     },
     {
@@ -1374,7 +1374,7 @@
       "description": "A JSON file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/json.svg",
@@ -1382,10 +1382,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-json/2026.0.0/metaforge-convert-json-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-json/2026.1.0/metaforge-convert-json-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-json/2026.0.0/metaforge-convert-json-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/convert/metaforge-convert-json-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-json/2026.1.0/metaforge-convert-json-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-json-bin.tar.gz"
       }
     },
     {
@@ -1394,7 +1394,7 @@
       "description": "A XML file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/xml.svg",
@@ -1402,10 +1402,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-xml/2026.0.0/metaforge-convert-xml-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-xml/2026.1.0/metaforge-convert-xml-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-xml/2026.0.0/metaforge-convert-xml-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/convert/metaforge-convert-xml-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-xml/2026.1.0/metaforge-convert-xml-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-xml-bin.tar.gz"
       }
     },
     {
@@ -1414,7 +1414,7 @@
       "description": "A multidimensional arrays file conversion plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Converter",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/convert/none.svg",
@@ -1422,10 +1422,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-none/2026.0.0/metaforge-convert-none-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-none/2026.1.0/metaforge-convert-none-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-none/2026.0.0/metaforge-convert-none-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/convert/metaforge-convert-none-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-convert-none/2026.1.0/metaforge-convert-none-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/convert/metaforge-convert-none-bin.tar.gz"
       }
     },
     {
@@ -1434,7 +1434,7 @@
       "description": "The built-in MetaForge executor for data sync and migration.",
       "i18nFormat": true,
       "type": "Executor",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/executor/local.svg",
@@ -1442,10 +1442,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-metaforge/2026.0.0/metaforge-executor-metaforge-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-metaforge/2026.1.0/metaforge-executor-metaforge-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-metaforge/2026.0.0/metaforge-executor-metaforge-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/executor/metaforge-executor-metaforge-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-metaforge/2026.1.0/metaforge-executor-metaforge-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/executor/metaforge-executor-metaforge-bin.tar.gz"
       }
     },
     {
@@ -1454,7 +1454,7 @@
       "description": "A Seatunnel execution plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Executor",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/executor/seatunnel.svg",
@@ -1462,10 +1462,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-seatunnel/2026.0.0/metaforge-executor-seatunnel-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-seatunnel/2026.1.0/metaforge-executor-seatunnel-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-seatunnel/2026.0.0/metaforge-executor-seatunnel-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/executor/metaforge-executor-seatunnel-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-executor-seatunnel/2026.1.0/metaforge-executor-seatunnel-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/executor/metaforge-executor-seatunnel-bin.tar.gz"
       }
     },
     {
@@ -1474,7 +1474,7 @@
       "description": "A local scheduling plugin for MetaForge.",
       "i18nFormat": true,
       "type": "Scheduler",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/scheduler/local.svg",
@@ -1482,10 +1482,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-scheduler-local/2026.0.0/metaforge-scheduler-local-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-scheduler-local/2026.1.0/metaforge-scheduler-local-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-scheduler-local/2026.0.0/metaforge-scheduler-local-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/scheduler/metaforge-scheduler-local-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-scheduler-local/2026.1.0/metaforge-scheduler-local-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/scheduler/metaforge-scheduler-local-bin.tar.gz"
       }
     },
     {
@@ -1494,7 +1494,7 @@
       "description": "A local file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/local.svg",
@@ -1502,10 +1502,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-local/2026.0.0/metaforge-fs-local-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-local/2026.1.0/metaforge-fs-local-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-local/2026.0.0/metaforge-fs-local-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/fs/metaforge-fs-local-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-local/2026.1.0/metaforge-fs-local-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-local-bin.tar.gz"
       }
     },
     {
@@ -1514,7 +1514,7 @@
       "description": "A Qiniu file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/qiniu.svg",
@@ -1522,10 +1522,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-qiniu/2026.0.0/metaforge-fs-qiniu-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-qiniu/2026.1.0/metaforge-fs-qiniu-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-qiniu/2026.0.0/metaforge-fs-qiniu-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/fs/metaforge-fs-qiniu-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-qiniu/2026.1.0/metaforge-fs-qiniu-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-qiniu-bin.tar.gz"
       }
     },
     {
@@ -1534,7 +1534,7 @@
       "description": "A Ali OSS file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/alioss.svg",
@@ -1542,10 +1542,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-alioss/2026.0.0/metaforge-fs-alioss-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-alioss/2026.1.0/metaforge-fs-alioss-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-alioss/2026.0.0/metaforge-fs-alioss-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/fs/metaforge-fs-alioss-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-alioss/2026.1.0/metaforge-fs-alioss-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-alioss-bin.tar.gz"
       }
     },
     {
@@ -1554,7 +1554,7 @@
       "description": "A Tencent COS file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/tencent-cos.svg",
@@ -1562,10 +1562,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-tencent-cos/2026.0.0/metaforge-fs-tencent-cos-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-tencent-cos/2026.1.0/metaforge-fs-tencent-cos-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-tencent-cos/2026.0.0/metaforge-fs-tencent-cos-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/fs/metaforge-fs-tencent-cos-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-tencent-cos/2026.1.0/metaforge-fs-tencent-cos-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-tencent-cos-bin.tar.gz"
       }
     },
     {
@@ -1574,7 +1574,7 @@
       "description": "A Amazon S3 file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/amazon-s3.svg",
@@ -1582,10 +1582,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-amazon-s3/2026.0.0/metaforge-fs-amazon-s3-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-amazon-s3/2026.1.0/metaforge-fs-amazon-s3-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-amazon-s3/2026.0.0/metaforge-fs-amazon-s3-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/fs/metaforge-fs-amazon-s3-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-amazon-s3/2026.1.0/metaforge-fs-amazon-s3-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-amazon-s3-bin.tar.gz"
       }
     },
     {
@@ -1594,7 +1594,7 @@
       "description": "A Minio file system plugin for MetaForge.",
       "i18nFormat": true,
       "type": "FileSystem",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "logo": "http://devlive-cdn.oss-cn-beijing.aliyuncs.com/applications/metaforge/resources/logo/fs/minio.svg",
@@ -1602,10 +1602,10 @@
         "ALL"
       ],
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-minio/2026.0.0/metaforge-fs-minio-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-minio/2026.1.0/metaforge-fs-minio-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-minio/2026.0.0/metaforge-fs-minio-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/fs/metaforge-fs-minio-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-fs-minio/2026.1.0/metaforge-fs-minio-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/fs/metaforge-fs-minio-bin.tar.gz"
       }
     },
     {
@@ -1614,14 +1614,14 @@
       "description": "Sends MetaForge notifications to DingTalk group robots.",
       "i18nFormat": false,
       "type": "Notify",
-      "version": "2026.0.0",
+      "version": "2026.1.0",
       "requires": "2026.0.0",
       "author": "metaforge-community",
       "features": [],
-      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-notify-dingtalk/2026.0.0/metaforge-notify-dingtalk-2026.0.0-bin.tar.gz",
+      "url": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-notify-dingtalk/2026.1.0/metaforge-notify-dingtalk-2026.1.0-bin.tar.gz",
       "sources": {
-        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-notify-dingtalk/2026.0.0/metaforge-notify-dingtalk-2026.0.0-bin.tar.gz",
-        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.0.0/plugin/metaforge-notify-dingtalk-bin.tar.gz"
+        "maven": "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-notify-dingtalk/2026.1.0/metaforge-notify-dingtalk-2026.1.0-bin.tar.gz",
+        "cdn": "https://cdn.north.devlive.org/applications/metaforge/plugins/2026.1.0/plugin/metaforge-notify-dingtalk-bin.tar.gz"
       }
     }
   ]

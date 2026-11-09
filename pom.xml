@@ -4,7 +4,7 @@
     <groupId>org.devlive.metaforge</groupId>
     <artifactId>metaforge</artifactId>
     <packaging>pom</packaging>
-    <version>2026.0.0</version>
+    <version>2026.1.0</version>
 
     <modules>
         <module>client/metaforge-cli</module>
