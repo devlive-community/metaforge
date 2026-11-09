@@ -6,18 +6,18 @@ config:
   toc: false
 ---
 
-当前的 metaforge 版本是 <img class="inline-flex" src="https://img.shields.io/github/v/release/EdurtIO/metaforge.svg" />。有关详细信息，请参阅 [发行说明](/zh-CN/reference/2025.1.0.html)。
+当前的 metaforge 版本是 <img class="inline-flex" src="https://img.shields.io/github/v/release/EdurtIO/metaforge.svg" />。有关详细信息，请参阅 [发行说明](/zh-CN/release/2026.0.0.html)。
 
 ::: grid cols-3 gap-6
 - #### 服务器软件包
   利用 `.tar.gz` 包手动部署。查看 [安装 metaforge](/zh-CN/reference/get-started/install.html) 以获取完整的安装说明。
 
-  !btn[metaforge-server-2025.1.0-bin.tar.gz](https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-server/2025.1.0/metaforge-server-2025.1.0-bin.tar.gz)
+  !btn[metaforge-server-2026.0.0-bin.tar.gz](https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-server/2026.0.0/metaforge-server-2026.0.0-bin.tar.gz)
 
 - #### 命令行客户端
   您可以使用交互式运行查询 [command line interface](/zh-CN/reference/clients/cli.html).
 
-  !btn[metaforge-client-cli-2025.1.0.jar](https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-client-cli/2025.1.0/metaforge-client-cli-2025.1.0.jar)
+  !btn[metaforge-client-cli-2026.0.0.jar](https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-client-cli/2026.0.0/metaforge-client-cli-2026.0.0.jar)
 
 - #### 更多
   查看 [The source code to install](/zh-CN/reference/get-started/install.md#the-source-code-to-install) 以获取完整的安装说明。
