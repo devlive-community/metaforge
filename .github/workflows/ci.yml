@@ -109,6 +109,16 @@ jobs:
           kill $pruner 2>/dev/null || true
           exit $status
 
+      # The suite log is too large for the log stream (it gets cut around 30-100 MB),
+      # so the per-module surefire reports are the reliable failure evidence.
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: surefire-java
+          path: '**/target/surefire-reports/*'
+          retention-days: 7
+
   # Runs the metadata persistence suite (changelog, entity mapping, filters, setup install) against
   # every database the setup wizard offers. Databases start in Testcontainers.
   persistence:
