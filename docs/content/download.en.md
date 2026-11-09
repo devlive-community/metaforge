@@ -12,7 +12,7 @@ The current metaforge release is version <img class="inline-flex" src="https://i
 - #### Server packages
   Deploy manually with the `.tar.gz` package. See [Install MetaForge](/en/reference/get-started/install.html) for complete installation instructions.
 
-  !btn[metaforge-server-2026.0.0-bin.tar.gz](https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge-server/2026.0.0/metaforge-server-2026.0.0-bin.tar.gz)
+  !btn[metaforge-server-2026.0.0-bin.tar.gz](https://github.com/devlive-community/metaforge/releases/download/2026.0.0/metaforge-server-2026.0.0-bin.tar.gz)
 
 - #### Command-line client
   You can run queries interactively [command line interface](/en/reference/clients/cli.html).
