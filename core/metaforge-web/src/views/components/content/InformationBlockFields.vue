@@ -9,6 +9,8 @@
         <MfInputNumber v-if="numeric" :model-value="reportNumber(item.value)" :aria-label="$t(key + fields.value)"
                        :min="0" :max="kind === 'ratingCards' ? 5 : undefined" :step="kind === 'ratingCards' ? .1 : 1" decimal-only commit-on-change
                        @update:model-value="value => patch(index, { value: value === undefined ? '' : String(value) })"/>
+        <MfTextarea v-else-if="kind === 'configDiffCards'" :model-value="item.value" :aria-label="$t(key + fields.value)" :rows="3" :maxlength="2000"
+                    @update:model-value="value => patch(index, { value })"/>
         <MfInput v-else :model-value="item.value" :aria-label="$t(key + fields.value)" :maxlength="fields.value === 'url' ? 2048 : 250"
                  @update:model-value="value => patch(index, { value })"/>
       </MfFormItem>
@@ -16,6 +18,8 @@
         <MfInputNumber v-if="kind === 'capacityGrid'" :model-value="reportNumber(item.secondary)" :aria-label="$t(key + fields.secondary)"
                        :min="0" decimal-only commit-on-change
                        @update:model-value="value => patch(index, { secondary: value === undefined ? '' : String(value) })"/>
+        <MfTextarea v-else-if="kind === 'configDiffCards'" :model-value="item.secondary" :aria-label="$t(key + fields.secondary)" :rows="3" :maxlength="2000"
+                    @update:model-value="secondary => patch(index, { secondary })"/>
         <MfInput v-else :model-value="item.secondary" :aria-label="$t(key + fields.secondary)" :maxlength="250"
                  @update:model-value="secondary => patch(index, { secondary })"/>
       </MfFormItem>

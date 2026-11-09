@@ -79,22 +79,28 @@ function chartExample(kind: DashboardWidgetKind, now: number): QueryChartConfigu
   } } }
 }
 
-function informationExamples(kind: DashboardWidgetKind, t: Translate): InformationItem[] | undefined {
+function informationExamples(kind: DashboardWidgetKind, t: Translate, art: readonly [string, string]): InformationItem[] | undefined {
   if (!isInformationBlock(kind)) return
   const key = 'dashboard.example.'
   const schema = informationFields[kind]
   const values: Record<string, string[]> = {
-    url: ['https://example.com', 'https://example.org'],
+    url: kind === 'evidenceGallery' || kind === 'imageBadges' ? [...art] : ['https://example.com', 'https://example.org'],
     email: ['ada@example.com', 'kai@example.com'],
     ratingValue: ['4.6', '3.8'], capacityUsed: ['64', '85'], capacityLimit: ['100', '120'],
     windowStart: ['09:00', '14:00'], windowEnd: ['10:30', '15:00'], deployedVersion: ['v2.4.0', 'v2.5.0'],
     assetId: ['AS-021', 'AS-036'], owner: ['Ada', 'Kai'], reviewer: ['Mina', 'Kai'], recipient: ['Kai', 'Ada'],
     shift: ['09:00–13:00', '13:00–17:00'], snippetLanguage: ['SQL', 'JSON'],
+    coverageSlot: ['09:00–13:00', '13:00–17:00'], primaryContact: ['Ada', 'Kai'], backupContact: ['Mina', 'Ada'],
+    dataType: ['UUID', 'DECIMAL'], dataUnit: ['—', 'ms'], dueLabel: ['10:30', '15:00'], dateLabel: ['2026-10-25', '2026-10-26'],
+    endpointPath: ['/api/reports', '/api/metrics'], httpMethod: ['GET', 'POST'],
+    previousConfig: ['{ "retries": 1 }', '{ "timeout": 200 }'], currentConfig: ['{ "retries": 3 }', '{ "timeout": 500 }'],
+    hypothesis: [t(key + 'description'), t(key + 'description')], observation: ['+12%', '+8%'],
   }
   const cell = (field: string | undefined, index: number, fallback: string) => field ? values[field]?.[index] ?? fallback : ''
   return [0, 1].map(index => ({
     id: 'entry-' + index,
-    title: kind === 'faqList' ? t(key + 'question', { number: index + 1 }) : t(key + 'entry', { number: index + 1 }),
+    title: kind === 'dataDictionary' ? ['request_id', 'latency_ms'][index] : kind === 'faqList' || kind === 'reviewQuestions'
+      ? t(key + 'question', { number: index + 1 }) : t(key + 'entry', { number: index + 1 }),
     value: cell('value' in schema ? schema.value : undefined, index, index === 0 ? '64' : '85'),
     secondary: cell('secondary' in schema ? schema.secondary : undefined, index, index === 0 ? '80' : '100'),
     detail: kind === 'copySnippets' ? index === 0 ? 'SELECT region, SUM(value) FROM sample GROUP BY region;' : '{ "status": "ready" }'
@@ -118,7 +124,7 @@ export function screenComponentExample(kind: DashboardWidgetKind, title: string,
     deadline: { date: new Date(now + DAY * 2).toISOString().slice(0, 10), hour: 12, minute: 0 },
     contentOptions: dashboardContentSettings({ autoplay: kind === 'textTicker', attribution: t(key + 'sampleData') }),
     dataOptions: data, layoutOptions: dashboardLayoutSettings({ columns: 2, gap: 5, padding: 5, itemHeight: 56, pageSize: 4, minWidth: 90 }),
-    informationItems: informationExamples(kind, t),
+    informationItems: informationExamples(kind, t, art),
     operationsOptions: dashboardOperationsSettings(kind, { labelField: 'Task', statusField: 'Status', detailsField: 'Region', endField: 'End', threshold: 60 }),
     businessOptions: dashboardBusinessSettings({ groupField: kind === 'stageConversion' ? 'Stage' : 'Region', subgroupField: 'Category',
       referenceField: 'Target', entityField: 'Entity', stageOrder: stages }),

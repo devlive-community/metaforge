@@ -4,6 +4,8 @@ export const informationBlockKinds = [
   'noticeBoard', 'capacityGrid', 'escalationPaths', 'ratingCards',
   'glossaryIndex', 'statusBoard', 'incidentTimeline', 'teamHandoff', 'dependencyRegister',
   'acceptanceChecklist', 'policyCards', 'assetInventory', 'environmentCards', 'copySnippets',
+  'operatingHours', 'onCallCoverage', 'dataDictionary', 'deliveryQueue', 'approvalTrail', 'evidenceGallery',
+  'apiEndpointList', 'communicationChannels', 'releaseReadiness', 'reviewQuestions', 'experimentNotes', 'configDiffCards',
 ] as const
 export type InformationBlockKind = typeof informationBlockKinds[number]
 export const informationTones = ['info', 'success', 'warning', 'danger'] as const
@@ -25,6 +27,7 @@ export function isInformationBlock(kind: unknown): kind is InformationBlockKind 
 export function isTabularInformationBlock(kind: unknown) {
   return kind === 'riskRegister' || kind === 'shiftRoster' || kind === 'decisionLog' || kind === 'maintenanceSchedule'
     || kind === 'teamHandoff' || kind === 'dependencyRegister' || kind === 'assetInventory'
+    || kind === 'operatingHours' || kind === 'onCallCoverage' || kind === 'dataDictionary' || kind === 'apiEndpointList'
 }
 
 export function readInformationItems(value: unknown): InformationItem[] {
@@ -37,7 +40,7 @@ export function readInformationItems(value: unknown): InformationItem[] {
     while (ids.has(id)) id += '-'
     ids.add(id)
     return [{
-      id, title: text(item.title, 160), value: text(item.value, 2048), secondary: text(item.secondary, 250) || undefined, detail: text(item.detail, 2000),
+      id, title: text(item.title, 160), value: text(item.value, 2048), secondary: text(item.secondary, 2000) || undefined, detail: text(item.detail, 2000),
       tone: informationTones.find(tone => tone === item.tone) ?? 'info',
     }]
   })
@@ -72,6 +75,18 @@ export const informationFields = {
   assetInventory: { title: 'assetName', value: 'assetId', secondary: 'assetLocation', tone: 'assetStatus', detail: 'description' },
   environmentCards: { title: 'environment', value: 'url', secondary: 'deployedVersion', detail: 'description' },
   copySnippets: { title: 'snippetName', value: 'snippetLanguage', detail: 'snippetText' },
+  operatingHours: { title: 'service', value: 'windowStart', secondary: 'windowEnd', detail: 'serviceTimezone' },
+  onCallCoverage: { title: 'coverageSlot', value: 'primaryContact', secondary: 'backupContact', detail: 'nextAction' },
+  dataDictionary: { title: 'fieldName', value: 'dataType', secondary: 'dataUnit', detail: 'definition' },
+  deliveryQueue: { title: 'deliverable', value: 'owner', secondary: 'dueLabel', tone: 'workStatus', detail: 'nextAction' },
+  approvalTrail: { title: 'decision', value: 'reviewer', secondary: 'dateLabel', tone: 'decisionStatus', detail: 'rationale' },
+  evidenceGallery: { title: 'evidence', value: 'url', tone: 'checkResult', detail: 'description' },
+  apiEndpointList: { title: 'endpointName', value: 'endpointPath', secondary: 'httpMethod', detail: 'description' },
+  communicationChannels: { title: 'channelName', value: 'url', secondary: 'owner', detail: 'description' },
+  releaseReadiness: { title: 'releaseGate', value: 'owner', tone: 'readinessStatus', detail: 'evidence' },
+  reviewQuestions: { title: 'question', tone: 'decisionStatus', detail: 'answer' },
+  experimentNotes: { title: 'experimentName', value: 'hypothesis', secondary: 'observation', detail: 'context' },
+  configDiffCards: { title: 'configurationName', value: 'previousConfig', secondary: 'currentConfig', detail: 'context' },
 } satisfies Record<InformationBlockKind, Partial<Record<keyof Omit<InformationItem, 'id'>, string>>>
 
 export function informationResourceUrl(value: string) {
@@ -80,6 +95,10 @@ export function informationResourceUrl(value: string) {
     if (url.protocol === 'https:' || url.protocol === 'http:') return url.href
   } catch { /* Leave the resource inactive until the address is valid. */ }
   return ''
+}
+
+export function informationImageUrl(value: string) {
+  return /^\/(?![\/\\])/.test(value) && !/[\r\n\t]/.test(value) ? value : informationResourceUrl(value)
 }
 
 export function informationMailUrl(value: string) {

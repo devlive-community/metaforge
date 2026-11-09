@@ -11,7 +11,7 @@
     </dl>
     <MfEmpty v-if="!filtered.length" size="sm" :title="$t(key + 'noGlossaryMatch')"/>
   </div>
-  <div v-else-if="kind === 'statusBoard'" class="grid h-full auto-rows-min grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-2 overflow-auto">
+  <div v-else-if="kind === 'statusBoard' || kind === 'deliveryQueue'" class="grid h-full auto-rows-min grid-cols-[repeat(auto-fit,minmax(min(100%,9rem),1fr))] gap-2 overflow-auto">
     <section v-for="column in columns" :key="column.status" class="min-w-0 space-y-2 rounded-mf-md bg-surface-hover p-2">
       <h4 class="flex flex-wrap items-center justify-between gap-2 text-sm font-semibold">
         <MfTag :variant="column.status" size="sm">{{ $t(key + 'workStatus.' + column.status) }}</MfTag><span class="tabular-nums">{{ column.items.length }}</span>
@@ -20,15 +20,16 @@
         <li v-for="item in column.items" :key="item.id" class="rounded-mf-sm bg-surface p-2">
           <p class="break-words text-sm font-medium">{{ item.title }}</p>
           <p v-if="item.value" class="break-words text-xs text-content-tertiary">{{ item.value }}</p>
+          <p v-if="kind === 'deliveryQueue' && item.secondary" class="break-words text-xs text-content-secondary">{{ $t(key + 'dueLabel') }} · {{ item.secondary }}</p>
           <p v-if="item.detail" class="mt-1 whitespace-pre-wrap break-words text-xs text-content-secondary">{{ item.detail }}</p>
         </li>
       </ul>
     </section>
   </div>
-  <div v-else-if="kind === 'acceptanceChecklist'" class="flex h-full min-h-0 flex-col gap-2">
+  <div v-else-if="kind === 'acceptanceChecklist' || kind === 'releaseReadiness'" class="flex h-full min-h-0 flex-col gap-2">
     <div class="shrink-0 space-y-1 text-xs text-content-secondary">
-      <p>{{ $t(key + 'checksPassed', { count: passed, total: items.length }) }}</p>
-      <ProgressMeter :value="passed" :target="items.length" :label="$t(key + 'acceptanceProgress')"/>
+      <p>{{ $t(key + (kind === 'releaseReadiness' ? 'gatesReady' : 'checksPassed'), { count: passed, total: items.length }) }}</p>
+      <ProgressMeter :value="passed" :target="items.length" :label="$t(key + (kind === 'releaseReadiness' ? 'releaseGate' : 'acceptanceProgress'))"/>
     </div>
     <ul class="space-y-2 overflow-auto">
       <li v-for="item in items" :key="item.id" class="flex gap-2 rounded-mf-md border border-line p-2">
@@ -37,7 +38,7 @@
         <div class="min-w-0 flex-1">
           <div class="flex flex-wrap items-center justify-between gap-1">
             <strong class="break-words text-sm">{{ item.title }}</strong>
-            <MfTag :variant="item.tone" size="sm">{{ $t(key + 'checkResult.' + item.tone) }}</MfTag>
+            <MfTag :variant="item.tone" size="sm">{{ $t(key + (kind === 'releaseReadiness' ? 'readinessStatus.' : 'checkResult.') + item.tone) }}</MfTag>
           </div>
           <p v-if="item.value" class="break-words text-xs text-content-tertiary">{{ item.value }}</p>
           <p v-if="item.detail" class="mt-1 whitespace-pre-wrap break-words text-xs text-content-secondary">{{ item.detail }}</p>
@@ -45,6 +46,18 @@
       </li>
     </ul>
   </div>
+  <ul v-else-if="kind === 'configDiffCards'" class="h-full space-y-2 overflow-auto">
+    <li v-for="item in items" :key="item.id" class="rounded-mf-md border border-line p-2">
+      <strong class="text-sm">{{ item.title }}</strong>
+      <div class="mt-1 grid grid-cols-[repeat(auto-fit,minmax(min(100%,8rem),1fr))] gap-2">
+        <div v-for="(snippet, index) in [item.value, item.secondary]" :key="index" class="min-w-0">
+          <p class="text-xs text-content-secondary">{{ $t(key + (index === 0 ? 'previousConfig' : 'currentConfig')) }}</p>
+          <pre class="select-text overflow-auto rounded-mf-sm p-2 text-xs" :class="index === 0 ? 'bg-surface-hover' : 'bg-primary/8'"><code>{{ snippet || '—' }}</code></pre>
+        </div>
+      </div>
+      <p v-if="item.detail" class="mt-1 whitespace-pre-wrap break-words text-xs text-content-secondary">{{ item.detail }}</p>
+    </li>
+  </ul>
   <ul v-else class="h-full space-y-2 overflow-auto">
     <li v-for="item in items" :key="item.id" class="rounded-mf-md border border-line p-2">
       <div class="mb-1 flex flex-wrap items-center justify-between gap-1">
@@ -68,7 +81,10 @@ import { MfMessage } from 'metaforge-ui'
 import { type InformationItem } from '@/model/information-block'
 import ProgressMeter from '@/views/components/visual/metrics/ProgressMeter.vue'
 
-const props = defineProps<{ kind: 'glossaryIndex' | 'statusBoard' | 'acceptanceChecklist' | 'copySnippets'; items: readonly InformationItem[] }>()
+const props = defineProps<{
+  kind: 'glossaryIndex' | 'statusBoard' | 'acceptanceChecklist' | 'copySnippets' | 'deliveryQueue' | 'releaseReadiness' | 'configDiffCards'
+  items: readonly InformationItem[]
+}>()
 const { t } = useI18n()
 const key = 'informationBlock.'
 const keyword = ref('')

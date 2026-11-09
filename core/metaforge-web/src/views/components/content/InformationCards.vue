@@ -15,15 +15,17 @@
   </ul>
   <ul v-else class="grid h-full auto-rows-min grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-2 overflow-auto">
     <li v-for="{ item, capacity, score } in cards" :key="item.id" class="min-w-0 rounded-mf-md border border-line bg-surface p-3">
-      <div v-if="kind === 'imageBadges'" class="mb-2 grid h-14 place-items-center rounded-mf-sm bg-surface-hover">
-        <img v-if="resourceUrl(item.value) && !failedImages.has(item.value)" :src="resourceUrl(item.value)" alt=""
-             class="h-full max-h-14 w-full object-contain p-1" loading="lazy" decoding="async" @error="failedImages.add(item.value)">
+      <div v-if="kind === 'imageBadges' || kind === 'evidenceGallery'"
+           class="mb-2 grid place-items-center overflow-hidden rounded-mf-sm bg-surface-hover" :class="kind === 'evidenceGallery' ? 'h-20' : 'h-14'">
+        <img v-if="imageUrl(item.value) && !failedImages.has(item.value)" :src="imageUrl(item.value)" alt=""
+             class="size-full object-contain p-1" loading="lazy" decoding="async" @error="failedImages.add(item.value)">
         <ImageIcon v-else :size="22" class="text-content-tertiary" aria-hidden="true"/>
       </div>
       <p class="mb-1 break-words text-sm font-semibold">{{ item.title }}</p>
-      <div v-if="kind === 'comparisonCards'" class="grid grid-cols-2 gap-2">
+      <MfTag v-if="kind === 'evidenceGallery'" :variant="item.tone" size="sm">{{ $t(key + 'checkResult.' + item.tone) }}</MfTag>
+      <div v-if="kind === 'comparisonCards' || kind === 'experimentNotes'" class="grid grid-cols-2 gap-2">
         <div v-for="(entry, index) in [item.value, item.secondary]" :key="index" class="min-w-0 rounded-mf-sm bg-surface-hover px-2 py-1">
-          <p class="text-xs text-content-tertiary">{{ $t(key + (index === 0 ? 'referenceValue' : 'comparisonValue')) }}</p>
+          <p class="text-xs text-content-tertiary">{{ $t(key + comparisonLabels[index]) }}</p>
           <p class="break-words font-semibold tabular-nums">{{ entry || '—' }}</p>
         </div>
       </div>
@@ -55,15 +57,16 @@
 <script setup lang="ts">
 import { ArrowUpRight, ImageIcon, Star } from '@lucide/vue'
 import { computed, reactive } from 'vue'
-import { informationResourceUrl as resourceUrl, type InformationItem } from '@/model/information-block'
+import { informationImageUrl as imageUrl, informationResourceUrl as resourceUrl, type InformationItem } from '@/model/information-block'
 import { reportNumber } from '@/model/report-values'
 import ProgressMeter from '@/views/components/visual/metrics/ProgressMeter.vue'
 
 const props = defineProps<{
-  kind: 'linkButtonBar' | 'imageBadges' | 'comparisonCards' | 'noticeBoard' | 'capacityGrid' | 'ratingCards'
+  kind: 'linkButtonBar' | 'imageBadges' | 'comparisonCards' | 'noticeBoard' | 'capacityGrid' | 'ratingCards' | 'evidenceGallery' | 'experimentNotes'
   items: readonly InformationItem[]
 }>()
 const key = 'informationBlock.'
+const comparisonLabels = computed(() => props.kind === 'experimentNotes' ? ['hypothesis', 'observation'] : ['referenceValue', 'comparisonValue'])
 const failedImages = reactive(new Set<string>())
 const cards = computed(() => props.items.map(item => ({
   item, capacity: props.kind === 'capacityGrid' ? capacity(item) : undefined,

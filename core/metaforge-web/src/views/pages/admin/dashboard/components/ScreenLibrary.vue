@@ -223,6 +223,12 @@ const toolGroups = [
     { kind: 'dependencyRegister', icon: Network }, { kind: 'acceptanceChecklist', icon: ClipboardCheck },
     { kind: 'policyCards', icon: ListOrdered }, { kind: 'assetInventory', icon: Table2 },
     { kind: 'environmentCards', icon: Link }, { kind: 'copySnippets', icon: Copy },
+    { kind: 'operatingHours', icon: Clock }, { kind: 'onCallCoverage', icon: CalendarClock },
+    { kind: 'dataDictionary', icon: List }, { kind: 'deliveryQueue', icon: LayoutGrid },
+    { kind: 'approvalTrail', icon: ClipboardCheck }, { kind: 'evidenceGallery', icon: Image },
+    { kind: 'apiEndpointList', icon: Terminal }, { kind: 'communicationChannels', icon: MessageSquare },
+    { kind: 'releaseReadiness', icon: ClipboardCheck }, { kind: 'reviewQuestions', icon: MessageSquare },
+    { kind: 'experimentNotes', icon: Columns2 }, { kind: 'configDiffCards', icon: Terminal },
   ] },
   { title: 'contentTools', icon: Type, items: [
     { kind: 'text', icon: Type }, { kind: 'clock', icon: Clock }, { kind: 'heading', icon: Heading },

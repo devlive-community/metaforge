@@ -1,16 +1,25 @@
 <template>
   <MfEmpty v-if="!entries.length" size="sm" class="h-full" :title="$t(key + 'empty')"/>
-  <MfTable v-else-if="tabular" fill class="h-full" row-key="id" :columns="columns" :data-source="entries"
-           :density="tableAppearance?.density ?? 'compact'" :striped="tableAppearance?.striped" :bordered="tableAppearance?.bordered ?? true">
-    <template #cell-title="{ record }"><EllipsisCell :text="record.title"/></template>
-    <template #cell-value="{ record }"><EllipsisCell :text="record.value"/></template>
-    <template #cell-secondary="{ record }"><EllipsisCell :text="record.secondary ?? ''"/></template>
-    <template #cell-tone="{ record }"><MfTag size="sm" :variant="record.tone">{{ $t(key + tableTone + '.' + record.tone) }}</MfTag></template>
-    <template #cell-detail="{ record }"><EllipsisCell :text="record.detail"/></template>
-  </MfTable>
-  <div v-else-if="kind === 'faqList'" class="flex h-full flex-col gap-2 overflow-auto">
-    <details v-for="item in entries" :key="item.id" class="rounded-mf-md border border-line bg-surface">
-      <summary class="cursor-pointer break-words px-3 py-2 text-sm font-semibold">{{ item.title }}</summary>
+  <div v-else-if="tabular" class="flex h-full min-h-0 flex-col gap-2">
+    <MfInput v-if="kind === 'dataDictionary'" v-model="search" class="shrink-0"
+             :aria-label="$t(key + 'searchDictionary')" :placeholder="$t(key + 'searchDictionary')" clearable/>
+    <MfTable fill class="min-h-0 flex-1" row-key="id" :columns="columns" :data-source="tableEntries"
+             :density="tableAppearance?.density ?? 'compact'" :striped="tableAppearance?.striped" :bordered="tableAppearance?.bordered ?? true">
+      <template #cell-title="{ record }"><EllipsisCell :text="record.title"/></template>
+      <template #cell-value="{ record }"><EllipsisCell :text="record.value"/></template>
+      <template #cell-secondary="{ record }">
+        <MfTag v-if="kind === 'apiEndpointList' && record.secondary" size="sm">{{ record.secondary }}</MfTag>
+        <EllipsisCell v-else :text="record.secondary ?? ''"/>
+      </template>
+      <template #cell-tone="{ record }"><MfTag size="sm" :variant="record.tone">{{ $t(key + tableTone + '.' + record.tone) }}</MfTag></template>
+      <template #cell-detail="{ record }"><EllipsisCell :text="record.detail"/></template>
+    </MfTable>
+  </div>
+  <div v-else-if="kind === 'faqList' || kind === 'reviewQuestions'" class="flex h-full flex-col gap-2 overflow-auto">
+    <details v-for="(item, index) in entries" :key="item.id" :open="kind === 'reviewQuestions' && index === 0" class="rounded-mf-md border border-line bg-surface">
+      <summary class="cursor-pointer break-words px-3 py-2 text-sm font-semibold">
+        {{ item.title }} <MfTag v-if="kind === 'reviewQuestions'" :variant="item.tone" size="sm">{{ $t(key + 'decisionStatus.' + item.tone) }}</MfTag>
+      </summary>
       <p class="whitespace-pre-wrap break-words px-3 pb-3 text-sm text-content-secondary">{{ item.detail }}</p>
     </details>
   </div>
@@ -20,9 +29,10 @@
     </li>
     <li v-for="(item, index) in entries" :key="item.id" class="border-l-2 border-primary/45 py-0.5 pl-3">
       <span v-if="kind === 'escalationPaths'" class="block text-xs text-content-tertiary">{{ $t(key + 'escalationStep', { number: index + 1 }) }}</span>
+      <span v-else-if="kind === 'approvalTrail'" class="block break-words text-xs text-content-tertiary">{{ [item.secondary, item.value].filter(Boolean).join(' · ') }}</span>
       <span v-else-if="item.value" class="block text-xs text-content-tertiary">{{ item.value }}</span>
       <p class="break-words text-sm font-semibold">{{ item.title }}</p>
-      <MfTag v-if="kind === 'milestoneTracker' || kind === 'incidentTimeline'" size="sm" :variant="item.tone">{{ $t(key + tableTone + '.' + item.tone) }}</MfTag>
+      <MfTag v-if="kind === 'milestoneTracker' || kind === 'incidentTimeline' || kind === 'approvalTrail'" size="sm" :variant="item.tone">{{ $t(key + tableTone + '.' + item.tone) }}</MfTag>
       <p v-if="item.detail" class="whitespace-pre-wrap break-words text-sm text-content-secondary">{{ item.detail }}</p>
       <a v-if="kind === 'escalationPaths' && mailUrl(item.value)" :href="mailUrl(item.value)" class="break-all text-xs text-primary hover:underline">{{ item.value }}</a>
     </li>
@@ -43,11 +53,11 @@
         <strong class="break-all text-sm">{{ item.title }}</strong>
         <MfTag v-if="kind === 'serviceStatus'" size="sm" :variant="item.tone">{{ $t(key + 'status.' + item.tone) }}</MfTag>
       </div>
-      <p v-if="(kind === 'policyCards' || kind === 'environmentCards') && item.secondary" class="text-xs text-content-tertiary">
-        {{ $t(key + (kind === 'policyCards' ? 'owner' : 'deployedVersion')) }} · {{ item.secondary }}
+      <p v-if="(kind === 'policyCards' || kind === 'environmentCards' || kind === 'communicationChannels') && item.secondary" class="text-xs text-content-tertiary">
+        {{ $t(key + (kind === 'environmentCards' ? 'deployedVersion' : 'owner')) }} · {{ item.secondary }}
       </p>
       <p v-if="item.detail" class="whitespace-pre-wrap break-words text-xs text-content-secondary">{{ item.detail }}</p>
-      <a v-if="(kind === 'resourceCards' || kind === 'policyCards' || kind === 'environmentCards') && resourceUrl(item.value)" :href="resourceUrl(item.value)"
+      <a v-if="(kind === 'resourceCards' || kind === 'policyCards' || kind === 'environmentCards' || kind === 'communicationChannels') && resourceUrl(item.value)" :href="resourceUrl(item.value)"
          target="_blank" rel="noopener noreferrer" class="mt-1 inline-flex items-center gap-1 text-xs text-primary hover:underline">
         {{ $t(key + 'openResource') }}<ArrowUpRight :size="13"/>
       </a>
@@ -58,7 +68,7 @@
 
 <script setup lang="ts">
 import { ArrowUpRight } from '@lucide/vue'
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { informationFields, informationMailUrl as mailUrl, informationResourceUrl as resourceUrl, isTabularInformationBlock,
   type InformationBlockKind, type InformationItem } from '@/model/information-block'
@@ -71,18 +81,24 @@ const props = defineProps<{ kind: InformationBlockKind; items: readonly Informat
 const { t } = useI18n()
 const key = 'informationBlock.'
 const entries = computed(() => props.items.filter(item => item.title.trim()))
+const search = ref('')
+const tableEntries = computed(() => {
+  const term = props.kind === 'dataDictionary' ? search.value.trim().toLocaleLowerCase() : ''
+  return term ? entries.value.filter(item => [item.title, item.value, item.secondary, item.detail]
+    .some(value => value?.toLocaleLowerCase().includes(term))) : entries.value
+})
 const tabular = computed(() => isTabularInformationBlock(props.kind))
 const tableTone = computed(() => {
   const fields = informationFields[props.kind]
   return 'tone' in fields ? fields.tone : 'severity'
 })
-const ordered = computed(() => ['releaseTimeline', 'milestoneTracker', 'escalationPaths', 'incidentTimeline'].includes(props.kind))
+const ordered = computed(() => ['releaseTimeline', 'milestoneTracker', 'escalationPaths', 'incidentTimeline', 'approvalTrail'].includes(props.kind))
 const columns = computed(() => Object.entries(informationFields[props.kind]).map(([dataIndex, label]) => ({ dataIndex, title: t(key + label) })))
-const cardKinds = ['linkButtonBar', 'imageBadges', 'comparisonCards', 'noticeBoard', 'capacityGrid', 'ratingCards'] as const
+const cardKinds = ['linkButtonBar', 'imageBadges', 'comparisonCards', 'noticeBoard', 'capacityGrid', 'ratingCards', 'evidenceGallery', 'experimentNotes'] as const
 function isInformationCard(kind: InformationBlockKind): kind is typeof cardKinds[number] {
   return cardKinds.some(card => card === kind)
 }
-const boardKinds = ['glossaryIndex', 'statusBoard', 'acceptanceChecklist', 'copySnippets'] as const
+const boardKinds = ['glossaryIndex', 'statusBoard', 'acceptanceChecklist', 'copySnippets', 'deliveryQueue', 'releaseReadiness', 'configDiffCards'] as const
 function isInformationBoard(kind: InformationBlockKind): kind is typeof boardKinds[number] {
   return boardKinds.some(board => board === kind)
 }
