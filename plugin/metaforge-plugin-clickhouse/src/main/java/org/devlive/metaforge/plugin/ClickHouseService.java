@@ -86,12 +86,14 @@ public class ClickHouseService
                 "\n" +
                 "    UNION ALL\n" +
                 "\n" +
-                "    -- 函数\n" +
+                "    -- 函数：只列用户定义的函数，内置函数（上千个）不属于任何库\n" +
+                "    -- Functions: user-defined ones only; the thousand-plus built-ins belong to no database\n" +
                 "    SELECT\n" +
                 "        'function' as type_name,\n" +
                 "        name as object_name,\n" +
                 "        '' as object_comment\n" +
                 "    FROM system.functions\n" +
+                "    WHERE origin != 'System'\n" +
                 "\n" +
                 ") AS combined_objects\n" +
                 "ORDER BY\n" +

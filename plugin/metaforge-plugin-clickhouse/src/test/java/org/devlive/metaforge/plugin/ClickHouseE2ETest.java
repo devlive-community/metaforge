@@ -66,7 +66,10 @@ public class ClickHouseE2ETest
             Assert.assertTrue(column(ok("databases", service.getDatabases(configure)), "object_name").contains("e2e"));
 
             ok("create table", service.execute(configure, "CREATE TABLE e2e.items (id UInt32, name String) ENGINE = MergeTree ORDER BY id"));
-            Assert.assertTrue(column(ok("tables", service.getTables(configure, "e2e")), "object_name").contains("items"));
+            List<String> objects = column(ok("tables", service.getTables(configure, "e2e")), "object_name");
+            Assert.assertTrue(objects.contains("items"));
+            // Built-in functions are not objects of the database
+            Assert.assertFalse(objects.toString(), objects.contains("BIT_AND"));
             ok("insert", service.execute(configure, "INSERT INTO e2e.items VALUES (1, 'a'), (2, 'b')"));
             Assert.assertEquals("2", first(ok("count", service.execute(configure, "SELECT count() AS total FROM e2e.items"))));
 
