@@ -25,9 +25,7 @@ const MODULE_ROOTS = ['plugin', 'convert', 'executor', 'fs', 'scheduler', 'notif
 const DECLARATIONS = 'src/main/resources/org/devlive/metaforge/plugin'
 const CAPABILITIES = `${DECLARATIONS}/capabilities.json`
 const DESCRIPTOR = `${DECLARATIONS}/plugin.json`
-const MAVEN_BASE = 'https://repo1.maven.org/maven2'
 const CDN_BASE = 'https://cdn.north.devlive.org/applications/metaforge/plugins'
-const GROUP_PATH = 'org/devlive/metaforge'
 
 // Feature codes the store translates (store.feature.<code>). Each is offered
 // when the plugin declares any of the listed management capabilities.
@@ -112,7 +110,6 @@ async function main() {
   for (const { key, dir } of modules()) {
     const config = JSON.parse(readFileSync(join(dir, DESCRIPTOR), 'utf8'))
     if (typeof config.label !== 'string' || !config.label.trim()) throw new Error(`${key}/${DESCRIPTOR} needs a label`)
-    const mavenPath = `${GROUP_PATH}/${key}/${version}/${key}-${version}-bin.tar.gz`
     const cdnPath = `${version}/${cdnDirectory(key)}/${key}-bin.tar.gz`
     const entry = {
       key,
@@ -127,10 +124,12 @@ async function main() {
       released,
       supportVersion: Array.isArray(config.supportVersion) ? config.supportVersion : undefined,
       features: features(dir, config.features),
-      // url stays the Maven Central package for MetaForge versions before the
-      // multi-source store; newer servers pick from sources.
-      url: `${MAVEN_BASE}/${mavenPath}`,
-      sources: { maven: `${MAVEN_BASE}/${mavenPath}`, cdn: `${CDN_BASE}/${cdnPath}` },
+      // The store archives ship through the CDN only: attaching the 2.5 GB of
+      // plugin archives to the Maven Central deploy was rejected with a 413
+      // against the 1 GB bundle upload limit. Older servers download the url
+      // field; newer servers pick from sources.
+      url: `${CDN_BASE}/${cdnPath}`,
+      sources: { cdn: `${CDN_BASE}/${cdnPath}` },
       order: Number.isFinite(config.order) ? config.order : Number.MAX_SAFE_INTEGER,
     }
     if (opts.dist) {
@@ -138,7 +137,7 @@ async function main() {
       if (existsSync(archive)) {
         entry.size = statSync(archive).size
         entry.sha256 = await sha256(archive)
-        packages.push({ id: key, version, sha256: entry.sha256, size: entry.size, status: 'active', sources: { maven: mavenPath, cdn: cdnPath } })
+        packages.push({ id: key, version, sha256: entry.sha256, size: entry.size, status: 'active', sources: { cdn: cdnPath } })
       }
       else {
         missing.push(key)

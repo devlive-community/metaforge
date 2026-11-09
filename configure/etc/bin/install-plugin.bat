@@ -1,8 +1,8 @@
 @echo off
 setlocal EnableDelayedExpansion
 set "HOME=%cd%"
-set "VERSION=2026.0.0
-set "CDN_CENTER=https://repo1.maven.org/maven2/org/devlive/metaforge"
+set "VERSION=2026.0.0"
+set "CDN_CENTER=https://cdn.north.devlive.org/applications/metaforge/plugins"
 
 :: 检查并创建临时目录
 :: Check and create temporary directory
@@ -56,7 +56,13 @@ if %errorlevel% equ 0 (
 for /f "usebackq tokens=*" %%A in (`type "%HOME%\configure\plugin.conf"`) do (
     set "line=%%A"
     if not "!line!"=="" if not "!line:~0,2!"=="--" (
-        set "DOWNLOAD_URL=%CDN_CENTER%/!line!/%VERSION%/!line!-%VERSION%-bin.tar.gz"
+        set "PACKAGE_TYPE=plugin"
+        if "!line:~0,17!"=="metaforge-executor" set "PACKAGE_TYPE=executor"
+        if "!line:~0,16!"=="metaforge-convert" set "PACKAGE_TYPE=convert"
+        if "!line:~0,12!"=="metaforge-fs" set "PACKAGE_TYPE=fs"
+        if "!line:~0,15!"=="metaforge-parser" set "PACKAGE_TYPE=parser"
+        if "!line:~0,18!"=="metaforge-scheduler" set "PACKAGE_TYPE=scheduler"
+        set "DOWNLOAD_URL=%CDN_CENTER%/%VERSION%/!PACKAGE_TYPE!/!line!-%VERSION%-bin.tar.gz"
         set "TEMP_FILE=%TEMP_DIR%\!line!-%VERSION%-bin.tar.gz"
 
         echo Downloading: !line!

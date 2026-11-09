@@ -2,7 +2,7 @@
 
 HOME=$(pwd)
 VERSION=2026.0.0
-CDN_CENTER="https://repo1.maven.org/maven2/org/devlive/metaforge"
+CDN_CENTER="https://cdn.north.devlive.org/applications/metaforge/plugins"
 
 install_package() {
     DOWNLOAD_URL=$1
@@ -31,6 +31,11 @@ install_package() {
 
 process_section() {
     SECTION=$1
+    # The CDN keeps the notify archives under plugin/ alongside the other store packages.
+    case "$1" in
+        Notify) PACKAGE_TYPE="plugin" ;;
+        *) PACKAGE_TYPE=$(echo "$1" | tr 'A-Z' 'a-z') ;;
+    esac
 
     if [ ! -d "${HOME}/plugins" ]; then
         mkdir "${HOME}/plugins"
@@ -50,7 +55,7 @@ process_section() {
 
         if [ $IN_SECTION -eq 1 ] && [ ! -z "$line" ] && [[ ! "$line" =~ ^--.*$ ]]; then
             COMPONENT_NAME="$line"
-            DOWNLOAD_URL="${CDN_CENTER}/${COMPONENT_NAME}/${VERSION}/${COMPONENT_NAME}-${VERSION}-bin.tar.gz"
+            DOWNLOAD_URL="${CDN_CENTER}/${VERSION}/${PACKAGE_TYPE}/${COMPONENT_NAME}-${VERSION}-bin.tar.gz"
             echo "Installing from: $DOWNLOAD_URL"
             install_package "$DOWNLOAD_URL" "${HOME}/plugins"
         fi
