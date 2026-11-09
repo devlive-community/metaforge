@@ -28,5 +28,8 @@ const icons = {
   tukeyBox: ChartCandlestick, violinPlot: ChartArea, ridgePlot: ChartArea, quantileComparison: ChartScatter,
   percentileProfile: ChartSpline, lorenzCurve: ChartLine, ganttTimeline: ChartBarStacked, signedShareBar: ChartBarStacked,
   quadrantScatter: ChartScatter, lagScatter: ChartScatter, indexTrend: ChartLine, movingAverage: ChartSpline,
+  weightedMeanLine: ChartLine, ratioTrend: Activity, deltaTrend: ChartLine, growthTrend: ChartSpline,
+  rollingRange: ChartArea, rollingMedian: ChartSpline, runningEnvelope: ChartArea, thresholdBands: ChartArea,
+  slopeChange: Route, coverageHeatmap: Grid2x2, seasonalProfile: ChartSpline, histogramOverlay: ChartNoAxesColumnIncreasing,
 } satisfies Record<QueryChartType, typeof ChartLine>
 </script>

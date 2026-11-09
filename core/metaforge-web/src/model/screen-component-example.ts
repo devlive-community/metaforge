@@ -48,20 +48,24 @@ function chartExample(kind: DashboardWidgetKind, now: number): QueryChartConfigu
   const type = dashboardChartType(kind) ?? 'line'
   const rows = sampleRows(now)
   const numeric = ['Value', 'Target', 'Balance', 'Longitude', 'Latitude']
-  const dateCategory = ['calendarMatrix', 'themeRiver'].includes(type)
+  const dateCategory = ['calendarMatrix', 'themeRiver', 'seasonalProfile'].includes(type)
   const regionCategory = ['map', 'graph', 'sankey', 'tree', 'treemap', 'sunburst', 'violinPlot', 'ridgePlot', 'tukeyBox',
-    'stripPlot', 'ganttTimeline', 'radialBar', 'mirrorBar', 'targetComparison', 'polarBar', 'polarStackedBar', 'polarLine'].includes(type)
+    'stripPlot', 'ganttTimeline', 'radialBar', 'mirrorBar', 'targetComparison', 'polarBar', 'polarStackedBar', 'polarLine', 'histogramOverlay'].includes(type)
   const category = dateCategory ? 'Date' : regionCategory ? 'Region' : 'Period'
   const noSeries = ['pie', 'donut', 'funnel', 'rose', 'radar', 'candlestick', 'boxplot', 'tukeyBox', 'radialBar', 'ganttTimeline',
     'dualAxis', 'dumbbell', 'rangeBand', 'mirrorBar', 'targetComparison'].includes(type)
   const series = noSeries ? '' : ['graph', 'sankey', 'tree', 'treemap', 'sunburst', 'heatmap', 'table'].includes(type) ? 'Category' : 'Region'
-  const headers = type === 'table' ? ['Period', 'Region', 'Value', 'Status'] : fields
+  const headers = type === 'table' ? ['Period', 'Region', 'Value', 'Status'] : type === 'coverageHeatmap' ? ['Period', 'Input', 'Done', 'Status', 'Active'] : fields
   let raw = type === 'table' ? rows.slice(0, 5) : ['candlestick', 'dumbbell'].includes(type) ? rows.filter((_, index) => index % 3 === 0) : rows
   if (kind === 'yearOverYearTrend') raw = [...raw, ...rows.map(row => {
     const date = new Date(String(row.Date))
     date.setUTCFullYear(date.getUTCFullYear() - 1)
     return { ...row, Date: date.toISOString(), Value: Number(row.Value) * .8 }
   })]
+  if (type === 'seasonalProfile') {
+    const year = new Date(now).getUTCFullYear()
+    raw = rows.map((row, index) => ({ ...row, Date: new Date(Date.UTC(year - Math.floor(index / 6), index % 6, 12)).toISOString() }))
+  }
   return { headers, columns: raw, queryChart: { version: 1, options: {
     ...defaultQueryChart(headers), type, category, series, metric: ['deviationBar', 'signedShareBar', 'waterfall'].includes(type) ? 'Balance' : 'Value',
     aggregation: 'sum', grain: type === 'calendarMatrix' ? 'day' : 'none', colors: palette.join(','), labels: false,
@@ -71,7 +75,7 @@ function chartExample(kind: DashboardWidgetKind, now: number): QueryChartConfigu
     chartFields: { value: 'Value', lower: 'Low', upper: 'High', open: 'Open', close: 'Close', low: 'Low', high: 'High',
       bubbleX: 'Value', bubbleY: 'Target', bubbleSize: 'Open', before: 'Target', after: 'Value', columnMeasure: 'Value', lineMeasure: 'Target',
       leftMeasure: 'Target', rightMeasure: 'Value', actualMeasure: 'Value', targetMeasure: 'Target', intervalStart: 'Date', intervalEnd: 'End',
-      startX: 'StartX', startY: 'StartY', endX: 'EndX', endY: 'EndY' },
+      startX: 'StartX', startY: 'StartY', endX: 'EndX', endY: 'EndY', weight: 'Open', numerator: 'Value', denominator: 'Target' },
   } } }
 }
 

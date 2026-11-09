@@ -1,5 +1,8 @@
 import { isCompleteFilter, type FilterFieldKind, type FilterGroup, type FilterJoin, type FilterRule } from './typed-filter'
 
+export const diagnosticChartTypes = ['weightedMeanLine', 'ratioTrend', 'deltaTrend', 'growthTrend', 'rollingRange', 'rollingMedian',
+  'runningEnvelope', 'thresholdBands', 'slopeChange', 'coverageHeatmap', 'seasonalProfile', 'histogramOverlay'] as const
+
 export const queryChartTypes = [
   'line', 'bar', 'area', 'pie', 'donut', 'scatter', 'horizontal',
   'radar', 'funnel', 'rose', 'table', 'effectScatter', 'pictorialBar', 'heatmap', 'gauge',
@@ -12,8 +15,12 @@ export const queryChartTypes = [
   'scatterFit', 'calendarMatrix', 'radialBar', 'frequencyPolygon', 'targetComparison', 'rankTrend',
   'tukeyBox', 'violinPlot', 'ridgePlot', 'quantileComparison', 'percentileProfile', 'lorenzCurve',
   'ganttTimeline', 'signedShareBar', 'quadrantScatter', 'lagScatter', 'indexTrend', 'movingAverage',
+  ...diagnosticChartTypes,
 ] as const
 export type QueryChartType = typeof queryChartTypes[number]
+export function isDiagnosticChart(type: QueryChartType): type is typeof diagnosticChartTypes[number] {
+  return diagnosticChartTypes.some(kind => kind === type)
+}
 export type QueryChartRow = Record<string, unknown>
 export interface QueryChartOptions {
   type: QueryChartType

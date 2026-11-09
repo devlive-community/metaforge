@@ -4,10 +4,12 @@ import test from 'node:test'
 import * as echarts from 'echarts'
 import { sourceModule } from '../../metaforge-ui/tests/component.mjs'
 
-const { aggregateQueryChart, defaultQueryChart, queryChartTypes } = await sourceModule('../../metaforge-web/src/model/query-chart.ts')
+const { aggregateQueryChart, defaultQueryChart, diagnosticChartTypes, queryChartTypes } = await sourceModule('../../metaforge-web/src/model/query-chart.ts')
 const { prepareQueryChart } = await sourceModule('../../metaforge-web/src/model/query-chart-series.ts')
 const { queryChartCategoryShares, suggestChartFields } = await sourceModule('../../metaforge-web/src/model/query-chart-data.ts')
-const { dashboardTools, dashboardChartMappings, dashboardWidget } = await sourceModule('../../metaforge-web/src/model/dashboard-layout.ts')
+const { dashboardTools, dashboardChartMappings, dashboardEmbeddedChartOptions, dashboardWidget } = await sourceModule('../../metaforge-web/src/model/dashboard-layout.ts')
+const { screenComponentExample } = await sourceModule('../../metaforge-web/src/model/screen-component-example.ts')
+const { fitChartToCard } = await sourceModule('../../metaforge-web/src/model/chart-card-layout.ts')
 const rows = [
   { region: 'A', group: 'C', date: '2026-10-01', open: 12, close: 15, low: 10, high: 17, startX: 0, startY: 1, endX: 2, endY: 4 },
   { region: 'B', group: 'D', date: '2026-10-01', open: 16, close: 14, low: 11, high: 18, startX: 3, startY: 2, endX: 4, endY: 5 },
@@ -31,6 +33,38 @@ const options = {
 test('the dashboard includes every type shown in the visualizer', () => {
   assert.equal(new Set(dashboardTools).size, dashboardTools.length)
   for (const type of queryChartTypes) assert.ok(dashboardTools.includes(type), type)
+})
+
+test('diagnostic examples export from a compact card with their contributing rows', () => {
+  for (const type of diagnosticChartTypes) {
+    const { widget, snapshot } = screenComponentExample(type, type, key => key, ['/a.svg', '/b.svg'], Date.UTC(2026, 10, 8))
+    const options = dashboardEmbeddedChartOptions(widget, snapshot, false)
+    const prepared = prepareQueryChart(options, aggregateQueryChart(snapshot.columns, options))
+    assert.ok(prepared.option && prepared.details.size, type)
+    const chart = echarts.init(null, undefined, { renderer: 'svg', ssr: true, width: 320, height: 210 })
+    try {
+      chart.setOption(fitChartToCard({ ...prepared.option, animation: false }, 320, 210, '#345'))
+      assert.match(chart.renderToSVGString(), /<(path|rect|polygon)\b/, type)
+    } finally {
+      chart.dispose()
+    }
+  }
+})
+
+test('weighted means ignore unusable weights and ratios skip a zero denominator', () => {
+  const records = [
+    { period: 'A', value: 10, factor: 1 }, { period: 'A', value: 20, factor: 3 }, { period: 'A', value: 500, factor: -1 },
+    { period: 'B', value: 5, factor: 0 },
+  ]
+  const options = { ...defaultQueryChart(['period', 'value', 'factor']), category: 'period',
+    chartFields: { value: 'value', weight: 'factor', numerator: 'value', denominator: 'factor' } }
+  const prepare = type => prepareQueryChart({ ...options, type }, aggregateQueryChart(records, { ...options, type }))
+  const weighted = prepare('weightedMeanLine')
+  assert.deepEqual(weighted.option.series[0].data[0].value, [0, 17.5])
+  assert.deepEqual(weighted.details.get(0), records.slice(0, 2))
+  const ratio = prepare('ratioTrend')
+  assert.equal(ratio.option.series[0].data.length, 1)
+  assert.deepEqual(ratio.details.get(0), records.slice(0, 3))
 })
 
 test('specialized field mappings produce real ECharts series that can render SVG', () => {

@@ -1,5 +1,5 @@
 import { chartDataSpec, queryChartGeometry } from './query-chart-data'
-import type { QueryChartOptions, QueryChartType } from './query-chart'
+import { isDiagnosticChart, type QueryChartOptions, type QueryChartType } from './query-chart'
 
 const booleanFields = ['smooth', 'dashed', 'points', 'fill', 'transparent', 'legend', 'legendInteractive', 'labels',
   'labelOverlap', 'xVisible', 'xTitleVisible', 'yVisible', 'grid', 'hideOverlap', 'donutTotal'] as const
@@ -45,6 +45,17 @@ export function readQueryChartStyle(value: unknown): QueryChartStyle | undefined
 export function queryChartStyleFields(type: QueryChartType): QueryChartStyleKey[] {
   if (type === 'table') return []
   const fields: QueryChartStyleKey[] = ['palette', 'colors', 'transparent']
+  if (isDiagnosticChart(type)) {
+    fields.push('xTitle', 'xTitleVisible', 'xVisible', 'hideOverlap', 'yTitle', 'yVisible')
+    if (type === 'coverageHeatmap') return [...fields, 'labels']
+    fields.push('min', 'max', 'grid', 'lineWidth', 'dashed')
+    if (['rollingRange', 'runningEnvelope', 'thresholdBands'].includes(type)) {
+      return [...fields, 'opacity', ...(type === 'thresholdBands' ? ['pointSize' as const] : [])]
+    }
+    fields.push('legend', 'legendInteractive', 'points', 'pointSize')
+    if (type !== 'histogramOverlay') fields.push('smooth')
+    return fields
+  }
   const geometry = queryChartGeometry(type)
   const direct = !chartDataSpec(type)
   const circular = ['pie', 'donut', 'rose', 'funnel'].includes(type)

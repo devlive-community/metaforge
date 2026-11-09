@@ -62,6 +62,18 @@ const specs: Partial<Record<QueryChartType, ChartDataSpec>> = {
   lagScatter: { raw: true, fields: ['value'] },
   indexTrend: { category: 'category', series: 'group' },
   movingAverage: { category: 'category', series: 'group' },
+  weightedMeanLine: { category: 'category', series: 'group', raw: true, fields: ['value', 'weight'] },
+  ratioTrend: { category: 'category', series: 'group', raw: true, fields: ['numerator', 'denominator'] },
+  deltaTrend: { category: 'category', series: 'group' },
+  growthTrend: { category: 'category', series: 'group' },
+  rollingRange: { category: 'category' },
+  rollingMedian: { category: 'category', series: 'group' },
+  runningEnvelope: { category: 'category' },
+  thresholdBands: { category: 'category', raw: true, fields: ['value', 'lower', 'upper'] },
+  slopeChange: { category: 'category', series: 'group' },
+  coverageHeatmap: { category: 'category', raw: true },
+  seasonalProfile: { category: 'time' },
+  histogramOverlay: { category: 'group', raw: true, fields: ['value'] },
   gauge: {},
 }
 
@@ -104,7 +116,7 @@ export function chartDataSpec(type: QueryChartType): ChartDataSpec | undefined {
 }
 
 export function requiresChartSeries(type: QueryChartType): boolean {
-  return ['heatmap', 'graph', 'sankey', 'themeRiver', 'rankTrend', 'signedShareBar'].includes(type)
+  return ['heatmap', 'graph', 'sankey', 'themeRiver', 'rankTrend', 'signedShareBar', 'slopeChange'].includes(type)
 }
 
 const fieldAliases: Record<string, string[]> = {
@@ -119,6 +131,7 @@ const fieldAliases: Record<string, string[]> = {
   columnMeasure: ['volume', 'count', 'quantity'], lineMeasure: ['rate', 'price', 'average'],
   leftMeasure: ['left', 'before', 'baseline'], rightMeasure: ['right', 'after', 'actual'],
   actualMeasure: ['actual', 'observed'], targetMeasure: ['target', 'goal', 'plan', 'budget'],
+  weight: ['weight', 'quantity', 'count'], numerator: ['numerator', 'actual', 'value'], denominator: ['denominator', 'target', 'total'],
 }
 
 export function suggestChartFields(type: QueryChartType, numericFields: string[]): Pick<ChartMappings, 'chartFields' | 'parallelFields'> {
@@ -131,7 +144,8 @@ export function suggestChartFields(type: QueryChartType, numericFields: string[]
     const field = numericFields.find(name => fieldAliases[key]?.includes(normalized(name)))
     if (field) chartFields[key] = field
   }
-  if (['bubble', 'dumbbell', 'rangeBand', 'dualAxis', 'mirrorBar', 'scatterFit', 'targetComparison', 'quantileComparison', 'quadrantScatter'].includes(type)) {
+  if (['bubble', 'dumbbell', 'rangeBand', 'dualAxis', 'mirrorBar', 'scatterFit', 'targetComparison', 'quantileComparison', 'quadrantScatter',
+    'weightedMeanLine', 'ratioTrend', 'thresholdBands'].includes(type)) {
     const available = numericFields.filter(field => !Object.values(chartFields).includes(field))
     for (const key of spec.fields) if (!chartFields[key] && available.length) chartFields[key] = available.shift()!
   }

@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { snapshotRowLimit, type QueryChartOptions } from '@/model/query-chart'
+import { isDiagnosticChart, snapshotRowLimit, type QueryChartOptions } from '@/model/query-chart'
 import { queryChartGeometry } from '@/model/query-chart-data'
 import { queryChartStyleFields } from '@/model/query-chart-style'
 import InspectorSection from '@/views/components/studio/InspectorSection.vue'
@@ -65,7 +65,7 @@ const sections = computed(() => {
   const type = props.options.type
   const geometry = queryChartGeometry(type)
   const appearance = queryChartStyleFields(type)
-  const cartesian = !!geometry || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom',
+  const cartesian = !!geometry || isDiagnosticChart(type) || ['scatter', 'effectScatter', 'bubble', 'pictorialBar', 'heatmap', 'candlestick', 'boxplot', 'lines', 'custom',
     'waterfall', 'lollipop', 'dumbbell', 'rangeBand', 'dualAxis', 'pareto', 'cumulativeLine', 'deviationBar',
     'mirrorBar', 'stripPlot', 'ecdf', 'scatterFit', 'frequencyPolygon', 'targetComparison', 'rankTrend', 'tukeyBox', 'violinPlot',
     'ridgePlot', 'quantileComparison', 'percentileProfile', 'lorenzCurve', 'ganttTimeline', 'signedShareBar', 'quadrantScatter', 'lagScatter', 'indexTrend', 'movingAverage'].includes(type)
@@ -73,7 +73,7 @@ const sections = computed(() => {
     .filter(field => appearance.some(key => key === field.key))
   const fillToggle = geometry?.series === 'line' && !geometry.area && !geometry.stacked
   const fillOpacity = appearance.includes('opacity')
-  const variableScale = geometry?.percentage || ['dualAxis', 'pareto', 'ecdf', 'rankTrend', 'mirrorBar', 'lorenzCurve', 'signedShareBar'].includes(type)
+  const variableScale = geometry?.percentage || ['dualAxis', 'pareto', 'ecdf', 'rankTrend', 'mirrorBar', 'lorenzCurve', 'signedShareBar', 'coverageHeatmap'].includes(type)
     ? [] : [number('min', undefined, undefined, 3), number('max', undefined, undefined, 3)]
   if (props.panel === 'axes') return [
     { title: 'xAxis', fields: [text('xTitle'), ...(props.timeCategory ? [select('dateFormat', ['short', 'full', 'time'])] : []),

@@ -2,7 +2,8 @@ import type { CustomSeriesRenderItem, EChartsOption } from 'echarts'
 import { chartDataSpec, geoJsonLimit, requiresChartSeries } from './query-chart-data'
 import { analyticalChartOption, type ChartText } from './query-chart-analysis'
 import { distributionChartOption } from './query-chart-distributions'
-import { aggregateQueryChart, type QueryChartOptions, type QueryChartPoint, type QueryChartRow } from './query-chart'
+import { diagnosticChartOption } from './query-chart-diagnostics'
+import { aggregateQueryChart, isDiagnosticChart, type QueryChartOptions, type QueryChartPoint, type QueryChartRow } from './query-chart'
 
 type Aggregated = ReturnType<typeof aggregateQueryChart>
 type MapInput = Parameters<typeof import('echarts').registerMap>[1]
@@ -131,6 +132,10 @@ export function prepareQueryChart(options: QueryChartOptions, result: Aggregated
   const points = result.points.filter((point): point is QueryChartPoint & { value: number } => point.value !== null)
   const pointRows = (point: QueryChartPoint) => result.details.get(point.pointId) ?? []
   const done = (option: EChartsOption): PreparedQueryChart => ({ option, details })
+  if (isDiagnosticChart(options.type)) {
+    const option = diagnosticChartOption(options, result, fields, id, text)
+    return option ? done(option) : issue('noPoints')
+  }
   const axes = (categories: string[]) => ({
     xAxis: { type: 'category' as const, data: categories, name: options.xTitle, show: options.xVisible, axisLabel: { hideOverlap: options.hideOverlap } },
     yAxis: { type: 'value' as const, name: options.yTitle, min: options.min, max: options.max, axisLabel: { show: options.yVisible },
