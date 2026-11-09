@@ -120,17 +120,20 @@ public final class PluginE2E
     }
 
     /**
-     * Runs the statement and asserts it succeeded, retrying while the coordinator reports
-     * "No nodes available to run query": single-node Presto/Trino containers drop and
-     * re-register their only node under CI load, and a scheduling failure means the
-     * statement was never started, so retrying it cannot repeat any work.
+     * Runs the statement and asserts it succeeded, retrying while the server reports a
+     * transient not-ready state: single-node Presto/Trino containers drop and re-register
+     * their only node under CI load ("No nodes available to run query"), and DolphinDB
+     * answers logins with "Public key is not initialized yet" until its security module
+     * has finished starting. Neither failure means the statement was rejected, so
+     * retrying it cannot repeat any work.
      */
     public static Response ok(String what, Supplier<Response> call)
     {
         long deadline = System.currentTimeMillis() + Duration.ofSeconds(60).toMillis();
         Response response = call.get();
         while (!Boolean.TRUE.equals(response.getIsSuccessful())
-                && String.valueOf(response.getMessage()).contains("No nodes available")
+                && (String.valueOf(response.getMessage()).contains("No nodes available")
+                    || String.valueOf(response.getMessage()).contains("Public key is not initialized yet"))
                 && System.currentTimeMillis() < deadline) {
             try {
                 Thread.sleep(2000);

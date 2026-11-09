@@ -59,7 +59,9 @@ public class DolphinDBE2ETest
             container.start();
             PluginService service = new DolphinDBService();
             RuntimeConfigure configure = configure(container.getHost(), container.getMappedPort(8848), "admin", "123456", null);
-            String reported = first(ok("validator", service.execute(configure, service.validator())));
+            // The web port answers before the public key is initialized; the retrying ok()
+            // repeats the login until the node accepts it
+            String reported = first(ok("validator", () -> service.execute(configure, service.validator())));
             Assert.assertTrue(reported + " is not " + version, reported.startsWith(version.substring(1)));
 
             // The web port answers before the data node takes writes; retry creating the database until it does
