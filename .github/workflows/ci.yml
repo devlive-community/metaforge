@@ -95,6 +95,20 @@ jobs:
       # The e2e modules pull a dozen engine images across the suite; without reclaiming
       # them the runner's disk runs out mid-run and the job dies without any error in
       # the log. The background loop removes images no running container uses anymore.
+      # The marathon peaks well past the 7 GB runner RAM once several engine
+      # containers (mongo, cassandra, scylladb, ...) overlap with surefire:
+      # the kernel OOM killer starts reaping containers (exit 137) and the
+      # surefire JVM itself, which shows up as random mid-suite deaths.
+      # Swap absorbs those peaks; the runner has ~90 GB of free disk.
+      - name: Enable swap
+        run: |
+          sudo swapoff -a || true
+          sudo fallocate -l 8G /swapfile
+          sudo chmod 600 /swapfile
+          sudo mkswap /swapfile
+          sudo swapon /swapfile
+          free -h
+
       - name: Run the JUnit 5 suite
         run: |
           # The pruner loop must fully detach from the step's stdout/stderr: a
