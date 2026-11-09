@@ -128,21 +128,16 @@ jobs:
         with:
           ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
 
-      # The distribution and the store archives (dist/plugins) are built once
-      # here; the publishing steps below reuse them, so a deploy that fails
-      # half-way leaves nothing behind and re-running finishes the release.
+      # Maven Central gets the pure backend artifacts (no frontend), so the
+      # reactor is built exactly once here: either as a deploy to Central, or
+      # as a plain package when Central already has the version or is skipped —
+      # the store archives (dist/plugins) must exist for the CDN either way.
       - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 21
           cache: maven
-      - name: Build the distribution and the store archives
-        run: >
-          ./mvnw -B clean install
-          -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
-          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
-
       - uses: actions/setup-java@v4
         if: env.CENTRAL_CONFIGURED == 'true'
         with:
@@ -168,13 +163,24 @@ jobs:
             -Dorg.slf4j.simpleLogger.defaultLogLevel=WARN exec:exec | tail -1)"
           if curl --silent --fail --head --output /dev/null \
               "https://repo1.maven.org/maven2/org/devlive/metaforge/metaforge/${version}/metaforge-${version}.pom"; then
-            echo "::notice::${version} is on Maven Central already"
+            echo "::notice::${version} is on Maven Central already; packaging the store archives only"
+            ./mvnw --batch-mode --no-transfer-progress \
+              -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip \
+              -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm package \
+              -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
             exit 0
           fi
           ./mvnw --batch-mode --no-transfer-progress -Prelease,central -Dcentral.skip=false \
             -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip \
             -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm deploy \
             -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+      - name: Build the store archives
+        if: env.CENTRAL_CONFIGURED != 'true'
+        run: >
+          ./mvnw -B package
+          -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
+          -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
+          -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
       - name: Skip Maven Central
         if: env.CENTRAL_CONFIGURED != 'true'
         run: echo "::notice::Maven Central skipped; set CENTRAL_USERNAME, CENTRAL_PASSWORD, GPG_PRIVATE_KEY and GPG_PASSPHRASE to publish there"
