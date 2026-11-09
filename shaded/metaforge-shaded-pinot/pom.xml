@@ -18,6 +18,9 @@
     <properties>
         <pinot.version>1.1.0</pinot.version>
         <metaforge.shade.packageName>org.devlive.metaforge.pinot</metaforge.shade.packageName>
+        <!-- The shade plugin already attaches this module's sources jar, so the
+             release profile must not attach a second one with the same classifier. -->
+        <maven.source.skip>true</maven.source.skip>
     </properties>
 
     <dependencies>
