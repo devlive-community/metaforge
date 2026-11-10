@@ -167,20 +167,20 @@ jobs:
             ./mvnw --batch-mode --no-transfer-progress \
               -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip \
               -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm package \
-              -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+              -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin,!test/metaforge-test-e2e'
             exit 0
           fi
           ./mvnw --batch-mode --no-transfer-progress -Prelease,central -Dcentral.skip=false \
             -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip \
             -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm deploy \
-            -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+            -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin,!test/metaforge-test-e2e'
       - name: Build the store archives
         if: env.CENTRAL_CONFIGURED != 'true'
         run: >
           ./mvnw -B package
           -Dmaven.test.skip=true -Dcheckstyle.skip -Dspotbugs.skip -Dgpg.skip
           -Dskip.pnpm -Dskip.npm -Dskip.installnodenpm
-          -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin'
+          -pl '!test/metaforge-test-condor,!test/metaforge-test-convert,!test/metaforge-test-core,!test/metaforge-test-lib,!test/metaforge-test-executor,!test/metaforge-test-scheduler,!test/metaforge-test-fs,!test/metaforge-test-driver,!test/metaforge-test-parser,!test/metaforge-test-plugin,!test/metaforge-test-e2e'
       - name: Skip Maven Central
         if: env.CENTRAL_CONFIGURED != 'true'
         run: echo "::notice::Maven Central skipped; set CENTRAL_USERNAME, CENTRAL_PASSWORD, GPG_PRIVATE_KEY and GPG_PASSPHRASE to publish there"

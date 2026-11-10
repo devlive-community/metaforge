@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>metaforge-test-parser</artifactId>
+    <name>metaforge-test-parser</name>
     <description>MetaForge - Test - Parser</description>
 
     <dependencies>
