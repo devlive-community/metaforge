@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>metaforge-test-lib</artifactId>
+    <name>metaforge-test-lib</name>
     <description>MetaForge - Test - Lib</description>
 
     <dependencies>

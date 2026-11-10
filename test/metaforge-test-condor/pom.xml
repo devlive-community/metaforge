@@ -9,6 +9,7 @@
     </parent>
 
     <artifactId>metaforge-test-condor</artifactId>
+    <name>metaforge-test-condor</name>
     <description>MetaForge - Test - Condor</description>
 
     <dependencies>

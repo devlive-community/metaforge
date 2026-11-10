@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>metaforge-test-convert</artifactId>
+    <name>metaforge-test-convert</name>
     <description>MetaForge - Test - Convert</description>
 
     <dependencies>

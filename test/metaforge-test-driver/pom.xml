@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>metaforge-test-driver</artifactId>
+    <name>metaforge-test-driver</name>
     <description>MetaForge - Test - Driver</description>
 
     <dependencies>

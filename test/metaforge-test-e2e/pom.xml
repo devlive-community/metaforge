@@ -11,6 +11,7 @@
     </parent>
 
     <artifactId>metaforge-test-e2e</artifactId>
+    <name>metaforge-test-e2e</name>
     <description>MetaForge - Test - E2E: runs plugins against real databases in containers</description>
 
     <dependencies>
